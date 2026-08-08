@@ -1,95 +1,107 @@
 <script setup lang="ts">
-import "mathlive";
-import { ref, onMounted, onUnmounted } from "vue";
-import type { MathfieldElement } from "mathlive";
+  import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 
-const props = defineProps<{
-  hotkeys: Record<string, string>;
-}>();
+  /**
+   * the slice of mathlive's MathfieldElement this component drives, declared here
+   * because mathlive's node entry omits the class and nodenext resolves to that entry.
+   */
+  type MathfieldElement = HTMLElement & {
+    value: string;
+    inlineShortcuts: Record<string, string>;
+    getValue: () => string;
+    executeCommand: (command: [string, string]) => void;
+  };
 
-const latexString = defineModel<string>({
-  required: true,
-});
+  const props = defineProps<{
+    hotkeys: Record<string, string>;
+  }>();
 
-const insertIntoLatexString = (latex: string) => {
-  if (!latexInput.value) return;
-  latexInput.value.executeCommand(["insert", latex]);
-};
+  const latexString = defineModel<string>({
+    required: true,
+  });
 
-const replaceLatexString = (latex: string) => {
-  if (!latexInput.value) return;
-  latexInput.value.value = latex;
-  latexString.value = latex;
-};
+  const latexInput = ref<MathfieldElement | null>(null);
+  const mathfieldRegistered = ref(false);
 
-defineExpose({ insertIntoLatexString, replaceLatexString })
+  const insertIntoLatexString = (latex: string) => {
+    if (!latexInput.value) return;
+    latexInput.value.executeCommand(['insert', latex]);
+  };
 
-const latexInput = ref<MathfieldElement | null>(null);
+  const replaceLatexString = (latex: string) => {
+    if (!latexInput.value) return;
+    latexInput.value.value = latex;
+    latexString.value = latex;
+  };
 
-const onInput = () => {
-  if (!latexInput.value) return;
-  latexString.value = latexInput.value.getValue();
-};
+  defineExpose({ insertIntoLatexString, replaceLatexString });
 
-const onKeydown = (event: KeyboardEvent) => {
-  
-  const keyEvent = event;
-  const isAlphabetical = /^[a-zA-Z]$/.test(keyEvent.key);
+  const onInput = () => {
+    if (!latexInput.value) return;
+    latexString.value = latexInput.value.getValue();
+  };
 
-  if (keyEvent.ctrlKey || keyEvent.metaKey || keyEvent.altKey) return;
-  if (keyEvent.key.length !== 1) return;
-  if (!isAlphabetical) return
-  if (keyEvent.key in props.hotkeys) return;
-  
-  keyEvent.preventDefault();
-  latexInput.value!.executeCommand(["insert", keyEvent.key.toUpperCase()]);
-};
+  const onKeydown = (event: KeyboardEvent) => {
+    const isAlphabetical = /^[a-zA-Z]$/.test(event.key);
 
-onMounted(() => {
-  const mathField = latexInput.value;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key.length !== 1) return;
+    if (!isAlphabetical) return;
+    if (event.key in props.hotkeys) return;
 
-  if (!mathField) return;
+    event.preventDefault();
+    latexInput.value?.executeCommand(['insert', event.key.toUpperCase()]);
+  };
+
+  onMounted(async () => {
+    // importing mathlive registers <math-field> against window, so it can only run in the browser
+    await import('mathlive');
+    mathfieldRegistered.value = true;
+    await nextTick();
+
+    const mathField = latexInput.value;
+    if (!mathField) return;
 
     mathField.inlineShortcuts = {
       ...mathField.inlineShortcuts,
       ...props.hotkeys,
-    }
+    };
 
-  mathField.addEventListener("input", onInput);
-  mathField.addEventListener("keydown", onKeydown);
-});
+    mathField.addEventListener('input', onInput);
+    mathField.addEventListener('keydown', onKeydown);
+  });
 
-onUnmounted(() => {
-  const mathField = latexInput.value;
+  onUnmounted(() => {
+    const mathField = latexInput.value;
+    if (!mathField) return;
 
-  if (!mathField) return;
-
-  mathField.removeEventListener("input", onInput);
-  mathField.removeEventListener("keydown", onKeydown);
-});
+    mathField.removeEventListener('input', onInput);
+    mathField.removeEventListener('keydown', onKeydown);
+  });
 </script>
 
 <template>
-   <math-field
+  <math-field
+    v-if="mathfieldRegistered"
     ref="latexInput"
     class="text-box"
   />
 </template>
 
 <style scoped>
-@media not (pointer: coarse) {
-  math-field::part(virtual-keyboard-toggle) {
+  @media not (pointer: coarse) {
+    math-field::part(virtual-keyboard-toggle) {
+      display: none;
+    }
+  }
+
+  math-field::part(menu-toggle) {
     display: none;
   }
-}
 
-math-field::part(menu-toggle) {
-  display: none;
-}
-
-math-field {
-  min-height: 2.1em;
-  --contains-highlight-background-color: rgb(200, 200, 200);
-  --contains-highlight-color: rgb(45, 45, 45);
-}
+  math-field {
+    min-height: 2.1em;
+    --contains-highlight-background-color: rgb(200, 200, 200);
+    --contains-highlight-color: rgb(45, 45, 45);
+  }
 </style>

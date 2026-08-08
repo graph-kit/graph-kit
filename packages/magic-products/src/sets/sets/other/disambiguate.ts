@@ -1,5 +1,5 @@
-import { parseMathJSON } from './parseMathJSON'
-import { mathJsonToLatex } from './simplifier/dnf'
+import { parseMathJSON } from './parseMathJSON.ts'
+import { mathJsonToLatex } from './simplifier/dnf.ts'
 
 const BINARY_OPS = ['\\cup', '\\cap', '\\setminus', '\\triangle'] as const
 

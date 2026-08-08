@@ -1,6 +1,6 @@
-import type { Circle, Overlap } from "@/sets/types/types"
+import type { Circle, Overlap } from "../types/types.ts"
 import { computed, type Ref } from "vue"
-import { RESERVED_LABELS } from "../other/constants"
+import { RESERVED_LABELS } from "../other/constants.ts"
 
 /**
  * all individual sections of the set space

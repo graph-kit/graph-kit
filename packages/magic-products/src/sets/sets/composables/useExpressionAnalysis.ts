@@ -1,11 +1,11 @@
 import { computed, type Ref } from "vue";
-import type { CircleLabel, HighlightGroup } from "../types/types";
-import { setParser } from "../other/expressionParser";
-import { parseMathJSON } from "../other/parseMathJSON";
-import { simplify } from "../other/simplifier";
-import { extractVariables } from "../other/simplifier/truthTable";
-import { isAmbiguous, getDisambiguatedLatex } from "../other/disambiguate";
-import { COLORS } from "../other/constants";
+import type { CircleLabel, HighlightGroup } from "../types/types.ts";
+import { setParser } from "../other/expressionParser.ts";
+import { parseMathJSON } from "../other/parseMathJSON.ts";
+import { simplify } from "../other/simplifier/index.ts";
+import { extractVariables } from "../other/simplifier/truthTable.ts";
+import { isAmbiguous, getDisambiguatedLatex } from "../other/disambiguate.ts";
+import { COLORS } from "../other/constants.ts";
 
 export type ExpressionInput = {
   value: string;

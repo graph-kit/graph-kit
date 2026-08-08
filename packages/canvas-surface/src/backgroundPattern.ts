@@ -1,4 +1,4 @@
-import { getCoordinates } from '@core/utils/canvas/index';
+import { getWorldCoordinates } from '@core/utils/canvas/index';
 
 import type { Camera } from './camera/index.ts';
 import type { Coordinate, DrawFns } from './types.ts';
@@ -48,7 +48,7 @@ export const useBackgroundPattern = (
   ) => {
     if (zoom.value <= PATTERN_FULLY_FADED_OUT) return;
 
-    const startingCoords = getCoordinates(
+    const startingCoords = getWorldCoordinates(
       {
         clientX: 0,
         clientY: 0,
@@ -57,7 +57,7 @@ export const useBackgroundPattern = (
       canvasRect,
     );
 
-    const endingCoords = getCoordinates(
+    const endingCoords = getWorldCoordinates(
       {
         clientX: window.innerWidth + STAGGER,
         clientY: window.innerHeight + STAGGER,

@@ -1,6 +1,6 @@
-import type { Circle } from '@/sets/types/types';
+import type { Circle } from '../types/types.ts';
 import type { Ref } from 'vue';
-import { ALPHABET, RESERVED_LABELS } from '../other/constants';
+import { ALPHABET, RESERVED_LABELS } from '../other/constants.ts';
 
 const LETTERS = ALPHABET.filter((l) => !(RESERVED_LABELS as readonly string[]).includes(l));
 

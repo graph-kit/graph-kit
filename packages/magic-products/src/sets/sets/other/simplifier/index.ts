@@ -1,9 +1,9 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine'
-import { parseMathJSON } from '../parseMathJSON'
-import { extractVariables, getTruthTable, getOneMinterms } from './truthTable'
-import { minimizeDNF } from './quine-mccluskey'
-import { dnfToMathJson, mathJsonToLatex } from './dnf'
-import { RESERVED_LABELS, LATEX_SET_SYMBOLS } from '../constants'
+import { parseMathJSON } from '../parseMathJSON.ts'
+import { extractVariables, getTruthTable, getOneMinterms } from './truthTable.ts'
+import { minimizeDNF } from './quine-mccluskey.ts'
+import { dnfToMathJson, mathJsonToLatex } from './dnf.ts'
+import { RESERVED_LABELS, LATEX_SET_SYMBOLS } from '../constants.ts'
 
 const MAX_VARIABLES = 8
 const MAX_SIMPLIFICATION_ITERATIONS = 10

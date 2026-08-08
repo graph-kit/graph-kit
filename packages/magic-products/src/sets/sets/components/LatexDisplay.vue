@@ -1,7 +1,8 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted } from "vue";
-  import katex from "katex";
-  import "katex/dist/katex.min.css";
+  import katex from 'katex';
+  import 'katex/dist/katex.min.css';
+
+  import { onMounted, ref, watch } from 'vue';
 
   const props = defineProps<{
     latex: string;
@@ -12,7 +13,7 @@
   const renderMath = () => {
     if (!el.value) return;
     katex.render(props.latex, el.value, {
-        throwOnError: false,
+      throwOnError: false,
     });
   };
 

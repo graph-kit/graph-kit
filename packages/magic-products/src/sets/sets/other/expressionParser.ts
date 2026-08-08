@@ -1,5 +1,5 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine'
-import { LATEX_SET_SYMBOLS } from './constants'
+import { LATEX_SET_SYMBOLS } from './constants.ts'
 
 type Subset = string[]
 

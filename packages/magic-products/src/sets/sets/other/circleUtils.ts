@@ -1,4 +1,4 @@
-import type { Circle } from '../types/types'
+import type { Circle } from '../types/types.ts'
 
 export const getCircle = (circles: Circle[], circleLabel: Circle['label']) => {
   const circle = circles.find((c) => c.label === circleLabel)

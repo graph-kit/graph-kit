@@ -6,6 +6,7 @@
     "rewriteRelativeImportExtensions": false
   },
   "references": [
+    { "path": "../canvas-primitives" },
     { "path": "../canvas-surface" },
     { "path": "../core-utils" },
     { "path": "../graph-plugins" },

@@ -1,6 +1,6 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine'
-import type { DNFTerm } from './quine-mccluskey'
-import { LATEX_SET_SYMBOLS } from '../constants'
+import type { DNFTerm } from './quine-mccluskey.ts'
+import { LATEX_SET_SYMBOLS } from '../constants.ts'
 
 const union = (...args: MathJsonExpression[]): MathJsonExpression =>
   [LATEX_SET_SYMBOLS.UNION, ...args]

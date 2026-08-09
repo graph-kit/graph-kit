@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import LatexInput from "./LatexInput.vue";
+import LatexInput from "./latex-input/LatexInput.vue";
+import type { LatexInputInstance } from "./latex-input/types.ts";
 import { ref, computed } from "vue";
 
 const props = defineProps<{
@@ -23,7 +24,7 @@ const localValue = computed({
   set: (value) => emit("update:modelValue", value),
 });
 
-const latexInputRef = ref<InstanceType<typeof LatexInput> | null>(null);
+const latexInputRef = ref<LatexInputInstance | null>(null);
 
 const insertIntoLatexString = (symbol: string) => {
   latexInputRef.value?.insertIntoLatexString(symbol);

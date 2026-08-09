@@ -14,7 +14,7 @@
     KEYBOARD_KEY_TO_LATEX,
   } from '../other/constants.ts';
   import ExpressionRow from './ExpressionRow.vue';
-  import LatexButton from './LatexButton.vue';
+  import LatexButton from './latex-button/LatexButton.vue';
 
   const { allSections, activeSubsets } = useProvidedSetsProductState();
 

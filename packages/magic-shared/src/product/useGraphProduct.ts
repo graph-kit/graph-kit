@@ -20,7 +20,6 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     surface: graph.canvas.surface,
     transit: graph.transit,
     history: graph.history,
-    events: graph.events,
     setAppearance: (color) => (graph.theme.activePresetName.value = color),
   };
 
@@ -32,6 +31,8 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     ui: options.ui,
     lensChips,
   });
+
+  graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
 
   if (lensChips) {
     magic.componentSlots.add({

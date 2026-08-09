@@ -1,10 +1,8 @@
 <script setup lang="ts">
-  import { useCanvas } from '@canvas/surface/index';
   import { MagicProduct } from '@magic/shared/product';
 
   import { computed, ref } from 'vue';
 
-  import { useSetsProduct } from './host.ts';
   import { useCircleDrag } from './sets/composables/useCircleDrag.ts';
   import { useCircleFocus } from './sets/composables/useCircleFocus.ts';
   import { useCircleResize } from './sets/composables/useCircleResize.ts';
@@ -14,6 +12,7 @@
   import { draw } from './sets/draw/index.ts';
   import { Circle, HighlightGroup, Overlap } from './types.ts';
   import { useCanvasTheme } from './useCanvasTheme.ts';
+  import { useSetsProduct } from './useSetsProduct.ts';
 
   const magic = useSetsProduct();
 

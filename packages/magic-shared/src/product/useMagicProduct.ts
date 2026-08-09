@@ -20,11 +20,7 @@ export const useMagicProduct = (
 ): Magic => {
   const componentSlots = useComponentSlotsState();
   const lens = useLensState(componentSlots);
-  const simulation = useSimulationState(
-    host.events.subscribe,
-    componentSlots,
-    lens,
-  );
+  const simulation = useSimulationState(componentSlots, lens);
 
   const appearance = useProductAppearance(host.setAppearance);
 

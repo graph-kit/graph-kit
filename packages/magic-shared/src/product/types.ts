@@ -1,5 +1,4 @@
 import { CanvasProps } from '@canvas/surface/types';
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 import { BasicColorMode } from '@vueuse/core';
 
 import { ComputedRef } from 'vue';
@@ -36,9 +35,6 @@ export type HistoryField = {
  */
 export type MagicProductHost = {
   transit: TransitField;
-  events: ReadonlyEventHub<{
-    onStructureChange: () => void;
-  }>;
   surface: CanvasProps;
   setAppearance: (color: BasicColorMode) => void;
   history?: HistoryField;

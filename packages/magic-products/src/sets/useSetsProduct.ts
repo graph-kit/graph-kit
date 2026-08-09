@@ -42,7 +42,7 @@ export const useSetsProduct = () => {
 
   const host: MagicProductHost = {
     surface,
-    setAppearance: () => {},
+    onAppearanceChanged: () => {},
     transit: {
       encode: () => {},
       decode: () => {},

@@ -22,7 +22,7 @@ export const useMagicProduct = (
   const lens = useLensState(componentSlots);
   const simulation = useSimulationState(componentSlots, lens);
 
-  const appearance = useProductAppearance(host.setAppearance);
+  const appearance = useProductAppearance(host.onAppearanceChanged);
 
   const annotations = options.annotations
     ? useAnnotationsState(options.annotations, appearance)

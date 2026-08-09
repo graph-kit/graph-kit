@@ -15,7 +15,8 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     surface: graph.canvas.surface,
     transit: graph.transit,
     history: graph.history,
-    setAppearance: (color) => (graph.theme.activePresetName.value = color),
+    onAppearanceChanged: (color) =>
+      (graph.theme.activePresetName.value = color),
   };
 
   const magic = useMagicProduct(host, {

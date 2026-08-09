@@ -44,7 +44,7 @@ export type LocalStorageField = {
 export type MagicProductHost = {
   transit: TransitField;
   surface: CanvasProps;
-  setAppearance: (color: BasicColorMode) => void;
+  onAppearanceChanged: (color: BasicColorMode) => void;
   history?: HistoryField;
 };
 

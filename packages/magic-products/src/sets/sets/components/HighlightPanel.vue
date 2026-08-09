@@ -8,7 +8,7 @@
 
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { useExpressionAnalysis } from '../composables/useExpressionAnalysis.ts';
+  import { useQueryAnalysis } from '../composables/useQueryAnalysis.ts';
   import {
     ADDITIONAL_KEY_BINDINGS,
     COLORS,
@@ -37,8 +37,8 @@
     focusedQueryId.value = addQuery();
   };
 
-  const { inputErrors, simplifiedForms, disambiguatedForms } =
-    useExpressionAnalysis(highlights, allSections);
+  const { queryErrors, simplifiedQueries, disambiguatedQueries } =
+    useQueryAnalysis(highlights, allSections);
 
   const MAX_NUMBER_OF_HIGHLIGHTS = 5;
 </script>
@@ -52,9 +52,9 @@
         :queryId="queryId"
         :modelValue="getQuery(queryId).latexQueryString"
         :hidden="getQuery(queryId).isHidden"
-        :error="inputErrors[queryId]"
-        :simplified="simplifiedForms[queryId]"
-        :disambiguated="disambiguatedForms[queryId]"
+        :error="queryErrors[queryId]"
+        :simplified="simplifiedQueries[queryId]"
+        :disambiguated="disambiguatedQueries[queryId]"
         :color="COLORS.HIGHLIGHT[index % COLORS.HIGHLIGHT.length]"
         :hotkeys="{ ...KEYBOARD_KEY_TO_LATEX, ...ADDITIONAL_KEY_BINDINGS }"
         @update:modelValue="setLatexQueryString(queryId, $event)"

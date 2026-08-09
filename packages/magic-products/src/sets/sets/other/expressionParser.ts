@@ -1,70 +1,90 @@
-import type { MathJsonExpression } from '@cortex-js/compute-engine'
-import { LATEX_SET_SYMBOLS } from './constants.ts'
+import type { MathJsonExpression } from '@cortex-js/compute-engine';
 
-type Subset = string[]
+import { LATEX_SET_SYMBOLS } from './constants.ts';
 
-const setParser = (partition: Subset[]) => {
+export type Subset = string[];
+
+/**
+ * resolves a set notation MathJSON expression to the subsets of the partition it selects,
+ * or null when the expression cannot be resolved against that partition
+ */
+export type ParseSetExpression = (
+  mathJSON: MathJsonExpression,
+) => Subset[] | null;
+
+export const createSetExpressionParser = (
+  partition: Subset[],
+): ParseSetExpression => {
   const getSet = (set: string) => {
-    if (set === LATEX_SET_SYMBOLS.OMEGA) return partition
-    return partition.filter((subset) => subset.includes(set))
-  }
+    if (set === LATEX_SET_SYMBOLS.OMEGA) return partition;
+    return partition.filter((subset) => subset.includes(set));
+  };
 
   const isEqual = (set1: Subset, set2: Subset) => {
-    return set1.length === set2.length && set1.every((element) => set2.includes(element))
-  }
+    return (
+      set1.length === set2.length &&
+      set1.every((element) => set2.includes(element))
+    );
+  };
 
-  const union = (set1: Subset[], set2: Subset[]) => set1.concat(set2)
+  const union = (set1: Subset[], set2: Subset[]) => set1.concat(set2);
 
   const intersection = (set1: Subset[], set2: Subset[]) =>
-    set1.filter((element) => set2.includes(element))
+    set1.filter((element) => set2.includes(element));
 
   const exclusion = (set1: Subset[], set2: Subset[]) =>
-    set1.filter((element) => !set2.includes(element))
+    set1.filter((element) => !set2.includes(element));
 
   const difference = (set1: Subset[], set2: Subset[]) =>
-    exclusion(union(set1, set2), intersection(set1, set2))
+    exclusion(union(set1, set2), intersection(set1, set2));
 
   const complement = (set: Subset[]) =>
-    partition.filter((subset) => set.every((element) => !isEqual(subset, element)))
+    partition.filter((subset) =>
+      set.every((element) => !isEqual(subset, element)),
+    );
 
   const dedupe = (sets: Subset[]) =>
-    sets.filter((set, index) => sets.findIndex((other) => isEqual(set, other)) === index)
+    sets.filter(
+      (set, index) => sets.findIndex((other) => isEqual(set, other)) === index,
+    );
 
   const parseHelper = (node: MathJsonExpression): Subset[] => {
     if (typeof node === 'string') {
-      return getSet(node)
+      return getSet(node);
     }
 
-    if (!Array.isArray(node) || node.length < 2 || typeof node[0] !== 'string') {
-      throw new Error('Invalid MathJSON expression')
+    if (
+      !Array.isArray(node) ||
+      node.length < 2 ||
+      typeof node[0] !== 'string'
+    ) {
+      throw new Error('Invalid MathJSON expression');
     }
 
-    const [head, ...args] = node as [string, ...MathJsonExpression[]]
+    const [head, ...args] = node as [string, ...MathJsonExpression[]];
 
     switch (head) {
       case LATEX_SET_SYMBOLS.UNION:
-        return union(parseHelper(args[0]), parseHelper(args[1]))
+        return union(parseHelper(args[0]), parseHelper(args[1]));
       case LATEX_SET_SYMBOLS.INTERSECTION:
-        return intersection(parseHelper(args[0]), parseHelper(args[1]))
+        return intersection(parseHelper(args[0]), parseHelper(args[1]));
       case LATEX_SET_SYMBOLS.SYMMETRIC_DIFFERENCE:
-        return difference(parseHelper(args[0]), parseHelper(args[1]))
+        return difference(parseHelper(args[0]), parseHelper(args[1]));
       case LATEX_SET_SYMBOLS.COMPLEMENT:
-        return complement(parseHelper(args[0]))
+        return complement(parseHelper(args[0]));
       case LATEX_SET_SYMBOLS.SET_MINUS:
-        return exclusion(parseHelper(args[0]), parseHelper(args[1]))
+        return exclusion(parseHelper(args[0]), parseHelper(args[1]));
       default:
-        throw new Error(`Unknown operator: ${head}`)
+        throw new Error(`Unknown operator: ${head}`);
     }
-  }
+  };
 
-  return (mathJSON: MathJsonExpression): Subset[] | null => {
-    if (!mathJSON) return null
+  return (mathJSON) => {
+    if (!mathJSON) return null;
     try {
-      return dedupe(parseHelper(mathJSON))
+      return dedupe(parseHelper(mathJSON));
     } catch {
-      return null
+      return null;
     }
-  }
-}
-
-export { setParser }
+  };
+};

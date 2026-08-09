@@ -8,7 +8,7 @@ import {
   type HighlightQueries,
   createHighlightQueries,
 } from './highlightQueries.ts';
-import ExpressionPanel from './sets/components/ExpressionPanel.vue';
+import HighlightPanel from './sets/components/HighlightPanel.vue';
 import { CircleLabel, HighlightGroup } from './types.ts';
 
 export type SetsProductState = {
@@ -57,8 +57,8 @@ export const useSetsProduct = () => {
   provideSetsProductState(setsProductState);
 
   magic.componentSlots.add({
-    id: 'sets/expression-panel',
-    component: ExpressionPanel,
+    id: 'sets/highlight-panel',
+    component: HighlightPanel,
     position: 'bottom-middle',
   });
 

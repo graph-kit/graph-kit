@@ -9,20 +9,23 @@ import type {
 import { SetsProductState } from '../../useSetsProduct.ts';
 import { COLORS } from '../other/constants.ts';
 import { getDisambiguatedLatex, isAmbiguous } from '../other/disambiguate.ts';
-import { setParser } from '../other/expressionParser.ts';
+import {
+  type ParseSetExpression,
+  createSetExpressionParser,
+} from '../other/expressionParser.ts';
 import { parseMathJSON } from '../other/parseMathJSON.ts';
 import { simplify } from '../other/simplifier/index.ts';
 import { extractVariables } from '../other/simplifier/truthTable.ts';
 
-export const useExpressionAnalysis = (
+export const useQueryAnalysis = (
   highlights: HighlightQueries,
   allSections: SetsProductState['allSections'],
 ) => {
   const definedSets = computed(() => [...new Set(allSections.value.flat())]);
 
-  const hasInputError = (
+  const hasQueryError = (
     latexQueryString: HighlightQuery,
-    parse: ReturnType<typeof setParser>,
+    parse: ParseSetExpression,
     definedSets: string[],
   ) => {
     if (!latexQueryString.trim()) return false;
@@ -39,49 +42,49 @@ export const useExpressionAnalysis = (
     return false;
   };
 
-  const inputErrors = computed(() => {
-    const parse = setParser(allSections.value);
+  const queryErrors = computed(() => {
+    const parse = createSetExpressionParser(allSections.value);
     const sets = definedSets.value;
     const errors: Record<HighlightQueryId, boolean> = {};
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
-      errors[queryId] = hasInputError(latexQueryString, parse, sets);
+      errors[queryId] = hasQueryError(latexQueryString, parse, sets);
     }
 
     return errors;
   });
 
-  const simplifiedForms = computed(() => {
-    const forms: Record<HighlightQueryId, string | null> = {};
+  const simplifiedQueries = computed(() => {
+    const queries: Record<HighlightQueryId, string | null> = {};
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
-      forms[queryId] = simplify(latexQueryString, definedSets.value);
+      queries[queryId] = simplify(latexQueryString, definedSets.value);
     }
 
-    return forms;
+    return queries;
   });
 
-  const disambiguatedForms = computed(() => {
-    const forms: Record<HighlightQueryId, string | null> = {};
+  const disambiguatedQueries = computed(() => {
+    const queries: Record<HighlightQueryId, string | null> = {};
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
 
-      forms[queryId] = null;
+      queries[queryId] = null;
       if (!latexQueryString.trim()) continue;
-      if (inputErrors.value[queryId]) continue;
+      if (queryErrors.value[queryId]) continue;
       if (!isAmbiguous(latexQueryString)) continue;
 
-      forms[queryId] = getDisambiguatedLatex(latexQueryString);
+      queries[queryId] = getDisambiguatedLatex(latexQueryString);
     }
 
-    return forms;
+    return queries;
   });
 
   const activeSubsets = computed(() => {
-    const parse = setParser(allSections.value);
+    const parse = createSetExpressionParser(allSections.value);
     const sets = definedSets.value;
     const results: HighlightGroup[] = [];
 
@@ -89,7 +92,7 @@ export const useExpressionAnalysis = (
       const { latexQueryString, isHidden } = highlights.getQuery(queryId);
 
       if (isHidden) continue;
-      if (hasInputError(latexQueryString, parse, sets)) continue;
+      if (hasQueryError(latexQueryString, parse, sets)) continue;
 
       const mathJSON = parseMathJSON(latexQueryString);
       if (!mathJSON) continue;
@@ -108,9 +111,9 @@ export const useExpressionAnalysis = (
 
   return {
     definedSets,
-    inputErrors,
-    simplifiedForms,
-    disambiguatedForms,
+    queryErrors,
+    simplifiedQueries,
+    disambiguatedQueries,
     activeSubsets,
   };
 };

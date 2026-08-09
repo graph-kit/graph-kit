@@ -4,17 +4,23 @@ import { MagicProductHost, useMagicProduct } from '@magic/shared/product';
 
 import { Ref, inject, provide, ref } from 'vue';
 
+import {
+  type HighlightQueries,
+  createHighlightQueries,
+} from './highlightQueries.ts';
 import ExpressionPanel from './sets/components/ExpressionPanel.vue';
 import { CircleLabel, HighlightGroup } from './types.ts';
 
 export type SetsProductState = {
   allSections: Ref<CircleLabel[][]>;
   activeSubsets: Ref<HighlightGroup[]>;
+  highlights: HighlightQueries;
 };
 
 const useSetsProductState = (): SetsProductState => ({
   allSections: ref([]),
   activeSubsets: ref([]),
+  highlights: createHighlightQueries(),
 });
 
 const SETS_PROVIDE_KEY = 'sets-product';

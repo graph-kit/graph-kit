@@ -6,6 +6,7 @@
 
   import { ref } from 'vue';
 
+  import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { useExpressionAnalysis } from '../composables/useExpressionAnalysis.ts';
   import {
@@ -13,55 +14,60 @@
     COLORS,
     KEYBOARD_KEY_TO_LATEX,
   } from '../other/constants.ts';
-  import ExpressionRow from './ExpressionRow.vue';
+  import HighlightRow from './HighlightRow.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
-  const { allSections, activeSubsets } = useProvidedSetsProductState();
+  const { allSections, highlights } = useProvidedSetsProductState();
+  // destructured so the template gets an unwrapped queryIds rather than highlights.queryIds.value
+  const { queryIds, getQuery, addQuery, setLatexQueryString, setHidden } =
+    highlights;
 
-  const rowRefs = ref<InstanceType<typeof ExpressionRow>[]>([]);
-  const setRowRef = (el: unknown, index: number) => {
-    if (el) rowRefs.value[index] = el as InstanceType<typeof ExpressionRow>;
+  const rowRefs = ref<
+    Record<HighlightQueryId, InstanceType<typeof HighlightRow>>
+  >({});
+  const setRowRef = (queryId: HighlightQueryId, el: unknown) => {
+    if (el) rowRefs.value[queryId] = el as InstanceType<typeof HighlightRow>;
   };
 
-  const latexInputStrings = ref<{ value: string; hidden: boolean }[]>([
-    { value: '', hidden: false },
-  ]);
-  const focusedIndex = ref(0);
+  const focusedQueryId = ref<HighlightQueryId>(queryIds.value[0]);
 
   const insertLatexString = (symbol: string) => {
-    rowRefs.value[focusedIndex.value]?.insertIntoLatexString(symbol);
+    rowRefs.value[focusedQueryId.value]?.insertIntoLatexString(symbol);
   };
 
-  const addInput = () => {
-    latexInputStrings.value.push({ value: '', hidden: false });
-    focusedIndex.value = latexInputStrings.value.length - 1;
+  const addHighlight = () => {
+    focusedQueryId.value = addQuery();
   };
 
   const { inputErrors, simplifiedForms, disambiguatedForms } =
-    useExpressionAnalysis(latexInputStrings, allSections);
+    useExpressionAnalysis(highlights, allSections);
+
+  const MAX_NUMBER_OF_HIGHLIGHTS = 5;
 </script>
 
 <template>
   <Well>
     <VStack>
-      <ExpressionRow
-        v-for="(_, index) in latexInputStrings"
-        :key="index"
-        :ref="(el) => setRowRef(el, index)"
-        v-model="latexInputStrings[index].value"
-        v-model:hidden="latexInputStrings[index].hidden"
-        :error="inputErrors[index]"
-        :simplified="simplifiedForms[index]"
-        :disambiguated="disambiguatedForms[index]"
+      <HighlightRow
+        v-for="(queryId, index) in queryIds"
+        :key="queryId"
+        :ref="(el) => setRowRef(queryId, el)"
+        :modelValue="getQuery(queryId).latexQueryString"
+        :hidden="getQuery(queryId).isHidden"
+        :error="inputErrors[queryId]"
+        :simplified="simplifiedForms[queryId]"
+        :disambiguated="disambiguatedForms[queryId]"
         :color="COLORS.HIGHLIGHT[index % COLORS.HIGHLIGHT.length]"
         :hotkeys="{ ...KEYBOARD_KEY_TO_LATEX, ...ADDITIONAL_KEY_BINDINGS }"
-        @focus="focusedIndex = index"
+        @update:modelValue="setLatexQueryString(queryId, $event)"
+        @update:hidden="setHidden(queryId, $event)"
+        @focus="focusedQueryId = queryId"
       />
 
       <div>
         <Button
-          @click="addInput"
-          :disabled="latexInputStrings.length > 5"
+          @click="addHighlight"
+          :disabled="queryIds.length > MAX_NUMBER_OF_HIGHLIGHTS"
         >
           + Add Expression
         </Button>

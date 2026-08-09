@@ -1,6 +1,11 @@
-import { type Ref, computed } from 'vue';
+import { computed } from 'vue';
 
-import type { HighlightGroup } from '../../types.ts';
+import type { HighlightQueries } from '../../highlightQueries.ts';
+import type {
+  HighlightGroup,
+  HighlightQuery,
+  HighlightQueryId,
+} from '../../types.ts';
 import { SetsProductState } from '../../useSetsProduct.ts';
 import { COLORS } from '../other/constants.ts';
 import { getDisambiguatedLatex, isAmbiguous } from '../other/disambiguate.ts';
@@ -9,25 +14,20 @@ import { parseMathJSON } from '../other/parseMathJSON.ts';
 import { simplify } from '../other/simplifier/index.ts';
 import { extractVariables } from '../other/simplifier/truthTable.ts';
 
-export type ExpressionInput = {
-  value: string;
-  hidden: boolean;
-};
-
 export const useExpressionAnalysis = (
-  expressions: Ref<ExpressionInput[]>,
+  highlights: HighlightQueries,
   allSections: SetsProductState['allSections'],
 ) => {
   const definedSets = computed(() => [...new Set(allSections.value.flat())]);
 
   const hasInputError = (
-    value: string,
+    latexQueryString: HighlightQuery,
     parse: ReturnType<typeof setParser>,
     definedSets: string[],
   ) => {
-    if (!value.trim()) return false;
+    if (!latexQueryString.trim()) return false;
 
-    const mathJSON = parseMathJSON(value);
+    const mathJSON = parseMathJSON(latexQueryString);
     if (!mathJSON?.isValid) return true;
     if (parse(mathJSON.json) === null) return true;
     if (
@@ -42,34 +42,56 @@ export const useExpressionAnalysis = (
   const inputErrors = computed(() => {
     const parse = setParser(allSections.value);
     const sets = definedSets.value;
+    const errors: Record<HighlightQueryId, boolean> = {};
 
-    return expressions.value.map(({ value }) =>
-      hasInputError(value, parse, sets),
-    );
+    for (const queryId of highlights.queryIds.value) {
+      const { latexQueryString } = highlights.getQuery(queryId);
+      errors[queryId] = hasInputError(latexQueryString, parse, sets);
+    }
+
+    return errors;
   });
 
-  const simplifiedForms = computed(() =>
-    expressions.value.map(({ value }) => simplify(value, definedSets.value)),
-  );
+  const simplifiedForms = computed(() => {
+    const forms: Record<HighlightQueryId, string | null> = {};
 
-  const disambiguatedForms = computed(() =>
-    expressions.value.map(({ value }, index) => {
-      if (!value.trim() || inputErrors.value[index] || !isAmbiguous(value))
-        return null;
-      return getDisambiguatedLatex(value);
-    }),
-  );
+    for (const queryId of highlights.queryIds.value) {
+      const { latexQueryString } = highlights.getQuery(queryId);
+      forms[queryId] = simplify(latexQueryString, definedSets.value);
+    }
+
+    return forms;
+  });
+
+  const disambiguatedForms = computed(() => {
+    const forms: Record<HighlightQueryId, string | null> = {};
+
+    for (const queryId of highlights.queryIds.value) {
+      const { latexQueryString } = highlights.getQuery(queryId);
+
+      forms[queryId] = null;
+      if (!latexQueryString.trim()) continue;
+      if (inputErrors.value[queryId]) continue;
+      if (!isAmbiguous(latexQueryString)) continue;
+
+      forms[queryId] = getDisambiguatedLatex(latexQueryString);
+    }
+
+    return forms;
+  });
 
   const activeSubsets = computed(() => {
     const parse = setParser(allSections.value);
     const sets = definedSets.value;
     const results: HighlightGroup[] = [];
 
-    for (const [index, expression] of expressions.value.entries()) {
-      if (expression.hidden) continue;
-      if (hasInputError(expression.value, parse, sets)) continue;
+    for (const [index, queryId] of highlights.queryIds.value.entries()) {
+      const { latexQueryString, isHidden } = highlights.getQuery(queryId);
 
-      const mathJSON = parseMathJSON(expression.value);
+      if (isHidden) continue;
+      if (hasInputError(latexQueryString, parse, sets)) continue;
+
+      const mathJSON = parseMathJSON(latexQueryString);
       if (!mathJSON) continue;
 
       const sections = parse(mathJSON.json);

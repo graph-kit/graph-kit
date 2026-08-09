@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { primsExplainer } from './explainer.ts';
 import { PrimsFrame } from './frame.ts';
 
+// TODO: update language
+
 /*
   explainerSegments.ts throws if a [bracketed] term in `content` has no
   matching entry in `highlights` (matched positionally, left to right) - see

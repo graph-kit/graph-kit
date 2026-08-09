@@ -20,7 +20,7 @@ const highlights = {
   },
   frontier: {
     tooltipLabel:
-      'Every edge currently eligible - it connects a tree node to a node outside the tree',
+      'Every edge currently eligible to grow into the tree. It connects a tree node to a node outside of the tree',
   },
   added: {
     tooltipLabel: 'The edge just chosen to grow the tree',
@@ -39,16 +39,19 @@ export const primsExplainer =
 
     if (frame.type === 'end') {
       const edges = frame.treeEdgeIds.length;
+      const cost = frame.treeEdgeIds
+        .map((id) => graph.getEdge(id).weight)
+        .reduce((sum, weight) => sum.add(weight));
       return {
-        content: `Done! The [Tree] Is Complete With ${edges} Edge${edges === 1 ? '' : 's'}`,
+        content: `Done! The [Tree] is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of ${cost}`,
         highlights: [highlights.tree],
       };
     }
 
     if (frame.type === 'consider-edges') {
       return {
-        content: `The [Frontier] Now Includes ${listEdges(graph, frame.edges)} - Every Edge Connecting the [Tree] to a Node Outside It`,
-        highlights: [highlights.frontier, highlights.tree],
+        content: `The [Frontier] now includes every edge connecting the [Tree] to a node not in the [Tree]: ${listEdges(graph, frame.edges)}`,
+        highlights: [highlights.frontier, highlights.tree, highlights.tree],
       };
     }
 
@@ -56,7 +59,7 @@ export const primsExplainer =
       const left = describeEdge(graph, frame.left);
       const right = describeEdge(graph, frame.right);
       return {
-        content: `Comparing ${left} to ${right} - Which One Costs Less?`,
+        content: `Comparing weights of ${left} to ${right}. Which one costs less?`,
       };
     }
 
@@ -66,13 +69,13 @@ export const primsExplainer =
       if (frame.tiedEdges) {
         const tied = listEdges(graph, frame.tiedEdges);
         return {
-          content: `${tied} Are Tied for Cheapest, So ${winner} Is Chosen Arbitrarily and [Added] to the [Tree]`,
+          content: `${tied} are tied for for lowest weight, so ${winner} is chosen arbitrarily and [Added] to the [Tree]`,
           highlights: [highlights.added, highlights.tree],
         };
       }
 
       return {
-        content: `${winner} Wins - It Has the Smallest Weight, So It Gets [Added] to the [Tree]`,
+        content: `${winner} is chosen because it has the smallest weight, so it gets [Added] to the [Tree]`,
         highlights: [highlights.added, highlights.tree],
       };
     }
@@ -81,15 +84,16 @@ export const primsExplainer =
       const excluded = listEdges(graph, frame.edges);
       const plural = frame.edges.length > 1;
       return {
-        content: `Not Choosing ${excluded} - Both Ends Are Already in the [Tree], So ${plural ? 'They' : 'It'} Would Only Close a Loop`,
+        content: `${excluded} ${plural ? 'are' : 'is'} ruled out because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would cause a loop`,
         highlights: [highlights.tree],
       };
     }
 
     if (frame.type === 'unreachable') {
       const count = frame.nodes.length;
+      const plural = count > 1;
       return {
-        content: `${count} Node${count === 1 ? '' : 's'} Never Connect to the [Tree]: the Graph Is Disconnected From {${frame.nodes[0]}}`,
+        content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the [Tree]: the graph is disconnected`,
         highlights: [highlights.tree],
       };
     }

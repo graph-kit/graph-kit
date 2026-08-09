@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import Button from '@magic/shared/Button';
+  import HStack from '@magic/shared/HStack';
   import Well from '@magic/shared/Well';
 
   import { ref } from 'vue';
@@ -12,7 +13,7 @@
     KEY_TO_LATEX,
   } from '../other/constants.ts';
   import ExpressionRow from './ExpressionRow.vue';
-  import LatexButtons from './LatexButtons.vue';
+  import LatexButton from './LatexButton.vue';
 
   const { allSections, activeSubsets } = useProvidedSetsProductState();
 
@@ -63,10 +64,14 @@
         + Add Expression
       </Button>
 
-      <LatexButtons
-        :keys="KEY_TO_LATEX"
-        @insert="insertLatexSymbol"
-      />
+      <HStack>
+        <LatexButton
+          v-for="latexString in KEY_TO_LATEX"
+          @click="insertLatexSymbol(latexString)"
+        >
+          {{ latexString }}
+        </LatexButton>
+      </HStack>
     </div>
   </Well>
 </template>

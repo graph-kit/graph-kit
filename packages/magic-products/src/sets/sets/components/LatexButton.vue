@@ -6,22 +6,42 @@
   import { onMounted, ref } from 'vue';
 
   const buttonTextContent = ref<HTMLSpanElement>();
+  const hasRendered = ref(false);
 
-  const props = defineProps<{
-    latexString: string;
+  withDefaults(
+    defineProps<{
+      size?: number;
+    }>(),
+    { size: 40 },
+  );
+
+  defineSlots<{
+    default: () => unknown;
   }>();
 
   onMounted(() => {
-    katex.render(
-      props.latexString,
-      nullThrows(
-        buttonTextContent.value,
-        'button text content DOM element missing',
-      ),
+    const element = nullThrows(
+      buttonTextContent.value,
+      'button text content DOM element missing',
     );
+
+    // the slot renders the latex source as plain text, which katex replaces in place
+    katex.render(element.textContent?.trim() ?? '', element);
+    hasRendered.value = true;
   });
 </script>
 
 <template>
-  <Button><span ref="buttonTextContent"></span></Button>
+  <Button
+    class="p-0"
+    :style="{ width: `${size}px`, height: `${size}px` }"
+  >
+    <!-- the raw latex source is in the DOM until katex swaps it out, so keep it hidden -->
+    <span
+      ref="buttonTextContent"
+      :class="hasRendered ? undefined : 'invisible'"
+    >
+      <slot />
+    </span>
+  </Button>
 </template>

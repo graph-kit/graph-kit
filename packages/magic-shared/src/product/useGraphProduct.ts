@@ -9,11 +9,6 @@ import { useMagicProduct } from './useMagicProduct.ts';
 export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   const graph = useGraph(options);
 
-  const handleLocalStorageSave = (save: () => void) => {
-    graph.events.subscribe('onStructureChange', save);
-    graph.nodeDrag.events.subscribe('onNodeDrop', save);
-  };
-
   const lensChips = options.lensChips?.(graph);
 
   const host: MagicProductHost = {
@@ -25,14 +20,16 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const magic = useMagicProduct(host, {
     productId: options.productId,
-    localStorage:
-      options.localStorage === false ? undefined : handleLocalStorageSave,
+    localStorage: options.localStorage !== false,
     annotations: options.annotations === false ? undefined : graph.canvas,
     ui: options.ui,
     lensChips,
   });
 
   graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
+
+  graph.events.subscribe('onStructureChange', magic.localStorage.invalidate);
+  graph.nodeDrag.events.subscribe('onNodeDrop', magic.localStorage.invalidate);
 
   if (lensChips) {
     magic.componentSlots.add({

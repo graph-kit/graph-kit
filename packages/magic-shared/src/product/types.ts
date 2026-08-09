@@ -28,6 +28,14 @@ export type HistoryField = {
   redo: () => void;
 };
 
+export type LocalStorageField = {
+  /**
+   * Reports that the hosted product's state changed, persisting it on a
+   * debounce. A no-op when local storage was not opted into.
+   */
+  invalidate: () => void;
+};
+
 /**
  * everything the harness needs from whatever it is hosting. a graph satisfies
  * this, but so does anything else that can paint to a canvas and describe its
@@ -51,8 +59,8 @@ export type MagicProductOptions = {
   annotations?: Graph['canvas'];
   lensChips?: LensChipDefinition[];
   ui?: UIOptions;
-  /** provide a handler for the trigger save function if you want to opt-in to local storage  */
-  localStorage?: (triggerSave: () => void) => void;
+  /** opt in to local storage, exposing {@link Magic.localStorage} for the host to drive */
+  localStorage?: boolean;
 };
 
 /** the harness itself: the chrome and controls wrapped around a hosted product */
@@ -69,6 +77,7 @@ export type Magic = {
   history?: HistoryField;
   annotations?: AnnotationsControls;
   lensChips?: LensChipDefinition[];
+  localStorage: LocalStorageField;
 };
 
 export type GraphLensChipOption = (

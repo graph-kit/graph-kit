@@ -8,11 +8,11 @@ import type {
 } from '../../types.ts';
 import { SetsProductState } from '../../useSetsProduct.ts';
 import { COLORS } from '../other/constants.ts';
-import { getDisambiguatedLatex, isAmbiguous } from '../other/disambiguate.ts';
 import {
   type ParseSetExpression,
   createSetExpressionParser,
-} from '../other/expressionParser.ts';
+} from '../other/createSetExpressionParser.ts';
+import { getDisambiguatedLatex, isAmbiguous } from '../other/disambiguate.ts';
 import { parseMathJSON } from '../other/parseMathJSON.ts';
 import { simplify } from '../other/simplifier/index.ts';
 import { extractVariables } from '../other/simplifier/truthTable.ts';

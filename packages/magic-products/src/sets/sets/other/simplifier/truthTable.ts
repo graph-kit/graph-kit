@@ -1,7 +1,7 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine';
 
 import { RESERVED_LABELS } from '../constants.ts';
-import { createSetExpressionParser } from '../expressionParser.ts';
+import { createSetExpressionParser } from '../createSetExpressionParser.ts';
 
 const RESERVED = new Set<string>(RESERVED_LABELS);
 

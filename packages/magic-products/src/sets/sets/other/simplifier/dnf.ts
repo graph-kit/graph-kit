@@ -3,16 +3,6 @@ import type { MathJsonExpression } from '@cortex-js/compute-engine';
 import { LATEX_SET_SYMBOLS } from '../constants.ts';
 import type { DNFTerm } from './quine-mccluskey.ts';
 
-const union = (...args: MathJsonExpression[]): MathJsonExpression => [
-  LATEX_SET_SYMBOLS.UNION,
-  ...args,
-];
-
-const intersection = (...args: MathJsonExpression[]): MathJsonExpression => [
-  LATEX_SET_SYMBOLS.INTERSECTION,
-  ...args,
-];
-
 const complement = (arg: MathJsonExpression): MathJsonExpression => [
   LATEX_SET_SYMBOLS.COMPLEMENT,
   arg,

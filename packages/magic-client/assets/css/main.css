@@ -5,6 +5,8 @@
 @source '../../../magic-shared//src/**/*.{vue,ts}';
 @source '../../../canvas-surface//src/**/*.{vue,ts}';
 
+@import 'katex/dist/katex.min.css';
+
 /* chrome turns horizontal overscroll into back/forward navigation, which yanks the user off the page mid drag */
 html,
 body {

@@ -7,7 +7,7 @@
   import { useProvidedMagic } from '../../product/context.ts';
 
   const magic = useProvidedMagic();
-  const coords = magic.canvas.surface.cursorCoordinates;
+  const coords = magic.surface.cursorCoordinates;
   const x = computed(() => Math.round(coords.value.x));
   const y = computed(() => Math.round(coords.value.y));
 </script>

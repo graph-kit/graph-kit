@@ -45,7 +45,7 @@ export const useMagicProduct = (
     shortcuts,
     annotations,
     lensChips: options.lensChips,
-    canvas: host.canvas,
+    surface: host.surface,
     transit: host.transit,
     history: host.history,
   };

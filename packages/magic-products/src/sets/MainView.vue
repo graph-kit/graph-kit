@@ -1,11 +1,10 @@
 <script setup lang="ts">
   import { useCanvas } from '@canvas/surface/index';
-  import { MagicProduct, useMagicProduct } from '@magic/shared/product';
+  import { MagicProduct } from '@magic/shared/product';
 
   import { computed, ref } from 'vue';
 
-  import { initHost } from './host.ts';
-  import { useAllSections } from './sets/composables/useAllSections.ts';
+  import { useSetsProduct } from './host.ts';
   import { useCircleDrag } from './sets/composables/useCircleDrag.ts';
   import { useCircleFocus } from './sets/composables/useCircleFocus.ts';
   import { useCircleResize } from './sets/composables/useCircleResize.ts';
@@ -13,16 +12,10 @@
   import { useLabelGetter } from './sets/composables/useLabel.ts';
   import { useOverlaps } from './sets/composables/useOverlaps.ts';
   import { draw } from './sets/draw/index.ts';
-  import { COLORS } from './sets/other/constants.ts';
-  import { Circle, CircleLabel, HighlightGroup, Overlap } from './types.ts';
+  import { Circle, HighlightGroup, Overlap } from './types.ts';
   import { useCanvasTheme } from './useCanvasTheme.ts';
 
-  const surface = useCanvas();
-
-  const magic = useMagicProduct(initHost(surface), {
-    productId: 'sets',
-    ui: { linkSharing: false },
-  });
+  const magic = useSetsProduct();
 
   useCanvasTheme(magic);
 
@@ -43,18 +36,18 @@
   const getCircleLabel = useLabelGetter(circles);
 
   const { isResizing } = useCircleResize({
-    surface: surface,
+    surface: magic.surface,
     circles,
   });
 
   useCircleDrag({
-    surface: surface,
+    surface: magic.surface,
     circles,
     isResizing,
   });
 
   const { isCircleFocused, setFocus } = useCircleFocus({
-    surface: surface,
+    surface: magic.surface,
     circles,
   });
 
@@ -110,7 +103,7 @@
   const createCircle = () => {
     const newCircle: Circle = {
       label: getCircleLabel(),
-      at: surface.cursorCoordinates.value,
+      at: magic.surface.cursorCoordinates.value,
       radius: 70,
     };
     circles.value.push(newCircle);
@@ -127,7 +120,7 @@
     key: 'backspace',
   });
 
-  surface.draw.content.value = (ctx) => {
+  magic.surface.draw.content.value = (ctx) => {
     draw(ctx, {
       circles: circles.value,
       overlaps: overlaps.value,
@@ -139,9 +132,9 @@
     });
   };
 
-  surface.domEvents.subscribe('onDblClick', createCircle);
+  magic.surface.domEvents.subscribe('onDblClick', createCircle);
 
-  const cursor = useCursorStyle(circles, surface.cursorCoordinates);
+  const cursor = useCursorStyle(circles, magic.surface.cursorCoordinates);
 </script>
 
 <template>

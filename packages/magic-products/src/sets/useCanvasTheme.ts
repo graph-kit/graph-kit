@@ -9,7 +9,7 @@ export const useCanvasTheme = (magic: Magic) => {
   const theme = computed(() =>
     magic.appearance.state.value === 'dark' ? dark : light,
   );
-  const canvas = computed(() => magic.canvas.surface.canvas.value);
+  const canvas = computed(() => magic.surface.canvas.value);
 
   const setCanvasColor = () => {
     if (!canvas.value) return console.warn('no canvas found in DOM');
@@ -20,7 +20,7 @@ export const useCanvasTheme = (magic: Magic) => {
 
   onMounted(setCanvasColor);
 
-  magic.canvas.surface.draw.backgroundPattern.value = crossPattern((alpha) =>
+  magic.surface.draw.backgroundPattern.value = crossPattern((alpha) =>
     theme.value.canvas['canvas.patternColor'](alpha),
   );
 };

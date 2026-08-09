@@ -2,7 +2,6 @@
   import { ref } from 'vue';
 
   import ExpressionPanel from './sets/components/ExpressionPanel.vue';
-  import MainCanvas from './sets/components/MainCanvas.vue';
   import { CircleLabel, HighlightGroup } from './types.ts';
 
   const allSections = ref<CircleLabel[][]>([]);
@@ -10,10 +9,6 @@
 </script>
 
 <template>
-  <MainCanvas
-    @sections-updated="(newAllSections) => (allSections = newAllSections)"
-    :sections-to-highlight="activeSubsets"
-  />
   <ExpressionPanel
     :all-sections="allSections"
     @update:activeSubsets="(val) => (activeSubsets = val)"

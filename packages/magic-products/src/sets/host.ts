@@ -1,24 +1,26 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { useCanvas } from '@canvas/surface/index';
 import { createEventHub } from '@graph/primitives/events/createEventHub';
-import { MagicProductHost } from '@magic/shared/product';
+import { MagicProductHost, useMagicProduct } from '@magic/shared/product';
 
-export const initHost = (surface: CanvasProps): MagicProductHost => ({
-  setAppearance: () => {},
-  events: createEventHub<{ onStructureChange: () => void }>({
-    onStructureChange: new Set(),
-  }),
-  canvas: {
-    surface,
-    events: createEventHub<{
-      onMouseUp: () => void;
-      onMouseDown: () => void;
-    }>({
-      onMouseUp: new Set(),
-      onMouseDown: new Set(),
+export const useSetsProduct = () => {
+  const surface = useCanvas();
+
+  const host: MagicProductHost = {
+    setAppearance: () => {},
+    events: createEventHub<{ onStructureChange: () => void }>({
+      onStructureChange: new Set(),
     }),
-  },
-  transit: {
-    encode: () => {},
-    decode: () => {},
-  },
-});
+    surface: surface,
+    transit: {
+      encode: () => {},
+      decode: () => {},
+    },
+  };
+
+  const magic = useMagicProduct(host, {
+    productId: 'sets',
+    ui: { linkSharing: false },
+  });
+
+  return magic;
+};

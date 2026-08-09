@@ -17,14 +17,6 @@ import { UIControls, UIOptions } from '../ui/useProductUI.ts';
 import { ProductId } from './manifests/index.ts';
 import { MagicProductManifest } from './manifests/types.ts';
 
-export type CanvasField = {
-  events: ReadonlyEventHub<{
-    onMouseDown: () => void;
-    onMouseUp: () => void;
-  }>;
-  surface: CanvasProps;
-};
-
 export type TransitField = {
   encode: () => any;
   decode: (payload: any) => void;
@@ -47,7 +39,7 @@ export type MagicProductHost = {
   events: ReadonlyEventHub<{
     onStructureChange: () => void;
   }>;
-  canvas: CanvasField;
+  surface: CanvasProps;
   setAppearance: (color: BasicColorMode) => void;
   history?: HistoryField;
 };
@@ -76,7 +68,7 @@ export type Magic = {
   ui: UIControls;
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
-  canvas: CanvasField;
+  surface: CanvasProps;
   transit: TransitField;
   history?: HistoryField;
   annotations?: AnnotationsControls;

@@ -3,7 +3,7 @@
 
   import ExpressionPanel from './sets/components/ExpressionPanel.vue';
   import MainCanvas from './sets/components/MainCanvas.vue';
-  import { CircleLabel, HighlightGroup } from './sets/types/types.ts';
+  import { CircleLabel, HighlightGroup } from './types.ts';
 
   const allSections = ref<CircleLabel[][]>([]);
   const activeSubsets = ref<HighlightGroup[]>([]);

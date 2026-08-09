@@ -1,11 +1,12 @@
-import { computed, type Ref } from "vue";
-import type { CircleLabel, HighlightGroup } from "../types/types.ts";
-import { setParser } from "../other/expressionParser.ts";
-import { parseMathJSON } from "../other/parseMathJSON.ts";
-import { simplify } from "../other/simplifier/index.ts";
-import { extractVariables } from "../other/simplifier/truthTable.ts";
-import { isAmbiguous, getDisambiguatedLatex } from "../other/disambiguate.ts";
-import { COLORS } from "../other/constants.ts";
+import { type Ref, computed } from 'vue';
+
+import type { CircleLabel, HighlightGroup } from '../../types.ts';
+import { COLORS } from '../other/constants.ts';
+import { getDisambiguatedLatex, isAmbiguous } from '../other/disambiguate.ts';
+import { setParser } from '../other/expressionParser.ts';
+import { parseMathJSON } from '../other/parseMathJSON.ts';
+import { simplify } from '../other/simplifier/index.ts';
+import { extractVariables } from '../other/simplifier/truthTable.ts';
 
 export type ExpressionInput = {
   value: string;
@@ -28,9 +29,11 @@ export const useExpressionAnalysis = (
     const mathJSON = parseMathJSON(value);
     if (!mathJSON?.isValid) return true;
     if (parse(mathJSON.json) === null) return true;
-    if (definedSets.length &&
-      extractVariables(mathJSON.json).some(v => !definedSets.includes(v))
-    ) return true;
+    if (
+      definedSets.length &&
+      extractVariables(mathJSON.json).some((v) => !definedSets.includes(v))
+    )
+      return true;
 
     return false;
   };
@@ -45,14 +48,15 @@ export const useExpressionAnalysis = (
   });
 
   const simplifiedForms = computed(() =>
-    expressions.value.map(({ value }) => simplify(value, definedSets.value))
+    expressions.value.map(({ value }) => simplify(value, definedSets.value)),
   );
 
   const disambiguatedForms = computed(() =>
     expressions.value.map(({ value }, index) => {
-      if (!value.trim() || inputErrors.value[index] || !isAmbiguous(value)) return null;
+      if (!value.trim() || inputErrors.value[index] || !isAmbiguous(value))
+        return null;
       return getDisambiguatedLatex(value);
-    })
+    }),
   );
 
   const activeSubsets = computed(() => {
@@ -79,11 +83,11 @@ export const useExpressionAnalysis = (
     return results;
   });
 
-  return { 
-    definedSets, 
-    inputErrors, 
-    simplifiedForms, 
-    disambiguatedForms, 
-    activeSubsets 
+  return {
+    definedSets,
+    inputErrors,
+    simplifiedForms,
+    disambiguatedForms,
+    activeSubsets,
   };
 };

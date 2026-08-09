@@ -2,8 +2,8 @@ import { CanvasProps } from '@canvas/surface/types';
 
 import { type Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
+import type { Circle } from '../../types.ts';
 import { isInsideCircle, isOnEdge } from '../other/circleUtils.ts';
-import type { Circle } from '../types/types.ts';
 
 export type CursorStyle =
   'auto' | 'grab' | 'grabbing' | 'ew-resize' | 'ns-resize';

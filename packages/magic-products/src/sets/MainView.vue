@@ -14,12 +14,7 @@
   import { useOverlaps } from './sets/composables/useOverlaps.ts';
   import { draw } from './sets/draw/index.ts';
   import { COLORS } from './sets/other/constants.ts';
-  import {
-    Circle,
-    CircleLabel,
-    HighlightGroup,
-    Overlap,
-  } from './sets/types/types.ts';
+  import { Circle, CircleLabel, HighlightGroup, Overlap } from './types.ts';
   import { useCanvasTheme } from './useCanvasTheme.ts';
 
   const surface = useCanvas();

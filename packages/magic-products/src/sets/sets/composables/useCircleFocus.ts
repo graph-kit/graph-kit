@@ -3,8 +3,8 @@ import { CanvasProps } from '@canvas/surface/types';
 
 import { type Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
+import type { Circle } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
-import type { Circle } from '../types/types.ts';
 
 type CircleFocusProps = {
   circles: Ref<Circle[]>;

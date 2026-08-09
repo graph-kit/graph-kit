@@ -5,6 +5,7 @@
 
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
+  import type { Circle, HighlightGroup, Overlap } from '../../types.ts';
   import { useAllSections } from '../composables/useAllSections.ts';
   import { useCanvasFocus } from '../composables/useCanvasFocus.ts';
   import { useCircleDrag } from '../composables/useCircleDrag.ts';
@@ -15,7 +16,6 @@
   import { useOverlaps } from '../composables/useOverlaps.ts';
   import { draw } from '../draw/index.ts';
   import { COLORS } from '../other/constants.ts';
-  import type { Circle, HighlightGroup, Overlap } from '../types/types.ts';
 
   const surface = useCanvas();
 

@@ -1,13 +1,13 @@
 <script setup lang="ts">
   import { ref, toRef, watch } from 'vue';
 
+  import type { CircleLabel, HighlightGroup } from '../../types.ts';
   import { useExpressionAnalysis } from '../composables/useExpressionAnalysis.ts';
   import {
     ADDITIONAL_KEY_BINDINGS,
     COLORS,
     KEY_TO_LATEX,
   } from '../other/constants.ts';
-  import type { CircleLabel, HighlightGroup } from '../types/types.ts';
   import ExpressionRow from './ExpressionRow.vue';
   import LatexButtons from './LatexButtons.vue';
 

@@ -1,7 +1,7 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
+import type { Circle, Overlap } from '../../types.ts';
 import type { CircleFocusControls } from '../composables/useCircleFocus.ts';
-import type { Circle, Overlap } from '../types/types.ts';
 import {
   drawCircleBackground,
   drawCircleLabel,

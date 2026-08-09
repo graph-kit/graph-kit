@@ -1,8 +1,8 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
+import type { Circle, Overlap } from '../../types.ts';
 import { getCircle } from '../other/circleUtils.ts';
 import { COLORS } from '../other/constants.ts';
-import type { Circle, Overlap } from '../types/types.ts';
 import { getHatchPattern } from './hatchPattern.ts';
 
 type DrawOverlappingAreaProps = {

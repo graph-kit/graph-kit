@@ -3,7 +3,7 @@ import { CanvasProps } from '@canvas/surface/types';
 
 import type { Ref } from 'vue';
 
-import type { Circle } from '../types/types.ts';
+import type { Circle } from '../../types.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleDragProps = {

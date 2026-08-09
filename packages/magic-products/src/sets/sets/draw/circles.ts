@@ -1,7 +1,7 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
 
+import { Circle } from '../../types.ts';
 import { COLORS } from '../other/constants.ts';
-import { Circle } from '../types/types.ts';
 import { getHatchPattern } from './hatchPattern.ts';
 
 type DrawCircleBackgroundProps = {

@@ -1,8 +1,11 @@
-import type { Circle } from '../types/types.ts';
 import type { Ref } from 'vue';
+
+import type { Circle } from '../../types.ts';
 import { ALPHABET, RESERVED_LABELS } from '../other/constants.ts';
 
-const LETTERS = ALPHABET.filter((l) => !(RESERVED_LABELS as readonly string[]).includes(l));
+const LETTERS = ALPHABET.filter(
+  (l) => !(RESERVED_LABELS as readonly string[]).includes(l),
+);
 
 /**
  * takes a list of labelled items and a sequence of labels and returns a function that will
@@ -19,30 +22,32 @@ const LETTERS = ALPHABET.filter((l) => !(RESERVED_LABELS as readonly string[]).i
  *  // remove "A" from the list of labelled items
  *  console.log(newLabel); // 'A'
  */
-export const useLabelGetter = (labelledItems: Ref<Circle[]>, sequence = LETTERS) => () => {
-  let labels = labelledItems.value.map((c) => c.label);
+export const useLabelGetter =
+  (labelledItems: Ref<Circle[]>, sequence = LETTERS) =>
+  () => {
+    let labels = labelledItems.value.map((c) => c.label);
 
-  let timesAround = 0;
-  let index = 0;
-  let newLabel;
+    let timesAround = 0;
+    let index = 0;
+    let newLabel;
 
-  const getPrefix = () => {
-    if (timesAround === 0) return '';
-    return sequence[(timesAround - 1) % sequence.length];
-  };
+    const getPrefix = () => {
+      if (timesAround === 0) return '';
+      return sequence[(timesAround - 1) % sequence.length];
+    };
 
-  while (!newLabel) {
-    const indexOutOfBounds = index >= sequence.length;
-    if (indexOutOfBounds) {
-      labels = labels.slice(sequence.length);
-      index = 0;
-      timesAround++;
+    while (!newLabel) {
+      const indexOutOfBounds = index >= sequence.length;
+      if (indexOutOfBounds) {
+        labels = labels.slice(sequence.length);
+        index = 0;
+        timesAround++;
+      }
+      const potentialLabel = getPrefix() + sequence[index];
+      const labelExists = labels.includes(potentialLabel);
+      if (!labelExists) newLabel = potentialLabel;
+      index++;
     }
-    const potentialLabel = getPrefix() + sequence[index];
-    const labelExists = labels.includes(potentialLabel);
-    if (!labelExists) newLabel = potentialLabel;
-    index++;
-  }
 
-  return newLabel;
-};
+    return newLabel;
+  };

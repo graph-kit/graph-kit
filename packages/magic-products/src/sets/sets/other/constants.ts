@@ -16,16 +16,26 @@ export const COLORS = {
 
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-// Labels that are reserved for structural use and cannot be used as circle names.
-// S is the complement region (everything outside all defined circles).
-export const RESERVED_LABELS = ['S'] as const;
+/**
+ * the region covered by no set. it has no definition to point at, so it carries both
+ * halves of one here: what a query calls it, and what stands in for its id in a Section
+ */
+export const OUTSIDE_ALL_SETS = {
+  display: 'S',
+  identity: 'outside-all-sets',
+} as const;
+
+// labels reserved for structural use, so they cannot name a set
+export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.display] as const;
+
+export const DEFAULT_CIRCLE_RADIUS = 70;
 
 export const KEYBOARD_KEY_TO_LATEX = {
   I: '\\cap',
   U: '\\cup',
   D: '\\triangle',
   O: '\\Omega',
-  S: 'S',
+  S: OUTSIDE_ALL_SETS.display,
   C: '^\\complement',
   '\\': '\\setminus',
 } as const;

@@ -1,6 +1,6 @@
 import type { Ref } from 'vue';
 
-import type { Circle } from '../../types.ts';
+import type { SetDefinition } from '../../types.ts';
 import { ALPHABET, RESERVED_LABELS } from '../other/constants.ts';
 
 const LETTERS = ALPHABET.filter(
@@ -23,9 +23,9 @@ const LETTERS = ALPHABET.filter(
  *  console.log(newLabel); // 'A'
  */
 export const useLabelGetter =
-  (labelledItems: Ref<Circle[]>, sequence = LETTERS) =>
+  (labelledItems: Ref<SetDefinition[]>, sequence = LETTERS) =>
   () => {
-    let labels = labelledItems.value.map((c) => c.label);
+    let labels = labelledItems.value.map(({ label }) => label);
 
     let timesAround = 0;
     let index = 0;

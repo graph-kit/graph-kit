@@ -1,4 +1,4 @@
-import type { Circle, Overlap } from '../../types.ts';
+import type { Overlap, SetDefinition, SetDefinitionId } from '../../types.ts';
 import type { CircleFocusControls } from '../composables/useCircleFocus.ts';
 import {
   drawCircleBackground,
@@ -8,35 +8,35 @@ import {
 import { colorOverlappingAreas } from './overlaps.ts';
 
 type DrawProps = {
-  circles: Circle[];
+  definitions: SetDefinition[];
   overlaps: Overlap[];
-  highlightedCircles: Map<Circle['label'], string[]>;
+  highlightedSets: Map<SetDefinitionId, string[]>;
   highlightedOverlaps: Map<Overlap['id'], string[]>;
-  isCircleFocused: CircleFocusControls['isCircleFocused'];
+  isSetFocused: CircleFocusControls['isSetFocused'];
   backgroundColors: string[] | null;
 };
 
 export const draw = (ctx: CanvasRenderingContext2D, props: DrawProps) => {
-  const { highlightedCircles, highlightedOverlaps } = props;
+  const { highlightedSets, highlightedOverlaps } = props;
 
-  for (const circle of props.circles) {
+  for (const set of props.definitions) {
     drawCircleBackground(ctx, {
-      circle,
-      highlightColors: highlightedCircles.get(circle.label) ?? null,
+      set,
+      highlightColors: highlightedSets.get(set.id) ?? null,
     });
   }
 
   colorOverlappingAreas(ctx, {
-    circles: props.circles,
+    definitions: props.definitions,
     overlaps: props.overlaps,
-    highlightedCircles,
+    highlightedSets,
     highlightedOverlaps,
   });
 
-  for (const circle of props.circles) {
+  for (const set of props.definitions) {
     const options = {
-      circle,
-      isFocused: props.isCircleFocused(circle.label),
+      set,
+      isFocused: props.isSetFocused(set.id),
     };
     drawCircleOutline(ctx, options);
     drawCircleLabel(ctx, options);

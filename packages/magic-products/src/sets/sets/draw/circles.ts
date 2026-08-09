@@ -1,11 +1,11 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
 import { FontWeight } from '@canvas/primitives/text/types';
 
-import { Circle } from '../../types.ts';
+import { SetDefinition } from '../../types.ts';
 import { COLORS } from '../other/constants.ts';
 
 type DrawCircleBackgroundProps = {
-  circle: Circle;
+  set: SetDefinition;
   highlightColors: string[] | null;
 };
 
@@ -13,16 +13,16 @@ export const drawCircleBackground = (
   ctx: CanvasRenderingContext2D,
   props: DrawCircleBackgroundProps,
 ) => {
-  const { circle: c, highlightColors } = props;
+  const { set, highlightColors } = props;
   if (highlightColors && highlightColors.length !== 1) return;
   circle({
-    ...c,
+    ...set.display,
     fillColor: highlightColors?.[0] ?? COLORS.BACKGROUND,
   }).draw(ctx);
 };
 
 type DrawCircleOutlineProps = {
-  circle: Circle;
+  set: SetDefinition;
   isFocused: boolean;
 };
 
@@ -33,7 +33,7 @@ export const drawCircleOutline = (
   const {
     at: { x, y },
     radius,
-  } = props.circle;
+  } = props.set.display;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, 2 * Math.PI);
   ctx.lineWidth = 6;
@@ -44,7 +44,7 @@ export const drawCircleOutline = (
 };
 
 type DrawCircleLabelProps = {
-  circle: Circle;
+  set: SetDefinition;
   isFocused: boolean;
 };
 
@@ -53,9 +53,11 @@ export const drawCircleLabel = (
   props: DrawCircleLabelProps,
 ) => {
   const {
-    at: { x, y },
     label,
-  } = props.circle;
+    display: {
+      at: { x, y },
+    },
+  } = props.set;
   const fontWeight: FontWeight = 'bold';
   const fontSize = 24;
   const fontFamily = 'Arial';

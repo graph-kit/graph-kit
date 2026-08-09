@@ -3,41 +3,43 @@ import { CanvasProps } from '@canvas/surface/types';
 
 import { type Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import type { Circle } from '../../types.ts';
+import type { SetDefinition, SetDefinitionId } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
 
 type CircleFocusProps = {
-  circles: Ref<Circle[]>;
+  definitions: Ref<SetDefinition[]>;
   surface: CanvasProps;
 };
 
-export const useCircleFocus = ({ circles, surface }: CircleFocusProps) => {
-  const focusedCircleLabels = ref(new Set<Circle['label']>());
+export const useCircleFocus = ({ definitions, surface }: CircleFocusProps) => {
+  const focusedSetIds = ref(new Set<SetDefinitionId>());
 
-  const sortedCircles = computed(() => {
-    return circles.value.toSorted((a, b) => a.radius - b.radius);
+  const sortedDefinitions = computed(() => {
+    return definitions.value.toSorted(
+      (a, b) => a.display.radius - b.display.radius,
+    );
   });
 
-  const setFocus = (label: Circle['label']) => {
-    focusedCircleLabels.value.clear();
-    focusedCircleLabels.value.add(label);
+  const setFocus = (id: SetDefinitionId) => {
+    focusedSetIds.value.clear();
+    focusedSetIds.value.add(id);
   };
 
-  const getCircleAtCursorPosition = () => {
+  const getDefinitionAtCursorPosition = () => {
     const coord = surface.cursorCoordinates.value;
-    return sortedCircles.value.find((c) => {
-      const inCircle = circle(c).hitbox(coord);
+    return sortedDefinitions.value.find(({ display }) => {
+      const inCircle = circle(display).hitbox(coord);
       // this accounts for the special buffer region thats not part of the shape but only
       // for targeting circle
-      const onCircleEdge = isOnEdge(coord.x, coord.y, c);
+      const onCircleEdge = isOnEdge(coord.x, coord.y, display);
       return inCircle || onCircleEdge;
     });
   };
 
   const focusCircle = () => {
-    const circle = getCircleAtCursorPosition();
-    if (!circle) return focusedCircleLabels.value.clear();
-    setFocus(circle.label);
+    const definition = getDefinitionAtCursorPosition();
+    if (!definition) return focusedSetIds.value.clear();
+    setFocus(definition.id);
   };
 
   onMounted(() => {
@@ -49,9 +51,8 @@ export const useCircleFocus = ({ circles, surface }: CircleFocusProps) => {
   });
 
   return {
-    focusedCircleIds: focusedCircleLabels,
-    isCircleFocused: (label: Circle['label']) =>
-      focusedCircleLabels.value.has(label),
+    focusedSetIds,
+    isSetFocused: (id: SetDefinitionId) => focusedSetIds.value.has(id),
     setFocus,
   };
 };

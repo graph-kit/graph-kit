@@ -1,69 +1,66 @@
 <script setup lang="ts">
   import { MagicProduct } from '@magic/shared/product';
 
-  import { computed, ref } from 'vue';
+  import { computed } from 'vue';
 
   import { useCircleDrag } from './sets/composables/useCircleDrag.ts';
   import { useCircleFocus } from './sets/composables/useCircleFocus.ts';
   import { useCircleResize } from './sets/composables/useCircleResize.ts';
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
-  import { useLabelGetter } from './sets/composables/useLabel.ts';
-  import { useOverlaps } from './sets/composables/useOverlaps.ts';
   import { draw } from './sets/draw/index.ts';
-  import { Circle, HighlightGroup, Overlap } from './types.ts';
+  import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
+  import { HighlightGroup, Overlap, SetDefinitionId } from './types.ts';
   import { useCanvasTheme } from './useCanvasTheme.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
     magic,
-    setsProductState: { activeSubsets },
+    setsProductState: { activeSubsets, sets },
   } = useSetsProduct();
+
+  const { definitions, overlaps, addDefinition, removeDefinition } = sets;
 
   useCanvasTheme(magic);
 
-  const circleSectionsToHighlight = computed<HighlightGroup[]>(() => {
+  const isOutsideAllSets = (section: SetDefinitionId[]) =>
+    section.length === 1 && section[0] === OUTSIDE_ALL_SETS.identity;
+
+  const setSectionsToHighlight = computed<HighlightGroup[]>(() => {
     return activeSubsets.value
       .map((group) => ({
         ...group,
         sections: group.sections.filter(
-          (s) => !(s.length === 1 && s[0] === 'S'),
+          (section) => !isOutsideAllSets(section),
         ),
       }))
       .filter((group) => group.sections.length > 0);
   });
 
-  const circles = ref<Circle[]>([]);
-  const getCircleLabel = useLabelGetter(circles);
-
   const { isResizing } = useCircleResize({
     surface: magic.surface,
-    circles,
+    definitions,
   });
 
   useCircleDrag({
     surface: magic.surface,
-    circles,
+    definitions,
     isResizing,
   });
 
-  const { isCircleFocused, setFocus } = useCircleFocus({
+  const { focusedSetIds, isSetFocused, setFocus } = useCircleFocus({
     surface: magic.surface,
-    circles,
+    definitions,
   });
 
   const backgroundColors = computed(() => {
     return activeSubsets.value
-      .filter((group) =>
-        group.sections.some((s) => s.length === 1 && s[0] === 'S'),
-      )
+      .filter((group) => group.sections.some(isOutsideAllSets))
       .map((group) => group.color);
   });
 
-  const overlaps = useOverlaps(circles);
-
-  const highlightedCircles = computed(() => {
-    const map = new Map<Circle['label'], string[]>();
-    for (const { sections, color } of circleSectionsToHighlight.value) {
+  const highlightedSets = computed(() => {
+    const map = new Map<SetDefinitionId, string[]>();
+    for (const { sections, color } of setSectionsToHighlight.value) {
       for (const section of sections) {
         if (section.length === 1) {
           const existing = map.get(section[0]) ?? [];
@@ -78,13 +75,11 @@
   const highlightedOverlaps = computed(() => {
     const overlapByKey = new Map<string, Overlap>();
     for (const overlap of overlaps.value) {
-      const key = overlap.circles
-        .toSorted((a, b) => a.localeCompare(b))
-        .join('.');
+      const key = overlap.sets.toSorted((a, b) => a.localeCompare(b)).join('.');
       overlapByKey.set(key, overlap);
     }
     const map = new Map<Overlap['id'], string[]>();
-    for (const { sections, color } of circleSectionsToHighlight.value) {
+    for (const { sections, color } of setSectionsToHighlight.value) {
       for (const section of sections) {
         if (section.length > 1) {
           const key = section.toSorted((a, b) => a.localeCompare(b)).join('.');
@@ -100,41 +95,36 @@
     return map;
   });
 
-  const createCircle = () => {
-    const newCircle: Circle = {
-      label: getCircleLabel(),
-      at: magic.surface.cursorCoordinates.value,
-      radius: 70,
-    };
-    circles.value.push(newCircle);
-    setFocus(newCircle.label);
+  const createSet = () => {
+    const definition = addDefinition(magic.surface.cursorCoordinates.value);
+    setFocus(definition.id);
   };
 
-  const deleteCircle = () => {
-    circles.value = circles.value.filter((c) => !isCircleFocused(c.label));
+  const deleteFocusedSets = () => {
+    for (const setId of [...focusedSetIds.value]) removeDefinition(setId);
   };
 
   magic.shortcuts.add({
     id: 'delete-set',
-    callback: () => deleteCircle(),
+    callback: () => deleteFocusedSets(),
     key: 'backspace',
   });
 
   magic.surface.draw.content.value = (ctx) => {
     draw(ctx, {
-      circles: circles.value,
+      definitions: definitions.value,
       overlaps: overlaps.value,
-      highlightedCircles: highlightedCircles.value,
+      highlightedSets: highlightedSets.value,
       highlightedOverlaps: highlightedOverlaps.value,
-      isCircleFocused,
+      isSetFocused,
       backgroundColors:
         backgroundColors.value.length > 1 ? backgroundColors.value : null,
     });
   };
 
-  magic.surface.domEvents.subscribe('onDblClick', createCircle);
+  magic.surface.domEvents.subscribe('onDblClick', createSet);
 
-  const cursor = useCursorStyle(circles, magic.surface.cursorCoordinates);
+  const cursor = useCursorStyle(definitions, magic.surface.cursorCoordinates);
 </script>
 
 <template>

@@ -17,7 +17,7 @@
   import HighlightRow from './HighlightRow.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
-  const { allSections, highlights } = useProvidedSetsProductState();
+  const { sets, highlights } = useProvidedSetsProductState();
   const {
     queryIds,
     getQuery,
@@ -38,7 +38,7 @@
   };
 
   const { queryErrors, simplifiedQueries, disambiguatedQueries } =
-    useQueryAnalysis(highlights, allSections);
+    useQueryAnalysis(highlights, sets);
 
   const MAX_NUMBER_OF_HIGHLIGHTS = 5;
 </script>

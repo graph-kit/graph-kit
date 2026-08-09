@@ -8,19 +8,20 @@ import {
   type HighlightQueries,
   createHighlightQueries,
 } from './highlightQueries.ts';
+import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
 import HighlightPanel from './sets/components/HighlightPanel.vue';
-import { CircleLabel, HighlightGroup } from './types.ts';
+import { HighlightGroup } from './types.ts';
 
 export type SetsProductState = {
-  allSections: Ref<CircleLabel[][]>;
   activeSubsets: Ref<HighlightGroup[]>;
   highlights: HighlightQueries;
+  sets: SetDefinitions;
 };
 
 const useSetsProductState = (): SetsProductState => ({
-  allSections: ref([]),
   activeSubsets: ref([]),
   highlights: createHighlightQueries(),
+  sets: createSetDefinitions(),
 });
 
 const SETS_PROVIDE_KEY = 'sets-product';

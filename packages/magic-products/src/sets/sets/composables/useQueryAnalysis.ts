@@ -1,12 +1,14 @@
 import { computed } from 'vue';
 
 import type { HighlightQueries } from '../../highlightQueries.ts';
+import type { SetDefinitions } from '../../setDefinitions.ts';
 import type {
   HighlightGroup,
   HighlightQuery,
   HighlightQueryId,
+  SetDefinitionId,
+  SetLabel,
 } from '../../types.ts';
-import { SetsProductState } from '../../useSetsProduct.ts';
 import { COLORS } from '../other/constants.ts';
 import {
   type ParseSetExpression,
@@ -19,14 +21,22 @@ import { extractVariables } from '../other/simplifier/truthTable.ts';
 
 export const useQueryAnalysis = (
   highlights: HighlightQueries,
-  allSections: SetsProductState['allSections'],
+  sets: SetDefinitions,
 ) => {
-  const definedSets = computed(() => [...new Set(allSections.value.flat())]);
+  const definedSetLabels = computed(() =>
+    sets.definitions.value.map(({ label }) => label),
+  );
+
+  const parseAgainstSetSpace = () =>
+    createSetExpressionParser<SetDefinitionId>(
+      sets.allSections.value,
+      (label) => sets.idByLabel.value[label],
+    );
 
   const hasQueryError = (
     latexQueryString: HighlightQuery,
-    parse: ParseSetExpression,
-    definedSets: string[],
+    parse: ParseSetExpression<SetDefinitionId>,
+    definedLabels: SetLabel[],
   ) => {
     if (!latexQueryString.trim()) return false;
 
@@ -34,8 +44,10 @@ export const useQueryAnalysis = (
     if (!mathJSON?.isValid) return true;
     if (parse(mathJSON.json) === null) return true;
     if (
-      definedSets.length &&
-      extractVariables(mathJSON.json).some((v) => !definedSets.includes(v))
+      definedLabels.length &&
+      extractVariables(mathJSON.json).some(
+        (variable) => !definedLabels.includes(variable),
+      )
     )
       return true;
 
@@ -43,13 +55,13 @@ export const useQueryAnalysis = (
   };
 
   const queryErrors = computed(() => {
-    const parse = createSetExpressionParser(allSections.value);
-    const sets = definedSets.value;
+    const parse = parseAgainstSetSpace();
+    const labels = definedSetLabels.value;
     const errors: Record<HighlightQueryId, boolean> = {};
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
-      errors[queryId] = hasQueryError(latexQueryString, parse, sets);
+      errors[queryId] = hasQueryError(latexQueryString, parse, labels);
     }
 
     return errors;
@@ -60,7 +72,7 @@ export const useQueryAnalysis = (
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
-      queries[queryId] = simplify(latexQueryString, definedSets.value);
+      queries[queryId] = simplify(latexQueryString, definedSetLabels.value);
     }
 
     return queries;
@@ -84,15 +96,15 @@ export const useQueryAnalysis = (
   });
 
   const activeSubsets = computed(() => {
-    const parse = createSetExpressionParser(allSections.value);
-    const sets = definedSets.value;
+    const parse = parseAgainstSetSpace();
+    const labels = definedSetLabels.value;
     const results: HighlightGroup[] = [];
 
     for (const [index, queryId] of highlights.queryIds.value.entries()) {
       const { latexQueryString, isHidden } = highlights.getQuery(queryId);
 
       if (isHidden) continue;
-      if (hasQueryError(latexQueryString, parse, sets)) continue;
+      if (hasQueryError(latexQueryString, parse, labels)) continue;
 
       const mathJSON = parseMathJSON(latexQueryString);
       if (!mathJSON) continue;
@@ -110,7 +122,7 @@ export const useQueryAnalysis = (
   });
 
   return {
-    definedSets,
+    definedSetLabels,
     queryErrors,
     simplifiedQueries,
     disambiguatedQueries,

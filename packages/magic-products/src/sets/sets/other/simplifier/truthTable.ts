@@ -1,6 +1,6 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine';
 
-import { RESERVED_LABELS } from '../constants.ts';
+import { OUTSIDE_ALL_SETS, RESERVED_LABELS } from '../constants.ts';
 import { createSetExpressionParser } from '../createSetExpressionParser.ts';
 
 const RESERVED = new Set<string>(RESERVED_LABELS);
@@ -16,12 +16,12 @@ export const extractVariables = (node: MathJsonExpression): string[] => {
 };
 
 // minterm i represents the atom where variable[j] is present iff bit j of i is set.
-// minterm 0 (no variables) is the complement region, represented as ['S'] so that
-// getSet('S') in the expression parser resolves it correctly.
+// this partition is symbolic, so minterm 0 (no variables) uses the label the parser
+// resolves rather than an identity that only the real set space has.
 const buildPartition = (variables: string[]): string[][] =>
   Array.from({ length: 2 ** variables.length }, (_, i) => {
     const atom = variables.filter((_, j) => (i >> j) & 1);
-    return atom.length === 0 ? ['S'] : atom;
+    return atom.length === 0 ? [OUTSIDE_ALL_SETS.display] : atom;
   });
 
 export const getTruthTable = (
@@ -29,7 +29,8 @@ export const getTruthTable = (
   variables: string[],
 ): number => {
   const partition = buildPartition(variables);
-  const parse = createSetExpressionParser(partition);
+  // this partition is symbolic, so a label already is how a set is identified in it
+  const parse = createSetExpressionParser(partition, (label) => label);
   const result = parse(node);
 
   if (!result) return 0;

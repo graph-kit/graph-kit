@@ -1,32 +1,39 @@
+import { CanvasDOMEvents } from '@canvas/surface/domEvents';
 import { isTypingTarget } from '@core/utils/keyboard';
-import { KeyboardEventMap, MouseEventMap } from '@core/utils/types';
-import { EventHub } from '@graph/primitives/events/createEventHub';
+import { KeyboardEventMap } from '@core/utils/types';
+import {
+  EventHub,
+  ReadonlyEventHub,
+} from '@graph/primitives/events/createEventHub';
 
 import { CanvasEventMap, CanvasGraphMouseEvent } from './events.ts';
 
-export const emitMouseEvents: (
+/**
+ * republishes the surface's mouse events as canvas events, each one carrying
+ * the graph elements sitting under the point it happened at.
+ */
+export const emitMouseEvents = (
+  domEvents: ReadonlyEventHub<CanvasDOMEvents>,
   graphMouseEvent: (ev: MouseEvent) => CanvasGraphMouseEvent,
   emit: EventHub<CanvasEventMap>['emit'],
-) => Partial<MouseEventMap> = (graphMouseEvent, emit) => ({
-  click: (ev: MouseEvent) => {
-    emit('onClick', graphMouseEvent(ev));
-  },
-  mousemove: (ev: MouseEvent) => {
-    emit('onMouseMove', graphMouseEvent(ev));
-  },
-  mousedown: (ev: MouseEvent) => {
-    emit('onMouseDown', graphMouseEvent(ev));
-  },
-  mouseup: (ev: MouseEvent) => {
-    emit('onMouseUp', graphMouseEvent(ev));
-  },
-  dblclick: (ev: MouseEvent) => {
-    emit('onDblClick', graphMouseEvent(ev));
-  },
-  contextmenu: (ev: MouseEvent) => {
-    emit('onContextMenu', graphMouseEvent(ev));
-  },
-});
+) => {
+  domEvents.subscribe('onClick', (ev) => emit('onClick', graphMouseEvent(ev)));
+  domEvents.subscribe('onMouseMove', (ev) =>
+    emit('onMouseMove', graphMouseEvent(ev)),
+  );
+  domEvents.subscribe('onMouseDown', (ev) =>
+    emit('onMouseDown', graphMouseEvent(ev)),
+  );
+  domEvents.subscribe('onMouseUp', (ev) =>
+    emit('onMouseUp', graphMouseEvent(ev)),
+  );
+  domEvents.subscribe('onDblClick', (ev) =>
+    emit('onDblClick', graphMouseEvent(ev)),
+  );
+  domEvents.subscribe('onContextMenu', (ev) =>
+    emit('onContextMenu', graphMouseEvent(ev)),
+  );
+};
 
 /**
  * keyboard listeners live on document rather than the canvas element, so every

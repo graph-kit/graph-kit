@@ -2,8 +2,8 @@ import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasProps } from '@canvas/surface/types';
 import { createThemeController } from '@core/themes/index';
-import { getWorldCoordinates, getCtx } from '@core/utils/canvas/index';
-import { KeyboardEventEntries, MouseEventEntries } from '@core/utils/types';
+import { getCtx, getWorldCoordinates } from '@core/utils/canvas/index';
+import { KeyboardEventEntries } from '@core/utils/types';
 import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { CoreEdge } from '@graph/primitives/types';
 
@@ -125,21 +125,11 @@ export const canvas =
       };
     };
 
-    const mouseEvents = emitMouseEvents(graphMouseEvent, canvasEvents.emit);
+    emitMouseEvents(surface.domEvents, graphMouseEvent, canvasEvents.emit);
 
     const keyboardEvents = emitKeyboardEvents(canvasEvents.emit);
 
     surface.lifecycleEvents.subscribe('onMounted', () => {
-      if (!surface.canvas.value) {
-        throw new Error('Canvas element not found in DOM');
-      }
-
-      for (const [event, listeners] of Object.entries(
-        mouseEvents,
-      ) as MouseEventEntries) {
-        surface.canvas.value.addEventListener(event, listeners);
-      }
-
       for (const [event, listeners] of Object.entries(
         keyboardEvents,
       ) as KeyboardEventEntries) {
@@ -148,16 +138,6 @@ export const canvas =
     });
 
     surface.lifecycleEvents.subscribe('onBeforeUnmount', () => {
-      if (!surface.canvas.value) {
-        throw new Error('Canvas element not found in DOM');
-      }
-
-      for (const [event, listeners] of Object.entries(
-        mouseEvents,
-      ) as MouseEventEntries) {
-        surface.canvas.value.removeEventListener(event, listeners);
-      }
-
       for (const [event, listeners] of Object.entries(
         keyboardEvents,
       ) as KeyboardEventEntries) {

@@ -7,6 +7,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { type DrawPattern, useBackgroundPattern } from './backgroundPattern.ts';
 import { useCamera } from './camera/index.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
+import { useDOMEvents } from './domEvents.ts';
 import { createCanvasLifecycleEventRegistry } from './events.ts';
 import type { DrawContent, UseCanvas } from './types.ts';
 
@@ -99,9 +100,13 @@ export const useCanvas: UseCanvas = () => {
     ctx = getCtx(canvas);
   });
 
-  const { cleanup: cleanupCamera, ...camera } = useCamera(canvas);
-  const { worldCoordinates: cursorCoordinates, cleanup: cleanupCoords } =
-    useWorldCoordinates(canvas);
+  const { events: domEvents, cleanup: cleanupDOMEvents } = useDOMEvents(canvas);
+
+  const { cleanup: cleanupCamera, ...camera } = useCamera(canvas, domEvents);
+  const { worldCoordinates: cursorCoordinates } = useWorldCoordinates(
+    canvas,
+    domEvents,
+  );
 
   const pattern = useBackgroundPattern(camera.state, drawBackgroundPattern);
 
@@ -121,8 +126,8 @@ export const useCanvas: UseCanvas = () => {
     ref: {
       canvasRef: (ref) => (canvas.value = ref),
       cleanup: (ref) => {
-        cleanupCoords(ref);
-        cleanupCamera(ref);
+        cleanupCamera();
+        cleanupDOMEvents(ref);
         if (repaintFrame !== undefined) cancelAnimationFrame(repaintFrame);
         ctx = undefined;
       },
@@ -132,5 +137,6 @@ export const useCanvas: UseCanvas = () => {
       backgroundPattern: drawBackgroundPattern,
     },
     lifecycleEvents,
+    domEvents,
   };
 };

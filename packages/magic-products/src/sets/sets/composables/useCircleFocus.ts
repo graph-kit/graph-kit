@@ -1,7 +1,7 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
 import { CanvasProps } from '@canvas/surface/types';
 
-import { type Ref, computed, onBeforeUnmount, ref } from 'vue';
+import { type Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { isOnEdge } from '../other/circleUtils.ts';
 import type { Circle } from '../types/types.ts';
@@ -40,7 +40,9 @@ export const useCircleFocus = ({ circles, surface }: CircleFocusProps) => {
     setFocus(circle.label);
   };
 
-  document.addEventListener('mousedown', focusCircle);
+  onMounted(() => {
+    document.addEventListener('mousedown', focusCircle);
+  });
 
   onBeforeUnmount(() => {
     document.removeEventListener('mousedown', focusCircle);

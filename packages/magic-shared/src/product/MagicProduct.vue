@@ -46,5 +46,5 @@
     />
   </div>
 
-  <CanvasSurface v-bind="magic.canvas.surface.ref" />
+  <CanvasSurface v-bind="{ ...magic.canvas.surface.ref, $attrs }" />
 </template>

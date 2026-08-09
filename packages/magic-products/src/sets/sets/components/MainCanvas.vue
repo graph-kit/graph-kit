@@ -3,7 +3,7 @@
   import { useCanvas } from '@canvas/surface/index';
   import keys from 'ctrl-keys';
 
-  import { computed, onBeforeUnmount, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
   import { useAllSections } from '../composables/useAllSections.ts';
   import { useCanvasFocus } from '../composables/useCanvasFocus.ts';
@@ -157,7 +157,10 @@
     circles.value = circles.value.filter((c) => !isCircleFocused(c.label));
   };
 
-  document.addEventListener('keydown', ctrlKeysHandler.handle);
+  onMounted(() => {
+    document.addEventListener('keydown', ctrlKeysHandler.handle);
+  });
+
   onBeforeUnmount(() => {
     document.removeEventListener('keydown', ctrlKeysHandler.handle);
   });

@@ -1,23 +1,27 @@
 <script setup lang="ts">
+  import { nullThrows } from '@core/utils/assert';
+  import Button from '@magic/shared/Button';
   import katex from 'katex';
 
   import { onMounted, ref } from 'vue';
 
-  const btn = ref<HTMLButtonElement | null>(null);
+  const buttonTextContent = ref<HTMLSpanElement>();
 
   const props = defineProps<{
-    label: string;
+    latexString: string;
   }>();
 
   onMounted(() => {
-    if (!btn.value) return;
-
-    katex.render(props.label, btn.value, {
-      throwOnError: false,
-    });
+    katex.render(
+      props.latexString,
+      nullThrows(
+        buttonTextContent.value,
+        'button text content DOM element missing',
+      ),
+    );
   });
 </script>
 
 <template>
-  <button ref="btn"></button>
+  <Button><span ref="buttonTextContent"></span></Button>
 </template>

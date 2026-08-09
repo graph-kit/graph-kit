@@ -2,7 +2,6 @@ import { circle } from '@canvas/primitives/shapes/circle/index';
 
 import { Circle } from '../../types.ts';
 import { COLORS } from '../other/constants.ts';
-import { getHatchPattern } from './hatchPattern.ts';
 
 type DrawCircleBackgroundProps = {
   circle: Circle;
@@ -14,22 +13,11 @@ export const drawCircleBackground = (
   props: DrawCircleBackgroundProps,
 ) => {
   const { circle: c, highlightColors } = props;
-
-  if (!highlightColors || highlightColors.length === 1) {
-    circle({
-      ...c,
-      fillColor: highlightColors?.[0] ?? COLORS.BACKGROUND,
-    }).draw(ctx);
-    return;
-  }
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(c.at.x, c.at.y, c.radius, 0, 2 * Math.PI);
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = getHatchPattern(ctx, highlightColors);
-  ctx.fill();
-  ctx.restore();
+  if (highlightColors && highlightColors.length !== 1) return;
+  circle({
+    ...c,
+    fillColor: highlightColors?.[0] ?? COLORS.BACKGROUND,
+  }).draw(ctx);
 };
 
 type DrawCircleOutlineProps = {

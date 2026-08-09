@@ -1,4 +1,5 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
+import { FontWeight } from '@canvas/primitives/text/types';
 
 import { Circle } from '../../types.ts';
 import { COLORS } from '../other/constants.ts';
@@ -35,7 +36,7 @@ export const drawCircleOutline = (
   } = props.circle;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 6;
   ctx.strokeStyle = props.isFocused
     ? COLORS.CIRCLE_FOCUSED
     : COLORS.CIRCLE_OUTLINE;
@@ -55,10 +56,12 @@ export const drawCircleLabel = (
     at: { x, y },
     label,
   } = props.circle;
-  ctx.font = '15px Arial';
-  ctx.fillStyle = props.isFocused
-    ? COLORS.CIRCLE_FOCUSED
-    : COLORS.CIRCLE_OUTLINE;
+  const fontWeight: FontWeight = 'bold';
+  const fontSize = 24;
+  const fontFamily = 'Arial';
+  const color = COLORS.CIRCLE_OUTLINE;
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, x, y);

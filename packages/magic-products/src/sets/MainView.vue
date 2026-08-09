@@ -67,7 +67,6 @@
   });
 
   const overlaps = useOverlaps(circles);
-  const allSections = useAllSections(circles, overlaps);
 
   const highlightedCircles = computed(() => {
     const map = new Map<Circle['label'], string[]>();

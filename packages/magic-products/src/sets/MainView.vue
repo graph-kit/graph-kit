@@ -14,11 +14,12 @@
   import { useCanvasTheme } from './useCanvasTheme.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
-  const magic = useSetsProduct();
+  const {
+    magic,
+    setsProductState: { activeSubsets },
+  } = useSetsProduct();
 
   useCanvasTheme(magic);
-
-  const activeSubsets = ref<HighlightGroup[]>([]);
 
   const circleSectionsToHighlight = computed<HighlightGroup[]>(() => {
     return activeSubsets.value

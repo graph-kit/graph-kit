@@ -1,6 +1,7 @@
 import { type Ref, computed } from 'vue';
 
-import type { CircleLabel, HighlightGroup } from '../../types.ts';
+import type { HighlightGroup } from '../../types.ts';
+import { SetsProductState } from '../../useSetsProduct.ts';
 import { COLORS } from '../other/constants.ts';
 import { getDisambiguatedLatex, isAmbiguous } from '../other/disambiguate.ts';
 import { setParser } from '../other/expressionParser.ts';
@@ -15,7 +16,7 @@ export type ExpressionInput = {
 
 export const useExpressionAnalysis = (
   expressions: Ref<ExpressionInput[]>,
-  allSections: Ref<CircleLabel[][]>,
+  allSections: SetsProductState['allSections'],
 ) => {
   const definedSets = computed(() => [...new Set(allSections.value.flat())]);
 

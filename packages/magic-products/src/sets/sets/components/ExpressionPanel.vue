@@ -1,7 +1,10 @@
 <script setup lang="ts">
-  import { ref, toRef, watch } from 'vue';
+  import Button from '@magic/shared/Button';
+  import Well from '@magic/shared/Well';
 
-  import type { CircleLabel, HighlightGroup } from '../../types.ts';
+  import { ref } from 'vue';
+
+  import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { useExpressionAnalysis } from '../composables/useExpressionAnalysis.ts';
   import {
     ADDITIONAL_KEY_BINDINGS,
@@ -11,13 +14,7 @@
   import ExpressionRow from './ExpressionRow.vue';
   import LatexButtons from './LatexButtons.vue';
 
-  const props = defineProps<{
-    allSections: CircleLabel[][];
-  }>();
-
-  const emit = defineEmits<{
-    'update:activeSubsets': [subsets: HighlightGroup[]];
-  }>();
+  const { allSections, activeSubsets } = useProvidedSetsProductState();
 
   const rowRefs = ref<InstanceType<typeof ExpressionRow>[]>([]);
   const setRowRef = (el: unknown, index: number) => {
@@ -38,20 +35,13 @@
     focusedIndex.value = latexInputStrings.value.length - 1;
   };
 
-  const { inputErrors, simplifiedForms, disambiguatedForms, activeSubsets } =
-    useExpressionAnalysis(latexInputStrings, toRef(props, 'allSections'));
-
-  watch(activeSubsets, (val) => emit('update:activeSubsets', val), {
-    immediate: true,
-  });
+  const { inputErrors, simplifiedForms, disambiguatedForms } =
+    useExpressionAnalysis(latexInputStrings, allSections);
 </script>
 
 <template>
-  <div
-    style="position: absolute; bottom: 0; z-index: 2"
-    class="flex justify-center items-center w-screen"
-  >
-    <div class="bg-gray-600 p-5 w-125 rounded-t-lg">
+  <Well>
+    <div>
       <ExpressionRow
         v-for="(_, index) in latexInputStrings"
         :key="index"
@@ -66,18 +56,17 @@
         @focus="focusedIndex = index"
       />
 
-      <button
+      <Button
         @click="addInput"
         :disabled="latexInputStrings.length > 5"
-        class="text-white text-sm mb-2 opacity-60 hover:opacity-100"
       >
-        + add expression
-      </button>
+        + Add Expression
+      </Button>
 
       <LatexButtons
         :keys="KEY_TO_LATEX"
         @insert="insertLatexSymbol"
       />
     </div>
-  </div>
+  </Well>
 </template>

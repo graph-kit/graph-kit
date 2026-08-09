@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import katex from 'katex';
-import { ref, onMounted } from 'vue';
+  import katex from 'katex';
 
-const btn = ref<HTMLButtonElement | null>(null);
+  import { onMounted, ref } from 'vue';
 
-const props = defineProps<{
-  label: string;
-}>()
+  const btn = ref<HTMLButtonElement | null>(null);
 
-onMounted(() => {
-  if (!btn.value) return;
+  const props = defineProps<{
+    label: string;
+  }>();
 
-  katex.render(props.label, btn.value, {
-    throwOnError: false,
+  onMounted(() => {
+    if (!btn.value) return;
+
+    katex.render(props.label, btn.value, {
+      throwOnError: false,
+    });
   });
-});
 </script>
 
 <template>

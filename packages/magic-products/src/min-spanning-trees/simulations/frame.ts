@@ -38,6 +38,16 @@ type SelectEdgeFrame = {
   tiedEdges?: readonly GEdge['id'][];
 };
 
+/**
+ * candidates just ruled out because the node that grew the tree this round
+ * closed the loop on them - both ends are now inside the tree without this
+ * edge being the one that connected them
+ */
+type ExcludeEdgesFrame = {
+  type: 'exclude-edges';
+  edges: readonly GEdge['id'][];
+};
+
 type UnreachableFrame = {
   type: 'unreachable';
   nodes: readonly GNode['id'][];
@@ -49,6 +59,7 @@ export type PrimsStep =
   | ConsiderEdgesFrame
   | CompareEdgesFrame
   | SelectEdgeFrame
+  | ExcludeEdgesFrame
   | UnreachableFrame;
 
 /**

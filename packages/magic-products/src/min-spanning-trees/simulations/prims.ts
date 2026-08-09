@@ -51,6 +51,9 @@ export const prims: PrimsFunction = (graph, startNodeId) => (frameCollector) => 
   const growTree = (node: GNode['id']) => {
     inTree.add(node);
 
+    /** candidates this call rules out, so the caller can announce why */
+    const newlyExcluded: GEdge['id'][] = [];
+
     const stillCandidates: typeof candidateEdges = [];
     for (const edge of candidateEdges) {
       if (inTree.has(edge.source) !== inTree.has(edge.target)) {
@@ -60,7 +63,10 @@ export const prims: PrimsFunction = (graph, startNodeId) => (frameCollector) => 
       // both ends are inside the tree now. the one that just connected them
       // became a tree edge already, so anything else in this state would
       // only close a cycle - it can never be picked from here on
-      if (edge.id !== treeEdges.at(-1)) excludedEdges.push(edge.id);
+      if (edge.id !== treeEdges.at(-1)) {
+        excludedEdges.push(edge.id);
+        newlyExcluded.push(edge.id);
+      }
     }
     candidateEdges = stillCandidates;
 
@@ -72,6 +78,8 @@ export const prims: PrimsFunction = (graph, startNodeId) => (frameCollector) => 
       if (inTree.has(other)) continue;
       candidateEdges.push(edge);
     }
+
+    return newlyExcluded;
   };
 
   const frame = <T extends PrimsStep>(
@@ -164,7 +172,13 @@ export const prims: PrimsFunction = (graph, startNodeId) => (frameCollector) => 
     );
 
     treeEdges.push(winner.id);
-    growTree(winnerNode);
+    const newlyExcluded = growTree(winnerNode);
+
+    if (newlyExcluded.length > 0) {
+      frameCollector.add(
+        frame({ type: 'exclude-edges', edges: newlyExcluded }),
+      );
+    }
   }
 
   const unreachable = nodeIds.filter((id) => !inTree.has(id));

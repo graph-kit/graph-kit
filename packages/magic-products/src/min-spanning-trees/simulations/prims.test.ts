@@ -194,6 +194,27 @@ describe('prims', () => {
     expect(last(frames).treeEdgeIds).toEqual(['e0', 'e1']);
   });
 
+  it('announces an exclude-edges frame the moment an edge is ruled out, naming just that edge', () => {
+    // same shape as the test above: a-c (e2) is the one that gets ruled out
+    // once b-c closes the triangle. the announcement should fire right then,
+    // not just show up passively in excludedEdgeIds later
+    const graph = makeGraph(
+      ['a', 'b', 'c'],
+      [
+        ['a', 'b', 1],
+        ['b', 'c', 1],
+        ['a', 'c', 100],
+      ],
+    );
+    const frames = collect(prims(graph, 'a'));
+
+    const excludeFrames = frames.filter(
+      (f): f is typeof f & { edges: string[] } => f.type === 'exclude-edges',
+    );
+    expect(excludeFrames).toHaveLength(1);
+    expect(excludeFrames[0].edges).toEqual(['e2']);
+  });
+
   it('never marks an edge excluded if the tree has not reached either of its ends', () => {
     // c-d never becomes a candidate at all, since neither c nor d is ever in
     // the tree - it should read as untouched, not as ruled out

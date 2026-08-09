@@ -21,12 +21,12 @@ export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
  * halves of one here: what a query calls it, and what stands in for its id in a Section
  */
 export const OUTSIDE_ALL_SETS = {
-  display: 'S',
+  label: 'S',
   identity: 'outside-all-sets',
 } as const;
 
 // labels reserved for structural use, so they cannot name a set
-export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.display] as const;
+export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.label] as const;
 
 export const DEFAULT_CIRCLE_RADIUS = 70;
 
@@ -35,7 +35,7 @@ export const KEYBOARD_KEY_TO_LATEX = {
   U: '\\cup',
   D: '\\triangle',
   O: '\\Omega',
-  S: OUTSIDE_ALL_SETS.display,
+  S: OUTSIDE_ALL_SETS.label,
   C: '^\\complement',
   '\\': '\\setminus',
 } as const;

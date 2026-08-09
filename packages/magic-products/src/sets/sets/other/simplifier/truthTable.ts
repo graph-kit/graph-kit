@@ -21,7 +21,7 @@ export const extractVariables = (node: MathJsonExpression): string[] => {
 const buildPartition = (variables: string[]): string[][] =>
   Array.from({ length: 2 ** variables.length }, (_, i) => {
     const atom = variables.filter((_, j) => (i >> j) & 1);
-    return atom.length === 0 ? [OUTSIDE_ALL_SETS.display] : atom;
+    return atom.length === 0 ? [OUTSIDE_ALL_SETS.label] : atom;
   });
 
 export const getTruthTable = (

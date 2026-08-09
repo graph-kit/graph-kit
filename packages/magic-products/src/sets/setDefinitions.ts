@@ -41,7 +41,7 @@ export const createSetDefinitions = (): SetDefinitions => {
     const ids: Record<SetLabel, SetDefinitionId> = {};
 
     for (const { label, id } of definitions.value) ids[label] = id;
-    ids[OUTSIDE_ALL_SETS.display] = OUTSIDE_ALL_SETS.identity;
+    ids[OUTSIDE_ALL_SETS.label] = OUTSIDE_ALL_SETS.identity;
 
     return ids;
   });

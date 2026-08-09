@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import Button from '@magic/shared/Button';
   import HStack from '@magic/shared/HStack';
+  import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
 
   import { ref } from 'vue';
@@ -10,7 +11,7 @@
   import {
     ADDITIONAL_KEY_BINDINGS,
     COLORS,
-    KEY_TO_LATEX,
+    KEYBOARD_KEY_TO_LATEX,
   } from '../other/constants.ts';
   import ExpressionRow from './ExpressionRow.vue';
   import LatexButton from './LatexButton.vue';
@@ -27,7 +28,7 @@
   ]);
   const focusedIndex = ref(0);
 
-  const insertLatexSymbol = (symbol: string) => {
+  const insertLatexString = (symbol: string) => {
     rowRefs.value[focusedIndex.value]?.insertIntoLatexString(symbol);
   };
 
@@ -42,7 +43,7 @@
 
 <template>
   <Well>
-    <div>
+    <VStack>
       <ExpressionRow
         v-for="(_, index) in latexInputStrings"
         :key="index"
@@ -53,25 +54,27 @@
         :simplified="simplifiedForms[index]"
         :disambiguated="disambiguatedForms[index]"
         :color="COLORS.HIGHLIGHT[index % COLORS.HIGHLIGHT.length]"
-        :hotkeys="{ ...KEY_TO_LATEX, ...ADDITIONAL_KEY_BINDINGS }"
+        :hotkeys="{ ...KEYBOARD_KEY_TO_LATEX, ...ADDITIONAL_KEY_BINDINGS }"
         @focus="focusedIndex = index"
       />
 
-      <Button
-        @click="addInput"
-        :disabled="latexInputStrings.length > 5"
-      >
-        + Add Expression
-      </Button>
+      <div>
+        <Button
+          @click="addInput"
+          :disabled="latexInputStrings.length > 5"
+        >
+          + Add Expression
+        </Button>
+      </div>
 
       <HStack>
         <LatexButton
-          v-for="latexString in KEY_TO_LATEX"
-          @click="insertLatexSymbol(latexString)"
+          v-for="latexString in KEYBOARD_KEY_TO_LATEX"
+          @click="insertLatexString(latexString)"
         >
           {{ latexString }}
         </LatexButton>
       </HStack>
-    </div>
+    </VStack>
   </Well>
 </template>

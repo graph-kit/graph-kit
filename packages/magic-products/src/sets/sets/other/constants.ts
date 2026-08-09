@@ -20,7 +20,7 @@ export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 // S is the complement region (everything outside all defined circles).
 export const RESERVED_LABELS = ['S'] as const;
 
-export const KEY_TO_LATEX = {
+export const KEYBOARD_KEY_TO_LATEX = {
   I: '\\cap',
   U: '\\cup',
   D: '\\triangle',

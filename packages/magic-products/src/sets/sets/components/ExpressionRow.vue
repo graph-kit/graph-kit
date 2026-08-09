@@ -51,7 +51,7 @@ const applyDisambiguation = () => {
       ref="latexInputRef"
       v-model="localValue"
       :hotkeys="hotkeys"
-      :class="['flex-1 rounded-md min-w-0', error ? 'bg-red-50 ring-2 ring-red-400' : 'bg-white']"
+      :class="['rounded-md', error ? 'bg-red-50 ring-2 ring-red-400' : 'bg-white']"
       @focus="emit('focus')"
     />
     <button

@@ -17,6 +17,15 @@ export type HighlightQueries = {
     latexQueryString: HighlightQuery,
   ) => void;
   setHidden: (queryId: HighlightQueryId, isHidden: boolean) => void;
+  // only the rendered mathfield knows where its caret is, so it registers how to insert
+  registerInsertHandler: (
+    queryId: HighlightQueryId,
+    insert: (latexString: HighlightQuery) => void,
+  ) => () => void;
+  insertIntoQuery: (
+    queryId: HighlightQueryId,
+    latexString: HighlightQuery,
+  ) => void;
 };
 
 export const createHighlightQueries = (): HighlightQueries => {
@@ -25,6 +34,12 @@ export const createHighlightQueries = (): HighlightQueries => {
   // kept beside the ids rather than in them so a query is nothing but its latex string
   const latexQueryStrings = ref<Record<HighlightQueryId, HighlightQuery>>({});
   const hiddenQueryIds = ref(new Set<HighlightQueryId>());
+
+  // a plain map because handlers are imperative, not something a render depends on
+  const insertHandlers = new Map<
+    HighlightQueryId,
+    (latexString: HighlightQuery) => void
+  >();
 
   return {
     queryIds,
@@ -47,6 +62,15 @@ export const createHighlightQueries = (): HighlightQueries => {
     setHidden: (queryId, isHidden) => {
       if (isHidden) hiddenQueryIds.value.add(queryId);
       else hiddenQueryIds.value.delete(queryId);
+    },
+
+    registerInsertHandler: (queryId, insert) => {
+      insertHandlers.set(queryId, insert);
+      return () => insertHandlers.delete(queryId);
+    },
+
+    insertIntoQuery: (queryId, latexString) => {
+      insertHandlers.get(queryId)?.(latexString);
     },
   };
 };

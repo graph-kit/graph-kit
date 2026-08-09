@@ -18,21 +18,19 @@
   import LatexButton from './latex-button/LatexButton.vue';
 
   const { allSections, highlights } = useProvidedSetsProductState();
-  // destructured so the template gets an unwrapped queryIds rather than highlights.queryIds.value
-  const { queryIds, getQuery, addQuery, setLatexQueryString, setHidden } =
-    highlights;
-
-  const rowRefs = ref<
-    Record<HighlightQueryId, InstanceType<typeof HighlightRow>>
-  >({});
-  const setRowRef = (queryId: HighlightQueryId, el: unknown) => {
-    if (el) rowRefs.value[queryId] = el as InstanceType<typeof HighlightRow>;
-  };
+  const {
+    queryIds,
+    getQuery,
+    addQuery,
+    setLatexQueryString,
+    setHidden,
+    insertIntoQuery,
+  } = highlights;
 
   const focusedQueryId = ref<HighlightQueryId>(queryIds.value[0]);
 
-  const insertLatexString = (symbol: string) => {
-    rowRefs.value[focusedQueryId.value]?.insertIntoLatexString(symbol);
+  const insertLatexString = (latexString: string) => {
+    insertIntoQuery(focusedQueryId.value, latexString);
   };
 
   const addHighlight = () => {
@@ -51,7 +49,7 @@
       <HighlightRow
         v-for="(queryId, index) in queryIds"
         :key="queryId"
-        :ref="(el) => setRowRef(queryId, el)"
+        :queryId="queryId"
         :modelValue="getQuery(queryId).latexQueryString"
         :hidden="getQuery(queryId).isHidden"
         :error="inputErrors[queryId]"

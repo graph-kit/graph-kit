@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import LatexInput from "./latex-input/LatexInput.vue";
 import type { LatexInputInstance } from "./latex-input/types.ts";
-import { ref, computed } from "vue";
+import { ref, computed, onUnmounted } from "vue";
+import type { HighlightQueryId } from "../../types.ts";
+import { useProvidedSetsProductState } from "../../useSetsProduct.ts";
 
 const props = defineProps<{
+  queryId: HighlightQueryId;
   modelValue: string;
   hidden: boolean;
   error: boolean;
@@ -26,11 +29,13 @@ const localValue = computed({
 
 const latexInputRef = ref<LatexInputInstance | null>(null);
 
-const insertIntoLatexString = (symbol: string) => {
-  latexInputRef.value?.insertIntoLatexString(symbol);
-};
+const { highlights } = useProvidedSetsProductState();
 
-defineExpose({ insertIntoLatexString });
+onUnmounted(
+  highlights.registerInsertHandler(props.queryId, (latexString) => {
+    latexInputRef.value?.insertIntoLatexString(latexString);
+  }),
+);
 
 const applySimplification = () => {
   if (!props.simplified) return;

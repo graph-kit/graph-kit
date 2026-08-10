@@ -11,7 +11,6 @@
   import { LATEX_HOTKEYS } from '../other/constants.ts';
   import LatexInput from './latex-input/LatexInput.vue';
   import type { LatexInputInstance } from './latex-input/types.ts';
-  import LatexText from './LatexText.vue';
 
   const props = defineProps<{
     queryId: HighlightQueryId;
@@ -94,8 +93,6 @@
         <!-- TODO replace with a proper icon button -->
         <Button @click="applyDisambiguation">&#9432;</Button>
       </template>
-      Ambiguous order of operations. Parsed as:
-      <LatexText>{{ disambiguated }}</LatexText>
     </Tooltip>
 
     <Tooltip

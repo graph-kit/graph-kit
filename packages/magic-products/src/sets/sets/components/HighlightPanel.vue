@@ -10,7 +10,7 @@
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
   import Query from './Query.vue';
-  import LatexButton from './latex-button/LatexButton.vue';
+  import LatexButton from './latex/LatexButton.vue';
 
   const { highlights } = useProvidedSetsProductState();
   const { queryIds, addQuery, insertIntoQuery } = highlights;

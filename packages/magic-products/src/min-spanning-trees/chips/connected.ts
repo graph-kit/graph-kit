@@ -33,7 +33,7 @@ export const connectedChip = (graph: Graph): LensChipDefinition => {
   const componentCount = computed(() => components.value.value.length);
 
   return {
-    title: () => `Is Connected: ${mstConnected.value ? 'Yes' : 'No'}`,
+    title: () => `Connected: ${mstConnected.value ? 'Yes' : 'No'}`,
     tooltipLabel: () =>
       mstConnected.value
         ? 'Every node can be reached from every other, so a single tree of edges spans the whole graph.'

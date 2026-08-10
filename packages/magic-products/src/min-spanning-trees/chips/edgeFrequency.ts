@@ -52,7 +52,8 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
 
   const hoverLabel = (edge: CoreEdge) => {
     const frequency = frequencyOf(edge.id);
-    return `In ${frequency}/${totalMsts.value} MST${totalMsts.value === 1 ? '' : 's'}`;
+    const inAllMsts = frequency === totalMsts.value;
+    return inAllMsts ? `In all ${totalMsts.value} MSTs` : `In ${frequency}/${totalMsts.value} MSTs`;
   };
 
   const themer = graph.theme.createThemer({

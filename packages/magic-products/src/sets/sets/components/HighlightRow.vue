@@ -1,4 +1,8 @@
 <script setup lang="ts">
+  import Button from '@magic/shared/Button';
+  import HStack from '@magic/shared/HStack';
+  import Tooltip from '@magic/shared/Tooltip';
+
   import { computed, onUnmounted, ref } from 'vue';
 
   import type { HighlightQueryId } from '../../types.ts';
@@ -64,7 +68,7 @@
 </script>
 
 <template>
-  <div class="flex items-center gap-2 mb-2">
+  <HStack>
     <LatexInput
       ref="latexInputRef"
       v-model="latexQueryString"
@@ -75,27 +79,31 @@
       ]"
       @focus="emit('focus')"
     />
-    <button
+    <Tooltip
       v-if="disambiguated && !hasError"
-      :title="`Ambiguous order of operations. Parsed as: ${disambiguated}`"
-      class="flex-none w-8 h-8 rounded-md bg-gray-500 text-white flex items-center justify-center select-none"
-      @click="applyDisambiguation"
+      :label="`Ambiguous order of operations. Parsed as: ${disambiguated}`"
     >
-      &#9432;
-    </button>
+      <template #trigger>
+        <Button @click="applyDisambiguation">&#9432;</Button>
+      </template>
+    </Tooltip>
 
-    <button
+    <Tooltip
       v-if="simplified && !hasError"
-      @click="applySimplification"
-      title="Simplify expression"
-      class="text-white text-xs px-2 h-8 rounded-md flex-none bg-gray-500 hover:bg-gray-400 whitespace-nowrap"
+      label="Simplify expression"
     >
-      simplify
-    </button>
-    <button
-      @click="toggleHidden"
-      :style="{ backgroundColor: isHidden ? 'gray' : color }"
-      class="w-2 h-8 rounded-full flex-none"
-    ></button>
-  </div>
+      <template #trigger>
+        <Button @click="applySimplification">simplify</Button>
+      </template>
+    </Tooltip>
+
+    <Tooltip :label="isHidden ? 'Show highlight' : 'Hide highlight'">
+      <template #trigger>
+        <Button
+          :style="{ backgroundColor: isHidden ? 'gray' : color }"
+          @click="toggleHidden"
+        />
+      </template>
+    </Tooltip>
+  </HStack>
 </template>

@@ -26,8 +26,8 @@ export type QueryAnalysis = {
   queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
   simplifiedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
   disambiguatedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
-  // the sections every visible query resolves to, each with the color to paint them
-  activeSubsets: ComputedRef<HighlightGroup[]>;
+  // the sections each query resolves to paired with its color, skipping hidden and erroring queries
+  activeHighlights: ComputedRef<HighlightGroup[]>;
 };
 
 export const createQueryAnalysis = (
@@ -106,7 +106,7 @@ export const createQueryAnalysis = (
     return queries;
   });
 
-  const activeSubsets = computed(() => {
+  const activeHighlights = computed(() => {
     const parse = parseAgainstSetSpace();
     const labels = definedSetLabels.value;
     const results: HighlightGroup[] = [];
@@ -136,6 +136,6 @@ export const createQueryAnalysis = (
     queryErrors,
     simplifiedQueries,
     disambiguatedQueries,
-    activeSubsets,
+    activeHighlights,
   };
 };

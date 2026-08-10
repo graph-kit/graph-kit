@@ -74,10 +74,12 @@ export const createSetExpressionParser = <SetIdentity>(
     const [head, ...args] = node as [string, ...MathJsonExpression[]];
 
     switch (head) {
+      // the compute engine flattens union/intersection of 3+ sets into one n-ary node,
+      // so every arg must fold in, not just the first two
       case LATEX_SET_SYMBOLS.UNION:
-        return union(parseHelper(args[0]), parseHelper(args[1]));
+        return args.map(parseHelper).reduce(union);
       case LATEX_SET_SYMBOLS.INTERSECTION:
-        return intersection(parseHelper(args[0]), parseHelper(args[1]));
+        return args.map(parseHelper).reduce(intersection);
       case LATEX_SET_SYMBOLS.SYMMETRIC_DIFFERENCE:
         return difference(parseHelper(args[0]), parseHelper(args[1]));
       case LATEX_SET_SYMBOLS.COMPLEMENT:

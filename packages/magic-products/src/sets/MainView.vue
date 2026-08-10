@@ -20,7 +20,7 @@
     setsProductState: { sets, queryAnalysis },
   } = useSetsProduct();
 
-  const { activeSubsets } = queryAnalysis;
+  const { activeHighlights } = queryAnalysis;
 
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 
@@ -30,7 +30,7 @@
     section.length === 1 && section[0] === OUTSIDE_ALL_SETS.identity;
 
   const setSectionsToHighlight = computed<HighlightGroup[]>(() => {
-    return activeSubsets.value
+    return activeHighlights.value
       .map((group) => ({
         ...group,
         sections: group.sections.filter(
@@ -57,7 +57,7 @@
   });
 
   const highlightedOutside = computed(() => {
-    return activeSubsets.value
+    return activeHighlights.value
       .filter((group) => group.sections.some(isOutsideAllSets))
       .map((group) => group.color);
   });

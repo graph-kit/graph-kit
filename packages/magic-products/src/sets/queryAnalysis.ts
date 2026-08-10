@@ -1,5 +1,3 @@
-import { Magic, useProvidedMagic } from '@magic/shared/product';
-
 import { type ComputedRef, computed } from 'vue';
 
 import type { HighlightQueries } from './highlightQueries.ts';
@@ -22,7 +20,8 @@ import type {
   SetDefinitionId,
   SetLabel,
 } from './types.ts';
-import { SetColors } from './useSetsTheme.ts';
+import { SetsProductState } from './useSetsProduct.ts';
+import { SetColors, SetsTheme } from './useSetsTheme.ts';
 
 export type QueryAnalysis = {
   queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
@@ -35,7 +34,7 @@ export type QueryAnalysis = {
 export const useQueryAnalysis = (
   highlights: HighlightQueries,
   sets: SetDefinitions,
-  colors: SetColors,
+  theme: SetsProductState['theme'],
 ): QueryAnalysis => {
   const definedSetLabels = computed(() =>
     sets.definitions.value.map(({ label }) => label),
@@ -126,9 +125,11 @@ export const useQueryAnalysis = (
       const sections = parse(mathJSON.json);
       if (!sections) continue;
 
+      const colors = theme.value.set.highlighted;
+
       results.push({
         sections,
-        color: colors.highlighted[index % colors.highlighted.length],
+        color: colors[index % colors.length],
       });
     }
 

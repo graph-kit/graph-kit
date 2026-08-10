@@ -20,7 +20,7 @@ export const useCanvasTheme = (
 
   onMounted(setCanvasColor);
 
-  magic.surface.draw.backgroundPattern.value = crossPattern(
-    theme.value.canvas.patternColor,
+  magic.surface.draw.backgroundPattern.value = crossPattern((alpha) =>
+    theme.value.canvas.patternColor(alpha),
   );
 };

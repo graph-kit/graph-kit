@@ -34,7 +34,7 @@ const useSetsProductState = (magic: Magic): SetsProductState => {
   return {
     highlights,
     sets,
-    queryAnalysis: useQueryAnalysis(highlights, sets, theme.value.set),
+    queryAnalysis: useQueryAnalysis(highlights, sets, theme),
     theme,
   };
 };

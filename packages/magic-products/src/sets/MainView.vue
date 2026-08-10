@@ -51,12 +51,12 @@
     isResizing,
   });
 
-  const { focusedSetIds, isSetFocused, setFocus } = useCircleFocus({
+  const { focusedSetIds, isFocused, setFocus } = useCircleFocus({
     surface: magic.surface,
     definitions,
   });
 
-  const backgroundColors = computed(() => {
+  const highlightedOutside = computed(() => {
     return activeSubsets.value
       .filter((group) => group.sections.some(isOutsideAllSets))
       .map((group) => group.color);
@@ -112,9 +112,8 @@
       overlaps: sharedSections.value,
       highlightedSets: highlightedSets.value,
       highlightedOverlaps: highlightedOverlaps.value,
-      isSetFocused,
-      backgroundColors:
-        backgroundColors.value.length > 1 ? backgroundColors.value : null,
+      isSetFocused: isFocused,
+      highlightedOutside: highlightedOutside.value,
     });
   };
 

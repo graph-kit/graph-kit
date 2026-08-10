@@ -12,18 +12,24 @@ import { hatchPattern } from './hatchPattern.ts';
 import { colorOverlappingAreas } from './overlaps.ts';
 
 type DrawProps = {
+  /** every set to draw, as a circle with its label */
   definitions: SetDefinition[];
+  /** every section two or more circles share, back to front so nested ones paint on top */
   overlaps: Section[];
+  /** colors painted over a whole set, keyed by the set they cover */
   highlightedSets: Map<SetDefinitionId, string[]>;
+  /** colors painted over one shared section, keyed by the sets forming it */
   highlightedOverlaps: Map<SectionKey, string[]>;
-  isSetFocused: CircleFocusControls['isSetFocused'];
-  backgroundColors: string[] | null;
+  /** whether a set carries the focus outline, see {@link CircleFocusControls} */
+  isSetFocused: CircleFocusControls['isFocused'];
+  /** colors painted over the region no set covers, drawn behind every circle */
+  highlightedOutside: string[];
 };
 
 export const draw = (ctx: CanvasRenderingContext2D, props: DrawProps) => {
   const { highlightedSets, highlightedOverlaps } = props;
 
-  if (props.backgroundColors && props.backgroundColors.length > 1) {
+  if (props.highlightedOutside.length > 1) {
     const start = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
     const end = getWorldCoordinates(
       { clientX: window.innerWidth, clientY: window.innerHeight },
@@ -31,7 +37,7 @@ export const draw = (ctx: CanvasRenderingContext2D, props: DrawProps) => {
     );
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = hatchPattern(ctx, props.backgroundColors);
+    ctx.fillStyle = hatchPattern(ctx, props.highlightedOutside);
     ctx.fillRect(start.x, start.y, end.x - start.x, end.y - start.y);
     ctx.restore();
   }

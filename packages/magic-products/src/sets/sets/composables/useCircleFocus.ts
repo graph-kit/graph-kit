@@ -1,7 +1,7 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
 import { CanvasProps } from '@canvas/surface/types';
 
-import { type Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { type Ref, computed, ref } from 'vue';
 
 import type { SetDefinition, SetDefinitionId } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
@@ -42,17 +42,11 @@ export const useCircleFocus = ({ definitions, surface }: CircleFocusProps) => {
     setFocus(definition.id);
   };
 
-  onMounted(() => {
-    document.addEventListener('mousedown', focusCircle);
-  });
-
-  onBeforeUnmount(() => {
-    document.removeEventListener('mousedown', focusCircle);
-  });
+  surface.domEvents.subscribe('onMouseDown', focusCircle);
 
   return {
     focusedSetIds,
-    isSetFocused: (id: SetDefinitionId) => focusedSetIds.value.has(id),
+    isFocused: (id: SetDefinitionId) => focusedSetIds.value.has(id),
     setFocus,
   };
 };

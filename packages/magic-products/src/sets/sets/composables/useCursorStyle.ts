@@ -1,4 +1,5 @@
 import { CanvasProps } from '@canvas/surface/types';
+import { nullThrows } from '@core/utils/assert';
 import { CURSOR } from '@core/utils/cursor';
 
 import { Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
@@ -34,12 +35,17 @@ const useMouseDown = (surface: CanvasProps) => {
   return isMouseDown;
 };
 
+/**
+ * shapes the canvas cursor to whatever circle sits under it: a resize arrow on an
+ * edge, grab inside, default everywhere else. writes to the canvas after each
+ * repaint rather than handing back a value to apply.
+ */
 export const useCursorStyle = (
   definitions: Ref<SetDefinition[]>,
   surface: CanvasProps,
 ) => {
   const iseMouseDown = useMouseDown(surface);
-  return computed(() => {
+  const cursor = computed(() => {
     const { x, y } = surface.cursorCoordinates.value;
 
     for (const setDefinition of definitions.value) {
@@ -56,5 +62,11 @@ export const useCursorStyle = (
       }
     }
     return CURSOR.AUTO;
+  });
+
+  surface.lifecycleEvents.subscribe('onAfterRepaint', () => {
+    const canvas = nullThrows(surface.canvas.value, 'canvas not defined');
+    if (canvas.style.cursor === cursor.value) return;
+    canvas.style.cursor = cursor.value;
   });
 };

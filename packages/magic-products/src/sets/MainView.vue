@@ -100,13 +100,7 @@
     key: 'backspace',
   });
 
-  const cursor = useCursorStyle(sets.definitions, magic.surface);
-
-  magic.surface.lifecycleEvents.subscribe('onAfterRepaint', () => {
-    const canvas = nullThrows(magic.surface.canvas.value, 'canvas not defined');
-    if (canvas.style.cursor === cursor.value) return;
-    canvas.style.cursor = cursor.value;
-  });
+  useCursorStyle(sets.definitions, magic.surface);
 </script>
 
 <template>

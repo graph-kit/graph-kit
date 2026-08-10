@@ -1,23 +1,19 @@
 <script setup lang="ts">
-  import { GraphProduct, useGraphProduct } from '@magic/shared/product';
+  import { MagicProduct, useMagicProduct } from '@magic/shared/product';
   
 
   import { lensChips } from './lensChips.ts';
-  import { manifest } from './manifest.ts';
-
   import ActionBar from './ActionBar.vue';
 
-  const graph = useGraphProduct({
-    manifest,
+  const graph = useMagicProduct({
+    productId: 'min-spanning-trees',
     core: {
       directed: false,
     },
     interactive: {
       allowSelfLoops: false,
     },
-    ui: {
-      lensChips,
-    },
+    lensChips,
   });
 
   graph.magic.componentSlots.add({
@@ -25,14 +21,8 @@
     component: ActionBar,
     position: 'bottom-middle',
   });
-
-  // graph.magic.componentSlots.add({
-  //   component: ActiveMST,
-  //   id: 'mst-viewer',
-  //   position: 'bottom-middle',
-  // });
 </script>
 
 <template>
-  <GraphProduct />
+  <MagicProduct />
 </template>

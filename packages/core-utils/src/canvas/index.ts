@@ -18,6 +18,17 @@ export type ClientCoords = Pick<MouseEvent, 'clientX' | 'clientY'>;
  */
 export type Coords = Coordinate;
 
+/**
+ * a rectangle in the canvas world, most often the slice of it the canvas
+ * currently shows. see `visibleWorldRect` on the canvas surface
+ */
+export type WorldRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export type WithZoom<T> = T & {
   /**
    * the scale factor of the canvas
@@ -67,13 +78,9 @@ export const getCanvasTransform = (ctx: CanvasRenderingContext2D) => {
 export const getWorldCoordinates = (
   clientCoords: ClientCoords,
   ctx: CanvasRenderingContext2D,
-  /**
-   * the canvas's position on screen. measuring it forces layout, so callers on
-   * the draw path should pass one they already hold and leave the default to
-   * one off callers like event handlers
-   */
-  rect: Pick<DOMRect, 'left' | 'top'> = ctx.canvas.getBoundingClientRect(),
 ): WithZoom<Coords> => {
+  // measuring forces layout, so this is for one off callers like event handlers
+  const rect = ctx.canvas.getBoundingClientRect();
   const localX = clientCoords.clientX - rect.left;
   const localY = clientCoords.clientY - rect.top;
 

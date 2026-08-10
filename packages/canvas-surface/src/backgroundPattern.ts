@@ -1,4 +1,6 @@
-import { getWorldCoordinates } from '@core/utils/canvas/index';
+import type { WorldRect } from '@core/utils/canvas/index';
+
+import type { ComputedRef } from 'vue';
 
 import type { Camera } from './camera/index.ts';
 import type { Coordinate, DrawFns } from './types.ts';
@@ -37,34 +39,16 @@ export type DrawPattern = (
 export const useBackgroundPattern = (
   { panX, panY, zoom }: Camera['state'],
   drawPattern: DrawFns['backgroundPattern'],
+  visibleWorldRect: ComputedRef<WorldRect>,
 ) => {
-  /**
-   * @param canvasRect the canvas's on screen position, passed in rather than
-   * measured here: both corners below need it, and reading it forces layout
-   */
-  const draw = (
-    ctx: CanvasRenderingContext2D,
-    canvasRect: Pick<DOMRect, 'left' | 'top'>,
-  ) => {
+  const draw = (ctx: CanvasRenderingContext2D) => {
     if (zoom.value <= PATTERN_FULLY_FADED_OUT) return;
 
-    const startingCoords = getWorldCoordinates(
-      {
-        clientX: 0,
-        clientY: 0,
-      },
-      ctx,
-      canvasRect,
-    );
+    const { x, y, width, height } = visibleWorldRect.value;
 
-    const endingCoords = getWorldCoordinates(
-      {
-        clientX: window.innerWidth + STAGGER,
-        clientY: window.innerHeight + STAGGER,
-      },
-      ctx,
-      canvasRect,
-    );
+    // one cell of overscan keeps the partly visible row and column at the far edge drawn
+    const endX = x + width + STAGGER;
+    const endY = y + height + STAGGER;
 
     const offsetX = (panX.value / zoom.value) % STAGGER;
     const offsetY = (panY.value / zoom.value) % STAGGER;
@@ -72,13 +56,9 @@ export const useBackgroundPattern = (
     // the alpha follows zoom alone, so it is the same string for every cell
     const drawCell = drawPattern.value(ctx, computeAlpha(zoom.value));
 
-    for (let x = startingCoords.x + offsetX; x < endingCoords.x; x += STAGGER) {
-      for (
-        let y = startingCoords.y + offsetY;
-        y < endingCoords.y;
-        y += STAGGER
-      ) {
-        drawCell({ x, y });
+    for (let cellX = x + offsetX; cellX < endX; cellX += STAGGER) {
+      for (let cellY = y + offsetY; cellY < endY; cellY += STAGGER) {
+        drawCell({ x: cellX, y: cellY });
       }
     }
   };

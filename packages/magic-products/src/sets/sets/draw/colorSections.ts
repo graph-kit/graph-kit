@@ -1,4 +1,4 @@
-import { getWorldCoordinates } from '@core/utils/canvas/index';
+import type { WorldRect } from '@core/utils/canvas/index';
 
 import type { Section, SetDefinition } from '../../types.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
@@ -9,29 +9,8 @@ type ColorSectionsProps = {
   sections: Section[];
   /** colors painted over a section, keyed by the sets forming it */
   sectionKeyToColors: Map<SectionKey, string[]>;
-};
-
-type WorldRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-/** the slice of the world the canvas currently shows, to fill over and clip against */
-const getVisibleWorldRect = (ctx: CanvasRenderingContext2D): WorldRect => {
-  const start = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
-  const end = getWorldCoordinates(
-    { clientX: window.innerWidth, clientY: window.innerHeight },
-    ctx,
-  );
-
-  return {
-    x: start.x,
-    y: start.y,
-    width: end.x - start.x,
-    height: end.y - start.y,
-  };
+  /** the area to paint within, which every clip is taken against */
+  bounds: WorldRect;
 };
 
 const clipInsideCircle = (
@@ -97,10 +76,7 @@ export const colorSections = (
   ctx: CanvasRenderingContext2D,
   props: ColorSectionsProps,
 ) => {
-  const { sections, definitions, sectionKeyToColors } = props;
-
-  // measured once here, since reading it forces layout and it holds for the frame
-  const bounds = getVisibleWorldRect(ctx);
+  const { sections, definitions, sectionKeyToColors, bounds } = props;
 
   for (const section of sections) {
     const colors = sectionKeyToColors.get(getSectionKey(section));

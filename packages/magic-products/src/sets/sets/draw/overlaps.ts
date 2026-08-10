@@ -9,15 +9,14 @@ import { hatchPattern } from './hatchPattern.ts';
 type DrawOverlappingAreaProps = {
   definitions: SetDefinition[];
   overlap: Section;
-  highlightColors: string[] | null;
+  colors: string[];
 };
 
 const drawOverlappingAreas = (
   ctx: CanvasRenderingContext2D,
   props: DrawOverlappingAreaProps,
-  colors: SetColors,
 ) => {
-  const { overlap, definitions, highlightColors } = props;
+  const { overlap, definitions, colors } = props;
   ctx.save();
 
   for (const setId of overlap) {
@@ -30,20 +29,14 @@ const drawOverlappingAreas = (
     ctx.clip();
   }
 
+  ctx.fillStyle = hatchPattern(ctx, colors);
+  ctx.imageSmoothingEnabled = false;
+
   const startingCoords = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
   const endingCoords = getWorldCoordinates(
     { clientX: window.innerWidth, clientY: window.innerHeight },
     ctx,
   );
-
-  if (highlightColors === null) {
-    ctx.fillStyle = colors.unhighlighted;
-  } else if (highlightColors.length === 1) {
-    ctx.fillStyle = highlightColors[0];
-  } else {
-    ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = hatchPattern(ctx, highlightColors);
-  }
 
   ctx.fillRect(
     startingCoords.x,
@@ -101,13 +94,12 @@ export const colorOverlappingAreas = (
   };
 
   for (const overlap of overlaps) {
-    const highlightColors =
-      highlightedOverlaps.get(getSectionKey(overlap)) ?? null;
+    const highlightColors = highlightedOverlaps.get(getSectionKey(overlap));
     if (!highlightColors && !hasHighlightedAncestor(overlap)) continue;
-    drawOverlappingAreas(
-      ctx,
-      { definitions, overlap, highlightColors },
-      colors,
-    );
+    drawOverlappingAreas(ctx, {
+      definitions,
+      overlap,
+      colors: highlightColors ?? [colors.unhighlighted],
+    });
   }
 };

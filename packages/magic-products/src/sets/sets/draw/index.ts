@@ -9,8 +9,8 @@ import {
   drawCircleLabel,
   drawCircleOutline,
 } from './circles.ts';
+import { colorSections } from './colorSections.ts';
 import { hatchPattern } from './hatchPattern.ts';
-import { colorOverlappingAreas } from './overlaps.ts';
 
 type DrawProps = {
   /** every set to draw, as a circle with its label */
@@ -58,7 +58,7 @@ export const draw = (
     );
   }
 
-  colorOverlappingAreas(
+  colorSections(
     ctx,
     {
       definitions: props.definitions,

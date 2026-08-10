@@ -12,7 +12,7 @@ type DrawOverlappingAreaProps = {
   colors: string[];
 };
 
-const drawOverlappingAreas = (
+const colorSection = (
   ctx: CanvasRenderingContext2D,
   props: DrawOverlappingAreaProps,
 ) => {
@@ -48,55 +48,47 @@ const drawOverlappingAreas = (
   ctx.restore();
 };
 
-type ColorOverlappingAreasProps = {
+type ColorSections = {
   definitions: SetDefinition[];
   overlaps: Section[];
   highlightedSets: Map<SetDefinitionId, string[]>;
   highlightedOverlaps: Map<SectionKey, string[]>;
 };
 
-const getProperNonEmptySubsets = (
-  setIds: SetDefinitionId[],
-): SetDefinitionId[][] => {
-  const subsets: SetDefinitionId[][] = [];
-  const fullSetMask = 2 ** setIds.length - 1;
+const getProperNonEmptySubsets = (section: Section): Section[] => {
+  const sections: Section[] = [];
+  const fullSetMask = 2 ** section.length - 1;
 
   // Each mask from 1 to fullSetMask - 1 represents one proper, non-empty subset,
   // where bit i indicates whether setIds[i] is included.
   for (let mask = 1; mask < fullSetMask; mask++) {
-    const subset = setIds.filter((_, i) => mask & (1 << i));
-    subsets.push(subset);
+    const subset = section.filter((_, i) => mask & (1 << i));
+    sections.push(subset);
   }
 
-  return subsets;
+  return sections;
 };
 
-export const colorOverlappingAreas = (
+export const colorSections = (
   ctx: CanvasRenderingContext2D,
-  props: ColorOverlappingAreasProps,
+  props: ColorSections,
   colors: SetColors,
 ) => {
   const { definitions, overlaps, highlightedSets, highlightedOverlaps } = props;
 
-  // an overlap region is geometrically nested inside every region formed by a
-  // subset of its circles, so it must be redrawn (even just to erase it back to
-  // background) whenever a single circle or a smaller
-  // overlap is highlighted, otherwise that region's fill bleeds through
-  const hasHighlightedAncestor = (setIds: SetDefinitionId[]) => {
-    for (const subset of getProperNonEmptySubsets(setIds)) {
-      if (subset.length === 1) {
-        if (highlightedSets.has(subset[0])) return true;
-        continue;
-      }
-      if (highlightedOverlaps.has(getSectionKey(subset))) return true;
-    }
-    return false;
-  };
+  // a highlighted ancestor means this section's fill would bleed through and must be redrawn
+  const isHighlighted = (section: Section) =>
+    section.length === 1
+      ? highlightedSets.has(section[0])
+      : highlightedOverlaps.has(getSectionKey(section));
+
+  const hasHighlightedAncestor = (section: Section) =>
+    getProperNonEmptySubsets(section).some(isHighlighted);
 
   for (const overlap of overlaps) {
     const highlightColors = highlightedOverlaps.get(getSectionKey(overlap));
     if (!highlightColors && !hasHighlightedAncestor(overlap)) continue;
-    drawOverlappingAreas(ctx, {
+    colorSection(ctx, {
       definitions,
       overlap,
       colors: highlightColors ?? [colors.unhighlighted],

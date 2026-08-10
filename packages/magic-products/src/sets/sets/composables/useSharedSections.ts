@@ -36,11 +36,7 @@ const getSharedSections = (definitions: SetDefinition[]) => {
   };
 
   populateSharedSections();
-  /*
-    IMPORTANT: if you want regions that exclude others, render order matters. if you want
-    something union with something but excluding something else, put it behind those and have the stuff render on top of it.
-  */
-  return sharedSections.toSorted((a, b) => a.length - b.length);
+  return sharedSections;
 };
 
 export const useSharedSections = (definitions: Ref<SetDefinition[]>) =>

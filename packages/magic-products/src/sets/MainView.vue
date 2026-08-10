@@ -72,7 +72,7 @@
     focus.set(definition.id);
   };
 
-  const deleteFocusedSets = () => {
+  const deleteFocusedSetDefinitions = () => {
     const focusedSetIds = sets.definitions.value
       .map((s) => s.id)
       .filter(focus.isFocused);
@@ -84,7 +84,7 @@
       ctx,
       {
         definitions: sets.definitions.value,
-        sections: sets.sharedSections.value,
+        sections: sets.allSections.value,
         sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: focus.isFocused,
       },
@@ -96,7 +96,7 @@
 
   magic.shortcuts.add({
     id: 'delete-set',
-    callback: deleteFocusedSets,
+    callback: deleteFocusedSetDefinitions,
     key: 'backspace',
   });
 

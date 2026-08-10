@@ -1,7 +1,7 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
 import { CanvasProps } from '@canvas/surface/types';
 
-import { type Ref, computed, ref } from 'vue';
+import { ComputedRef, type Ref, computed, ref } from 'vue';
 
 import type { SetDefinition, SetDefinitionId } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
@@ -17,7 +17,7 @@ type SetFocusProps = {
  */
 export type SetFocusControls = {
   /** every set currently focused, which clicking the canvas replaces wholesale */
-  focusedSetIds: Ref<ReadonlySet<SetDefinitionId>>;
+  focusedSetIds: ComputedRef<ReadonlySet<SetDefinitionId>>;
   /** whether a set is focused, for drawing it differently */
   isFocused: (id: SetDefinitionId) => boolean;
   /** focuses a set on its own, dropping whatever was focused before */
@@ -61,7 +61,7 @@ export const useSetFocus = ({
   surface.domEvents.subscribe('onMouseDown', focusSetAtCursor);
 
   return {
-    focusedSetIds,
+    focusedSetIds: computed(() => focusedSetIds.value),
     isFocused: (id) => focusedSetIds.value.has(id),
     setFocus,
   };

@@ -36,7 +36,7 @@ const drawOverlappingAreas = (
   );
 
   if (highlightColors === null) {
-    ctx.fillStyle = COLORS.BACKGROUND;
+    ctx.fillStyle = COLORS.NON_HIGHLIGHT;
   } else if (highlightColors.length === 1) {
     ctx.fillStyle = highlightColors[0];
   } else {

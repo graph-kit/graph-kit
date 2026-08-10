@@ -9,8 +9,9 @@ export const COLORS = {
     colors.VIOLET_500,
     colors.PINK_500,
   ],
-  BACKGROUND: colors.GRAY_600,
-  CIRCLE_OUTLINE: colors.WHITE,
+  NON_HIGHLIGHT: colors.STONE_600,
+  CIRCLE_OUTLINE: colors.GRAY_900,
+  TEXT_COLOR: colors.WHITE,
   CIRCLE_FOCUSED: colors.RED_600,
 } as const;
 

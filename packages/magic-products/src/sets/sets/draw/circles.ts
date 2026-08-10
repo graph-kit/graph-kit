@@ -19,7 +19,7 @@ export const drawCircleBackground = (
   if (!highlightColors || highlightColors.length === 1) {
     circle({
       ...set.display,
-      fillColor: highlightColors?.[0] ?? COLORS.BACKGROUND,
+      fillColor: highlightColors?.[0] ?? COLORS.NON_HIGHLIGHT,
     }).draw(ctx);
     return;
   }
@@ -54,7 +54,7 @@ export const drawCircleOutline = (
   } = props.set.display;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 8;
   ctx.strokeStyle = props.isFocused
     ? COLORS.CIRCLE_FOCUSED
     : COLORS.CIRCLE_OUTLINE;
@@ -79,7 +79,7 @@ export const drawCircleLabel = (
   const fontWeight: FontWeight = 'bold';
   const fontSize = 24;
   const fontFamily = 'Arial';
-  const color = COLORS.CIRCLE_OUTLINE;
+  const color = COLORS.TEXT_COLOR;
   ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
   ctx.fillStyle = color;
   ctx.textAlign = 'center';

@@ -7,8 +7,9 @@ import { SetsProductState } from './useSetsProduct.ts';
 
 export const useCanvasTheme = (
   magic: Magic,
-  theme: SetsProductState['theme'],
+  setsProductState: SetsProductState,
 ) => {
+  const { theme } = setsProductState;
   const canvas = computed(() => magic.surface.canvas.value);
 
   const setCanvasColor = () => {

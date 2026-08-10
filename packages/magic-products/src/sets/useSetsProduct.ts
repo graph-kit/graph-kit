@@ -70,7 +70,7 @@ export const useSetsProduct = () => {
   });
 
   const setsProductState = useSetsProductState(magic);
-  useCanvasTheme(magic, setsProductState.theme);
+  useCanvasTheme(magic, setsProductState);
 
   provideSetsProductState(setsProductState);
 

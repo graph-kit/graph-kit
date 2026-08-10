@@ -1,65 +1,61 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine';
 
-import type { SetLabel } from '../../types.ts';
+import type { Section, SetDefinitionId, SetLabel } from '../../types.ts';
 import { LATEX_SET_SYMBOLS } from './constants.ts';
 
 /**
  * resolves a set notation MathJSON expression to the sections of the partition it selects,
  * or null when the expression cannot be resolved against that partition
  */
-export type ParseSetExpression<SetIdentity> = (
+export type ParseSetExpression = (
   mathJSON: MathJsonExpression,
-) => SetIdentity[][] | null;
+) => SetDefinitionId[][] | null;
 
-// TODO remove generic and parse sets with set IDs instead
 /**
- * builds a parser over a partition, where a section lists the sets covering that region.
- * the real set space identifies those sets by SetDefinitionId while the simplifier
- * identifies them by label, so resolving a label is left to the caller
+ * builds a parser over a partition, where a section lists the SetDefinitionIds covering
+ * that region. mathJSON leaves may still be display labels (a raw typed query) or already
+ * SetDefinitionIds (an expression built internally, e.g. by the simplifier) - resolveLabel
+ * only gets called for the former, so callers already in ID space can pass the identity fn
  */
-export const createSetExpressionParser = <SetIdentity>(
-  partition: SetIdentity[][],
-  resolveLabel: (label: SetLabel) => SetIdentity | undefined,
-): ParseSetExpression<SetIdentity> => {
+export const createSetExpressionParser = (
+  partition: Section[],
+  resolveLabel: (label: SetLabel) => SetDefinitionId,
+): ParseSetExpression => {
   const getSet = (label: SetLabel) => {
     if (label === LATEX_SET_SYMBOLS.OMEGA) return partition;
-
     const identity = resolveLabel(label);
-    if (identity === undefined) return [];
-
     return partition.filter((section) => section.includes(identity));
   };
 
-  const isEqual = (set1: SetIdentity[], set2: SetIdentity[]) => {
+  const isEqual = (set1: Section, set2: Section) => {
     return (
       set1.length === set2.length &&
       set1.every((element) => set2.includes(element))
     );
   };
 
-  const union = (set1: SetIdentity[][], set2: SetIdentity[][]) =>
-    set1.concat(set2);
+  const union = (set1: Section[], set2: Section[]) => set1.concat(set2);
 
-  const intersection = (set1: SetIdentity[][], set2: SetIdentity[][]) =>
-    set1.filter((element) => set2.includes(element));
+  const intersection = (set1: Section[], set2: Section[]) =>
+    set1.filter((element) => set2.some((other) => isEqual(element, other)));
 
-  const exclusion = (set1: SetIdentity[][], set2: SetIdentity[][]) =>
-    set1.filter((element) => !set2.includes(element));
+  const exclusion = (set1: Section[], set2: Section[]) =>
+    set1.filter((element) => !set2.some((other) => isEqual(element, other)));
 
-  const difference = (set1: SetIdentity[][], set2: SetIdentity[][]) =>
+  const difference = (set1: Section[], set2: Section[]) =>
     exclusion(union(set1, set2), intersection(set1, set2));
 
-  const complement = (set: SetIdentity[][]) =>
+  const complement = (set: Section[]) =>
     partition.filter((section) =>
       set.every((element) => !isEqual(section, element)),
     );
 
-  const dedupe = (sets: SetIdentity[][]) =>
+  const dedupe = (sets: Section[]) =>
     sets.filter(
       (set, index) => sets.findIndex((other) => isEqual(set, other)) === index,
     );
 
-  const parseHelper = (node: MathJsonExpression): SetIdentity[][] => {
+  const parseHelper = (node: MathJsonExpression): Section[] => {
     if (typeof node === 'string') {
       return getSet(node);
     }

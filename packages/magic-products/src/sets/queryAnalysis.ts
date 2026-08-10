@@ -17,11 +17,9 @@ import type {
   HighlightGroup,
   HighlightQuery,
   HighlightQueryId,
-  SetDefinitionId,
   SetLabel,
 } from './types.ts';
 import { SetsProductState } from './useSetsProduct.ts';
-import { SetColors, SetsTheme } from './useSetsTheme.ts';
 
 export type QueryAnalysis = {
   queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
@@ -41,14 +39,14 @@ export const useQueryAnalysis = (
   );
 
   const parseAgainstSetSpace = () =>
-    createSetExpressionParser<SetDefinitionId>(
+    createSetExpressionParser(
       sets.allSections.value,
       (label) => sets.idByLabel.value[label],
     );
 
   const hasQueryError = (
     latexQueryString: HighlightQuery,
-    parse: ParseSetExpression<SetDefinitionId>,
+    parse: ParseSetExpression,
     definedLabels: SetLabel[],
   ) => {
     if (!latexQueryString.trim()) return false;
@@ -85,7 +83,9 @@ export const useQueryAnalysis = (
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
-      queries[queryId] = simplify(latexQueryString, definedSetLabels.value);
+      queries[queryId] = queryErrors.value[queryId]
+        ? null
+        : simplify(latexQueryString, sets.idByLabel.value);
     }
 
     return queries;

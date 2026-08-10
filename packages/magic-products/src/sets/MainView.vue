@@ -5,9 +5,9 @@
   import { computed } from 'vue';
 
   import { useCircleDrag } from './sets/composables/useCircleDrag.ts';
-  import { useCircleFocus } from './sets/composables/useCircleFocus.ts';
   import { useCircleResize } from './sets/composables/useCircleResize.ts';
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
+  import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
   import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
@@ -51,7 +51,7 @@
     isResizing,
   });
 
-  const { focusedSetIds, isFocused, setFocus } = useCircleFocus({
+  const { focusedSetIds, isFocused, setFocus } = useSetFocus({
     surface: magic.surface,
     definitions,
   });

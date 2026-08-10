@@ -6,7 +6,7 @@ import { type Ref, computed, ref } from 'vue';
 import type { SetDefinition, SetDefinitionId } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
 
-type CircleFocusProps = {
+type SetFocusProps = {
   definitions: Ref<SetDefinition[]>;
   surface: CanvasProps;
 };
@@ -15,19 +15,19 @@ type CircleFocusProps = {
  * focus tracks which sets the next set-targeted action applies to, such as the
  * delete shortcut, and which circles draw with the focus outline
  */
-export type CircleFocusControls = {
+export type SetFocusControls = {
   /** every set currently focused, which clicking the canvas replaces wholesale */
-  focusedSetIds: Ref<Set<SetDefinitionId>>;
+  focusedSetIds: Ref<ReadonlySet<SetDefinitionId>>;
   /** whether a set is focused, for drawing it differently */
   isFocused: (id: SetDefinitionId) => boolean;
   /** focuses a set on its own, dropping whatever was focused before */
   setFocus: (id: SetDefinitionId) => void;
 };
 
-export const useCircleFocus = ({
+export const useSetFocus = ({
   definitions,
   surface,
-}: CircleFocusProps): CircleFocusControls => {
+}: SetFocusProps): SetFocusControls => {
   const focusedSetIds = ref(new Set<SetDefinitionId>());
 
   const sortedDefinitions = computed(() => {
@@ -52,13 +52,13 @@ export const useCircleFocus = ({
     });
   };
 
-  const focusCircle = () => {
+  const focusSetAtCursor = () => {
     const definition = getDefinitionAtCursorPosition();
     if (!definition) return focusedSetIds.value.clear();
     setFocus(definition.id);
   };
 
-  surface.domEvents.subscribe('onMouseDown', focusCircle);
+  surface.domEvents.subscribe('onMouseDown', focusSetAtCursor);
 
   return {
     focusedSetIds,

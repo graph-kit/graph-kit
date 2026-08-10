@@ -1,7 +1,7 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
 import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
-import type { CircleFocusControls } from '../composables/useCircleFocus.ts';
+import type { SetFocusControls } from '../composables/useSetFocus.ts';
 import type { SectionKey } from '../other/sectionKey.ts';
 import {
   drawCircleBackground,
@@ -20,8 +20,8 @@ type DrawProps = {
   highlightedSets: Map<SetDefinitionId, string[]>;
   /** colors painted over one shared section, keyed by the sets forming it */
   highlightedOverlaps: Map<SectionKey, string[]>;
-  /** whether a set carries the focus outline, see {@link CircleFocusControls} */
-  isSetFocused: CircleFocusControls['isFocused'];
+  /** whether a set carries the focus outline, see {@link SetFocusControls} */
+  isSetFocused: SetFocusControls['isFocused'];
   /** colors painted over the region no set covers, drawn behind every circle */
   highlightedOutside: string[];
 };

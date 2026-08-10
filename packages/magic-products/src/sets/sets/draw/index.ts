@@ -34,7 +34,7 @@ export const draw = (
 ) => {
   const { highlightedSets, highlightedOverlaps } = props;
 
-  if (props.highlightedOutside.length > 1) {
+  if (props.highlightedOutside.length > 0) {
     const start = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
     const end = getWorldCoordinates(
       { clientX: window.innerWidth, clientY: window.innerHeight },

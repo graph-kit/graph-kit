@@ -24,7 +24,7 @@
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 
   const isOutsideAllSets = (section: SetDefinitionId[]) =>
-    section.length === 1 && section[0] === OUTSIDE_ALL_SETS.identity;
+    section.at(0) === OUTSIDE_ALL_SETS.identity;
 
   const setSectionsToHighlight = computed<HighlightGroup[]>(() => {
     return activeHighlights.value

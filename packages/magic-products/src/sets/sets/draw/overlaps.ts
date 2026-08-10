@@ -1,8 +1,8 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
 import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
+import { SetColors } from '../../useSetsTheme.ts';
 import { getSetDefinition } from '../other/circleUtils.ts';
-import { COLORS } from '../other/constants.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
 import { hatchPattern } from './hatchPattern.ts';
 
@@ -15,6 +15,7 @@ type DrawOverlappingAreaProps = {
 const drawOverlappingAreas = (
   ctx: CanvasRenderingContext2D,
   props: DrawOverlappingAreaProps,
+  colors: SetColors,
 ) => {
   const { overlap, definitions, highlightColors } = props;
   ctx.save();
@@ -36,7 +37,7 @@ const drawOverlappingAreas = (
   );
 
   if (highlightColors === null) {
-    ctx.fillStyle = COLORS.NON_HIGHLIGHT;
+    ctx.fillStyle = colors.unhighlighted;
   } else if (highlightColors.length === 1) {
     ctx.fillStyle = highlightColors[0];
   } else {
@@ -80,6 +81,7 @@ const getProperNonEmptySubsets = (
 export const colorOverlappingAreas = (
   ctx: CanvasRenderingContext2D,
   props: ColorOverlappingAreasProps,
+  colors: SetColors,
 ) => {
   const { definitions, overlaps, highlightedSets, highlightedOverlaps } = props;
 
@@ -102,6 +104,10 @@ export const colorOverlappingAreas = (
     const highlightColors =
       highlightedOverlaps.get(getSectionKey(overlap)) ?? null;
     if (!highlightColors && !hasHighlightedAncestor(overlap)) continue;
-    drawOverlappingAreas(ctx, { definitions, overlap, highlightColors });
+    drawOverlappingAreas(
+      ctx,
+      { definitions, overlap, highlightColors },
+      colors,
+    );
   }
 };

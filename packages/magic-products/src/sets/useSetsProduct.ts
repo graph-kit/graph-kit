@@ -1,32 +1,41 @@
 import { useCanvas } from '@canvas/surface/index';
 import { nullThrows } from '@core/utils/assert';
-import { MagicProductHost, useMagicProduct } from '@magic/shared/product';
+import {
+  Magic,
+  MagicProductHost,
+  useMagicProduct,
+} from '@magic/shared/product';
 
-import { inject, provide } from 'vue';
+import { ComputedRef, inject, provide } from 'vue';
 
 import {
   type HighlightQueries,
   createHighlightQueries,
 } from './highlightQueries.ts';
-import { type QueryAnalysis, createQueryAnalysis } from './queryAnalysis.ts';
+import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
 import HighlightPanel from './sets/components/HighlightPanel.vue';
+import { useCanvasTheme } from './useCanvasTheme.ts';
+import { SetsTheme, useSetsTheme } from './useSetsTheme.ts';
 
 export type SetsProductState = {
   highlights: HighlightQueries;
   sets: SetDefinitions;
   // everything the queries resolve to once read against the set space
   queryAnalysis: QueryAnalysis;
+  theme: ComputedRef<SetsTheme>;
 };
 
-const useSetsProductState = (): SetsProductState => {
+const useSetsProductState = (magic: Magic): SetsProductState => {
   const highlights = createHighlightQueries();
   const sets = createSetDefinitions();
+  const theme = useSetsTheme(magic);
 
   return {
     highlights,
     sets,
-    queryAnalysis: createQueryAnalysis(highlights, sets),
+    queryAnalysis: useQueryAnalysis(highlights, sets, theme),
+    theme,
   };
 };
 
@@ -60,7 +69,9 @@ export const useSetsProduct = () => {
     ui: { linkSharing: false },
   });
 
-  const setsProductState = useSetsProductState();
+  const setsProductState = useSetsProductState(magic);
+  useCanvasTheme(magic, setsProductState.theme);
+
   provideSetsProductState(setsProductState);
 
   magic.componentSlots.add({

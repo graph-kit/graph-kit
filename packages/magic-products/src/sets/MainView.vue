@@ -12,19 +12,16 @@
   import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
   import { HighlightGroup, SetDefinitionId } from './types.ts';
-  import { useCanvasTheme } from './useCanvasTheme.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
     magic,
-    setsProductState: { sets, queryAnalysis },
+    setsProductState: { sets, queryAnalysis, theme },
   } = useSetsProduct();
 
   const { activeHighlights } = queryAnalysis;
 
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
-
-  useCanvasTheme(magic);
 
   const isOutsideAllSets = (section: SetDefinitionId[]) =>
     section.length === 1 && section[0] === OUTSIDE_ALL_SETS.identity;
@@ -107,14 +104,18 @@
   };
 
   magic.surface.draw.content.value = (ctx) => {
-    draw(ctx, {
-      definitions: definitions.value,
-      overlaps: sharedSections.value,
-      highlightedSets: highlightedSets.value,
-      highlightedOverlaps: highlightedOverlaps.value,
-      isSetFocused: isFocused,
-      highlightedOutside: highlightedOutside.value,
-    });
+    draw(
+      ctx,
+      {
+        definitions: definitions.value,
+        overlaps: sharedSections.value,
+        highlightedSets: highlightedSets.value,
+        highlightedOverlaps: highlightedOverlaps.value,
+        isSetFocused: isFocused,
+        highlightedOutside: highlightedOutside.value,
+      },
+      theme.value.set,
+    );
   };
 
   magic.surface.domEvents.subscribe('onDblClick', createSet);

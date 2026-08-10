@@ -2,7 +2,7 @@ import { circle } from '@canvas/primitives/shapes/circle/index';
 import { FontWeight } from '@canvas/primitives/text/types';
 
 import { SetDefinition } from '../../types.ts';
-import { COLORS } from '../other/constants.ts';
+import { SetColors } from '../../useSetsTheme.ts';
 import { hatchPattern } from './hatchPattern.ts';
 
 type DrawCircleBackgroundProps = {
@@ -13,13 +13,14 @@ type DrawCircleBackgroundProps = {
 export const drawCircleBackground = (
   ctx: CanvasRenderingContext2D,
   props: DrawCircleBackgroundProps,
+  colors: SetColors,
 ) => {
   const { set, highlightColors } = props;
 
   if (!highlightColors || highlightColors.length === 1) {
     circle({
       ...set.display,
-      fillColor: highlightColors?.[0] ?? COLORS.NON_HIGHLIGHT,
+      fillColor: highlightColors?.[0] ?? colors.unhighlighted,
     }).draw(ctx);
     return;
   }
@@ -47,7 +48,9 @@ type DrawCircleOutlineProps = {
 export const drawCircleOutline = (
   ctx: CanvasRenderingContext2D,
   props: DrawCircleOutlineProps,
+  colors: SetColors,
 ) => {
+  const { outline } = colors;
   const {
     at: { x, y },
     radius,
@@ -55,9 +58,7 @@ export const drawCircleOutline = (
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, 2 * Math.PI);
   ctx.lineWidth = 8;
-  ctx.strokeStyle = props.isFocused
-    ? COLORS.CIRCLE_FOCUSED
-    : COLORS.CIRCLE_OUTLINE;
+  ctx.strokeStyle = props.isFocused ? outline.focused : outline.default;
   ctx.stroke();
 };
 
@@ -69,6 +70,7 @@ type DrawCircleLabelProps = {
 export const drawCircleLabel = (
   ctx: CanvasRenderingContext2D,
   props: DrawCircleLabelProps,
+  colors: SetColors,
 ) => {
   const {
     label,
@@ -79,7 +81,7 @@ export const drawCircleLabel = (
   const fontWeight: FontWeight = 'bold';
   const fontSize = 24;
   const fontFamily = 'Arial';
-  const color = COLORS.TEXT_COLOR;
+  const color = colors.label;
   ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
   ctx.fillStyle = color;
   ctx.textAlign = 'center';

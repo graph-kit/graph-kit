@@ -2,7 +2,6 @@ import { type ComputedRef, computed } from 'vue';
 
 import type { HighlightQueries } from './highlightQueries.ts';
 import type { SetDefinitions } from './setDefinitions.ts';
-import { COLORS } from './sets/other/constants.ts';
 import {
   type ParseSetExpression,
   createSetExpressionParser,
@@ -21,6 +20,8 @@ import type {
   SetDefinitionId,
   SetLabel,
 } from './types.ts';
+import { SetsProductState } from './useSetsProduct.ts';
+import { SetColors, SetsTheme } from './useSetsTheme.ts';
 
 export type QueryAnalysis = {
   queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
@@ -30,9 +31,10 @@ export type QueryAnalysis = {
   activeHighlights: ComputedRef<HighlightGroup[]>;
 };
 
-export const createQueryAnalysis = (
+export const useQueryAnalysis = (
   highlights: HighlightQueries,
   sets: SetDefinitions,
+  theme: SetsProductState['theme'],
 ): QueryAnalysis => {
   const definedSetLabels = computed(() =>
     sets.definitions.value.map(({ label }) => label),
@@ -123,9 +125,11 @@ export const createQueryAnalysis = (
       const sections = parse(mathJSON.json);
       if (!sections) continue;
 
+      const colors = theme.value.set.highlighted;
+
       results.push({
         sections,
-        color: COLORS.HIGHLIGHT[index % COLORS.HIGHLIGHT.length],
+        color: colors[index % colors.length],
       });
     }
 

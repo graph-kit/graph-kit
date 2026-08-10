@@ -8,11 +8,11 @@
 
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { COLORS, KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
+  import { KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
   import HighlightRow from './HighlightRow.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
-  const { highlights } = useProvidedSetsProductState();
+  const { highlights, theme } = useProvidedSetsProductState();
   const { queryIds, addQuery, insertIntoQuery } = highlights;
 
   const focusedQueryId = ref<HighlightQueryId>(queryIds.value[0]);
@@ -35,7 +35,7 @@
         v-for="(queryId, index) in queryIds"
         :key="queryId"
         :queryId="queryId"
-        :color="COLORS.HIGHLIGHT[index % COLORS.HIGHLIGHT.length]"
+        :color="theme.set.highlighted[index % theme.set.highlighted.length]"
         @focus="focusedQueryId = queryId"
       />
 

@@ -1,20 +1,3 @@
-import colors from '@core/utils/colors';
-
-export const COLORS = {
-  HIGHLIGHT: [
-    colors.RED_500,
-    colors.BLUE_500,
-    colors.EMERALD_500,
-    colors.AMBER_500,
-    colors.VIOLET_500,
-    colors.PINK_500,
-  ],
-  NON_HIGHLIGHT: colors.STONE_600,
-  CIRCLE_OUTLINE: colors.GRAY_900,
-  TEXT_COLOR: colors.WHITE,
-  CIRCLE_FOCUSED: colors.RED_600,
-} as const;
-
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 /**

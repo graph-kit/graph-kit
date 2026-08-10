@@ -1,6 +1,18 @@
+import colors from '@core/utils/colors';
+
 import type { Section } from '../../types.ts';
 
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+// the palette a highlight query's color is assigned from, in creation order
+export const HIGHLIGHT_COLORS = [
+  colors.RED_500,
+  colors.BLUE_500,
+  colors.EMERALD_500,
+  colors.AMBER_500,
+  colors.VIOLET_500,
+  colors.PINK_500,
+];
 
 /**
  * the region covered by no set. it has no definition to point at, so it carries both

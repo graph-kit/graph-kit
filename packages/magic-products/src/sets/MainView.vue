@@ -17,7 +17,7 @@
 
   const {
     magic,
-    setsProductState: { sets, queryAnalysis, theme },
+    setsProductState: { sets, queryAnalysis, theme, highlights },
   } = useSetsProduct();
 
   const { activeHighlights } = queryAnalysis;
@@ -54,13 +54,14 @@
   const outsideColors = computed(() => {
     return activeHighlights.value
       .filter((group) => group.sections.some(isOutsideAllSetsSection))
-      .map((group) => group.color);
+      .map((group) => highlights.getQuery(group.queryId).color);
   });
 
   const sectionKeyToColors = computed(() => {
     const map = new Map<SectionKey, Color[]>();
 
-    for (const { sections, color } of sectionsToHighlight.value) {
+    for (const { queryId, sections } of sectionsToHighlight.value) {
+      const color = highlights.getQuery(queryId).color;
       for (const section of sections) {
         const key = getSectionKey(section);
         const existing = map.get(key) ?? [];

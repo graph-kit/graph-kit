@@ -1,7 +1,10 @@
+import { nullThrows } from '@core/utils/assert';
+import type { Color } from '@core/utils/colors';
 import { generateId } from '@core/utils/id';
 
 import { type Ref, ref } from 'vue';
 
+import { HIGHLIGHT_COLORS } from './sets/other/constants.ts';
 import type { HighlightQuery, HighlightQueryId } from './types.ts';
 
 // the rendered mathfield owns its caret and its displayed value, so it takes the commands
@@ -16,6 +19,7 @@ export type HighlightQueries = {
   getQuery: (queryId: HighlightQueryId) => {
     latexQueryString: HighlightQuery;
     isHidden: boolean;
+    color: Color;
   };
   addQuery: () => HighlightQueryId;
   setLatexQueryString: (
@@ -38,12 +42,21 @@ export type HighlightQueries = {
   ) => void;
 };
 
+// assigns by creation order, cycling the palette once every query gets one
+const nextColor = (queryCountBeforeThisOne: number): Color =>
+  HIGHLIGHT_COLORS[queryCountBeforeThisOne % HIGHLIGHT_COLORS.length];
+
 export const createHighlightQueries = (): HighlightQueries => {
-  const queryIds = ref<HighlightQueryId[]>([generateId()]);
+  const initialQueryId = generateId();
+  const queryIds = ref<HighlightQueryId[]>([initialQueryId]);
 
   // kept beside the ids rather than in them so a query is nothing but its latex string
   const latexQueryStrings = ref<Record<HighlightQueryId, HighlightQuery>>({});
   const hiddenQueryIds = ref(new Set<HighlightQueryId>());
+  // assigned once at creation and never reassigned, so a query's color is stable
+  const colorsByQueryId = ref<Record<HighlightQueryId, Color>>({
+    [initialQueryId]: nextColor(0),
+  });
 
   // a plain map because editors are imperative, not something a render depends on
   const queryEditors = new Map<HighlightQueryId, QueryEditor>();
@@ -54,10 +67,15 @@ export const createHighlightQueries = (): HighlightQueries => {
     getQuery: (queryId) => ({
       latexQueryString: latexQueryStrings.value[queryId] ?? '',
       isHidden: hiddenQueryIds.value.has(queryId),
+      color: nullThrows(
+        colorsByQueryId.value[queryId],
+        `no color assigned to query ${queryId}`,
+      ),
     }),
 
     addQuery: () => {
       const queryId = generateId();
+      colorsByQueryId.value[queryId] = nextColor(queryIds.value.length);
       queryIds.value.push(queryId);
       return queryId;
     },

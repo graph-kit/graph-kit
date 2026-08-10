@@ -35,6 +35,6 @@ export type HighlightQuery = string;
 export type HighlightQueryId = string;
 
 export type HighlightGroup = {
+  queryId: HighlightQueryId;
   sections: Section[];
-  color: string;
 };

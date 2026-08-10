@@ -21,8 +21,7 @@
 
   const { activeHighlights } = queryAnalysis;
 
-  const { definitions, sharedSections, allSections, addDefinition, removeDefinition } =
-    sets;
+  const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 
   const isOutsideAllSets = (section: SetDefinitionId[]) =>
     section.at(0) === OUTSIDE_ALL_SETS.identity;
@@ -61,15 +60,11 @@
   });
 
   const highlightedSections = computed(() => {
-    const existingKeys = new Set(allSections.value.map(getSectionKey));
     const map = new Map<SectionKey, string[]>();
 
     for (const { sections, color } of setSectionsToHighlight.value) {
       for (const section of sections) {
         const key = getSectionKey(section);
-        // a section only paints if it actually exists, eg. two circles that don't overlap
-        if (!existingKeys.has(key)) continue;
-
         const existing = map.get(key) ?? [];
         existing.push(color);
         map.set(key, existing);

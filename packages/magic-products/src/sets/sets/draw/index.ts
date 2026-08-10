@@ -9,7 +9,7 @@ import {
   drawCircleLabel,
   drawCircleOutline,
 } from './circles.ts';
-import { colorSections } from './colorSections.ts';
+import { colorAllSections } from './colorAllSections.ts';
 import { hatchPattern } from './hatchPattern.ts';
 
 type DrawProps = {
@@ -58,7 +58,7 @@ export const draw = (
     );
   }
 
-  colorSections(
+  colorAllSections(
     ctx,
     {
       definitions: props.definitions,

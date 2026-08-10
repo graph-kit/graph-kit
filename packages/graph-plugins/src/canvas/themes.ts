@@ -1,13 +1,13 @@
 import type { FontWeight } from '@canvas/primitives/text/types';
 import { Coordinate } from '@canvas/surface/types';
 import {
-  Cursor,
   CursorFallback,
   ThemeOverrides,
   ThemeValue,
   TokenResolver,
 } from '@core/themes/index';
 import { Color } from '@core/utils/colors';
+import { Cursor } from '@core/utils/cursor';
 import { ComputedTokenDetectorMap } from '@graph/computed-tokens/index';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import { DeepReadonly } from 'ts-essentials';

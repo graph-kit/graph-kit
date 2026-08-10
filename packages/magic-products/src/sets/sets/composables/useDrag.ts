@@ -2,25 +2,23 @@ import { CanvasProps } from '@canvas/surface/types';
 import { Coordinate } from '@core/utils/canvas/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 
-import { type UnwrapRef, computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
-type ActiveDrag<T> = {
+type ActiveDrag<Item> = {
   startingCoords: Coordinate;
-  item: T;
+  item: Item;
 };
 
-export const useDrag = <T>(
+export const useDrag = <Item>(
   surface: CanvasProps,
-  getItem: (
-    magicCanvasCoords: UnwrapRef<CanvasProps>['cursorCoordinates'],
-  ) => T | undefined,
-  setItemCoords: (item: T, diff: Coordinate) => void,
+  getItemCoords: (coords: Coordinate) => Item | undefined,
+  setItemCoords: (item: Item, diff: Coordinate) => void,
 ) => {
-  const activeDrag = ref<ActiveDrag<T>>();
+  const activeDrag = ref<ActiveDrag<Item>>();
 
   const beginDrag = (ev: MouseEvent) => {
     if (ev.button !== MOUSE_BUTTONS.left) return;
-    const item = getItem(surface.cursorCoordinates.value);
+    const item = getItemCoords(surface.cursorCoordinates.value);
     if (!item) return;
     activeDrag.value = {
       item,
@@ -43,17 +41,17 @@ export const useDrag = <T>(
     activeDrag.value = undefined;
   };
 
-  onMounted(() => {
-    document.addEventListener('mousedown', beginDrag);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', drop);
-  });
+  surface.domEvents.subscribe('onMouseDown', beginDrag);
+  surface.domEvents.subscribe('onMouseMove', drag);
+  surface.domEvents.subscribe('onMouseUp', drop);
 
-  onBeforeUnmount(() => {
-    document.removeEventListener('mousedown', beginDrag);
-    document.removeEventListener('mousemove', drag);
-    document.removeEventListener('mouseup', drop);
-  });
+  const cleanup = () => {
+    surface.domEvents.unsubscribe('onMouseDown', beginDrag);
+    surface.domEvents.unsubscribe('onMouseMove', drag);
+    surface.domEvents.unsubscribe('onMouseUp', drop);
+  };
+
+  onBeforeUnmount(cleanup);
 
   return {
     activeDrag,

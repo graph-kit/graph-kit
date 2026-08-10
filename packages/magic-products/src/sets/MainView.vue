@@ -126,7 +126,7 @@
     key: 'backspace',
   });
 
-  const cursor = useCursorStyle(definitions, magic.surface.cursorCoordinates);
+  const cursor = useCursorStyle(definitions, magic.surface);
 
   magic.surface.lifecycleEvents.subscribe('onAfterRepaint', () => {
     const canvas = nullThrows(magic.surface.canvas.value, 'canvas not defined');

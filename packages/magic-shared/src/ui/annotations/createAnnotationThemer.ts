@@ -1,4 +1,4 @@
-import { CURSOR } from '@core/themes/index';
+import { CURSOR } from '@core/utils/cursor';
 
 import { ComputedRef } from 'vue';
 

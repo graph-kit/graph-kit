@@ -1,4 +1,4 @@
-import { CURSOR } from '@core/themes/index';
+import { CURSOR } from '@core/utils/cursor';
 import { DragStateControls } from '@graph/plugins-shared/drag';
 
 import { ANCHOR_PLUGIN_ID } from './constants.ts';

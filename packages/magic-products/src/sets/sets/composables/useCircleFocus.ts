@@ -11,7 +11,23 @@ type CircleFocusProps = {
   surface: CanvasProps;
 };
 
-export const useCircleFocus = ({ definitions, surface }: CircleFocusProps) => {
+/**
+ * focus tracks which sets the next set-targeted action applies to, such as the
+ * delete shortcut, and which circles draw with the focus outline
+ */
+export type CircleFocusControls = {
+  /** every set currently focused, which clicking the canvas replaces wholesale */
+  focusedSetIds: Ref<Set<SetDefinitionId>>;
+  /** whether a set is focused, for drawing it differently */
+  isFocused: (id: SetDefinitionId) => boolean;
+  /** focuses a set on its own, dropping whatever was focused before */
+  setFocus: (id: SetDefinitionId) => void;
+};
+
+export const useCircleFocus = ({
+  definitions,
+  surface,
+}: CircleFocusProps): CircleFocusControls => {
   const focusedSetIds = ref(new Set<SetDefinitionId>());
 
   const sortedDefinitions = computed(() => {
@@ -46,9 +62,7 @@ export const useCircleFocus = ({ definitions, surface }: CircleFocusProps) => {
 
   return {
     focusedSetIds,
-    isFocused: (id: SetDefinitionId) => focusedSetIds.value.has(id),
+    isFocused: (id) => focusedSetIds.value.has(id),
     setFocus,
   };
 };
-
-export type CircleFocusControls = ReturnType<typeof useCircleFocus>;

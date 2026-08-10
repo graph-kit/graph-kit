@@ -39,7 +39,7 @@ export const useSetsTheme = (magic: Magic) => {
     magic.appearance.state.value === 'dark' ? dark : light,
   );
 
-  const colors = computed<SetsTheme>(() => ({
+  return computed<SetsTheme>(() => ({
     set: {
       highlighted: HIGHLIGHT_COLOR,
       unhighlighted: theme.value.canvas['node.default.color'],
@@ -54,6 +54,4 @@ export const useSetsTheme = (magic: Magic) => {
       patternColor: theme.value.canvas['canvas.patternColor'],
     },
   }));
-
-  return colors;
 };

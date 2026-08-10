@@ -85,7 +85,9 @@ export const useQueryAnalysis = (
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
-      queries[queryId] = simplify(latexQueryString, definedSetLabels.value);
+      queries[queryId] = queryErrors.value[queryId]
+        ? null
+        : simplify(latexQueryString, definedSetLabels.value);
     }
 
     return queries;

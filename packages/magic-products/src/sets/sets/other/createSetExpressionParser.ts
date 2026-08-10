@@ -41,10 +41,10 @@ export const createSetExpressionParser = <SetIdentity>(
     set1.concat(set2);
 
   const intersection = (set1: SetIdentity[][], set2: SetIdentity[][]) =>
-    set1.filter((element) => set2.includes(element));
+    set1.filter((element) => set2.some((other) => isEqual(element, other)));
 
   const exclusion = (set1: SetIdentity[][], set2: SetIdentity[][]) =>
-    set1.filter((element) => !set2.includes(element));
+    set1.filter((element) => !set2.some((other) => isEqual(element, other)));
 
   const difference = (set1: SetIdentity[][], set2: SetIdentity[][]) =>
     exclusion(union(set1, set2), intersection(set1, set2));

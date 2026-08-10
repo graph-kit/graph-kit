@@ -1,21 +1,21 @@
 import { type Ref, computed } from 'vue';
 
-import type { Overlap, SetDefinition } from '../../types.ts';
+import type { Section, SetDefinition } from '../../types.ts';
 import { isOverlapping } from '../other/circleUtils.ts';
 
-const getOverlapsArray = (definitions: SetDefinition[]) => {
-  const overlaps: Overlap[] = [];
-  let overlapId = 1;
+/**
+ * every section covered by more than one set, which is every group of two or more
+ * circles that all intersect one another
+ */
+const getSharedSections = (definitions: SetDefinition[]) => {
+  const sharedSections: Section[] = [];
 
-  const populateOverlaps = (
+  const populateSharedSections = (
     overlapGroup: SetDefinition[] = [],
     startIndex = 0,
   ) => {
     if (overlapGroup.length > 1) {
-      overlaps.push({
-        sets: overlapGroup.map((definition) => definition.id),
-        id: overlapId++,
-      });
+      sharedSections.push(overlapGroup.map((definition) => definition.id));
     }
 
     for (let i = startIndex; i < definitions.length; i++) {
@@ -29,21 +29,21 @@ const getOverlapsArray = (definitions: SetDefinition[]) => {
 
       if (allOverlap) {
         overlapGroup.push(definitions[i]);
-        populateOverlaps(overlapGroup, i + 1);
+        populateSharedSections(overlapGroup, i + 1);
         overlapGroup.pop();
       }
     }
   };
 
-  populateOverlaps();
+  populateSharedSections();
   /*
     IMPORTANT: if you want regions that exclude others, render order matters. if you want
     something union with something but excluding something else, put it behind those and have the stuff render on top of it.
   */
-  return overlaps.toSorted((a, b) => a.sets.length - b.sets.length);
+  return sharedSections.toSorted((a, b) => a.length - b.length);
 };
 
-export const useOverlaps = (definitions: Ref<SetDefinition[]>) =>
+export const useSharedSections = (definitions: Ref<SetDefinition[]>) =>
   computed(() => {
-    return getOverlapsArray(definitions.value);
+    return getSharedSections(definitions.value);
   });

@@ -29,11 +29,6 @@ export type SetDefinition = {
  */
 export type Section = SetDefinitionId[];
 
-export type Overlap = {
-  id: number;
-  sets: SetDefinitionId[];
-};
-
 // unparsed set notation latex, parsed into a HighlightGroup to color the sections it matches
 export type HighlightQuery = string;
 

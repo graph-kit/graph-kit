@@ -9,7 +9,8 @@
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
   import { draw } from './sets/draw/index.ts';
   import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
-  import { HighlightGroup, Overlap, SetDefinitionId } from './types.ts';
+  import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
+  import { HighlightGroup, SetDefinitionId } from './types.ts';
   import { useCanvasTheme } from './useCanvasTheme.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
@@ -18,7 +19,7 @@
     setsProductState: { activeSubsets, sets },
   } = useSetsProduct();
 
-  const { definitions, overlaps, addDefinition, removeDefinition } = sets;
+  const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 
   useCanvasTheme(magic);
 
@@ -73,25 +74,23 @@
   });
 
   const highlightedOverlaps = computed(() => {
-    const overlapByKey = new Map<string, Overlap>();
-    for (const overlap of overlaps.value) {
-      const key = overlap.sets.toSorted((a, b) => a.localeCompare(b)).join('.');
-      overlapByKey.set(key, overlap);
-    }
-    const map = new Map<Overlap['id'], string[]>();
+    const existingKeys = new Set(sharedSections.value.map(getSectionKey));
+    const map = new Map<SectionKey, string[]>();
+
     for (const { sections, color } of setSectionsToHighlight.value) {
       for (const section of sections) {
-        if (section.length > 1) {
-          const key = section.toSorted((a, b) => a.localeCompare(b)).join('.');
-          const overlap = overlapByKey.get(key);
-          if (overlap) {
-            const existing = map.get(overlap.id) ?? [];
-            existing.push(color);
-            map.set(overlap.id, existing);
-          }
-        }
+        if (section.length === 1) continue;
+
+        const key = getSectionKey(section);
+        // a section only paints if the circles actually overlap there
+        if (!existingKeys.has(key)) continue;
+
+        const existing = map.get(key) ?? [];
+        existing.push(color);
+        map.set(key, existing);
       }
     }
+
     return map;
   });
 
@@ -113,7 +112,7 @@
   magic.surface.draw.content.value = (ctx) => {
     draw(ctx, {
       definitions: definitions.value,
-      overlaps: overlaps.value,
+      overlaps: sharedSections.value,
       highlightedSets: highlightedSets.value,
       highlightedOverlaps: highlightedOverlaps.value,
       isSetFocused,

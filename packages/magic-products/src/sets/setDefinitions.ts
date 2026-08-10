@@ -5,14 +5,13 @@ import { type ComputedRef, type Ref, computed, ref } from 'vue';
 
 import { useAllSections } from './sets/composables/useAllSections.ts';
 import { useLabelGetter } from './sets/composables/useLabel.ts';
-import { useOverlaps } from './sets/composables/useOverlaps.ts';
+import { useSharedSections } from './sets/composables/useSharedSections.ts';
 import { getSetDefinition } from './sets/other/circleUtils.ts';
 import {
   DEFAULT_CIRCLE_RADIUS,
   OUTSIDE_ALL_SETS,
 } from './sets/other/constants.ts';
 import type {
-  Overlap,
   Section,
   SetDefinition,
   SetDefinitionId,
@@ -21,7 +20,8 @@ import type {
 
 export type SetDefinitions = {
   definitions: Ref<SetDefinition[]>;
-  overlaps: ComputedRef<Overlap[]>;
+  // the sections more than one set covers, a subset of allSections
+  sharedSections: ComputedRef<Section[]>;
   allSections: ComputedRef<Section[]>;
   // the only authority on what a label typed into a query means, reserved labels included
   idByLabel: ComputedRef<Record<SetLabel, SetDefinitionId>>;
@@ -34,8 +34,8 @@ export const createSetDefinitions = (): SetDefinitions => {
   const definitions = ref<SetDefinition[]>([]);
 
   const nextLabel = useLabelGetter(definitions);
-  const overlaps = useOverlaps(definitions);
-  const allSections = useAllSections(definitions, overlaps);
+  const sharedSections = useSharedSections(definitions);
+  const allSections = useAllSections(definitions, sharedSections);
 
   const idByLabel = computed(() => {
     const ids: Record<SetLabel, SetDefinitionId> = {};
@@ -48,7 +48,7 @@ export const createSetDefinitions = (): SetDefinitions => {
 
   return {
     definitions,
-    overlaps,
+    sharedSections,
     allSections,
     idByLabel,
 

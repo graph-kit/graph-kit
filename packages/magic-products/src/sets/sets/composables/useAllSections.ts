@@ -1,6 +1,6 @@
 import { type Ref, computed } from 'vue';
 
-import type { Overlap, Section, SetDefinition } from '../../types.ts';
+import type { Section, SetDefinition } from '../../types.ts';
 import { OUTSIDE_ALL_SETS } from '../other/constants.ts';
 
 /**
@@ -8,14 +8,13 @@ import { OUTSIDE_ALL_SETS } from '../other/constants.ts';
  */
 export const useAllSections = (
   definitions: Ref<SetDefinition[]>,
-  overlaps: Ref<Overlap[]>,
+  sharedSections: Ref<Section[]>,
 ) => {
   return computed<Section[]>(() => {
-    const overlappingSections = overlaps.value.map((overlap) => overlap.sets);
     const setsByThemselves = definitions.value.map(({ id }) => [id]);
 
     return [
-      ...overlappingSections,
+      ...sharedSections.value,
       ...setsByThemselves,
       [OUTSIDE_ALL_SETS.identity],
     ];

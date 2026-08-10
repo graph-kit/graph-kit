@@ -1,5 +1,6 @@
-import type { Overlap, SetDefinition, SetDefinitionId } from '../../types.ts';
+import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
 import type { CircleFocusControls } from '../composables/useCircleFocus.ts';
+import type { SectionKey } from '../other/sectionKey.ts';
 import {
   drawCircleBackground,
   drawCircleLabel,
@@ -9,9 +10,9 @@ import { colorOverlappingAreas } from './overlaps.ts';
 
 type DrawProps = {
   definitions: SetDefinition[];
-  overlaps: Overlap[];
+  overlaps: Section[];
   highlightedSets: Map<SetDefinitionId, string[]>;
-  highlightedOverlaps: Map<Overlap['id'], string[]>;
+  highlightedOverlaps: Map<SectionKey, string[]>;
   isSetFocused: CircleFocusControls['isSetFocused'];
   backgroundColors: string[] | null;
 };

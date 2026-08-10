@@ -21,8 +21,6 @@
 
   const { queryIdToSections } = queryAnalysis;
 
-  const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
-
   // the eye-toggle in HighlightRow hides a query's paint without touching whether it resolves
   const visibleQueryIdToSections = computed(() => {
     const sectionsByQueryId = new Map<HighlightQueryId, Section[]>();
@@ -37,18 +35,18 @@
 
   const { isResizing } = useCircleResize({
     surface: magic.surface,
-    definitions,
+    definitions: sets.definitions,
   });
 
   useCircleDrag({
     surface: magic.surface,
-    definitions,
+    definitions: sets.definitions,
     isResizing,
   });
 
   const focus = useSetFocus({
     surface: magic.surface,
-    definitions,
+    definitions: sets.definitions,
   });
 
   const sectionKeyToColors = computed(() => {
@@ -67,8 +65,10 @@
     return map;
   });
 
-  const createSet = () => {
-    const definition = addDefinition(magic.surface.cursorCoordinates.value);
+  const createSetDefinition = () => {
+    const definition = sets.addDefinition(
+      magic.surface.cursorCoordinates.value,
+    );
     focus.set(definition.id);
   };
 
@@ -76,15 +76,15 @@
     const focusedSetIds = sets.definitions.value
       .map((s) => s.id)
       .filter(focus.isFocused);
-    for (const setId of focusedSetIds) removeDefinition(setId);
+    for (const setId of focusedSetIds) sets.removeDefinition(setId);
   };
 
   magic.surface.draw.content.value = (ctx) => {
     draw(
       ctx,
       {
-        definitions: definitions.value,
-        overlaps: sharedSections.value,
+        definitions: sets.definitions.value,
+        overlaps: sets.sharedSections.value,
         sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: focus.isFocused,
       },
@@ -92,7 +92,7 @@
     );
   };
 
-  magic.surface.domEvents.subscribe('onDblClick', createSet);
+  magic.surface.domEvents.subscribe('onDblClick', createSetDefinition);
 
   magic.shortcuts.add({
     id: 'delete-set',
@@ -100,7 +100,7 @@
     key: 'backspace',
   });
 
-  const cursor = useCursorStyle(definitions, magic.surface);
+  const cursor = useCursorStyle(sets.definitions, magic.surface);
 
   magic.surface.lifecycleEvents.subscribe('onAfterRepaint', () => {
     const canvas = nullThrows(magic.surface.canvas.value, 'canvas not defined');

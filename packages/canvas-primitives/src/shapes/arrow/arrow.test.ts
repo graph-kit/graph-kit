@@ -3,11 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { ARROW_SCHEMA_DEFAULTS } from './defaults.ts';
 import { arrow } from './index.ts';
 
-vi.mock('@canvas/surface/coordinates/index', () => ({
+vi.mock('@core/utils/canvas/index', () => ({
   getClientCoordinates: vi.fn(),
-}));
-
-vi.mock('@core/utils/ctx/index', () => ({
   getCtx: vi.fn(() => ({
     measureText: vi.fn(() => ({
       width: 0,

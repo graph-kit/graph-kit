@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  import { MagicProduct, useGraphProduct } from '@magic/shared/product';
-  
+  import { MagicProduct, useGraphProduct } from '@magic/shared/product';  
 
   import { lensChips } from './lensChips.ts';
   import ActionBar from './ActionBar.vue';

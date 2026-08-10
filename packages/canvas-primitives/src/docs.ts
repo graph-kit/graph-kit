@@ -1,5 +1,4 @@
-import { getDevicePixelRatio } from '@canvas/surface/camera/utils';
-import { getCtx } from '@core/utils/ctx/index';
+import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
 import { generateId } from '@core/utils/id';
 
 import { defineComponent, h, onMounted, watch } from 'vue';

@@ -4,6 +4,6 @@
     "outDir": "./dist/types",
     "rootDir": "./src"
   },
-  "references": [{ "path": "../core-utils" }, { "path": "../canvas-surface" }],
+  "references": [{ "path": "../core-utils" }],
   "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

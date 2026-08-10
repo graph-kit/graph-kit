@@ -12,7 +12,7 @@ type DarkPreset = PluginThemes<
   [CanvasPlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin]
 >;
 
-export const dark: DarkPreset = {
+export const dark = {
   canvas: {
     'canvas.color': colors.GRAY_600,
     'canvas.cursor': CURSOR_FALLBACK,
@@ -99,4 +99,4 @@ export const dark: DarkPreset = {
     'anchors.parentFocused.cursor': shared.anchors.cursor,
     'anchors.parentFocused.radius': shared.anchors.radius,
   },
-};
+} as const satisfies DarkPreset;

@@ -1,4 +1,4 @@
-import { getClientCoordinates } from '@canvas/surface/coordinates/index';
+import { getClientCoordinates } from '@core/utils/canvas/index';
 import type { DeepRequired } from 'ts-essentials';
 
 import { isPointInBoundingBox } from '../helpers.ts';
@@ -94,14 +94,14 @@ export const createTextarea = (
   const handleMouseDown = (event: MouseEvent) => {
     const { x, y, width, height } = input.getBoundingClientRect();
 
-    const bb: BoundingBox = {
+    const boundingBox: BoundingBox = {
       at: { x, y },
       width,
       height,
     };
 
     const { clientX, clientY } = event;
-    const clickedInside = isPointInBoundingBox(bb, {
+    const clickedInside = isPointInBoundingBox(boundingBox, {
       x: clientX,
       y: clientY,
     });

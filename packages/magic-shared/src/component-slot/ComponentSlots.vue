@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { useProvidedGraph } from '../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../product/context.ts';
   import { SlotPosition } from './types.ts';
   import { useComponentBySlotPosition } from './useComponentsBySlotPosition.ts';
 
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 
-  const componentSlots = useComponentBySlotPosition(graph.magic.componentSlots);
+  const componentSlots = useComponentBySlotPosition(magic.componentSlots);
 
   // maps 1:1 to slot positions in ComponentSlot type
   const props = defineProps<{

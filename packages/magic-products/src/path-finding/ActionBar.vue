@@ -4,12 +4,12 @@
   import HStack from '@magic/shared/HStack';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/product';
+  import { useProvidedMagicGraph } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities';
 
   import { usePathFindingSimulations } from './simulations/index.ts';
 
-  const graph = useProvidedGraph();
+  const graph = useProvidedMagicGraph();
 
   const simulations = usePathFindingSimulations();
 

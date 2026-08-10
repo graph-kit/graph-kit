@@ -2,7 +2,7 @@ import { MaybeGetter } from '@core/utils/maybeGetter/index';
 
 import { StyleValue } from 'vue';
 
-import { MagicGraph } from '../product/useGraphProduct.ts';
+import { MagicGraph } from '../product/types.ts';
 
 export type Explainer = {
   content: MaybeGetter<string, [MagicGraph]>;

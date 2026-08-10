@@ -1,9 +1,10 @@
 <script setup lang="ts">
-  import { manifest } from '@magic/products/traversals/manifest';
+  import MainView from '@magic/products/traversals/MainView.vue';
+  import { manifests } from '@magic/shared/product';
 
-  useSeoMeta(manifest.meta);
+  useSeoMeta(manifests['traversals'].meta);
 </script>
 
 <template>
-  <div><component :is="manifest.component" /></div>
+  <div><MainView /></div>
 </template>

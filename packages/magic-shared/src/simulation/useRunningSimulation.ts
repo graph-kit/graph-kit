@@ -2,15 +2,15 @@ import { nullThrows } from '@core/utils/assert';
 
 import { computed } from 'vue';
 
-import { useProvidedGraph } from '../product/useProvidedGraph.ts';
+import { useProvidedMagic } from '../product/context.ts';
 import { useCurrentFrame } from './useCurrentFrame.ts';
 
 export const useRunningSimulation = () => {
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 
   const simulation = computed(() =>
     nullThrows(
-      graph.magic.simulation.current.value,
+      magic.simulation.current.value,
       'no actively running simulation!',
     ),
   );

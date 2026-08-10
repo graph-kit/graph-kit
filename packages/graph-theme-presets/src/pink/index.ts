@@ -12,7 +12,7 @@ type PinkPreset = PluginThemes<
   [CanvasPlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin]
 >;
 
-export const pink: PinkPreset = {
+export const pink = {
   canvas: {
     'canvas.color': colors.PINK_300,
     'canvas.cursor': CURSOR_FALLBACK,
@@ -99,4 +99,4 @@ export const pink: PinkPreset = {
     'anchors.parentFocused.cursor': shared.anchors.cursor,
     'anchors.parentFocused.radius': shared.anchors.radius,
   },
-};
+} as const satisfies PinkPreset;

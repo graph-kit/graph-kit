@@ -21,7 +21,6 @@
     "vue": "^3.5.18"
   },
   "dependencies": {
-    "@canvas/surface": "workspace:*",
     "@core/utils": "workspace:*",
     "tinycolor2": "catalog:"
   },

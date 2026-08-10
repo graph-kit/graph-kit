@@ -1,5 +1,5 @@
 import { Lens } from '@magic/shared/lens';
-import { MagicGraph } from '@magic/shared/product/useGraphProduct';
+import { MagicGraph } from '@magic/shared/product';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import {
   SimulationDefinition,

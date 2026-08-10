@@ -12,7 +12,7 @@ type LightPreset = PluginThemes<
   [CanvasPlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin]
 >;
 
-export const light: LightPreset = {
+export const light = {
   canvas: {
     'canvas.color': colors.GRAY_300,
     'canvas.cursor': CURSOR_FALLBACK,
@@ -99,4 +99,4 @@ export const light: LightPreset = {
     'anchors.parentFocused.cursor': shared.anchors.cursor,
     'anchors.parentFocused.radius': shared.anchors.radius,
   },
-};
+} as const satisfies LightPreset;

@@ -2,6 +2,7 @@
   "extends": "./.nuxt/tsconfig.json",
   "references": [
     { "path": "../core-components" },
-    { "path": "../magic-products" }
+    { "path": "../magic-products" },
+    { "path": "../magic-shared" }
   ]
 }

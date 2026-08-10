@@ -1,3 +1,5 @@
+import { getDevicePixelRatio } from '@core/utils/canvas/index';
+
 import { onMounted, ref } from 'vue';
 
 export type TransformProps = {
@@ -16,8 +18,6 @@ export type TransformProps = {
 };
 
 export type TransformOptions = Partial<TransformProps>;
-
-export const getDevicePixelRatio = () => window.devicePixelRatio ?? 1;
 
 export const useDevicePixelRatio = () => {
   const dpr = ref(1);

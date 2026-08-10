@@ -1,7 +1,7 @@
 import { nullThrows } from '@core/utils/assert';
 import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 
-import { MagicGraph } from '../product/useGraphProduct.ts';
+import { MagicGraph } from '../product/types.ts';
 import { parseTextSegments } from './parseTextSegments.ts';
 import { Explainer, ExplainerHighlight } from './types.ts';
 import { useGraphElementRefExplainerSegment } from './useGraphElementIdPart.ts';

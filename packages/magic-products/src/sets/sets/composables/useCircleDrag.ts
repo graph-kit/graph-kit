@@ -1,0 +1,33 @@
+import { circle } from '@canvas/primitives/shapes/circle/index';
+import { CanvasProps } from '@canvas/surface/types';
+
+import type { Ref } from 'vue';
+
+import type { SetDefinition } from '../../types.ts';
+import { useDrag } from './useDrag.ts';
+
+type CircleDragProps = {
+  surface: CanvasProps;
+  definitions: Ref<SetDefinition[]>;
+  isResizing: Ref<Boolean>;
+};
+
+export const useCircleDrag = ({
+  surface,
+  definitions,
+  isResizing,
+}: CircleDragProps) =>
+  useDrag(
+    surface,
+    (coord) => {
+      if (isResizing.value) return;
+      return definitions.value
+        .toSorted((a, b) => a.display.radius - b.display.radius)
+        .find(({ display }) => circle(display).hitbox(coord));
+    },
+    (definition, diff) => {
+      const { at } = definition.display;
+      at.x = at.x + diff.x;
+      at.y = at.y + diff.y;
+    },
+  );

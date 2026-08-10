@@ -34,6 +34,9 @@
     side: 'top',
   });
 
+  /** stays true across the trigger, the tooltip, and the gap between them, unlike trigger mouseenter/mouseleave */
+  const open = defineModel<boolean>('open');
+
   const attrs = useAttrs();
   const slots = useSlots();
 
@@ -51,7 +54,13 @@
 
 <template>
   <TooltipProvider :delay-duration="0">
-    <TooltipRoot>
+    <!-- with no content there is no grace area to close on pointer exit, so leaving the trigger has to -->
+    <!-- closing on trigger click would punch a hole in `open` while the pointer is still on the trigger -->
+    <TooltipRoot
+      v-model:open="open"
+      :disable-hoverable-content="!hasContent"
+      disable-closing-trigger
+    >
       <TooltipTrigger as-child>
         <slot name="trigger" />
       </TooltipTrigger>

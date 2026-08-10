@@ -1,21 +1,18 @@
 <script setup lang="ts">
-  import { GraphProduct, useGraphProduct } from '@magic/shared/product';
+  import { MagicProduct, useGraphProduct } from '@magic/shared/product';
 
   import ActionBar from './ActionBar.vue';
   import { lensChips } from './lensChips.ts';
-  import { manifest } from './manifest.ts';
 
   const graph = useGraphProduct({
-    manifest,
+    productId: 'traversals',
     core: {
       weighted: false,
     },
     interactive: {
       allowSelfLoops: false,
     },
-    ui: {
-      lensChips,
-    },
+    lensChips,
   });
 
   graph.magic.componentSlots.add({
@@ -26,5 +23,5 @@
 </script>
 
 <template>
-  <GraphProduct />
+  <MagicProduct />
 </template>

@@ -6,20 +6,20 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import ToggleIconButton from '../../components/toggle-icon-button/ToggleIconButton.vue';
-  import { useProvidedGraph } from '../../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../../product/context.ts';
   import AnnotationToggle from '../annotations/AnnotationToggle.vue';
   import AppearanceToggle from '../appearance/AppearanceToggle.vue';
   import FullscreenButton from '../fullscreen/FullscreenButton.vue';
   import LinkSharingButton from '../link-sharing/LinkSharingButton.vue';
   import HistoryButtons from '../undo-redo/HistoryButtons.vue';
 
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 </script>
 
 <template>
   <HStack>
     <HistoryButtons />
-    <AnnotationToggle v-if="graph.magic.ui.annotations" />
+    <AnnotationToggle v-if="magic.annotations" />
 
     <Well class="p-0 rounded-full overflow-hidden">
       <Dropdown
@@ -35,7 +35,7 @@
           />
         </template>
         <VStack class="gap-1 px-1">
-          <LinkSharingButton v-if="graph.magic.ui.linkSharing" />
+          <LinkSharingButton v-if="magic.ui.linkSharing" />
           <FullscreenButton />
           <div
             class="w-full bg-white opacity-10"

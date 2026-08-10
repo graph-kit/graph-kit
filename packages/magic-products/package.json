@@ -20,16 +20,24 @@
     "vue": "^3.5.18"
   },
   "dependencies": {
+    "@canvas/primitives": "workspace:*",
+    "@canvas/surface": "workspace:*",
     "@core/utils": "workspace:*",
-    "@graph/core": "workspace:*",
+    "@cortex-js/compute-engine": "^0.102.0",
     "@graph/plugins": "workspace:*",
     "@graph/primitives": "workspace:*",
+    "@graph/theme-presets": "workspace:*",
     "@magic/shared": "workspace:*",
+    "@mdi/js": "^7.4.47",
+    "@vueuse/core": "catalog:",
+    "ctrl-keys": "^1.0.6",
     "fraction.js": "^5.3.4",
+    "katex": "^0.18.1",
+    "mathlive": "^0.110.0",
     "tinycolor2": "catalog:"
   },
   "devDependencies": {
-    "ts-essentials": "^10.2.0",
-    "@types/tinycolor2": "catalog:"
+    "@types/tinycolor2": "catalog:",
+    "ts-essentials": "^10.2.0"
   }
 }

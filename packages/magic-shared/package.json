@@ -16,6 +16,10 @@
       "types": "./dist/types/components/magic/NodeList.vue.d.ts",
       "default": "./src/components/magic/NodeList.vue"
     },
+    "./ProductCard": {
+      "types": "./dist/types/ui/product-card/ProductCard.vue.d.ts",
+      "default": "./src/ui/product-card/ProductCard.vue"
+    },
     "./Well": {
       "types": "./dist/types/components/layout/Well.vue.d.ts",
       "default": "./src/components/layout/Well.vue"

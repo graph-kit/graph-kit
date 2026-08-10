@@ -4,11 +4,11 @@
   import { computed } from 'vue';
 
   import ComponentSlots from '../component-slot/ComponentSlots.vue';
-  import { useDisablePointerEvents } from './useDisablePointerEvents.ts';
-  import { useProvidedGraph } from './useProvidedGraph.ts';
+  import { useProvidedMagic } from './context.ts';
+  import { useDisablePointerEvents } from './internals/useDisablePointerEvents.ts';
 
-  const graph = useProvidedGraph();
-  const pointerEvents = useDisablePointerEvents(graph);
+  const magic = useProvidedMagic();
+  const pointerEvents = useDisablePointerEvents(magic);
 
   const slotSharedClasses = computed(
     () => `absolute flex flex-col gap-2 ${pointerEvents.value}`,
@@ -31,7 +31,7 @@
     whole point: the slots claim them individually
   -->
   <div
-    v-if="!graph.magic.componentSlots.visibility.isHidden.value"
+    v-if="!magic.componentSlots.visibility.isHidden.value"
     class="fixed inset-0 overflow-hidden pointer-events-none"
   >
     <ComponentSlots
@@ -46,5 +46,5 @@
     />
   </div>
 
-  <CanvasSurface v-bind="graph.canvas.magicCanvas.ref" />
+  <CanvasSurface v-bind="{ ...magic.surface.ref, $attrs }" />
 </template>

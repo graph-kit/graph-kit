@@ -1,12 +1,12 @@
-import { useProvidedGraph } from '@magic/shared/product';
-
 import { computed } from 'vue';
 
+import { useProvidedMagic } from '../product/context.ts';
+
 export const useCurrentFrame = <Frame = any>() => {
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 
   return computed(() => {
-    const simulation = graph.magic.simulation.current.value;
+    const simulation = magic.simulation.current.value;
     if (!simulation) return;
     return simulation.frames[simulation.playhead.position];
   });

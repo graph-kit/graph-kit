@@ -4,8 +4,7 @@ import { FOCUS_PLUGIN_ID } from '@graph/plugins/focus/constants';
 import { INTERACTIVE_PLUGIN_ID } from '@graph/plugins/interactive/constants';
 import { MARQUEE_PLUGIN_ID } from '@graph/plugins/marquee/constants';
 import { NODE_DRAG_PLUGIN_ID } from '@graph/plugins/node-drag/constants';
-
-import { ThemePreset } from '../../graph/types.ts';
+import { BasicColorMode } from '@vueuse/core';
 
 export const COLORS = [
   colors.RED_600,
@@ -18,7 +17,7 @@ export const BRUSH_WEIGHTS = [3, 6, 9, 12];
 
 export const ANNOTATION_MODES = ['drawing', 'erasing', 'laser'] as const;
 
-export const THEME_TO_ERASER_OUTLINE: Record<ThemePreset, Color> = {
+export const THEME_TO_ERASER_OUTLINE: Record<BasicColorMode, Color> = {
   light: colors.GRAY_900,
   dark: colors.GRAY_100,
 };

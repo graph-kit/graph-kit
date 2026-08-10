@@ -1,5 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
-import { useProvidedGraph } from '@magic/shared/product';
+import { useProvidedMagicGraph } from '@magic/shared/product';
 import { SimulationDefinition } from '@magic/shared/simulation';
 
 import { onMounted, ref } from 'vue';
@@ -29,7 +29,7 @@ const useAVLControls = () => {
 export type AVLControls = ReturnType<typeof useAVLControls>;
 
 export const useAVLSimulationDefinition = (): Controls => {
-  const graph = useProvidedGraph();
+  const graph = useProvidedMagicGraph();
 
   const avlControls = useAVLControls();
 

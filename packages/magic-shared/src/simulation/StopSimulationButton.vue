@@ -3,20 +3,20 @@
 
   import Button from '../components/button/Button.vue';
   import Icon from '../components/icon/Icon.vue';
-  import { useProvidedGraph } from '../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../product/context.ts';
 
-  const graph = useProvidedGraph();
-  const { useShortcut } = graph.magic.shortcuts;
+  const magic = useProvidedMagic();
+  const { useShortcut } = magic.shortcuts;
   useShortcut({
     key: 'escape',
-    callback: graph.magic.simulation.stop,
+    callback: magic.simulation.stop,
   });
 </script>
 
 <template>
   <Button
-    v-if="graph.magic.simulation.current.value"
-    @click="graph.magic.simulation.stop()"
+    v-if="magic.simulation.current.value"
+    @click="magic.simulation.stop()"
     class="bg-red-500 hover:bg-red-600 text-white"
   >
     <template #start>

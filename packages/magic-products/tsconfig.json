@@ -6,12 +6,13 @@
     "rewriteRelativeImportExtensions": false
   },
   "references": [
-    { "path": "../magic-shared" },
+    { "path": "../canvas-primitives" },
+    { "path": "../canvas-surface" },
     { "path": "../core-utils" },
-    { "path": "../graph-core" },
     { "path": "../graph-plugins" },
     { "path": "../graph-primitives" },
-    { "path": "../graph-create-graph" }
+    { "path": "../graph-theme-presets" },
+    { "path": "../magic-shared" }
   ],
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
 }

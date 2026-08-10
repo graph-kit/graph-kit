@@ -19,6 +19,7 @@
     "vue": "^3.5.18"
   },
   "dependencies": {
+    "@canvas/primitives": "workspace:*",
     "@core/utils": "workspace:*",
     "@graph/primitives": "workspace:*",
     "@vueuse/core": "catalog:",

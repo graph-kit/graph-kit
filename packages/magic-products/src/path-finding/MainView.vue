@@ -1,17 +1,13 @@
 <script setup lang="ts">
-  import { GraphProduct, useGraphProduct } from '@magic/shared/product';
+  import { MagicProduct, useGraphProduct } from '@magic/shared/product';
 
   import ActionBar from './ActionBar.vue';
-  import { manifest } from './manifest.ts';
 
   const graph = useGraphProduct({
-    manifest,
+    productId: 'path-finding',
     interactive: {
       allowSelfLoops: false,
       allowRepeatConnections: true,
-    },
-    ui: {
-      annotations: true,
     },
   });
 
@@ -23,5 +19,5 @@
 </script>
 
 <template>
-  <GraphProduct />
+  <MagicProduct />
 </template>

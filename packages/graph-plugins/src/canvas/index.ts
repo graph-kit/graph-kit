@@ -1,10 +1,9 @@
 import { createAnimatedShapes } from '@canvas/primitives/animation/index';
-import { cross } from '@canvas/primitives/shapes/cross/index';
-import { getCoordinates } from '@canvas/surface/coordinates/index';
+import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasProps } from '@canvas/surface/types';
 import { createThemeController } from '@core/themes/index';
-import { getCtx } from '@core/utils/ctx/index';
-import { KeyboardEventEntries, MouseEventEntries } from '@core/utils/types';
+import { getCtx, getWorldCoordinates } from '@core/utils/canvas/index';
+import { KeyboardEventEntries } from '@core/utils/types';
 import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { CoreEdge } from '@graph/primitives/types';
 
@@ -28,7 +27,7 @@ const sameElements = (previous: CanvasElement[], next: CanvasElement[]) => {
 };
 
 export const canvas =
-  (magicCanvas: CanvasProps): CanvasPlugin =>
+  (surface: CanvasProps): CanvasPlugin =>
   ({ controls, getters }) => {
     const canvasEventRegistry = createCanvasEventRegistry();
     const canvasEvents = createEventHub(canvasEventRegistry);
@@ -53,7 +52,7 @@ export const canvas =
       rebuilt, every frame, and only emits when the answer actually changed
     */
     const refreshGraphUnderCursor = () => {
-      const coords = magicCanvas.cursorCoordinates.value;
+      const coords = surface.cursorCoordinates.value;
       const elements = aggregator.getCanvasElementsAtCoordinate(coords);
 
       const changed =
@@ -74,7 +73,7 @@ export const canvas =
     const theme = createThemeController(createCanvasThemeOverrides());
 
     setupCanvasCursor({
-      canvas: magicCanvas.canvas,
+      canvas: surface.canvas,
       getNode: getters.getNode,
       subscribe: canvasEvents.subscribe,
       resolveToken: theme._resolveToken,
@@ -114,7 +113,7 @@ export const canvas =
       native event knows where it happened, so the hit test is redone against it
     */
     const graphMouseEvent = (event: MouseEvent): CanvasGraphMouseEvent => {
-      const { x, y } = getCoordinates(event, getCtx(magicCanvas.canvas));
+      const { x, y } = getWorldCoordinates(event, getCtx(surface.canvas));
       const coords = { x, y };
       const elements = aggregator.getCanvasElementsAtCoordinate(coords);
 
@@ -126,21 +125,11 @@ export const canvas =
       };
     };
 
-    const mouseEvents = emitMouseEvents(graphMouseEvent, canvasEvents.emit);
+    emitMouseEvents(surface.domEvents, graphMouseEvent, canvasEvents.emit);
 
     const keyboardEvents = emitKeyboardEvents(canvasEvents.emit);
 
-    magicCanvas.lifecycleEvents.subscribe('onMounted', () => {
-      if (!magicCanvas.canvas.value) {
-        throw new Error('Canvas element not found in DOM');
-      }
-
-      for (const [event, listeners] of Object.entries(
-        mouseEvents,
-      ) as MouseEventEntries) {
-        magicCanvas.canvas.value.addEventListener(event, listeners);
-      }
-
+    surface.lifecycleEvents.subscribe('onMounted', () => {
       for (const [event, listeners] of Object.entries(
         keyboardEvents,
       ) as KeyboardEventEntries) {
@@ -148,17 +137,7 @@ export const canvas =
       }
     });
 
-    magicCanvas.lifecycleEvents.subscribe('onBeforeUnmount', () => {
-      if (!magicCanvas.canvas.value) {
-        throw new Error('Canvas element not found in DOM');
-      }
-
-      for (const [event, listeners] of Object.entries(
-        mouseEvents,
-      ) as MouseEventEntries) {
-        magicCanvas.canvas.value.removeEventListener(event, listeners);
-      }
-
+    surface.lifecycleEvents.subscribe('onBeforeUnmount', () => {
       for (const [event, listeners] of Object.entries(
         keyboardEvents,
       ) as KeyboardEventEntries) {
@@ -166,36 +145,12 @@ export const canvas =
       }
     });
 
-    /*
-      everything that does not depend on where a cell lands is hoisted out of
-      the stamp: the theme lookup, and the cross itself, which resolves its
-      schema, builds the three bars it draws with, and builds a hitbox, a
-      bounding box and text props the pattern never asks for. what is left per
-      cell is a translate and a draw
-
-      the cross is built at the origin, so that translate is what puts each
-      stamp where it belongs
-    */
-    magicCanvas.draw.backgroundPattern.value = (ctx, alpha) => {
-      const origin = { x: 0, y: 0 };
-
-      const cell = cross({
-        at: origin,
-        size: 12,
-        lineWidth: 1,
-        fillColor: theme._resolveToken('canvas.patternColor', alpha),
-      });
-
-      return (at) => {
-        ctx.save();
-        ctx.translate(at.x, at.y);
-        cell.draw(ctx);
-        ctx.restore();
-      };
-    };
+    surface.draw.backgroundPattern.value = crossPattern((alpha) =>
+      theme._resolveToken('canvas.patternColor', alpha),
+    );
 
     canvasEvents.subscribe('onDraw', () => {
-      const canvas = magicCanvas.canvas.value;
+      const canvas = surface.canvas.value;
       if (!canvas) return;
       canvas.style.backgroundColor = theme._resolveToken('canvas.color');
     });
@@ -219,7 +174,7 @@ export const canvas =
         renderer,
         events: canvasEvents,
 
-        magicCanvas,
+        surface,
 
         graphUnderCursor,
 
@@ -235,7 +190,7 @@ export const canvas =
       },
       transit: {
         encode: () => {
-          const camera = magicCanvas.camera.state;
+          const camera = surface.camera.state;
           return {
             panX: camera.panX.value,
             panY: camera.panY.value,
@@ -243,7 +198,7 @@ export const canvas =
           };
         },
         decode: (data) => {
-          const camera = magicCanvas.camera.state;
+          const camera = surface.camera.state;
           camera.panX.value = data.panX;
           camera.panY.value = data.panY;
           camera.zoom.value = data.zoom;

@@ -5,12 +5,10 @@ import { ComputedRef } from 'vue';
 import { Graph } from '../../graph/types.ts';
 
 export const createAnnotationThemer = (
-  graph: Graph,
+  canvas: Graph['canvas'],
   hideCursor: ComputedRef<boolean>,
 ) => {
-  const { set, removeAll } = graph.canvas.theme.createLayer(
-    'product/annotations',
-  );
+  const { set, removeAll } = canvas.theme.createLayer('product/annotations');
 
   const activate = () => {
     set('canvas.cursor', () =>

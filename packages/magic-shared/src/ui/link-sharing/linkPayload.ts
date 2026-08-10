@@ -3,36 +3,37 @@ import {
   decompressFromEncodedURIComponent,
 } from 'lz-string';
 
-import { MagicGraph } from '../../product/useGraphProduct.ts';
+import { Magic } from '../../product/types.ts';
 
-const graphSharePayloadQueryParam = 'graph';
+const sharePayloadQueryParam = 'data';
 
-const getLinkPayload = (graph: MagicGraph) => {
-  const encoding = graph.transit.encode();
+const getLinkPayload = (magic: Magic) => {
+  const encoding = magic.transit.encode();
   const stringEncoding = JSON.stringify(encoding);
   return compressToEncodedURIComponent(stringEncoding);
 };
 
-export const getLink = (graph: MagicGraph) => {
+export const getLink = (magic: Magic) => {
   const { origin } = window.location;
-  const { slug } = graph.magic.manifest.navigation;
-  const payload = getLinkPayload(graph);
-  const graphQueryParam = `${graphSharePayloadQueryParam}=${payload}`;
+  const { slug } = magic.manifest.navigation;
+  const payload = getLinkPayload(magic);
+  const query = `${sharePayloadQueryParam}=${payload}`;
 
-  return `${origin}/${slug}?${graphQueryParam}`;
+  return `${origin}/${slug}?${query}`;
 };
 
-export const loadGraphFromLinkPayload = (graph: MagicGraph) => {
+export const loadFromLinkPayload = (magic: Magic) => {
   const url = new URL(window.location.href);
-  const payload = url.searchParams.get(graphSharePayloadQueryParam);
+  const payload = url.searchParams.get(sharePayloadQueryParam);
   if (!payload) return;
 
   // always consume or else users see stale when they refresh
-  url.searchParams.delete(graphSharePayloadQueryParam);
+  url.searchParams.delete(sharePayloadQueryParam);
   window.history.replaceState({}, '', url);
 
   const stringEncoding = decompressFromEncodedURIComponent(payload);
   if (!stringEncoding) return;
 
-  graph.transit.decode(JSON.parse(stringEncoding));
+  const parsedEncoding = JSON.parse(stringEncoding);
+  magic.transit.decode(parsedEncoding);
 };

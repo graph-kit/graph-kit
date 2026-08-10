@@ -1,5 +1,4 @@
-import { useProvidedGraph } from '@magic/shared/product';
-import { MagicGraph } from '@magic/shared/product/useGraphProduct';
+import { MagicGraph, useProvidedMagicGraph } from '@magic/shared/product';
 
 import { ref } from 'vue';
 
@@ -13,7 +12,7 @@ export type TraversalSimulationOptions = {
 };
 
 export const useTraversalSimulations = () => {
-  const graph = useProvidedGraph();
+  const graph = useProvidedMagicGraph();
   const startNodeId: StartNodeId = ref();
   const options: TraversalSimulationOptions = { graph, startNodeId };
 

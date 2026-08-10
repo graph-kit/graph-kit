@@ -32,7 +32,7 @@ export type GraphUnderCursor = {
 
 type BaseCanvasControls = {
   /** @internal */
-  magicCanvas: CanvasProps;
+  surface: CanvasProps;
   /**
    * manages the set of canvas elements rendered on the canvas.
    * use `aggregator.transformers` to register custom canvas elements for your extension.

@@ -137,6 +137,7 @@ export const getAllMsts = (
       (sum, edge) => sum.add(edge.weight),
       new Fraction(0),
     ),
-    connected: msts[0].length === nodes.length - 1,
+    // a graph with no nodes has nothing to disconnect, so it counts as connected
+    connected: nodes.length === 0 || msts[0].length === nodes.length - 1,
   };
 };

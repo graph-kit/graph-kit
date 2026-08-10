@@ -1,4 +1,4 @@
-import { useProvidedGraph } from '@magic/shared/product';
+import { useProvidedMagicGraph } from '@magic/shared/product';
 
 import { ref } from 'vue';
 
@@ -10,7 +10,7 @@ import { singleSourceSimulationDefinition } from './single-source/effects.ts';
 import type { SourceNodeId } from './single-source/effects.ts';
 
 export const usePathFindingSimulations = () => {
-  const graph = useProvidedGraph();
+  const graph = useProvidedMagicGraph();
   const sourceNodeId: SourceNodeId = ref();
 
   /*

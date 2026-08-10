@@ -1,8 +1,8 @@
+import { createLabelGenerator } from '@core/utils/label';
 import { getValue } from '@core/utils/maybeGetter/index';
 import { reactiveMap } from '@reactive/primitives/index';
 
 import { UPPERCASE_ALPHABET } from './constants.ts';
-import { createLabelGenerator } from './createLabelGenerator.ts';
 import { createLabelThemer } from './createLabelThemer.ts';
 import { NodeLabelControls, NodeLabelPlugin } from './types.ts';
 

@@ -5,10 +5,10 @@
 
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';
-  import { useProvidedGraph } from '../../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../../product/context.ts';
   import { getLink } from './linkPayload.ts';
 
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 
   let linkCopiedResetTimer: NodeJS.Timeout;
 
@@ -18,7 +18,7 @@
   const copyLinkToClipboard = () => {
     clearTimeout(linkCopiedResetTimer);
     try {
-      navigator.clipboard.writeText(getLink(graph));
+      navigator.clipboard.writeText(getLink(magic));
       linkCopiedToClipboard.value = true;
       linkCopiedResetTimer = setTimeout(
         () => (linkCopiedToClipboard.value = false),

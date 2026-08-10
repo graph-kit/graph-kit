@@ -4,10 +4,10 @@
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedGraph } from '../../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../../product/context.ts';
 
-  const graph = useProvidedGraph();
-  const coords = graph.canvas.magicCanvas.cursorCoordinates;
+  const magic = useProvidedMagic();
+  const coords = magic.surface.cursorCoordinates;
   const x = computed(() => Math.round(coords.value.x));
   const y = computed(() => Math.round(coords.value.y));
 </script>

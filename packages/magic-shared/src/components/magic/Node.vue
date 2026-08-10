@@ -2,7 +2,7 @@
   import { StyleValue, computed, onUnmounted } from 'vue';
 
   import { GNode } from '../../graph/types.ts';
-  import { useProvidedGraph } from '../../product/useProvidedGraph.ts';
+  import { useProvidedGraph } from '../../product/context.ts';
   import { useNodeStyles } from '../../theme/index.ts';
 
   const props = withDefaults(

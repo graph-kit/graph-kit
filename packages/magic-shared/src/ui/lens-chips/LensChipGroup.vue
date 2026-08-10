@@ -5,20 +5,20 @@
 
   import HStack from '../../components/layout/HStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedGraph } from '../../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../../product/context.ts';
   import LensChip from './LensChip.vue';
   import { LensChipDefinition } from './types.ts';
 
   const chipId = (chip: LensChipDefinition) => chip.lens.id;
 
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 
   const pinnedLensId = ref<string>();
   const hoveredLensId = ref<string>();
 
   const chips = computed(() =>
     nullThrows(
-      graph.magic.ui.lensChips,
+      magic.lensChips,
       'LensChipGroup is being rendered without chips!',
     ),
   );
@@ -41,16 +41,16 @@
 
   watch(displayedChip, (newChip, oldChip) => {
     if (oldChip) {
-      graph.magic.lens.remove(oldChip.lens.id);
+      magic.lens.remove(oldChip.lens.id);
     }
     if (newChip) {
-      graph.magic.lens.add(newChip.lens);
+      magic.lens.add(newChip.lens);
     }
   });
 </script>
 
 <template>
-  <Well>
+  <Well v-if="chips.length > 0">
     <HStack>
       <template v-for="chip of chips">
         <LensChip
@@ -58,8 +58,11 @@
           @click="togglePinnedLens(chipId(chip))"
           @focus="hoveredLensId = chipId(chip)"
           @blur="hoveredLensId = undefined"
-          @mouseenter="hoveredLensId = chipId(chip)"
-          @mouseleave="hoveredLensId = undefined"
+          @update:active="
+            $event
+              ? (hoveredLensId = chipId(chip))
+              : hoveredLensId === chipId(chip) && (hoveredLensId = undefined)
+          "
           :model-value="chipId(chip) === pinnedLensId"
         />
       </template>

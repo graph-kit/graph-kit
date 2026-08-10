@@ -14,7 +14,8 @@
     { "path": "../graph-render-functions" },
     { "path": "../core-themes" },
     { "path": "../graph-computed-tokens" },
-    { "path": "../canvas-primitives" }
+    { "path": "../canvas-primitives" },
+    { "path": "../graph-algorithms" }
   ],
   "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

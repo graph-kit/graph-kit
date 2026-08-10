@@ -3,25 +3,24 @@
 
   import IconButton from '../../components/icon-button/IconButton.vue';
   import HStack from '../../components/layout/HStack.vue';
-  import { useProvidedGraph } from '../../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../../product/context.ts';
 
-  const graph = useProvidedGraph();
-  const { canRedo, canUndo, undo, redo } = graph.history;
+  const magic = useProvidedMagic();
 </script>
 
 <template>
-  <HStack>
+  <HStack v-if="magic.history">
     <IconButton
-      @click="undo"
-      :disabled="!canUndo"
+      @click="magic.history.undo"
+      :disabled="!magic.history.canUndo.value"
       class="p-4"
       label="Undo"
       :size="20"
       :path="mdiUndo"
     />
     <IconButton
-      @click="redo"
-      :disabled="!canRedo"
+      @click="magic.history.redo"
+      :disabled="!magic.history.canRedo.value"
       class="p-4"
       label="Redo"
       :size="20"

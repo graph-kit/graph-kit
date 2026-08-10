@@ -13,7 +13,7 @@
   import ToggleButtonGroup from '../../components/toggle-button-group/ToggleButtonGroup.vue';
   import ToggleButtonGroupItem from '../../components/toggle-button-group/ToggleButtonGroupItem.vue';
   import Tooltip from '../../components/tooltip/Tooltip.vue';
-  import { useProvidedGraph } from '../../product/useProvidedGraph.ts';
+  import { useProvidedMagic } from '../../product/context.ts';
   import { appearances } from './appearances.ts';
 
   const appearanceToDisplayString: Record<BasicColorSchema, string> = {
@@ -28,7 +28,7 @@
     auto: mdiMonitor,
   };
 
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 </script>
 
 <template>
@@ -38,7 +38,7 @@
       Appearance
     </HStack>
     <div>
-      <ToggleButtonGroup v-model="graph.magic.appearance.value">
+      <ToggleButtonGroup v-model="magic.appearance.value">
         <template
           v-for="appearance in appearances"
           :key="appearance"

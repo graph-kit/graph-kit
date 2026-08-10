@@ -5,6 +5,5 @@
     "rootDir": "./src",
     "rewriteRelativeImportExtensions": false
   },
-  "references": [{ "path": "../core-utils" }],
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
 }

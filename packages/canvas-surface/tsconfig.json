@@ -7,6 +7,7 @@
     "rewriteRelativeImportExtensions": false
   },
   "references": [
+    { "path": "../canvas-primitives" },
     { "path": "../core-utils" },
     { "path": "../graph-primitives" }
   ],

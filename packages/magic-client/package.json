@@ -13,9 +13,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@core/components": "workspace:*",
     "@magic/products": "workspace:*",
-    "@mdi/js": "^7.4.47",
+    "@magic/shared": "workspace:*",
     "nuxt": "^4.1.2",
     "vue": "catalog:"
   },

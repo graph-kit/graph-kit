@@ -152,6 +152,19 @@ describe(getAllMsts, () => {
     expect(result.connected).toBe(true);
     expect(normalize(result.msts[0])).toEqual(['AB']);
   });
+  it('treats a graph with no nodes as connected', () => {
+    const result = getAllMsts([], []);
+
+    expect(result.connected).toBe(true);
+    expect(result.msts).toEqual([[]]);
+    expect(result.totalWeight.equals(new Fraction(0))).toBe(true);
+  });
+  it('treats a lone node as connected', () => {
+    const result = getAllMsts([{ id: 'A' }], []);
+
+    expect(result.connected).toBe(true);
+    expect(result.msts).toEqual([[]]);
+  });
   it('takes the Cartesian product of independent equal-weight choice points', () => {
     /*
       A

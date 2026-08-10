@@ -3,12 +3,12 @@
   import Button from '@magic/shared/Button';
   import HStackVue from '@magic/shared/HStack';
   import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/product';
+  import { useProvidedMagicGraph } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities';
 
   import { useTraversalSimulations } from './simulations/index.ts';
 
-  const graph = useProvidedGraph();
+  const graph = useProvidedMagicGraph();
 
   const simulations = useTraversalSimulations();
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
 
-  import { useProvidedGraph } from '../product/index.ts';
+  import { useProvidedMagic } from '../product/context.ts';
 
   const props = withDefaults(
     defineProps<{
@@ -13,10 +13,10 @@
     },
   );
 
-  const graph = useProvidedGraph();
+  const magic = useProvidedMagic();
 
   const highlighted = computed(
-    () => props.slotId === graph.magic.componentSlots.highlightedId.value,
+    () => props.slotId === magic.componentSlots.highlightedId.value,
   );
 
   const classes = computed(() => {

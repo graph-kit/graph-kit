@@ -1,9 +1,10 @@
 <script setup lang="ts">
-  import { manifest } from '@magic/products/dev/manifest';
+  import MainView from '@magic/products/dev/MainView.vue';
+  import { manifests } from '@magic/shared/product';
 
-  useSeoMeta(manifest.meta);
+  useSeoMeta(manifests['dev'].meta);
 </script>
 
 <template>
-  <div><component :is="manifest.component" /></div>
+  <div><MainView /></div>
 </template>

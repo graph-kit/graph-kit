@@ -1,78 +1,51 @@
-import { onMounted } from 'vue';
+import { useGraph } from '../graph/useGraph.ts';
+import { useGraphProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
+import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
+import { provideGraph } from './context.ts';
+import { GraphProductOptions, MagicGraph, MagicProductHost } from './types.ts';
+import { useMagicProduct } from './useMagicProduct.ts';
 
-import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
-import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
-import { Graph } from '../graph/types.ts';
-import { UseGraphOptions, useGraph } from '../graph/useGraph.ts';
-import { useLensState } from '../lens/useLensState.ts';
-import { LensControls } from '../lens/useLensState.ts';
-import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
-import { ShortcutControls, useShortcuts } from '../shortcuts/useShortcuts.ts';
-import { useSimulationState } from '../simulation/useSimulationState.ts';
-import { SimulationControls } from '../simulation/useSimulationState.ts';
-import {
-  AppearanceControls,
-  useProductAppearance,
-} from '../ui/appearance/useProductAppearance.ts';
-import { loadGraphFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
-import { UIControls, UIOptions, useProductUI } from '../ui/useProductUI.ts';
-import { MagicProductManifest } from './manifest.ts';
-import { useLocalStorageGraphSync } from './useLocalStorageGraphSync.ts';
-import { provideGraph } from './useProvidedGraph.ts';
-
-type GraphProductOptions = UseGraphOptions & {
-  manifest: MagicProductManifest;
-  localStorage?: boolean;
-  ui?: UIOptions;
-};
-
-export type MagicGraph = Graph & {
-  magic: {
-    manifest: MagicProductManifest;
-    lens: LensControls;
-    componentSlots: ComponentSlotControls;
-    simulation: SimulationControls;
-    ui: UIControls;
-    appearance: AppearanceControls;
-    shortcuts: ShortcutControls;
-  };
-};
-
-export const useGraphProduct = (options: GraphProductOptions) => {
+/** adapts a graph to the harness host interface, see {@link useMagicProduct} */
+export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   const graph = useGraph(options);
 
-  const componentSlots = useComponentSlotsState();
-  const lens = useLensState(componentSlots);
-  const simulation = useSimulationState(graph, componentSlots, lens);
+  const lensChips = options.lensChips?.(graph);
 
-  const ui = useProductUI(graph, componentSlots, options.ui);
-  const appearance = useProductAppearance(graph);
-  const shortcuts = useShortcuts();
-
-  const magicGraph: MagicGraph = {
-    ...graph,
-    magic: {
-      manifest: options.manifest,
-      lens,
-      componentSlots,
-      simulation,
-      ui,
-      appearance,
-      shortcuts,
-    },
+  const host: MagicProductHost = {
+    surface: graph.canvas.surface,
+    transit: graph.transit,
+    history: graph.history,
+    onAppearanceChanged: (color) =>
+      (graph.theme.activePresetName.value = color),
   };
 
-  if (options.localStorage !== false) {
-    useLocalStorageGraphSync(magicGraph);
+  const magic = useMagicProduct(host, {
+    productId: options.productId,
+    localStorage: options.localStorage !== false,
+    annotations: options.annotations === false ? undefined : graph.canvas,
+    ui: options.ui,
+    lensChips,
+  });
+
+  graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
+
+  graph.events.subscribe('onStructureChange', magic.localStorage.invalidate);
+  graph.nodeDrag.events.subscribe('onNodeDrop', magic.localStorage.invalidate);
+
+  if (lensChips) {
+    magic.componentSlots.add({
+      id: 'product/lens-chips',
+      component: LensChipGroup,
+      position: 'top-middle',
+    });
   }
 
-  if (magicGraph.magic.ui.linkSharing) {
-    onMounted(() => loadGraphFromLinkPayload(magicGraph));
-  }
+  useGraphProductShortcuts(magic, graph);
 
-  useProductShortcuts(magicGraph);
+  provideGraph(graph);
 
-  provideGraph(magicGraph);
-
-  return magicGraph;
+  return {
+    ...graph,
+    magic,
+  };
 };

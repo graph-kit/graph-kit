@@ -1,36 +1,22 @@
 import { ComponentSlot } from '../component-slot/types.ts';
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
-import { Graph } from '../graph/types.ts';
-import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
-import {
-  AnnotationsControls,
-  useAnnotationsState,
-} from './annotations/useAnnotationsState.ts';
 import BottomRightControls from './bottom-right-controls/BottomRightControls.vue';
 import CursorCoordinates from './debug/CursorCoordinates.vue';
-import { LensChipDefinition } from './lens-chips/types.ts';
 import NavigationMenu from './navigation-menu/NavigationMenu.vue';
 
 export type UIOptions = {
-  lensChips?: (graph: Graph) => LensChipDefinition[] | undefined;
-  annotations?: boolean;
   debug?: boolean;
   linkSharing?: boolean;
 };
 
 export type UIControls = {
-  lensChips?: LensChipDefinition[];
-  annotations?: AnnotationsControls;
   linkSharing: boolean;
 };
 
 export const useProductUI = (
-  graph: Graph,
   componentSlots: ComponentSlotControls,
   options: UIOptions = {},
 ): UIControls => {
-  const lensChips = options.lensChips?.(graph);
-
   const slots: (ComponentSlot | undefined)[] = [
     {
       id: 'product/bottom-right-controls',
@@ -42,13 +28,6 @@ export const useProductUI = (
       component: NavigationMenu,
       position: 'top-left',
     },
-    lensChips
-      ? {
-          id: 'product/lens-chips',
-          component: LensChipGroup,
-          position: 'top-middle',
-        }
-      : undefined,
     options.debug
       ? {
           id: 'product/debug/cursor-coordinates',
@@ -61,12 +40,7 @@ export const useProductUI = (
   const definedSlots = slots.filter((s) => !!s);
   componentSlots.addMany(definedSlots);
 
-  const annotations =
-    options.annotations === false ? undefined : useAnnotationsState(graph);
-
   return {
-    annotations,
-    lensChips,
     linkSharing: options.linkSharing !== false,
   };
 };

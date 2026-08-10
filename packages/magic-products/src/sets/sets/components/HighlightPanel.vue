@@ -8,7 +8,6 @@
 
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { useQueryAnalysis } from '../composables/useQueryAnalysis.ts';
   import {
     ADDITIONAL_KEY_BINDINGS,
     COLORS,
@@ -17,7 +16,9 @@
   import HighlightRow from './HighlightRow.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
-  const { sets, highlights } = useProvidedSetsProductState();
+  const { highlights, queryAnalysis } = useProvidedSetsProductState();
+  const { queryErrors, simplifiedQueries, disambiguatedQueries } =
+    queryAnalysis;
   const {
     queryIds,
     getQuery,
@@ -36,9 +37,6 @@
   const addHighlight = () => {
     focusedQueryId.value = addQuery();
   };
-
-  const { queryErrors, simplifiedQueries, disambiguatedQueries } =
-    useQueryAnalysis(highlights, sets);
 
   const MAX_NUMBER_OF_HIGHLIGHTS = 5;
 </script>

@@ -1,28 +1,39 @@
-import { computed } from 'vue';
+import { type ComputedRef, computed } from 'vue';
 
-import type { HighlightQueries } from '../../highlightQueries.ts';
-import type { SetDefinitions } from '../../setDefinitions.ts';
+import type { HighlightQueries } from './highlightQueries.ts';
+import type { SetDefinitions } from './setDefinitions.ts';
+import { COLORS } from './sets/other/constants.ts';
+import {
+  type ParseSetExpression,
+  createSetExpressionParser,
+} from './sets/other/createSetExpressionParser.ts';
+import {
+  getDisambiguatedLatex,
+  isAmbiguous,
+} from './sets/other/disambiguate.ts';
+import { parseMathJSON } from './sets/other/parseMathJSON.ts';
+import { simplify } from './sets/other/simplifier/index.ts';
+import { extractVariables } from './sets/other/simplifier/truthTable.ts';
 import type {
   HighlightGroup,
   HighlightQuery,
   HighlightQueryId,
   SetDefinitionId,
   SetLabel,
-} from '../../types.ts';
-import { COLORS } from '../other/constants.ts';
-import {
-  type ParseSetExpression,
-  createSetExpressionParser,
-} from '../other/createSetExpressionParser.ts';
-import { getDisambiguatedLatex, isAmbiguous } from '../other/disambiguate.ts';
-import { parseMathJSON } from '../other/parseMathJSON.ts';
-import { simplify } from '../other/simplifier/index.ts';
-import { extractVariables } from '../other/simplifier/truthTable.ts';
+} from './types.ts';
 
-export const useQueryAnalysis = (
+export type QueryAnalysis = {
+  queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
+  simplifiedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
+  disambiguatedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
+  // the sections every visible query resolves to, each with the color to paint them
+  activeSubsets: ComputedRef<HighlightGroup[]>;
+};
+
+export const createQueryAnalysis = (
   highlights: HighlightQueries,
   sets: SetDefinitions,
-) => {
+): QueryAnalysis => {
   const definedSetLabels = computed(() =>
     sets.definitions.value.map(({ label }) => label),
   );
@@ -122,7 +133,6 @@ export const useQueryAnalysis = (
   });
 
   return {
-    definedSetLabels,
     queryErrors,
     simplifiedQueries,
     disambiguatedQueries,

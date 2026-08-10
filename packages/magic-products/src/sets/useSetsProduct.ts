@@ -2,27 +2,33 @@ import { useCanvas } from '@canvas/surface/index';
 import { nullThrows } from '@core/utils/assert';
 import { MagicProductHost, useMagicProduct } from '@magic/shared/product';
 
-import { Ref, inject, provide, ref } from 'vue';
+import { inject, provide } from 'vue';
 
 import {
   type HighlightQueries,
   createHighlightQueries,
 } from './highlightQueries.ts';
+import { type QueryAnalysis, createQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
 import HighlightPanel from './sets/components/HighlightPanel.vue';
-import { HighlightGroup } from './types.ts';
 
 export type SetsProductState = {
-  activeSubsets: Ref<HighlightGroup[]>;
   highlights: HighlightQueries;
   sets: SetDefinitions;
+  // everything the queries resolve to once read against the set space
+  queryAnalysis: QueryAnalysis;
 };
 
-const useSetsProductState = (): SetsProductState => ({
-  activeSubsets: ref([]),
-  highlights: createHighlightQueries(),
-  sets: createSetDefinitions(),
-});
+const useSetsProductState = (): SetsProductState => {
+  const highlights = createHighlightQueries();
+  const sets = createSetDefinitions();
+
+  return {
+    highlights,
+    sets,
+    queryAnalysis: createQueryAnalysis(highlights, sets),
+  };
+};
 
 const SETS_PROVIDE_KEY = 'sets-product';
 

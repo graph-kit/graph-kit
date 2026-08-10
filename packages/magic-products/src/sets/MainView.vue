@@ -16,8 +16,10 @@
 
   const {
     magic,
-    setsProductState: { activeSubsets, sets },
+    setsProductState: { sets, queryAnalysis },
   } = useSetsProduct();
+
+  const { activeSubsets } = queryAnalysis;
 
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 

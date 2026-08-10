@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { MagicProduct, useMagicProduct } from '@magic/shared/product';
+  import { MagicProduct, useGraphProduct } from '@magic/shared/product';
   
 
   import { lensChips } from './lensChips.ts';
   import ActionBar from './ActionBar.vue';
 
-  const graph = useMagicProduct({
+  const graph = useGraphProduct({
     productId: 'min-spanning-trees',
     core: {
       directed: false,

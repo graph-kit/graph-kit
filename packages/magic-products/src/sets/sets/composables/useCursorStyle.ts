@@ -1,12 +1,10 @@
 import { CanvasProps } from '@canvas/surface/types';
+import { CURSOR } from '@core/utils/cursor';
 
-import { type Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import type { SetDefinition } from '../../types.ts';
 import { isInsideCircle, isOnEdge } from '../other/circleUtils.ts';
-
-export type CursorStyle =
-  'auto' | 'grab' | 'grabbing' | 'ew-resize' | 'ns-resize';
 
 const getAngleBetweenTwoPoints = (
   x1: number,
@@ -17,43 +15,46 @@ const getAngleBetweenTwoPoints = (
   return Math.atan2(Math.abs(y1 - y2), Math.abs(x1 - x2));
 };
 
-const usePointerDown = () => {
-  const isPointerDown = ref(false);
+const useMouseDown = (surface: CanvasProps) => {
+  const isMouseDown = ref(false);
 
-  const setPointerDown = () => (isPointerDown.value = true);
-  const setPointerUp = () => (isPointerDown.value = false);
+  const setMouseDown = () => (isMouseDown.value = true);
+  const setMouseUp = () => (isMouseDown.value = false);
 
-  onMounted(() => {
-    document.addEventListener('pointerdown', setPointerDown);
-    document.addEventListener('pointerup', setPointerUp);
-    document.addEventListener('pointercancel', setPointerUp);
-  });
+  surface.domEvents.subscribe('onMouseDown', setMouseDown);
+  surface.domEvents.subscribe('onMouseUp', setMouseUp);
 
-  onBeforeUnmount(() => {
-    document.removeEventListener('pointerdown', setPointerDown);
-    document.removeEventListener('pointerup', setPointerUp);
-    document.removeEventListener('pointercancel', setPointerUp);
-  });
+  const cleanup = () => {
+    surface.domEvents.unsubscribe('onMouseDown', setMouseDown);
+    surface.domEvents.unsubscribe('onMouseUp', setMouseUp);
+  };
 
-  return isPointerDown;
+  onBeforeUnmount(cleanup);
+
+  return isMouseDown;
 };
 
 export const useCursorStyle = (
   definitions: Ref<SetDefinition[]>,
-  cursorCoords: CanvasProps['cursorCoordinates'],
+  surface: CanvasProps,
 ) => {
-  const isPointerDown = usePointerDown();
-  return computed<CursorStyle>(() => {
-    const { x, y } = cursorCoords.value;
-    for (let i = definitions.value.length - 1; i >= 0; i--) {
-      const { display } = definitions.value[i];
-      if (isOnEdge(x, y, display))
+  const iseMouseDown = useMouseDown(surface);
+  return computed(() => {
+    const { x, y } = surface.cursorCoordinates.value;
+
+    for (const setDefinition of definitions.value) {
+      const { display } = setDefinition;
+
+      if (isOnEdge(x, y, display)) {
         return getAngleBetweenTwoPoints(x, y, display.at.x, display.at.y) > 0.75
-          ? 'ns-resize'
-          : 'ew-resize';
-      if (isInsideCircle(x, y, display))
-        return isPointerDown.value ? 'grabbing' : 'grab';
+          ? CURSOR.NS_RESIZE
+          : CURSOR.EW_RESIZE;
+      }
+
+      if (isInsideCircle(x, y, display)) {
+        return iseMouseDown.value ? CURSOR.GRABBING : CURSOR.GRAB;
+      }
     }
-    return 'auto';
+    return CURSOR.AUTO;
   });
 };

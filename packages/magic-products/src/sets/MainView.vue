@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
+  import { Color } from '@core/utils/colors';
   import { MagicProduct } from '@magic/shared/product';
 
   import { computed } from 'vue';
@@ -50,14 +51,14 @@
     definitions,
   });
 
-  const highlightedOutside = computed(() => {
+  const outsideColors = computed(() => {
     return activeHighlights.value
       .filter((group) => group.sections.some(isOutsideAllSetsSection))
       .map((group) => group.color);
   });
 
-  const highlightedSections = computed(() => {
-    const map = new Map<SectionKey, string[]>();
+  const sectionKeyToColors = computed(() => {
+    const map = new Map<SectionKey, Color[]>();
 
     for (const { sections, color } of sectionsToHighlight.value) {
       for (const section of sections) {
@@ -86,9 +87,9 @@
       {
         definitions: definitions.value,
         overlaps: sharedSections.value,
-        highlightedSections: highlightedSections.value,
+        sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: isFocused,
-        highlightedOutside: highlightedOutside.value,
+        outsideColors: outsideColors.value,
       },
       theme.value.set,
     );

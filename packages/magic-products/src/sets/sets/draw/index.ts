@@ -18,11 +18,11 @@ type DrawProps = {
   /** every section two or more circles share, back to front so nested ones paint on top */
   overlaps: Section[];
   /** colors painted over a section, keyed by the sets forming it */
-  highlightedSections: Map<SectionKey, string[]>;
+  sectionKeyToColors: Map<SectionKey, string[]>;
   /** whether a set carries the focus outline, see {@link SetFocusControls} */
   isSetFocused: SetFocusControls['isFocused'];
   /** colors painted over the region no set covers, drawn behind every circle */
-  highlightedOutside: string[];
+  outsideColors: string[];
 };
 
 export const draw = (
@@ -30,9 +30,9 @@ export const draw = (
   props: DrawProps,
   colors: SetColors,
 ) => {
-  const { highlightedSections } = props;
+  const { sectionKeyToColors } = props;
 
-  if (props.highlightedOutside.length > 0) {
+  if (props.outsideColors.length > 0) {
     const start = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
     const end = getWorldCoordinates(
       { clientX: window.innerWidth, clientY: window.innerHeight },
@@ -40,7 +40,7 @@ export const draw = (
     );
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = hatchPattern(ctx, props.highlightedOutside);
+    ctx.fillStyle = hatchPattern(ctx, props.outsideColors);
     ctx.fillRect(start.x, start.y, end.x - start.x, end.y - start.y);
     ctx.restore();
   }
@@ -50,7 +50,7 @@ export const draw = (
       ctx,
       {
         set,
-        highlightColors: highlightedSections.get(getSectionKey([set.id])) ?? null,
+        highlightColors: sectionKeyToColors.get(getSectionKey([set.id])) ?? null,
       },
       colors,
     );
@@ -61,7 +61,7 @@ export const draw = (
     {
       definitions: props.definitions,
       overlaps: props.overlaps,
-      highlightedSections,
+      sectionKeyToColors,
     },
     colors,
   );

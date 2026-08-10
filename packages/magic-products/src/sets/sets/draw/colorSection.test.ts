@@ -27,31 +27,31 @@ describe(hasHighlightedAncestor, () => {
   });
 
   it('is true when a single-set ancestor is highlighted', () => {
-    const highlightedSections = new Map([[getSectionKey(['A']), ['red']]]);
-    expect(hasHighlightedAncestor(['A', 'B'], highlightedSections)).toBe(true);
+    const sectionKeyToColors = new Map([[getSectionKey(['A']), ['red']]]);
+    expect(hasHighlightedAncestor(['A', 'B'], sectionKeyToColors)).toBe(true);
   });
 
   it('is true when a multi-set ancestor overlap is highlighted', () => {
-    const highlightedSections = new Map([
+    const sectionKeyToColors = new Map([
       [getSectionKey(['A', 'B']), ['red']],
     ]);
-    expect(hasHighlightedAncestor(['A', 'B', 'C'], highlightedSections)).toBe(
+    expect(hasHighlightedAncestor(['A', 'B', 'C'], sectionKeyToColors)).toBe(
       true,
     );
   });
 
   it('ignores the section itself, only its ancestors count', () => {
-    const highlightedSections = new Map([
+    const sectionKeyToColors = new Map([
       [getSectionKey(['A', 'B']), ['red']],
     ]);
-    expect(hasHighlightedAncestor(['A', 'B'], highlightedSections)).toBe(
+    expect(hasHighlightedAncestor(['A', 'B'], sectionKeyToColors)).toBe(
       false,
     );
   });
 
   it('ignores highlights on sets outside the section', () => {
-    const highlightedSections = new Map([[getSectionKey(['Z']), ['red']]]);
-    expect(hasHighlightedAncestor(['A', 'B'], highlightedSections)).toBe(
+    const sectionKeyToColors = new Map([[getSectionKey(['Z']), ['red']]]);
+    expect(hasHighlightedAncestor(['A', 'B'], sectionKeyToColors)).toBe(
       false,
     );
   });

@@ -75,8 +75,8 @@ export const getAncestorSections = (section: Section): Section[] => {
  */
 export const hasHighlightedAncestor = (
   section: Section,
-  highlightedSections: Map<SectionKey, string[]>,
+  sectionKeyToColors: Map<SectionKey, string[]>,
 ) =>
   getAncestorSections(section).some((ancestor) =>
-    highlightedSections.has(getSectionKey(ancestor)),
+    sectionKeyToColors.has(getSectionKey(ancestor)),
   );

@@ -151,7 +151,12 @@ export const primsSimulationDefinition = (
       if (startNodeInNodes) return;
       return { id: 'no-start-node' };
     })
-    .build(),
+    .custom(() => {
+      if (options.graph.edges.value.length < 1) {
+        return { id: 'no-edges' };
+      }
+    })
+    .minNodes(2).build(),
   collectFrames: (collector) => {
     prims(
       options.graph,
@@ -226,7 +231,11 @@ export const kruskalsSimulationDefinition = (
   kruskals: KruskalsFunction,
   options: KruskalsSimulationOptions,
 ): SimulationDefinition<KruskalsFrame> => ({
-  guard: new SimulationGuardBuilder(options.graph).minNodes(1).build(),
+  guard: new SimulationGuardBuilder(options.graph).minNodes(2).custom(() => {
+      if (options.graph.edges.value.length < 1) {
+        return { id: 'no-edges' };
+      }
+    }).build(),
   collectFrames: (collector) => {
     kruskals(options.graph)(collector);
   },

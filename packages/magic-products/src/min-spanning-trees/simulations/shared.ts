@@ -22,15 +22,10 @@ import { Ref } from 'vue';
 import { primsExplainer } from './explainer.ts';
 import { PrimsFrame, PrimsFunction } from './frame.ts';
 
-// exploring = the tree-side node the current decision is anchored to - where
-//   the edge being taken (or just taken) actually comes from, which can be
-//   anywhere the tree already reaches.
-// settled = already grown into the tree.
-// frontier = the far side of a crossing edge - outside the tree, being
-//   weighed as a set alongside the rest of the frontier. paired with the
-//   'weighing' edge role below so a cyan node always sits at the far end of
-//   a cyan edge.
-// anchor = the node the user picked to grow the tree from.
+// exploring = the tree side node the current decision is anchored to 
+// settled = already grown into the tree
+// frontier = the far side of a potential edge 
+// anchor = start node (user picked)
 type PrimsNodeConcept = 'exploring' | 'settled' | 'frontier' | 'anchor';
 
 const nodeRoles = {
@@ -40,12 +35,9 @@ const nodeRoles = {
   anchor: 'anchor',
 } as const satisfies Record<PrimsNodeConcept, NodeRole>;
 
-// candidate = a currently-eligible edge, weighed against the rest of the
-//   candidate set, not yet resolved. a set, and stays lit for as long as an
-//   edge stays eligible.
-// crossing = the one or two edges actually in play this instant - either the
-//   pair being weighed against each other, or the single edge just chosen.
-// tree = an edge grown into the tree so far.
+// candidate = a currently eligible edge,
+// crossing = the one or two edges being weighed against each other right now
+// tree = an edge grown into the tree so far
 type PrimsEdgeConcept = 'candidate' | 'crossing' | 'tree';
 
 const edgeRoles = {
@@ -71,16 +63,10 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
   const candidateEdge = createEdgeIdThemer(graph, edgeRoles.candidate);
   const crossingEdge = createEdgeIdThemer(graph, edgeRoles.crossing);
 
-  /*
-    edges that were candidates at some point but can never be picked now -
-    faded to a quarter alpha rather than given a flat color, the same
-    technique the "total cost" chip uses to grey out non-mst edges. an id
-    themer would replace the color outright; fading whatever is already
-    there instead keeps this legible next to anything else painting the edge
-  */
   const excludedIds = new Set<string>();
   const fadeExcluded = (edge: CoreEdge, resolveUnderneath: () => Color) => {
     if (!excludedIds.has(edge.id)) return;
+    // TODO: does this have a default constant somewhere?
     return tinycolor(resolveUnderneath()).setAlpha(0.25).toHex8String();
   };
   const excludedEdge = graph.theme.createThemer({
@@ -96,9 +82,6 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     },
   });
 
-  // order matters: latter elements take priority over earlier ones. the anchor
-  // sits below the role that describes what is happening right now, so the
-  // node the user picked gives up its pink for the frame it is being worked on
   const themers = [
     frontier,
     settled,
@@ -117,8 +100,6 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     anchor.setId(frame.anchorNodeId);
     tree.setIds(frame.treeEdgeIds);
     candidateEdge.setIds(frame.candidateEdges ?? []);
-    // the pair being weighed and the final pick never coexist in the same
-    // frame, so this is safe to merge into one themer rather than two
     crossingEdge.setIds([
       ...(frame.currentComparison ?? []),
       ...(frame.selectedEdge ? [frame.selectedEdge] : []),

@@ -84,7 +84,7 @@ describe('primsExplainer', () => {
       edges: ['e2'],
     });
     expect(explainer?.content).toContain('Loop');
-    expect(explainer?.content).toContain('It Would');
+    expect(explainer?.content).toContain('it would');
   });
 
   it('uses plural phrasing when more than one edge is ruled out at once', () => {
@@ -93,6 +93,6 @@ describe('primsExplainer', () => {
       type: 'exclude-edges',
       edges: ['e1', 'e2'],
     });
-    expect(explainer?.content).toContain('They Would');
+    expect(explainer?.content).toContain('they would');
   });
 });

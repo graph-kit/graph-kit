@@ -45,6 +45,12 @@ export const ADDITIONAL_KEY_BINDINGS = {
   '+': '\\cup',
 } as const;
 
+// every key that expands into latex as a query is typed
+export const LATEX_HOTKEYS = {
+  ...KEYBOARD_KEY_TO_LATEX,
+  ...ADDITIONAL_KEY_BINDINGS,
+} as const;
+
 export const LATEX_SET_SYMBOLS = {
   SET_MINUS: 'SetMinus',
   UNION: 'Union',

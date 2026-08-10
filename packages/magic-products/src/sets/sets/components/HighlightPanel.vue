@@ -8,25 +8,12 @@
 
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import {
-    ADDITIONAL_KEY_BINDINGS,
-    COLORS,
-    KEYBOARD_KEY_TO_LATEX,
-  } from '../other/constants.ts';
+  import { COLORS, KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
   import HighlightRow from './HighlightRow.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
-  const { highlights, queryAnalysis } = useProvidedSetsProductState();
-  const { queryErrors, simplifiedQueries, disambiguatedQueries } =
-    queryAnalysis;
-  const {
-    queryIds,
-    getQuery,
-    addQuery,
-    setLatexQueryString,
-    setHidden,
-    insertIntoQuery,
-  } = highlights;
+  const { highlights } = useProvidedSetsProductState();
+  const { queryIds, addQuery, insertIntoQuery } = highlights;
 
   const focusedQueryId = ref<HighlightQueryId>(queryIds.value[0]);
 
@@ -48,15 +35,7 @@
         v-for="(queryId, index) in queryIds"
         :key="queryId"
         :queryId="queryId"
-        :modelValue="getQuery(queryId).latexQueryString"
-        :hidden="getQuery(queryId).isHidden"
-        :error="queryErrors[queryId]"
-        :simplified="simplifiedQueries[queryId]"
-        :disambiguated="disambiguatedQueries[queryId]"
         :color="COLORS.HIGHLIGHT[index % COLORS.HIGHLIGHT.length]"
-        :hotkeys="{ ...KEYBOARD_KEY_TO_LATEX, ...ADDITIONAL_KEY_BINDINGS }"
-        @update:modelValue="setLatexQueryString(queryId, $event)"
-        @update:hidden="setHidden(queryId, $event)"
         @focus="focusedQueryId = queryId"
       />
 

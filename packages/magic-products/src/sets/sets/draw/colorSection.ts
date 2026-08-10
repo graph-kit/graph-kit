@@ -7,7 +7,7 @@ import { hatchPattern } from './hatchPattern.ts';
 
 type ColorSectionProps = {
   definitions: SetDefinition[];
-  overlap: Section;
+  section: Section;
   colors: string[];
 };
 
@@ -16,10 +16,10 @@ export const colorSection = (
   ctx: CanvasRenderingContext2D,
   props: ColorSectionProps,
 ) => {
-  const { overlap, definitions, colors } = props;
+  const { section, definitions, colors } = props;
   ctx.save();
 
-  for (const setId of overlap) {
+  for (const setId of section) {
     const {
       at: { x, y },
       radius,

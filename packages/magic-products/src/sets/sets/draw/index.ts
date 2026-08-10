@@ -3,6 +3,7 @@ import { getWorldCoordinates } from '@core/utils/canvas/index';
 import type { Section, SetDefinition } from '../../types.ts';
 import { SetColors } from '../../useSetsTheme.ts';
 import type { SetFocusControls } from '../composables/useSetFocus.ts';
+import { OUTSIDE_ALL_SETS } from '../other/constants.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
 import {
   drawCircleBackground,
@@ -15,14 +16,11 @@ import { hatchPattern } from './hatchPattern.ts';
 type DrawProps = {
   /** every set to draw, as a circle with its label */
   definitions: SetDefinition[];
-  /** every section two or more circles share, back to front so nested ones paint on top */
-  overlaps: Section[];
+  sections: Section[];
   /** colors painted over a section, keyed by the sets forming it */
   sectionKeyToColors: Map<SectionKey, string[]>;
   /** whether a set carries the focus outline, see {@link SetFocusControls} */
   isSetFocused: SetFocusControls['isFocused'];
-  /** colors painted over the region no set covers, drawn behind every circle */
-  outsideColors: string[];
 };
 
 export const draw = (
@@ -32,7 +30,12 @@ export const draw = (
 ) => {
   const { sectionKeyToColors } = props;
 
-  if (props.outsideColors.length > 0) {
+  // the region no set covers fills the whole canvas rather than clipping to circles
+  const outsideColors = sectionKeyToColors.get(
+    getSectionKey([OUTSIDE_ALL_SETS.identity]),
+  );
+
+  if (outsideColors) {
     const start = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
     const end = getWorldCoordinates(
       { clientX: window.innerWidth, clientY: window.innerHeight },
@@ -40,7 +43,7 @@ export const draw = (
     );
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = hatchPattern(ctx, props.outsideColors);
+    ctx.fillStyle = hatchPattern(ctx, outsideColors);
     ctx.fillRect(start.x, start.y, end.x - start.x, end.y - start.y);
     ctx.restore();
   }
@@ -50,7 +53,8 @@ export const draw = (
       ctx,
       {
         set,
-        highlightColors: sectionKeyToColors.get(getSectionKey([set.id])) ?? null,
+        highlightColors:
+          sectionKeyToColors.get(getSectionKey([set.id])) ?? null,
       },
       colors,
     );
@@ -60,7 +64,7 @@ export const draw = (
     ctx,
     {
       definitions: props.definitions,
-      overlaps: props.overlaps,
+      sections: props.sections,
       sectionKeyToColors,
     },
     colors,

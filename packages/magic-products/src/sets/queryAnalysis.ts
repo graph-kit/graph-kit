@@ -14,18 +14,58 @@ import { parseMathJSON } from './sets/other/parseMathJSON.ts';
 import { simplify } from './sets/other/simplifier/index.ts';
 import { extractVariables } from './sets/other/simplifier/truthTable.ts';
 import type {
-  HighlightGroup,
   HighlightQuery,
   HighlightQueryId,
+  Section,
   SetLabel,
 } from './types.ts';
+
+/**
+ * one query read against the current set space. `isValid` gates `sections`, so
+ * checking it hands back the resolved sections without a second null check
+ */
+type AnalyzedQuery =
+  | { latexQueryString: HighlightQuery; isValid: true; sections: Section[] }
+  | { latexQueryString: HighlightQuery; isValid: false; sections: null };
+
+const analyzeQuery = (
+  latexQueryString: HighlightQuery,
+  parse: ParseSetExpression,
+  definedLabels: SetLabel[],
+): AnalyzedQuery => {
+  const invalid = {
+    latexQueryString,
+    isValid: false,
+    sections: null,
+  } as const;
+
+  // an empty query is not an error, it just selects nothing
+  if (!latexQueryString.trim()) {
+    return { latexQueryString, isValid: true, sections: [] };
+  }
+
+  const mathJSON = parseMathJSON(latexQueryString);
+  if (!mathJSON.isValid) return invalid;
+
+  const sections = parse(mathJSON.json);
+  if (sections === null) return invalid;
+
+  const namesAnUndefinedSet =
+    definedLabels.length > 0 &&
+    extractVariables(mathJSON.json).some(
+      (variable) => !definedLabels.includes(variable),
+    );
+  if (namesAnUndefinedSet) return invalid;
+
+  return { latexQueryString, isValid: true, sections };
+};
 
 export type QueryAnalysis = {
   queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
   simplifiedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
   disambiguatedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
-  // the sections each query resolves to paired with its queryId, skipping hidden and erroring queries
-  activeHighlights: ComputedRef<HighlightGroup[]>;
+  // the sections each query resolves to, keyed by query, skipping erroring queries
+  queryIdToSections: ComputedRef<Map<HighlightQueryId, Section[]>>;
 };
 
 export const useQueryAnalysis = (
@@ -36,41 +76,31 @@ export const useQueryAnalysis = (
     sets.definitions.value.map(({ label }) => label),
   );
 
-  const parseAgainstSetSpace = () =>
-    createSetExpressionParser(
+  /*
+    the one place a query gets read against the set space. everything below is a
+    view onto this, so a query is never parsed twice and the reads cannot disagree
+  */
+  const queryIdToAnalysis = computed(() => {
+    const parse = createSetExpressionParser(
       sets.allSections.value,
       (label) => sets.idByLabel.value[label],
     );
-
-  const hasQueryError = (
-    latexQueryString: HighlightQuery,
-    parse: ParseSetExpression,
-    definedLabels: SetLabel[],
-  ) => {
-    if (!latexQueryString.trim()) return false;
-
-    const mathJSON = parseMathJSON(latexQueryString);
-    if (!mathJSON?.isValid) return true;
-    if (parse(mathJSON.json) === null) return true;
-    if (
-      definedLabels.length &&
-      extractVariables(mathJSON.json).some(
-        (variable) => !definedLabels.includes(variable),
-      )
-    )
-      return true;
-
-    return false;
-  };
-
-  const queryErrors = computed(() => {
-    const parse = parseAgainstSetSpace();
     const labels = definedSetLabels.value;
-    const errors: Record<HighlightQueryId, boolean> = {};
+    const analyses = new Map<HighlightQueryId, AnalyzedQuery>();
 
     for (const queryId of highlights.queryIds.value) {
       const { latexQueryString } = highlights.getQuery(queryId);
-      errors[queryId] = hasQueryError(latexQueryString, parse, labels);
+      analyses.set(queryId, analyzeQuery(latexQueryString, parse, labels));
+    }
+
+    return analyses;
+  });
+
+  const queryErrors = computed(() => {
+    const errors: Record<HighlightQueryId, boolean> = {};
+
+    for (const [queryId, { isValid }] of queryIdToAnalysis.value) {
+      errors[queryId] = !isValid;
     }
 
     return errors;
@@ -79,11 +109,13 @@ export const useQueryAnalysis = (
   const simplifiedQueries = computed(() => {
     const queries: Record<HighlightQueryId, string | null> = {};
 
-    for (const queryId of highlights.queryIds.value) {
-      const { latexQueryString } = highlights.getQuery(queryId);
-      queries[queryId] = queryErrors.value[queryId]
-        ? null
-        : simplify(latexQueryString, sets.idByLabel.value);
+    for (const [
+      queryId,
+      { latexQueryString, isValid },
+    ] of queryIdToAnalysis.value) {
+      queries[queryId] = isValid
+        ? simplify(latexQueryString, sets.idByLabel.value)
+        : null;
     }
 
     return queries;
@@ -92,12 +124,13 @@ export const useQueryAnalysis = (
   const disambiguatedQueries = computed(() => {
     const queries: Record<HighlightQueryId, string | null> = {};
 
-    for (const queryId of highlights.queryIds.value) {
-      const { latexQueryString } = highlights.getQuery(queryId);
-
+    for (const [
+      queryId,
+      { latexQueryString, isValid },
+    ] of queryIdToAnalysis.value) {
       queries[queryId] = null;
       if (!latexQueryString.trim()) continue;
-      if (queryErrors.value[queryId]) continue;
+      if (!isValid) continue;
       if (!isAmbiguous(latexQueryString)) continue;
 
       queries[queryId] = getDisambiguatedLatex(latexQueryString);
@@ -106,33 +139,21 @@ export const useQueryAnalysis = (
     return queries;
   });
 
-  const activeHighlights = computed(() => {
-    const parse = parseAgainstSetSpace();
-    const labels = definedSetLabels.value;
-    const results: HighlightGroup[] = [];
+  const queryIdToSections = computed(() => {
+    const sectionsByQueryId = new Map<HighlightQueryId, Section[]>();
 
-    for (const queryId of highlights.queryIds.value) {
-      const { latexQueryString, isHidden } = highlights.getQuery(queryId);
-
-      if (isHidden) continue;
-      if (hasQueryError(latexQueryString, parse, labels)) continue;
-
-      const mathJSON = parseMathJSON(latexQueryString);
-      if (!mathJSON) continue;
-
-      const sections = parse(mathJSON.json);
-      if (!sections) continue;
-
-      results.push({ queryId, sections });
+    for (const [queryId, analysis] of queryIdToAnalysis.value) {
+      if (!analysis.isValid) continue;
+      sectionsByQueryId.set(queryId, analysis.sections);
     }
 
-    return results;
+    return sectionsByQueryId;
   });
 
   return {
     queryErrors,
     simplifiedQueries,
     disambiguatedQueries,
-    activeHighlights,
+    queryIdToSections,
   };
 };

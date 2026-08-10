@@ -5,7 +5,8 @@
   "entry": ["**/*.test.ts", "**/*.test.tsx"],
   "workspaces": {
     "packages/magic-client": {
-      "ignore": ["env.d.ts"]
+      "ignore": ["env.d.ts"],
+      "ignoreDependencies": ["katex"]
     },
     "packages/magic-products": {
       "ignoreDependencies": [

@@ -1,11 +1,12 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
+import { FontWeight } from '@canvas/primitives/text/types';
 
+import { SetDefinition } from '../../types.ts';
 import { COLORS } from '../other/constants.ts';
-import { Circle } from '../types/types.ts';
-import { getHatchPattern } from './hatchPattern.ts';
+import { hatchPattern } from './hatchPattern.ts';
 
 type DrawCircleBackgroundProps = {
-  circle: Circle;
+  set: SetDefinition;
   highlightColors: string[] | null;
 };
 
@@ -13,27 +14,33 @@ export const drawCircleBackground = (
   ctx: CanvasRenderingContext2D,
   props: DrawCircleBackgroundProps,
 ) => {
-  const { circle: c, highlightColors } = props;
+  const { set, highlightColors } = props;
 
   if (!highlightColors || highlightColors.length === 1) {
     circle({
-      ...c,
-      fillColor: highlightColors?.[0] ?? COLORS.BACKGROUND,
+      ...set.display,
+      fillColor: highlightColors?.[0] ?? COLORS.NON_HIGHLIGHT,
     }).draw(ctx);
     return;
   }
 
   ctx.save();
   ctx.beginPath();
-  ctx.arc(c.at.x, c.at.y, c.radius, 0, 2 * Math.PI);
+  ctx.arc(
+    set.display.at.x,
+    set.display.at.y,
+    set.display.radius,
+    0,
+    2 * Math.PI,
+  );
   ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = getHatchPattern(ctx, highlightColors);
+  ctx.fillStyle = hatchPattern(ctx, highlightColors);
   ctx.fill();
   ctx.restore();
 };
 
 type DrawCircleOutlineProps = {
-  circle: Circle;
+  set: SetDefinition;
   isFocused: boolean;
 };
 
@@ -44,10 +51,10 @@ export const drawCircleOutline = (
   const {
     at: { x, y },
     radius,
-  } = props.circle;
+  } = props.set.display;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 8;
   ctx.strokeStyle = props.isFocused
     ? COLORS.CIRCLE_FOCUSED
     : COLORS.CIRCLE_OUTLINE;
@@ -55,7 +62,7 @@ export const drawCircleOutline = (
 };
 
 type DrawCircleLabelProps = {
-  circle: Circle;
+  set: SetDefinition;
   isFocused: boolean;
 };
 
@@ -64,13 +71,17 @@ export const drawCircleLabel = (
   props: DrawCircleLabelProps,
 ) => {
   const {
-    at: { x, y },
     label,
-  } = props.circle;
-  ctx.font = '15px Arial';
-  ctx.fillStyle = props.isFocused
-    ? COLORS.CIRCLE_FOCUSED
-    : COLORS.CIRCLE_OUTLINE;
+    display: {
+      at: { x, y },
+    },
+  } = props.set;
+  const fontWeight: FontWeight = 'bold';
+  const fontSize = 24;
+  const fontFamily = 'Arial';
+  const color = COLORS.TEXT_COLOR;
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, x, y);

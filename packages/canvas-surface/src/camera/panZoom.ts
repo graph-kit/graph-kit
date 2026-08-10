@@ -1,6 +1,9 @@
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
+import type { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 
 import { type Ref, onMounted, ref } from 'vue';
+
+import type { CanvasDOMEvents } from '../domEvents.ts';
 
 export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 10;
@@ -8,7 +11,10 @@ export const MAX_ZOOM = 10;
 export const ZOOM_SENSITIVITY = 0.02;
 export const PAN_SENSITIVITY = 1;
 
-export const usePanAndZoom = (canvas: Ref<HTMLCanvasElement | undefined>) => {
+export const usePanAndZoom = (
+  canvas: Ref<HTMLCanvasElement | undefined>,
+  domEvents: ReadonlyEventHub<CanvasDOMEvents>,
+) => {
   const panX = ref(0);
   const panY = ref(0);
   const zoom = ref(1);
@@ -76,13 +82,16 @@ export const usePanAndZoom = (canvas: Ref<HTMLCanvasElement | undefined>) => {
     middleMouseDown = false;
   };
 
-  onMounted(() => {
-    if (!canvas.value) throw new Error('canvas not found in DOM');
-    canvas.value.addEventListener('wheel', onWheel, { passive: false });
-    canvas.value.addEventListener('mousedown', onMousedown);
-    canvas.value.addEventListener('mousemove', onMousemove);
-    document.addEventListener('mouseup', onMouseup);
-  });
+  domEvents.subscribe('onWheel', onWheel);
+  domEvents.subscribe('onMouseDown', onMousedown);
+  domEvents.subscribe('onMouseMove', onMousemove);
+
+  /*
+    the release that ends a pan is the one the canvas never sees: dragging past
+    the edge of the window and letting go there. that makes it a document event
+    rather than a canvas one, so it stays off the surface's dom event hub
+  */
+  onMounted(() => document.addEventListener('mouseup', onMouseup));
 
   return {
     actions: {
@@ -110,11 +119,6 @@ export const usePanAndZoom = (canvas: Ref<HTMLCanvasElement | undefined>) => {
       translateX: panX.value,
       translateY: panY.value,
     }),
-    cleanup: (ref: HTMLCanvasElement) => {
-      ref.removeEventListener('wheel', onWheel);
-      ref.removeEventListener('mousedown', onMousedown);
-      ref.removeEventListener('mousemove', onMousemove);
-      document.removeEventListener('mouseup', onMouseup);
-    },
+    cleanup: () => document.removeEventListener('mouseup', onMouseup),
   };
 };

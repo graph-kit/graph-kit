@@ -1,29 +1,37 @@
-import type { Circle } from '../types/types.ts'
+import { nullThrows } from '@core/utils/assert';
 
-export const getCircle = (circles: Circle[], circleLabel: Circle['label']) => {
-  const circle = circles.find((c) => c.label === circleLabel)
-  if (!circle) throw 'circle missing in call to getCircle'
-  return circle
-}
+import type {
+  SetDefinition,
+  SetDefinitionId,
+  SetDisplay,
+} from '../../types.ts';
 
-export const isInsideCircle = (x: number, y: number, circle: Circle) => {
-  const dx = x - circle.at.x
-  const dy = y - circle.at.y
-  return dx * dx + dy * dy <= circle.radius * circle.radius
-}
+export const getSetDefinition = (
+  definitions: SetDefinition[],
+  id: SetDefinitionId,
+) => {
+  const definition = definitions.find((candidate) => candidate.id === id);
+  return nullThrows(definition, `no set definition with id ${id}`);
+};
 
-export const isOnEdge = (x: number, y: number, circle: Circle) => {
-  const dx = x - circle.at.x
-  const dy = y - circle.at.y
-  const distance = Math.sqrt(dx * dx + dy * dy)
+export const isInsideCircle = (x: number, y: number, display: SetDisplay) => {
+  const dx = x - display.at.x;
+  const dy = y - display.at.y;
+  return dx * dx + dy * dy <= display.radius * display.radius;
+};
+
+export const isOnEdge = (x: number, y: number, display: SetDisplay) => {
+  const dx = x - display.at.x;
+  const dy = y - display.at.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
   // due to the 10 px buffer, both `isInsideCircle` and `isOnEdge`
   // can be true at the same time
-  return Math.abs(distance - circle.radius) < 10
-}
+  return Math.abs(distance - display.radius) < 10;
+};
 
-export const isOverlapping = (circle1: Circle, circle2: Circle) => {
-  const dx = circle2.at.x - circle1.at.x
-  const dy = circle2.at.y - circle1.at.y
-  const distance = Math.sqrt(dx * dx + dy * dy)
-  return distance < circle1.radius + circle2.radius
-}
+export const isOverlapping = (display1: SetDisplay, display2: SetDisplay) => {
+  const dx = display2.at.x - display1.at.x;
+  const dy = display2.at.y - display1.at.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  return distance < display1.radius + display2.radius;
+};

@@ -20,13 +20,9 @@ export const useMagicProduct = (
 ): Magic => {
   const componentSlots = useComponentSlotsState();
   const lens = useLensState(componentSlots);
-  const simulation = useSimulationState(
-    host.events.subscribe,
-    componentSlots,
-    lens,
-  );
+  const simulation = useSimulationState(componentSlots, lens);
 
-  const appearance = useProductAppearance(host.setAppearance);
+  const appearance = useProductAppearance(host.onAppearanceChanged);
 
   const annotations = options.annotations
     ? useAnnotationsState(options.annotations, appearance)
@@ -35,8 +31,16 @@ export const useMagicProduct = (
   const ui = useProductUI(componentSlots, options.ui);
   const shortcuts = useShortcuts();
 
+  const manifest = manifests[options.productId];
+
+  // ORDER MATTERS!
+  // local storage before link share, otherwise local storage content loads on top of a shared link
+  const localStorage = options.localStorage
+    ? useLocalStorageSync(manifest.id, host.transit)
+    : { invalidate: () => {} };
+
   const magic: Magic = {
-    manifest: manifests[options.productId],
+    manifest,
     lens,
     componentSlots,
     simulation,
@@ -45,17 +49,11 @@ export const useMagicProduct = (
     shortcuts,
     annotations,
     lensChips: options.lensChips,
-    canvas: host.canvas,
+    surface: host.surface,
     transit: host.transit,
     history: host.history,
+    localStorage,
   };
-
-  // ORDER MATTERS!
-  // local storage before link share, otherwise local storage content loads on top of a shared link
-  if (options.localStorage) {
-    const triggerSave = useLocalStorageSync(magic);
-    options.localStorage(triggerSave);
-  }
 
   if (magic.ui.linkSharing) {
     onMounted(() => loadFromLinkPayload(magic));

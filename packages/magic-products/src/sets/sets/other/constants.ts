@@ -1,45 +1,65 @@
+import colors from '@core/utils/colors';
+
 export const COLORS = {
   HIGHLIGHT: [
-    "#EF4444", // red
-    "#3B82F6", // blue
-    "#10B981", // emerald
-    "#F59E0B", // amber
-    "#8B5CF6", // violet
-    "#EC4899", // pink
+    colors.RED_500,
+    colors.BLUE_500,
+    colors.EMERALD_500,
+    colors.AMBER_500,
+    colors.VIOLET_500,
+    colors.PINK_500,
   ],
-  BACKGROUND: 'rgb(55, 65, 81)', // bg-gray-700 tailwind
-  CIRCLE_OUTLINE: '#8d99ae',
-  CIRCLE_FOCUSED: '#edf2f4',
-} as const
+  NON_HIGHLIGHT: colors.STONE_600,
+  CIRCLE_OUTLINE: colors.GRAY_900,
+  TEXT_COLOR: colors.WHITE,
+  CIRCLE_FOCUSED: colors.RED_600,
+} as const;
 
-export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-// Labels that are reserved for structural use and cannot be used as circle names.
-// S is the complement region (everything outside all defined circles).
-export const RESERVED_LABELS = ['S'] as const
+/**
+ * the region covered by no set. it has no definition to point at, so it carries both
+ * halves of one here: what a query calls it, and what stands in for its id in a Section
+ */
+export const OUTSIDE_ALL_SETS = {
+  label: 'S',
+  identity: 'outside-all-sets',
+} as const;
 
-export const KEY_TO_LATEX = {
-    I: "\\cap",
-    U: "\\cup",
-    D: "\\triangle",
-    O: "\\Omega",
-    S: "S",
-    C: "^\\complement",
-    '\\': '\\setminus',
-    } as const
+// labels reserved for structural use, so they cannot name a set
+export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.label] as const;
 
-  export const ADDITIONAL_KEY_BINDINGS = {
-    '-': '\\setminus',
-    '+': '\\cup',
-  } as const
+export const DEFAULT_CIRCLE_RADIUS = 70;
 
-  export const LATEX_SET_SYMBOLS = {
-    SET_MINUS: 'SetMinus',
-    UNION: 'Union',
-    INTERSECTION: 'Intersection',
-    SYMMETRIC_DIFFERENCE: 'SymmetricDifference',
-    COMPLEMENT: 'Complement',
-    OMEGA: 'Omega',
-  }
+export const KEYBOARD_KEY_TO_LATEX = {
+  I: '\\cap',
+  U: '\\cup',
+  D: '\\triangle',
+  O: '\\Omega',
+  S: OUTSIDE_ALL_SETS.label,
+  C: '^\\complement',
+  '\\': '\\setminus',
+} as const;
 
-  export type LatexSetOperation = typeof LATEX_SET_SYMBOLS[keyof typeof LATEX_SET_SYMBOLS]
+export const ADDITIONAL_KEY_BINDINGS = {
+  '-': '\\setminus',
+  '+': '\\cup',
+} as const;
+
+// every key that expands into latex as a query is typed
+export const LATEX_HOTKEYS = {
+  ...KEYBOARD_KEY_TO_LATEX,
+  ...ADDITIONAL_KEY_BINDINGS,
+} as const;
+
+export const LATEX_SET_SYMBOLS = {
+  SET_MINUS: 'SetMinus',
+  UNION: 'Union',
+  INTERSECTION: 'Intersection',
+  SYMMETRIC_DIFFERENCE: 'SymmetricDifference',
+  COMPLEMENT: 'Complement',
+  OMEGA: 'Omega',
+} as const;
+
+export type LatexSetOperation =
+  (typeof LATEX_SET_SYMBOLS)[keyof typeof LATEX_SET_SYMBOLS];

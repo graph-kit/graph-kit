@@ -1,13 +1,14 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
-import { getCircle } from '../other/circleUtils.ts';
+import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
+import { getSetDefinition } from '../other/circleUtils.ts';
 import { COLORS } from '../other/constants.ts';
-import type { Circle, Overlap } from '../types/types.ts';
-import { getHatchPattern } from './hatchPattern.ts';
+import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
+import { hatchPattern } from './hatchPattern.ts';
 
 type DrawOverlappingAreaProps = {
-  circles: Circle[];
-  overlap: Overlap;
+  definitions: SetDefinition[];
+  overlap: Section;
   highlightColors: string[] | null;
 };
 
@@ -15,14 +16,14 @@ const drawOverlappingAreas = (
   ctx: CanvasRenderingContext2D,
   props: DrawOverlappingAreaProps,
 ) => {
-  const { overlap, circles, highlightColors } = props;
+  const { overlap, definitions, highlightColors } = props;
   ctx.save();
 
-  for (const circleLabel of overlap.circles) {
+  for (const setId of overlap) {
     const {
       at: { x, y },
       radius,
-    } = getCircle(circles, circleLabel);
+    } = getSetDefinition(definitions, setId).display;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.clip();
@@ -35,12 +36,12 @@ const drawOverlappingAreas = (
   );
 
   if (highlightColors === null) {
-    ctx.fillStyle = COLORS.BACKGROUND;
+    ctx.fillStyle = COLORS.NON_HIGHLIGHT;
   } else if (highlightColors.length === 1) {
     ctx.fillStyle = highlightColors[0];
   } else {
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = getHatchPattern(ctx, highlightColors);
+    ctx.fillStyle = hatchPattern(ctx, highlightColors);
   }
 
   ctx.fillRect(
@@ -54,25 +55,22 @@ const drawOverlappingAreas = (
 };
 
 type ColorOverlappingAreasProps = {
-  circles: Circle[];
-  overlaps: Overlap[];
-  highlightedCircles: Map<Circle['label'], string[]>;
-  highlightedOverlaps: Map<Overlap['id'], string[]>;
+  definitions: SetDefinition[];
+  overlaps: Section[];
+  highlightedSets: Map<SetDefinitionId, string[]>;
+  highlightedOverlaps: Map<SectionKey, string[]>;
 };
 
-const subsetToString = (labels: Circle['label'][]): string =>
-  labels.toSorted((a, b) => a.localeCompare(b)).join('.');
-
 const getProperNonEmptySubsets = (
-  labels: Circle['label'][],
-): Circle['label'][][] => {
-  const subsets: Circle['label'][][] = [];
-  const fullSetMask = 2 ** labels.length - 1;
+  setIds: SetDefinitionId[],
+): SetDefinitionId[][] => {
+  const subsets: SetDefinitionId[][] = [];
+  const fullSetMask = 2 ** setIds.length - 1;
 
   // Each mask from 1 to fullSetMask - 1 represents one proper, non-empty subset,
-  // where bit i indicates whether labels[i] is included.
+  // where bit i indicates whether setIds[i] is included.
   for (let mask = 1; mask < fullSetMask; mask++) {
-    const subset = labels.filter((_, i) => mask & (1 << i));
+    const subset = setIds.filter((_, i) => mask & (1 << i));
     subsets.push(subset);
   }
 
@@ -83,34 +81,27 @@ export const colorOverlappingAreas = (
   ctx: CanvasRenderingContext2D,
   props: ColorOverlappingAreasProps,
 ) => {
-  const { circles, overlaps, highlightedCircles, highlightedOverlaps } = props;
-
-  const overlapIdByKey = new Map<string, Overlap['id']>();
-  for (const overlap of overlaps) {
-    const stringifiedSubset = subsetToString(overlap.circles);
-    overlapIdByKey.set(stringifiedSubset, overlap.id);
-  }
+  const { definitions, overlaps, highlightedSets, highlightedOverlaps } = props;
 
   // an overlap region is geometrically nested inside every region formed by a
   // subset of its circles, so it must be redrawn (even just to erase it back to
   // background) whenever a single circle or a smaller
   // overlap is highlighted, otherwise that region's fill bleeds through
-  const hasHighlightedAncestor = (labels: Circle['label'][]) => {
-    for (const subset of getProperNonEmptySubsets(labels)) {
+  const hasHighlightedAncestor = (setIds: SetDefinitionId[]) => {
+    for (const subset of getProperNonEmptySubsets(setIds)) {
       if (subset.length === 1) {
-        if (highlightedCircles.has(subset[0])) return true;
+        if (highlightedSets.has(subset[0])) return true;
         continue;
       }
-      const stringifiedSubset = subsetToString(subset);
-      const id = overlapIdByKey.get(stringifiedSubset);
-      if (id !== undefined && highlightedOverlaps.has(id)) return true;
+      if (highlightedOverlaps.has(getSectionKey(subset))) return true;
     }
     return false;
   };
 
   for (const overlap of overlaps) {
-    const highlightColors = highlightedOverlaps.get(overlap.id) ?? null;
-    if (!highlightColors && !hasHighlightedAncestor(overlap.circles)) continue;
-    drawOverlappingAreas(ctx, { circles, overlap, highlightColors });
+    const highlightColors =
+      highlightedOverlaps.get(getSectionKey(overlap)) ?? null;
+    if (!highlightColors && !hasHighlightedAncestor(overlap)) continue;
+    drawOverlappingAreas(ctx, { definitions, overlap, highlightColors });
   }
 };

@@ -1,6 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
 import { delta } from '@core/utils/delta/index';
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 
 import { ComputedRef, computed, ref } from 'vue';
 
@@ -16,9 +15,14 @@ import {
 } from './types.ts';
 
 export type SimulationControls = {
+  /** Runs a simulation. Throws if one is already active or if its guard is already failing. */
   start: <Frame>(definition: SimulationDefinition<Frame>) => void;
+  /** Tears down the running simulation. Throws if nothing is running. */
   stop: () => void;
+  /** The running simulation; `undefined` when nothing is running. */
   current: ComputedRef<Simulation<any> | undefined>;
+  /** Reports that the underlying data changed, letting the simulation recheck its guard and recompute frames. */
+  invalidate: () => void;
 };
 
 type Playhead = {
@@ -50,9 +54,6 @@ const COMPONENT_IDS = {
 };
 
 export const useSimulationState = (
-  subscribe: ReadonlyEventHub<{
-    onStructureChange: () => void;
-  }>['subscribe'],
   componentSlotControls: ComponentSlotControls,
   lensControls: LensControls,
 ): SimulationControls => {
@@ -239,7 +240,7 @@ export const useSimulationState = (
     return { previousViolationId, currentViolationId: undefined };
   };
 
-  subscribe('onStructureChange', () => {
+  const recompute = () => {
     const sim = simulation.value;
     if (!sim) return;
 
@@ -269,11 +270,12 @@ export const useSimulationState = (
 
     const diff = delta(oldFrame, newFrame);
     if (diff !== null) sim.onFrameTransition?.(newFrame, oldFrame);
-  });
+  };
 
   return {
     start,
     stop,
     current: computed(() => simulation.value),
+    invalidate: recompute,
   };
 };

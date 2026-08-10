@@ -12,9 +12,18 @@
     executeCommand: (command: [string, string]) => void;
   };
 
-  const props = defineProps<{
-    hotkeys: Record<string, string>;
-  }>();
+  // the wrapper owns the sizing, so attrs stay on the math-field where consumers expect them
+  defineOptions({ inheritAttrs: false });
+
+  const props = withDefaults(
+    defineProps<{
+      // TODO remove hotkeys from latex input props
+      hotkeys: Record<string, string>;
+      width?: number;
+      height?: number;
+    }>(),
+    { width: 400, height: 40 },
+  );
 
   const latexString = defineModel<string>({
     required: true,
@@ -81,11 +90,15 @@
 </script>
 
 <template>
-  <math-field
-    v-if="mathfieldRegistered"
-    ref="latexInput"
-    class="text-box"
-  />
+  <!-- mathlive only loads in the browser, so hold the space it will occupy to avoid a layout shift -->
+  <div :style="{ width: `${width}px`, height: `${height}px` }">
+    <math-field
+      v-if="mathfieldRegistered"
+      ref="latexInput"
+      v-bind="$attrs"
+      class="text-box h-full w-full"
+    />
+  </div>
 </template>
 
 <style scoped>
@@ -100,7 +113,6 @@
   }
 
   math-field {
-    min-height: 2.1em;
     --contains-highlight-background-color: rgb(200, 200, 200);
     --contains-highlight-color: rgb(45, 45, 45);
   }

@@ -20,7 +20,7 @@ const validAppearance = (appearance: unknown): appearance is BasicColorSchema =>
 export type AppearanceControls = ReturnType<typeof useProductAppearance>;
 
 export const useProductAppearance = (
-  setAppearance: (color: BasicColorMode) => void,
+  onAppearanceChanged: (color: BasicColorMode) => void,
 ) => {
   const colorMode = useColorMode({
     emitAuto: true,
@@ -57,7 +57,7 @@ export const useProductAppearance = (
       localStorage.removeItem(APPEARANCE_STORAGE_KEY);
       return;
     }
-    setAppearance(appearanceValue);
+    onAppearanceChanged(appearanceValue);
   };
 
   watch(colorMode.state, setValue);

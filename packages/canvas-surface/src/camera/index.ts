@@ -1,10 +1,19 @@
+import type { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
+
 import type { Ref } from 'vue';
 
+import type { CanvasDOMEvents } from '../domEvents.ts';
 import { usePanAndZoom } from './panZoom.ts';
 import { addTransform, useDevicePixelRatio } from './utils.ts';
 
-export const useCamera = (canvas: Ref<HTMLCanvasElement | undefined>) => {
-  const { getTransform: getPZTransform, ...rest } = usePanAndZoom(canvas);
+export const useCamera = (
+  canvas: Ref<HTMLCanvasElement | undefined>,
+  domEvents: ReadonlyEventHub<CanvasDOMEvents>,
+) => {
+  const { getTransform: getPanZoomTransform, ...rest } = usePanAndZoom(
+    canvas,
+    domEvents,
+  );
   const dpr = useDevicePixelRatio();
 
   return {
@@ -17,7 +26,7 @@ export const useCamera = (canvas: Ref<HTMLCanvasElement | undefined>) => {
           scaleX: dpr.value,
           scaleY: dpr.value,
         },
-        getPZTransform(),
+        getPanZoomTransform(),
       ];
       for (const t of transforms) addTransform(ctx, t);
     },

@@ -1,19 +1,22 @@
-import type { Circle, Overlap } from "../types/types.ts"
-import { computed, type Ref } from "vue"
-import { RESERVED_LABELS } from "../other/constants.ts"
+import { type Ref, computed } from 'vue';
+
+import type { Section, SetDefinition } from '../../types.ts';
+import { OUTSIDE_ALL_SETS } from '../other/constants.ts';
 
 /**
  * all individual sections of the set space
  */
-export const useAllSections = (circles: Ref<Circle[]>, overlaps: Ref<Overlap[]>) => {
-  return computed(() => {
-    const overlapsWithNames = overlaps.value.map(o => o.circles)
-    const circlesByThemselves = circles.value.map(c => c.label).map(id => [id])
+export const useAllSections = (
+  definitions: Ref<SetDefinition[]>,
+  sharedSections: Ref<Section[]>,
+) => {
+  return computed<Section[]>(() => {
+    const setsByThemselves = definitions.value.map(({ id }) => [id]);
 
     return [
-      ...overlapsWithNames,
-      ...circlesByThemselves,
-      ...RESERVED_LABELS.map(l => [l]),
-    ]
-  })
-}
+      ...sharedSections.value,
+      ...setsByThemselves,
+      [OUTSIDE_ALL_SETS.identity],
+    ];
+  });
+};

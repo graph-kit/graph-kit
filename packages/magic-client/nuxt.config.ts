@@ -20,6 +20,12 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
 
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => tag === 'math-field',
+    },
+  },
+
   typescript: {
     strict: true,
   },

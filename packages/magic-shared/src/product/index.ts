@@ -3,7 +3,6 @@ export { default as MagicProduct } from './MagicProduct.vue';
 // the harness, host agnostic
 export { useMagicProduct } from './useMagicProduct.ts';
 export type {
-  CanvasField,
   HistoryField,
   Magic,
   MagicProductHost,

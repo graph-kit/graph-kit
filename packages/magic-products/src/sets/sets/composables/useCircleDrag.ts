@@ -3,30 +3,31 @@ import { CanvasProps } from '@canvas/surface/types';
 
 import type { Ref } from 'vue';
 
-import type { Circle } from '../types/types.ts';
+import type { SetDefinition } from '../../types.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleDragProps = {
   surface: CanvasProps;
-  circles: Ref<Circle[]>;
+  definitions: Ref<SetDefinition[]>;
   isResizing: Ref<Boolean>;
 };
 
 export const useCircleDrag = ({
   surface,
-  circles,
+  definitions,
   isResizing,
 }: CircleDragProps) =>
   useDrag(
     surface,
     (coord) => {
       if (isResizing.value) return;
-      return circles.value
-        .toSorted((a, b) => a.radius - b.radius)
-        .find((c) => circle(c).hitbox(coord));
+      return definitions.value
+        .toSorted((a, b) => a.display.radius - b.display.radius)
+        .find(({ display }) => circle(display).hitbox(coord));
     },
-    (item, diff) => {
-      item.at.x = item.at.x + diff.x;
-      item.at.y = item.at.y + diff.y;
+    (definition, diff) => {
+      const { at } = definition.display;
+      at.x = at.x + diff.x;
+      at.y = at.y + diff.y;
     },
   );

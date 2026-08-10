@@ -2,7 +2,7 @@ import { CanvasProps } from '@canvas/surface/types';
 import { Coordinate } from '@core/utils/canvas/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 
-import { type UnwrapRef, computed, onBeforeUnmount, ref } from 'vue';
+import { type UnwrapRef, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 type ActiveDrag<T> = {
   startingCoords: Coordinate;
@@ -43,9 +43,11 @@ export const useDrag = <T>(
     activeDrag.value = undefined;
   };
 
-  document.addEventListener('mousedown', beginDrag);
-  document.addEventListener('mousemove', drag);
-  document.addEventListener('mouseup', drop);
+  onMounted(() => {
+    document.addEventListener('mousedown', beginDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', drop);
+  });
 
   onBeforeUnmount(() => {
     document.removeEventListener('mousedown', beginDrag);

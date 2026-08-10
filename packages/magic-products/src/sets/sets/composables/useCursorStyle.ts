@@ -2,8 +2,8 @@ import { CanvasProps } from '@canvas/surface/types';
 
 import { type Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
+import type { SetDefinition } from '../../types.ts';
 import { isInsideCircle, isOnEdge } from '../other/circleUtils.ts';
-import type { Circle } from '../types/types.ts';
 
 export type CursorStyle =
   'auto' | 'grab' | 'grabbing' | 'ew-resize' | 'ns-resize';
@@ -39,23 +39,19 @@ const usePointerDown = () => {
 };
 
 export const useCursorStyle = (
-  circles: Ref<Circle[]>,
+  definitions: Ref<SetDefinition[]>,
   cursorCoords: CanvasProps['cursorCoordinates'],
 ) => {
   const isPointerDown = usePointerDown();
   return computed<CursorStyle>(() => {
     const { x, y } = cursorCoords.value;
-    for (let i = circles.value.length - 1; i >= 0; i--) {
-      if (isOnEdge(x, y, circles.value[i]))
-        return getAngleBetweenTwoPoints(
-          x,
-          y,
-          circles.value[i].at.x,
-          circles.value[i].at.y,
-        ) > 0.75
+    for (let i = definitions.value.length - 1; i >= 0; i--) {
+      const { display } = definitions.value[i];
+      if (isOnEdge(x, y, display))
+        return getAngleBetweenTwoPoints(x, y, display.at.x, display.at.y) > 0.75
           ? 'ns-resize'
           : 'ew-resize';
-      if (isInsideCircle(x, y, circles.value[i]))
+      if (isInsideCircle(x, y, display))
         return isPointerDown.value ? 'grabbing' : 'grab';
     }
     return 'auto';

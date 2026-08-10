@@ -2,28 +2,32 @@ import { CanvasProps } from '@canvas/surface/types';
 
 import type { Ref } from 'vue';
 
+import type { SetDefinition } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
-import type { Circle } from '../types/types.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleResizeProps = {
   surface: CanvasProps;
-  circles: Ref<Circle[]>;
+  definitions: Ref<SetDefinition[]>;
 };
 
-export const useCircleResize = ({ surface, circles }: CircleResizeProps) => {
+export const useCircleResize = ({
+  surface,
+  definitions,
+}: CircleResizeProps) => {
   const { isDragging: isResizing } = useDrag(
     surface,
     (coords) =>
-      circles.value
-        .toSorted((a, b) => a.radius - b.radius)
-        .find((c) => isOnEdge(coords.x, coords.y, c)),
-    (circle) => {
+      definitions.value
+        .toSorted((a, b) => a.display.radius - b.display.radius)
+        .find(({ display }) => isOnEdge(coords.x, coords.y, display)),
+    (definition) => {
       const coords = surface.cursorCoordinates.value;
-      const dx = circle.at.x - coords.x;
-      const dy = circle.at.y - coords.y;
+      const { at } = definition.display;
+      const dx = at.x - coords.x;
+      const dy = at.y - coords.y;
       const distanceFromCenterToCursor = Math.hypot(dx, dy);
-      circle.radius = distanceFromCenterToCursor;
+      definition.display.radius = distanceFromCenterToCursor;
     },
   );
 

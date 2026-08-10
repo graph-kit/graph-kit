@@ -12,7 +12,7 @@
   <HStack v-if="magic.history">
     <IconButton
       @click="magic.history.undo"
-      :disabled="!magic.history.canUndo"
+      :disabled="!magic.history.canUndo.value"
       class="p-4"
       label="Undo"
       :size="20"
@@ -20,7 +20,7 @@
     />
     <IconButton
       @click="magic.history.redo"
-      :disabled="!magic.history.canRedo"
+      :disabled="!magic.history.canRedo.value"
       class="p-4"
       label="Redo"
       :size="20"

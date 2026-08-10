@@ -15,18 +15,17 @@ const MIN_ALPHA = 0.25;
 const MAX_ALPHA = 1;
 const MAX_DARKEN = 18;
 
-// linear interpolation between min and max, given a ratio between 0 and 1
-const lerp = (min: number, max: number, ratio: number) =>
+const linearInterpolate = (min: number, max: number, ratio: number) =>
   min + (max - min) * ratio;
 
 export const frequencyColor = (ratio: number) =>
   tinycolor(BASE_COLOR)
     .darken(ratio * MAX_DARKEN)
-    .setAlpha(lerp(MIN_ALPHA, MAX_ALPHA, ratio))
+    .setAlpha(linearInterpolate(MIN_ALPHA, MAX_ALPHA, ratio))
     .toHex8String();
 
 const frequencyWidth = (ratio: number) =>
-  lerp(MIN_WIDTH, MAX_WIDTH, ratio);
+  linearInterpolate(MIN_WIDTH, MAX_WIDTH, ratio);
 
 export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
   const msts = computed(() => graph.minimumSpanningTrees.all.value.msts);

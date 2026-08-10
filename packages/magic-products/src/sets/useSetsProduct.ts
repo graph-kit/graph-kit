@@ -6,7 +6,7 @@ import {
   useMagicProduct,
 } from '@magic/shared/product';
 
-import { inject, provide } from 'vue';
+import { ComputedRef, inject, provide } from 'vue';
 
 import {
   type HighlightQueries,
@@ -15,22 +15,27 @@ import {
 import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
 import HighlightPanel from './sets/components/HighlightPanel.vue';
+import { useCanvasTheme } from './useCanvasTheme.ts';
+import { SetsTheme, useSetsTheme } from './useSetsTheme.ts';
 
 export type SetsProductState = {
   highlights: HighlightQueries;
   sets: SetDefinitions;
   // everything the queries resolve to once read against the set space
   queryAnalysis: QueryAnalysis;
+  theme: ComputedRef<SetsTheme>;
 };
 
 const useSetsProductState = (magic: Magic): SetsProductState => {
   const highlights = createHighlightQueries();
   const sets = createSetDefinitions();
+  const theme = useSetsTheme(magic);
 
   return {
     highlights,
     sets,
-    queryAnalysis: useQueryAnalysis(highlights, sets, magic),
+    queryAnalysis: useQueryAnalysis(highlights, sets, theme.value.set),
+    theme,
   };
 };
 
@@ -65,6 +70,8 @@ export const useSetsProduct = () => {
   });
 
   const setsProductState = useSetsProductState(magic);
+  useCanvasTheme(magic, setsProductState.theme);
+
   provideSetsProductState(setsProductState);
 
   magic.componentSlots.add({

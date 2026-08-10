@@ -4,7 +4,6 @@ import { type ComputedRef, computed } from 'vue';
 
 import type { HighlightQueries } from './highlightQueries.ts';
 import type { SetDefinitions } from './setDefinitions.ts';
-import { useSetColorTheme } from './sets/other/constants.ts';
 import {
   type ParseSetExpression,
   createSetExpressionParser,
@@ -23,6 +22,7 @@ import type {
   SetDefinitionId,
   SetLabel,
 } from './types.ts';
+import { SetColors } from './useSetsTheme.ts';
 
 export type QueryAnalysis = {
   queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
@@ -35,13 +35,11 @@ export type QueryAnalysis = {
 export const useQueryAnalysis = (
   highlights: HighlightQueries,
   sets: SetDefinitions,
-  magic: Magic,
+  colors: SetColors,
 ): QueryAnalysis => {
   const definedSetLabels = computed(() =>
     sets.definitions.value.map(({ label }) => label),
   );
-
-  const colors = useSetColorTheme(magic);
 
   const parseAgainstSetSpace = () =>
     createSetExpressionParser<SetDefinitionId>(
@@ -130,8 +128,7 @@ export const useQueryAnalysis = (
 
       results.push({
         sections,
-        color:
-          colors.value.highlighted[index % colors.value.highlighted.length],
+        color: colors.highlighted[index % colors.highlighted.length],
       });
     }
 

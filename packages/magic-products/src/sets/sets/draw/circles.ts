@@ -2,7 +2,7 @@ import { circle } from '@canvas/primitives/shapes/circle/index';
 import { FontWeight } from '@canvas/primitives/text/types';
 
 import { SetDefinition } from '../../types.ts';
-import { SetColors } from '../other/constants.ts';
+import { SetColors } from '../../useSetsTheme.ts';
 import { hatchPattern } from './hatchPattern.ts';
 
 type DrawCircleBackgroundProps = {

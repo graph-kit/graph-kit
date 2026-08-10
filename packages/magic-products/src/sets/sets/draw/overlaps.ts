@@ -1,8 +1,8 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
 import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
+import { SetColors } from '../../useSetsTheme.ts';
 import { getSetDefinition } from '../other/circleUtils.ts';
-import { SetColors } from '../other/constants.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
 import { hatchPattern } from './hatchPattern.ts';
 

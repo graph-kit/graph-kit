@@ -9,25 +9,19 @@
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
   import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
-  import {
-    OUTSIDE_ALL_SETS,
-    useSetColorTheme,
-  } from './sets/other/constants.ts';
+  import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
   import { HighlightGroup, SetDefinitionId } from './types.ts';
-  import { useCanvasTheme } from './useCanvasTheme.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
     magic,
-    setsProductState: { sets, queryAnalysis },
+    setsProductState: { sets, queryAnalysis, theme },
   } = useSetsProduct();
 
   const { activeHighlights } = queryAnalysis;
 
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
-
-  useCanvasTheme(magic);
 
   const isOutsideAllSets = (section: SetDefinitionId[]) =>
     section.length === 1 && section[0] === OUTSIDE_ALL_SETS.identity;
@@ -109,8 +103,6 @@
     for (const setId of [...focusedSetIds.value]) removeDefinition(setId);
   };
 
-  const colors = useSetColorTheme(magic);
-
   magic.surface.draw.content.value = (ctx) => {
     draw(
       ctx,
@@ -122,7 +114,7 @@
         isSetFocused: isFocused,
         highlightedOutside: highlightedOutside.value,
       },
-      colors.value,
+      theme.value.set,
     );
   };
 

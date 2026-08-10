@@ -3,24 +3,17 @@
   import HStack from '@magic/shared/HStack';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { useProvidedMagic } from '@magic/shared/product';
 
   import { ref } from 'vue';
 
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import {
-    KEYBOARD_KEY_TO_LATEX,
-    useSetColorTheme,
-  } from '../other/constants.ts';
+  import { KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
   import HighlightRow from './HighlightRow.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
-  const { highlights } = useProvidedSetsProductState();
-  const magic = useProvidedMagic();
+  const { highlights, theme } = useProvidedSetsProductState();
   const { queryIds, addQuery, insertIntoQuery } = highlights;
-
-  const colors = useSetColorTheme(magic);
 
   const focusedQueryId = ref<HighlightQueryId>(queryIds.value[0]);
 
@@ -42,7 +35,7 @@
         v-for="(queryId, index) in queryIds"
         :key="queryId"
         :queryId="queryId"
-        :color="colors.highlighted[index % colors.highlighted.length]"
+        :color="theme.set.highlighted[index % theme.set.highlighted.length]"
         @focus="focusedQueryId = queryId"
       />
 

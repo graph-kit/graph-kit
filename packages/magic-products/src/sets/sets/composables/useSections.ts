@@ -2,6 +2,7 @@ import { type Ref, computed } from 'vue';
 
 import type { Section, SetDefinition } from '../../types.ts';
 import { isOverlapping } from '../other/circleUtils.ts';
+import { OUTSIDE_ALL_SETS } from '../other/constants.ts';
 
 /**
  * every section covered by more than one set, which is every group of two or more
@@ -39,7 +40,12 @@ const getSharedSections = (definitions: SetDefinition[]) => {
   return sharedSections;
 };
 
-export const useSharedSections = (definitions: Ref<SetDefinition[]>) =>
-  computed(() => {
-    return getSharedSections(definitions.value);
-  });
+/**
+ * all individual sections of the set space
+ */
+export const useSections = (definitions: Ref<SetDefinition[]>) =>
+  computed<Section[]>(() => [
+    ...getSharedSections(definitions.value),
+    ...definitions.value.map(({ id }) => [id]),
+    [OUTSIDE_ALL_SETS.identity],
+  ]);

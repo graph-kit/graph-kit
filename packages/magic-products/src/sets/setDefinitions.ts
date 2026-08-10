@@ -3,9 +3,8 @@ import { generateId } from '@core/utils/id';
 
 import { type ComputedRef, type Ref, computed, ref } from 'vue';
 
-import { useAllSections } from './sets/composables/useAllSections.ts';
 import { useLabelGetter } from './sets/composables/useLabel.ts';
-import { useSharedSections } from './sets/composables/useSharedSections.ts';
+import { useSections } from './sets/composables/useSections.ts';
 import { getSetDefinition } from './sets/other/circleUtils.ts';
 import {
   DEFAULT_CIRCLE_RADIUS,
@@ -20,9 +19,6 @@ import type {
 
 export type SetDefinitions = {
   definitions: Ref<SetDefinition[]>;
-  // the sections more than one set covers, a subset of allSections
-  sharedSections: ComputedRef<Section[]>;
-  allSections: ComputedRef<Section[]>;
   // the only authority on what a label typed into a query means, reserved labels included
   idByLabel: ComputedRef<Record<SetLabel, SetDefinitionId>>;
   getDefinition: (id: SetDefinitionId) => SetDefinition;
@@ -34,8 +30,7 @@ export const createSetDefinitions = (): SetDefinitions => {
   const definitions = ref<SetDefinition[]>([]);
 
   const nextLabel = useLabelGetter(definitions);
-  const sharedSections = useSharedSections(definitions);
-  const allSections = useAllSections(definitions, sharedSections);
+  const sections = useSections(definitions);
 
   const idByLabel = computed(() => {
     const ids: Record<SetLabel, SetDefinitionId> = {};
@@ -48,8 +43,6 @@ export const createSetDefinitions = (): SetDefinitions => {
 
   return {
     definitions,
-    sharedSections,
-    allSections,
     idByLabel,
 
     getDefinition: (id) => getSetDefinition(definitions.value, id),

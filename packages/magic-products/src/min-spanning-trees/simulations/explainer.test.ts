@@ -83,7 +83,7 @@ describe('primsExplainer', () => {
       type: 'exclude-edges',
       edges: ['e2'],
     });
-    expect(explainer?.content).toContain('Loop');
+    expect(explainer?.content).toContain('loop');
     expect(explainer?.content).toContain('it would');
   });
 

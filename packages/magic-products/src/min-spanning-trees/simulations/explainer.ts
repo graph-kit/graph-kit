@@ -128,7 +128,7 @@ export const kruskalsExplainer =
 
     if (frame.type === 'accept-edge') {
       return {
-        content: `${describeEdge(graph, frame.edge)} connects two parts of the forest that were still separate, so it's [Added] to the [Tree]`,
+        content: `${describeEdge(graph, frame.edge)} connects two parts of the graph that were still separate, so it's [Added] to the [Tree]`,
         highlights: [highlights.added, highlights.tree],
       };
     }

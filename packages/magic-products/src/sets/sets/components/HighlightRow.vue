@@ -14,7 +14,6 @@
 
   const props = defineProps<{
     queryId: HighlightQueryId;
-    color: string;
   }>();
 
   const emit = defineEmits<{
@@ -32,6 +31,8 @@
   });
 
   const isHidden = computed(() => highlights.getQuery(props.queryId).isHidden);
+
+  const color = computed(() => highlights.getQuery(props.queryId).color);
 
   const toggleHidden = () =>
     highlights.setHidden(props.queryId, !isHidden.value);

@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
+  import { Color } from '@core/utils/colors';
   import { MagicProduct } from '@magic/shared/product';
 
   import { computed } from 'vue';
@@ -9,29 +10,26 @@
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
   import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
-  import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
+  import { isOutsideAllSetsSection } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
-  import { HighlightGroup, SetDefinitionId } from './types.ts';
+  import { HighlightGroup } from './types.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
     magic,
-    setsProductState: { sets, queryAnalysis, theme },
+    setsProductState: { sets, queryAnalysis, theme, highlights },
   } = useSetsProduct();
 
   const { activeHighlights } = queryAnalysis;
 
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 
-  const isOutsideAllSets = (section: SetDefinitionId[]) =>
-    section.at(0) === OUTSIDE_ALL_SETS.identity;
-
-  const setSectionsToHighlight = computed<HighlightGroup[]>(() => {
+  const sectionsToHighlight = computed<HighlightGroup[]>(() => {
     return activeHighlights.value
       .map((group) => ({
         ...group,
         sections: group.sections.filter(
-          (section) => !isOutsideAllSets(section),
+          (section) => !isOutsideAllSetsSection(section),
         ),
       }))
       .filter((group) => group.sections.length > 0);
@@ -53,38 +51,19 @@
     definitions,
   });
 
-  const highlightedOutside = computed(() => {
+  const outsideColors = computed(() => {
     return activeHighlights.value
-      .filter((group) => group.sections.some(isOutsideAllSets))
-      .map((group) => group.color);
+      .filter((group) => group.sections.some(isOutsideAllSetsSection))
+      .map((group) => highlights.getQuery(group.queryId).color);
   });
 
-  const highlightedSets = computed(() => {
-    const map = new Map<SetDefinitionId, string[]>();
-    for (const { sections, color } of setSectionsToHighlight.value) {
+  const sectionKeyToColors = computed(() => {
+    const map = new Map<SectionKey, Color[]>();
+
+    for (const { queryId, sections } of sectionsToHighlight.value) {
+      const color = highlights.getQuery(queryId).color;
       for (const section of sections) {
-        if (section.length === 1) {
-          const existing = map.get(section[0]) ?? [];
-          existing.push(color);
-          map.set(section[0], existing);
-        }
-      }
-    }
-    return map;
-  });
-
-  const highlightedOverlaps = computed(() => {
-    const existingKeys = new Set(sharedSections.value.map(getSectionKey));
-    const map = new Map<SectionKey, string[]>();
-
-    for (const { sections, color } of setSectionsToHighlight.value) {
-      for (const section of sections) {
-        if (section.length === 1) continue;
-
         const key = getSectionKey(section);
-        // a section only paints if the circles actually overlap there
-        if (!existingKeys.has(key)) continue;
-
         const existing = map.get(key) ?? [];
         existing.push(color);
         map.set(key, existing);
@@ -109,10 +88,9 @@
       {
         definitions: definitions.value,
         overlaps: sharedSections.value,
-        highlightedSets: highlightedSets.value,
-        highlightedOverlaps: highlightedOverlaps.value,
+        sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: isFocused,
-        highlightedOutside: highlightedOutside.value,
+        outsideColors: outsideColors.value,
       },
       theme.value.set,
     );

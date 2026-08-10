@@ -1,4 +1,18 @@
+import colors from '@core/utils/colors';
+
+import type { Section } from '../../types.ts';
+
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+// the palette a highlight query's color is assigned from, in creation order
+export const HIGHLIGHT_COLORS = [
+  colors.RED_500,
+  colors.BLUE_500,
+  colors.EMERALD_500,
+  colors.AMBER_500,
+  colors.VIOLET_500,
+  colors.PINK_500,
+];
 
 /**
  * the region covered by no set. it has no definition to point at, so it carries both
@@ -8,6 +22,12 @@ export const OUTSIDE_ALL_SETS = {
   label: 'S',
   identity: 'outside-all-sets',
 } as const;
+
+/** true when `section` is the region outside every set, see {@link OUTSIDE_ALL_SETS}. */
+export const isOutsideAllSetsSection = (section: Section) => {
+  // all the area outside every set is itself atomic, so checking the first id is enough
+  return section.at(0) === OUTSIDE_ALL_SETS.identity;
+};
 
 // labels reserved for structural use, so they cannot name a set
 export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.label] as const;

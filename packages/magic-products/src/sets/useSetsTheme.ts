@@ -1,4 +1,3 @@
-import colors from '@core/utils/colors';
 import { dark } from '@graph/theme-presets/dark/index';
 import { light } from '@graph/theme-presets/light/index';
 import { Magic } from '@magic/shared/product';
@@ -7,7 +6,6 @@ import { computed } from 'vue';
 
 export type SetColors = {
   unhighlighted: string;
-  highlighted: string[];
   outline: {
     default: string;
     focused: string;
@@ -25,15 +23,6 @@ export type SetsTheme = {
   canvas: CanvasColors;
 };
 
-const HIGHLIGHT_COLOR = [
-  colors.RED_500,
-  colors.BLUE_500,
-  colors.EMERALD_500,
-  colors.AMBER_500,
-  colors.VIOLET_500,
-  colors.PINK_500,
-];
-
 export const useSetsTheme = (magic: Magic) => {
   const theme = computed(() =>
     magic.appearance.state.value === 'dark' ? dark : light,
@@ -41,7 +30,6 @@ export const useSetsTheme = (magic: Magic) => {
 
   return computed<SetsTheme>(() => ({
     set: {
-      highlighted: HIGHLIGHT_COLOR,
       unhighlighted: theme.value.canvas['node.default.color'],
       outline: {
         default: theme.value.canvas['node.default.border.color'],

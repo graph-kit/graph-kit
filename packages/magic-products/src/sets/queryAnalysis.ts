@@ -19,20 +19,18 @@ import type {
   HighlightQueryId,
   SetLabel,
 } from './types.ts';
-import { SetsProductState } from './useSetsProduct.ts';
 
 export type QueryAnalysis = {
   queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
   simplifiedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
   disambiguatedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
-  // the sections each query resolves to paired with its color, skipping hidden and erroring queries
+  // the sections each query resolves to paired with its queryId, skipping hidden and erroring queries
   activeHighlights: ComputedRef<HighlightGroup[]>;
 };
 
 export const useQueryAnalysis = (
   highlights: HighlightQueries,
   sets: SetDefinitions,
-  theme: SetsProductState['theme'],
 ): QueryAnalysis => {
   const definedSetLabels = computed(() =>
     sets.definitions.value.map(({ label }) => label),
@@ -113,7 +111,7 @@ export const useQueryAnalysis = (
     const labels = definedSetLabels.value;
     const results: HighlightGroup[] = [];
 
-    for (const [index, queryId] of highlights.queryIds.value.entries()) {
+    for (const queryId of highlights.queryIds.value) {
       const { latexQueryString, isHidden } = highlights.getQuery(queryId);
 
       if (isHidden) continue;
@@ -125,12 +123,7 @@ export const useQueryAnalysis = (
       const sections = parse(mathJSON.json);
       if (!sections) continue;
 
-      const colors = theme.value.set.highlighted;
-
-      results.push({
-        sections,
-        color: colors[index % colors.length],
-      });
+      results.push({ queryId, sections });
     }
 
     return results;

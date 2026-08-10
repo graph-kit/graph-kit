@@ -12,7 +12,7 @@
   import HighlightRow from './HighlightRow.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
-  const { highlights, theme } = useProvidedSetsProductState();
+  const { highlights } = useProvidedSetsProductState();
   const { queryIds, addQuery, insertIntoQuery } = highlights;
 
   const focusedQueryId = ref<HighlightQueryId>(queryIds.value[0]);
@@ -32,10 +32,9 @@
   <Well>
     <VStack>
       <HighlightRow
-        v-for="(queryId, index) in queryIds"
+        v-for="queryId in queryIds"
         :key="queryId"
         :queryId="queryId"
-        :color="theme.set.highlighted[index % theme.set.highlighted.length]"
         @focus="focusedQueryId = queryId"
       />
 

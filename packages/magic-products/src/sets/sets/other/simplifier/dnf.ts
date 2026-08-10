@@ -153,11 +153,13 @@ export const mathJsonToLatex = (node: MathJsonExpression): string => {
   };
 
   switch (head) {
+    // the compute engine flattens union/intersection of 3+ sets into one n-ary node,
+    // so every arg must fold in, not just the first two - see createSetExpressionParser.ts
     case LATEX_SET_SYMBOLS.UNION:
-      return `${wrap(args[0])} \\cup ${wrap(args[1])}`;
+      return args.map(wrap).join(' \\cup ');
 
     case LATEX_SET_SYMBOLS.INTERSECTION:
-      return `${wrap(args[0])} \\cap ${wrap(args[1])}`;
+      return args.map(wrap).join(' \\cap ');
 
     case LATEX_SET_SYMBOLS.SET_MINUS:
       return `${wrap(args[0])} \\setminus ${wrap(args[1])}`;

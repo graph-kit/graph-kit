@@ -2,7 +2,7 @@ import { CanvasProps } from '@canvas/surface/types';
 import { Coordinate } from '@core/utils/canvas/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 type ActiveDrag<Item> = {
   startingCoords: Coordinate;
@@ -41,17 +41,17 @@ export const useDrag = <Item>(
     activeDrag.value = undefined;
   };
 
-  onMounted(() => {
-    surface.domEvents.subscribe('onMouseDown', beginDrag);
-    surface.domEvents.subscribe('onMouseMove', drag);
-    surface.domEvents.subscribe('onMouseUp', drop);
-  });
+  surface.domEvents.subscribe('onMouseDown', beginDrag);
+  surface.domEvents.subscribe('onMouseMove', drag);
+  surface.domEvents.subscribe('onMouseUp', drop);
 
-  onBeforeUnmount(() => {
+  const cleanup = () => {
     surface.domEvents.unsubscribe('onMouseDown', beginDrag);
     surface.domEvents.unsubscribe('onMouseMove', drag);
     surface.domEvents.unsubscribe('onMouseUp', drop);
-  });
+  };
+
+  onBeforeUnmount(cleanup);
 
   return {
     activeDrag,

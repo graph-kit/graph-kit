@@ -11,6 +11,7 @@ export type ParseSetExpression<SetIdentity> = (
   mathJSON: MathJsonExpression,
 ) => SetIdentity[][] | null;
 
+// TODO remove generic and parse sets with set IDs instead
 /**
  * builds a parser over a partition, where a section lists the sets covering that region.
  * the real set space identifies those sets by SetDefinitionId while the simplifier

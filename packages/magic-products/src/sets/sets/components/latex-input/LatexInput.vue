@@ -17,6 +17,7 @@
 
   const props = withDefaults(
     defineProps<{
+      // TODO remove hotkeys from latex input props
       hotkeys: Record<string, string>;
       width?: number;
       height?: number;

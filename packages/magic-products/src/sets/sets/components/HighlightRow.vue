@@ -36,6 +36,8 @@
   const toggleHidden = () =>
     highlights.setHidden(props.queryId, !isHidden.value);
 
+  // TODO disambiguation and simplifications shouldn't even populate
+  // in query error condition.
   const hasError = computed(
     () => queryAnalysis.queryErrors.value[props.queryId],
   );
@@ -57,11 +59,13 @@
     }),
   );
 
+  // trigger example: $$ A\cup A $$
   const applySimplification = () => {
     if (!simplified.value) return;
     highlights.replaceQuery(props.queryId, simplified.value);
   };
 
+  // trigger example: $$ A\cap B\cup C $$
   const applyDisambiguation = () => {
     if (!disambiguated.value) return;
     highlights.replaceQuery(props.queryId, disambiguated.value);
@@ -85,6 +89,7 @@
       :label="`Ambiguous order of operations. Parsed as: ${disambiguated}`"
     >
       <template #trigger>
+        <!-- TODO replace with a proper icon button -->
         <Button @click="applyDisambiguation">&#9432;</Button>
       </template>
     </Tooltip>

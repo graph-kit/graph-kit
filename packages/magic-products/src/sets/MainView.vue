@@ -9,7 +9,10 @@
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
   import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
-  import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
+  import {
+    OUTSIDE_ALL_SETS,
+    useSetColorTheme,
+  } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
   import { HighlightGroup, SetDefinitionId } from './types.ts';
   import { useCanvasTheme } from './useCanvasTheme.ts';
@@ -106,15 +109,21 @@
     for (const setId of [...focusedSetIds.value]) removeDefinition(setId);
   };
 
+  const colors = useSetColorTheme(magic);
+
   magic.surface.draw.content.value = (ctx) => {
-    draw(ctx, {
-      definitions: definitions.value,
-      overlaps: sharedSections.value,
-      highlightedSets: highlightedSets.value,
-      highlightedOverlaps: highlightedOverlaps.value,
-      isSetFocused: isFocused,
-      highlightedOutside: highlightedOutside.value,
-    });
+    draw(
+      ctx,
+      {
+        definitions: definitions.value,
+        overlaps: sharedSections.value,
+        highlightedSets: highlightedSets.value,
+        highlightedOverlaps: highlightedOverlaps.value,
+        isSetFocused: isFocused,
+        highlightedOutside: highlightedOutside.value,
+      },
+      colors.value,
+    );
   };
 
   magic.surface.domEvents.subscribe('onDblClick', createSet);

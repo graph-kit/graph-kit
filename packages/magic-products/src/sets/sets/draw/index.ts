@@ -2,6 +2,7 @@ import { getWorldCoordinates } from '@core/utils/canvas/index';
 
 import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
 import type { SetFocusControls } from '../composables/useSetFocus.ts';
+import { SetColors } from '../other/constants.ts';
 import type { SectionKey } from '../other/sectionKey.ts';
 import {
   drawCircleBackground,
@@ -26,7 +27,11 @@ type DrawProps = {
   highlightedOutside: string[];
 };
 
-export const draw = (ctx: CanvasRenderingContext2D, props: DrawProps) => {
+export const draw = (
+  ctx: CanvasRenderingContext2D,
+  props: DrawProps,
+  colors: SetColors,
+) => {
   const { highlightedSets, highlightedOverlaps } = props;
 
   if (props.highlightedOutside.length > 1) {
@@ -43,25 +48,33 @@ export const draw = (ctx: CanvasRenderingContext2D, props: DrawProps) => {
   }
 
   for (const set of props.definitions) {
-    drawCircleBackground(ctx, {
-      set,
-      highlightColors: highlightedSets.get(set.id) ?? null,
-    });
+    drawCircleBackground(
+      ctx,
+      {
+        set,
+        highlightColors: highlightedSets.get(set.id) ?? null,
+      },
+      colors,
+    );
   }
 
-  colorOverlappingAreas(ctx, {
-    definitions: props.definitions,
-    overlaps: props.overlaps,
-    highlightedSets,
-    highlightedOverlaps,
-  });
+  colorOverlappingAreas(
+    ctx,
+    {
+      definitions: props.definitions,
+      overlaps: props.overlaps,
+      highlightedSets,
+      highlightedOverlaps,
+    },
+    colors,
+  );
 
   for (const set of props.definitions) {
     const options = {
       set,
       isFocused: props.isSetFocused(set.id),
     };
-    drawCircleOutline(ctx, options);
-    drawCircleLabel(ctx, options);
+    drawCircleOutline(ctx, options, colors);
+    drawCircleLabel(ctx, options, colors);
   }
 };

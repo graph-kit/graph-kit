@@ -1,19 +1,57 @@
 import colors from '@core/utils/colors';
+import { dark } from '@graph/theme-presets/dark/index';
+import { light } from '@graph/theme-presets/light/index';
+import { Magic } from '@magic/shared/product';
+import { BasicColorMode } from '@vueuse/core';
 
-export const COLORS = {
-  HIGHLIGHT: [
-    colors.RED_500,
-    colors.BLUE_500,
-    colors.EMERALD_500,
-    colors.AMBER_500,
-    colors.VIOLET_500,
-    colors.PINK_500,
-  ],
-  NON_HIGHLIGHT: colors.STONE_600,
-  CIRCLE_OUTLINE: colors.GRAY_900,
-  TEXT_COLOR: colors.WHITE,
-  CIRCLE_FOCUSED: colors.RED_600,
-} as const;
+import { computed } from 'vue';
+
+export type SetColors = {
+  unhighlighted: string;
+  highlighted: string[];
+  outline: {
+    default: string;
+    focused: string;
+  };
+  label: string;
+};
+
+const HIGHLIGHT_COLOR = [
+  colors.RED_500,
+  colors.BLUE_500,
+  colors.EMERALD_500,
+  colors.AMBER_500,
+  colors.VIOLET_500,
+  colors.PINK_500,
+];
+
+const DARK_COLORS = {
+  highlighted: HIGHLIGHT_COLOR,
+  unhighlighted: dark.canvas['node.default.color'],
+  outline: {
+    default: dark.canvas['node.default.border.color'],
+    focused: dark.focus['node.focus.border.color'],
+  },
+  label: dark.canvas['node.default.text.color'],
+} as const satisfies SetColors;
+
+const LIGHT_COLORS = {
+  highlighted: HIGHLIGHT_COLOR,
+  unhighlighted: light.canvas['node.default.color'],
+  outline: {
+    default: light.canvas['node.default.border.color'],
+    focused: light.focus['node.focus.border.color'],
+  },
+  label: light.canvas['node.default.text.color'],
+} as const satisfies SetColors;
+
+const themes: Record<BasicColorMode, SetColors> = {
+  dark: DARK_COLORS,
+  light: LIGHT_COLORS,
+};
+
+export const useSetColorTheme = (magic: Magic) =>
+  computed(() => themes[magic.appearance.state.value]);
 
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 

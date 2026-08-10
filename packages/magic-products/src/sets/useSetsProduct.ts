@@ -1,6 +1,10 @@
 import { useCanvas } from '@canvas/surface/index';
 import { nullThrows } from '@core/utils/assert';
-import { MagicProductHost, useMagicProduct } from '@magic/shared/product';
+import {
+  Magic,
+  MagicProductHost,
+  useMagicProduct,
+} from '@magic/shared/product';
 
 import { inject, provide } from 'vue';
 
@@ -8,7 +12,7 @@ import {
   type HighlightQueries,
   createHighlightQueries,
 } from './highlightQueries.ts';
-import { type QueryAnalysis, createQueryAnalysis } from './queryAnalysis.ts';
+import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
 import HighlightPanel from './sets/components/HighlightPanel.vue';
 
@@ -19,14 +23,14 @@ export type SetsProductState = {
   queryAnalysis: QueryAnalysis;
 };
 
-const useSetsProductState = (): SetsProductState => {
+const useSetsProductState = (magic: Magic): SetsProductState => {
   const highlights = createHighlightQueries();
   const sets = createSetDefinitions();
 
   return {
     highlights,
     sets,
-    queryAnalysis: createQueryAnalysis(highlights, sets),
+    queryAnalysis: useQueryAnalysis(highlights, sets, magic),
   };
 };
 
@@ -60,7 +64,7 @@ export const useSetsProduct = () => {
     ui: { linkSharing: false },
   });
 
-  const setsProductState = useSetsProductState();
+  const setsProductState = useSetsProductState(magic);
   provideSetsProductState(setsProductState);
 
   magic.componentSlots.add({

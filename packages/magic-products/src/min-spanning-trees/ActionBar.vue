@@ -6,22 +6,23 @@
   import { useProvidedGraph } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities';
 
-  import { usePrimsSimulation } from './simulations/index.ts';
+  import { useKruskalsSimulation, usePrimsSimulation } from './simulations/index.ts';
 
   const graph = useProvidedGraph();
 
-  const simulations = usePrimsSimulation();
+  const prims = usePrimsSimulation();
+  const kruskals = useKruskalsSimulation();
 
   const node = useFocusedNode(graph);
 
-  const startSim = (type: 'prims' | 'kruskals') => {
-    if (type === 'kruskals') return
+  const startPrims = () => {
+    prims.startNodeId.value = nullThrows(node.value?.id, 'no node defined');
+    graph.magic.simulation.start(prims.prims);
+    graph.focus.clear();
+  };
 
-    simulations.startNodeId.value = nullThrows(
-      node.value?.id,
-      'no node defined',
-    );
-    graph.magic.simulation.start(simulations[type]);
+  const startKruskals = () => {
+    graph.magic.simulation.start(kruskals.kruskals);
     graph.focus.clear();
   };
 </script>
@@ -32,13 +33,13 @@
       class="p-1"
     >
       <Button
-        @click="startSim('prims')"
+        @click="startPrims"
         class="text-lg"
       >
         Prim's
       </Button>
       <Button
-        @click="startSim('kruskals')"
+        @click="startKruskals"
         class="text-lg"
       >
         Kruskal's

@@ -71,3 +71,68 @@ export type PrimsHighlights = {
 };
 
 export type PrimsFrame = PrimsStep & PrimsState & PrimsHighlights;
+
+export type KruskalsFunction = (
+  graph: Graph,
+) => FrameCollectorFn<KruskalsFrame>;
+
+type KruskalsStartFrame = {
+  type: 'start';
+  sortedEdges: readonly GEdge['id'][];
+};
+
+type KruskalsEndFrame = {
+  type: 'end';
+};
+
+// the next cheapest edge in sorted order, up for a decision
+type ConsiderEdgeFrame = {
+  type: 'consider-edge';
+  edge: GEdge['id'];
+};
+
+// the edge connects two components that were still separate, so it grows the forest
+type AcceptEdgeFrame = {
+  type: 'accept-edge';
+  edge: GEdge['id'];
+};
+
+// both ends of the edge are already in the same component, so it would only close a loop
+type RejectEdgeFrame = {
+  type: 'reject-edge';
+  edge: GEdge['id'];
+};
+
+type KruskalsUnreachableFrame = {
+  type: 'unreachable';
+  nodes: readonly GNode['id'][];
+};
+
+// the tree already spans every node before every edge got a turn, so the
+// remaining, never-considered edges are waved off all at once
+type AllConnectedFrame = {
+  type: 'all-connected';
+  edges: readonly GEdge['id'][];
+};
+
+export type KruskalsStep =
+  | KruskalsStartFrame
+  | KruskalsEndFrame
+  | ConsiderEdgeFrame
+  | AcceptEdgeFrame
+  | RejectEdgeFrame
+  | KruskalsUnreachableFrame
+  | AllConnectedFrame;
+
+type KruskalsState = {
+  treeNodeIds: readonly GNode['id'][];
+  treeEdgeIds: readonly GEdge['id'][];
+  excludedEdgeIds: readonly GEdge['id'][];
+};
+
+export type KruskalsHighlights = {
+  activeEdgeId?: GEdge['id'];
+  activeNodeIds?: readonly GNode['id'][];
+};
+
+export type KruskalsFrame = KruskalsStep & KruskalsState & KruskalsHighlights;

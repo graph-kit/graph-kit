@@ -84,7 +84,7 @@
       ctx,
       {
         definitions: sets.definitions.value,
-        overlaps: sets.sharedSections.value,
+        sections: sets.sharedSections.value,
         sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: focus.isFocused,
       },

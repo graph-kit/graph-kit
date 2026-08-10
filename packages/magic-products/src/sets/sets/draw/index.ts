@@ -16,8 +16,7 @@ import { hatchPattern } from './hatchPattern.ts';
 type DrawProps = {
   /** every set to draw, as a circle with its label */
   definitions: SetDefinition[];
-  /** every section two or more circles share, back to front so nested ones paint on top */
-  overlaps: Section[];
+  sections: Section[];
   /** colors painted over a section, keyed by the sets forming it */
   sectionKeyToColors: Map<SectionKey, string[]>;
   /** whether a set carries the focus outline, see {@link SetFocusControls} */
@@ -54,7 +53,8 @@ export const draw = (
       ctx,
       {
         set,
-        highlightColors: sectionKeyToColors.get(getSectionKey([set.id])) ?? null,
+        highlightColors:
+          sectionKeyToColors.get(getSectionKey([set.id])) ?? null,
       },
       colors,
     );
@@ -64,7 +64,7 @@ export const draw = (
     ctx,
     {
       definitions: props.definitions,
-      overlaps: props.overlaps,
+      sections: props.sections,
       sectionKeyToColors,
     },
     colors,

@@ -5,7 +5,7 @@ import { colorSection, hasHighlightedAncestor } from './colorSection.ts';
 
 type ColorAllSectionsProps = {
   definitions: SetDefinition[];
-  overlaps: Section[];
+  sections: Section[];
   sectionKeyToColors: Map<SectionKey, string[]>;
 };
 
@@ -20,16 +20,19 @@ export const colorAllSections = (
   props: ColorAllSectionsProps,
   colors: SetColors,
 ) => {
-  const { definitions, overlaps, sectionKeyToColors } = props;
+  const { sections, definitions, sectionKeyToColors } = props;
 
-  for (const overlap of overlaps) {
-    const highlightColors = sectionKeyToColors.get(getSectionKey(overlap));
-    if (!highlightColors && !hasHighlightedAncestor(overlap, sectionKeyToColors)) {
+  for (const section of sections) {
+    const highlightColors = sectionKeyToColors.get(getSectionKey(section));
+    if (
+      !highlightColors &&
+      !hasHighlightedAncestor(section, sectionKeyToColors)
+    ) {
       continue;
     }
     colorSection(ctx, {
       definitions,
-      overlap,
+      section,
       colors: highlightColors ?? [colors.unhighlighted],
     });
   }

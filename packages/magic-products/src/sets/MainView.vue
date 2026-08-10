@@ -9,9 +9,9 @@
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
   import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
-  import { OUTSIDE_ALL_SETS } from './sets/other/constants.ts';
+  import { isOutsideAllSetsSection } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
-  import { HighlightGroup, SetDefinitionId } from './types.ts';
+  import { HighlightGroup } from './types.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
@@ -23,15 +23,12 @@
 
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 
-  const isOutsideAllSets = (section: SetDefinitionId[]) =>
-    section.at(0) === OUTSIDE_ALL_SETS.identity;
-
-  const setSectionsToHighlight = computed<HighlightGroup[]>(() => {
+  const sectionsToHighlight = computed<HighlightGroup[]>(() => {
     return activeHighlights.value
       .map((group) => ({
         ...group,
         sections: group.sections.filter(
-          (section) => !isOutsideAllSets(section),
+          (section) => !isOutsideAllSetsSection(section),
         ),
       }))
       .filter((group) => group.sections.length > 0);
@@ -55,14 +52,14 @@
 
   const highlightedOutside = computed(() => {
     return activeHighlights.value
-      .filter((group) => group.sections.some(isOutsideAllSets))
+      .filter((group) => group.sections.some(isOutsideAllSetsSection))
       .map((group) => group.color);
   });
 
   const highlightedSections = computed(() => {
     const map = new Map<SectionKey, string[]>();
 
-    for (const { sections, color } of setSectionsToHighlight.value) {
+    for (const { sections, color } of sectionsToHighlight.value) {
       for (const section of sections) {
         const key = getSectionKey(section);
         const existing = map.get(key) ?? [];

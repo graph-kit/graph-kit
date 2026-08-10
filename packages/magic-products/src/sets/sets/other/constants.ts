@@ -1,3 +1,5 @@
+import type { Section } from '../../types.ts';
+
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 /**
@@ -8,6 +10,12 @@ export const OUTSIDE_ALL_SETS = {
   label: 'S',
   identity: 'outside-all-sets',
 } as const;
+
+/** true when `section` is the region outside every set, see {@link OUTSIDE_ALL_SETS}. */
+export const isOutsideAllSetsSection = (section: Section) => {
+  // all the area outside every set is itself atomic, so checking the first id is enough
+  return section.at(0) === OUTSIDE_ALL_SETS.identity;
+};
 
 // labels reserved for structural use, so they cannot name a set
 export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.label] as const;

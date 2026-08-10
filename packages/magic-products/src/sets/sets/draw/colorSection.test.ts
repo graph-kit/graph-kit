@@ -23,35 +23,35 @@ describe(getAncestorSections, () => {
 
 describe(hasHighlightedAncestor, () => {
   it('is false when nothing is highlighted', () => {
-    expect(hasHighlightedAncestor(['A', 'B'], new Map(), new Map())).toBe(
-      false,
-    );
+    expect(hasHighlightedAncestor(['A', 'B'], new Map())).toBe(false);
   });
 
   it('is true when a single-set ancestor is highlighted', () => {
-    const highlightedSets = new Map([['A', ['red']]]);
-    expect(hasHighlightedAncestor(['A', 'B'], highlightedSets, new Map())).toBe(
+    const highlightedSections = new Map([[getSectionKey(['A']), ['red']]]);
+    expect(hasHighlightedAncestor(['A', 'B'], highlightedSections)).toBe(true);
+  });
+
+  it('is true when a multi-set ancestor overlap is highlighted', () => {
+    const highlightedSections = new Map([
+      [getSectionKey(['A', 'B']), ['red']],
+    ]);
+    expect(hasHighlightedAncestor(['A', 'B', 'C'], highlightedSections)).toBe(
       true,
     );
   });
 
-  it('is true when a multi-set ancestor overlap is highlighted', () => {
-    const highlightedOverlaps = new Map([[getSectionKey(['A', 'B']), ['red']]]);
-    expect(
-      hasHighlightedAncestor(['A', 'B', 'C'], new Map(), highlightedOverlaps),
-    ).toBe(true);
-  });
-
   it('ignores the section itself, only its ancestors count', () => {
-    const highlightedOverlaps = new Map([[getSectionKey(['A', 'B']), ['red']]]);
-    expect(
-      hasHighlightedAncestor(['A', 'B'], new Map(), highlightedOverlaps),
-    ).toBe(false);
+    const highlightedSections = new Map([
+      [getSectionKey(['A', 'B']), ['red']],
+    ]);
+    expect(hasHighlightedAncestor(['A', 'B'], highlightedSections)).toBe(
+      false,
+    );
   });
 
   it('ignores highlights on sets outside the section', () => {
-    const highlightedSets = new Map([['Z', ['red']]]);
-    expect(hasHighlightedAncestor(['A', 'B'], highlightedSets, new Map())).toBe(
+    const highlightedSections = new Map([[getSectionKey(['Z']), ['red']]]);
+    expect(hasHighlightedAncestor(['A', 'B'], highlightedSections)).toBe(
       false,
     );
   });

@@ -1,6 +1,6 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
-import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
+import type { Section, SetDefinition } from '../../types.ts';
 import { getSetDefinition } from '../other/circleUtils.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
 import { hatchPattern } from './hatchPattern.ts';
@@ -68,15 +68,6 @@ export const getAncestorSections = (section: Section): Section[] => {
   return ancestorSections;
 };
 
-const isSectionHighlighted = (
-  section: Section,
-  highlightedSets: Map<SetDefinitionId, string[]>,
-  highlightedOverlaps: Map<SectionKey, string[]>,
-) =>
-  section.length === 1
-    ? highlightedSets.has(section[0])
-    : highlightedOverlaps.has(getSectionKey(section));
-
 /**
  * true when `section` sits nested inside a highlighted section, meaning
  * `section` must be redrawn (even just back to its unhighlighted fill) or
@@ -84,9 +75,8 @@ const isSectionHighlighted = (
  */
 export const hasHighlightedAncestor = (
   section: Section,
-  highlightedSets: Map<SetDefinitionId, string[]>,
-  highlightedOverlaps: Map<SectionKey, string[]>,
+  highlightedSections: Map<SectionKey, string[]>,
 ) =>
   getAncestorSections(section).some((ancestor) =>
-    isSectionHighlighted(ancestor, highlightedSets, highlightedOverlaps),
+    highlightedSections.has(getSectionKey(ancestor)),
   );

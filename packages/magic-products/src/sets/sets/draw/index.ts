@@ -1,9 +1,9 @@
 import { getWorldCoordinates } from '@core/utils/canvas/index';
 
-import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
+import type { Section, SetDefinition } from '../../types.ts';
 import { SetColors } from '../../useSetsTheme.ts';
 import type { SetFocusControls } from '../composables/useSetFocus.ts';
-import type { SectionKey } from '../other/sectionKey.ts';
+import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
 import {
   drawCircleBackground,
   drawCircleLabel,
@@ -17,10 +17,8 @@ type DrawProps = {
   definitions: SetDefinition[];
   /** every section two or more circles share, back to front so nested ones paint on top */
   overlaps: Section[];
-  /** colors painted over a whole set, keyed by the set they cover */
-  highlightedSets: Map<SetDefinitionId, string[]>;
-  /** colors painted over one shared section, keyed by the sets forming it */
-  highlightedOverlaps: Map<SectionKey, string[]>;
+  /** colors painted over a section, keyed by the sets forming it */
+  highlightedSections: Map<SectionKey, string[]>;
   /** whether a set carries the focus outline, see {@link SetFocusControls} */
   isSetFocused: SetFocusControls['isFocused'];
   /** colors painted over the region no set covers, drawn behind every circle */
@@ -32,7 +30,7 @@ export const draw = (
   props: DrawProps,
   colors: SetColors,
 ) => {
-  const { highlightedSets, highlightedOverlaps } = props;
+  const { highlightedSections } = props;
 
   if (props.highlightedOutside.length > 0) {
     const start = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
@@ -52,7 +50,7 @@ export const draw = (
       ctx,
       {
         set,
-        highlightColors: highlightedSets.get(set.id) ?? null,
+        highlightColors: highlightedSections.get(getSectionKey([set.id])) ?? null,
       },
       colors,
     );
@@ -63,8 +61,7 @@ export const draw = (
     {
       definitions: props.definitions,
       overlaps: props.overlaps,
-      highlightedSets,
-      highlightedOverlaps,
+      highlightedSections,
     },
     colors,
   );

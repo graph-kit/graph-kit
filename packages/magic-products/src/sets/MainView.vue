@@ -21,7 +21,8 @@
 
   const { activeHighlights } = queryAnalysis;
 
-  const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
+  const { definitions, sharedSections, allSections, addDefinition, removeDefinition } =
+    sets;
 
   const isOutsideAllSets = (section: SetDefinitionId[]) =>
     section.at(0) === OUTSIDE_ALL_SETS.identity;
@@ -59,30 +60,14 @@
       .map((group) => group.color);
   });
 
-  const highlightedSets = computed(() => {
-    const map = new Map<SetDefinitionId, string[]>();
-    for (const { sections, color } of setSectionsToHighlight.value) {
-      for (const section of sections) {
-        if (section.length === 1) {
-          const existing = map.get(section[0]) ?? [];
-          existing.push(color);
-          map.set(section[0], existing);
-        }
-      }
-    }
-    return map;
-  });
-
-  const highlightedOverlaps = computed(() => {
-    const existingKeys = new Set(sharedSections.value.map(getSectionKey));
+  const highlightedSections = computed(() => {
+    const existingKeys = new Set(allSections.value.map(getSectionKey));
     const map = new Map<SectionKey, string[]>();
 
     for (const { sections, color } of setSectionsToHighlight.value) {
       for (const section of sections) {
-        if (section.length === 1) continue;
-
         const key = getSectionKey(section);
-        // a section only paints if the circles actually overlap there
+        // a section only paints if it actually exists, eg. two circles that don't overlap
         if (!existingKeys.has(key)) continue;
 
         const existing = map.get(key) ?? [];
@@ -109,8 +94,7 @@
       {
         definitions: definitions.value,
         overlaps: sharedSections.value,
-        highlightedSets: highlightedSets.value,
-        highlightedOverlaps: highlightedOverlaps.value,
+        highlightedSections: highlightedSections.value,
         isSetFocused: isFocused,
         highlightedOutside: highlightedOutside.value,
       },

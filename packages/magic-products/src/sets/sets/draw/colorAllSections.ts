@@ -1,4 +1,4 @@
-import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
+import type { Section, SetDefinition } from '../../types.ts';
 import { SetColors } from '../../useSetsTheme.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
 import { colorSection, hasHighlightedAncestor } from './colorSection.ts';
@@ -6,8 +6,7 @@ import { colorSection, hasHighlightedAncestor } from './colorSection.ts';
 type ColorAllSectionsProps = {
   definitions: SetDefinition[];
   overlaps: Section[];
-  highlightedSets: Map<SetDefinitionId, string[]>;
-  highlightedOverlaps: Map<SectionKey, string[]>;
+  highlightedSections: Map<SectionKey, string[]>;
 };
 
 /**
@@ -21,15 +20,11 @@ export const colorAllSections = (
   props: ColorAllSectionsProps,
   colors: SetColors,
 ) => {
-  const { definitions, overlaps, highlightedSets, highlightedOverlaps } =
-    props;
+  const { definitions, overlaps, highlightedSections } = props;
 
   for (const overlap of overlaps) {
-    const highlightColors = highlightedOverlaps.get(getSectionKey(overlap));
-    if (
-      !highlightColors &&
-      !hasHighlightedAncestor(overlap, highlightedSets, highlightedOverlaps)
-    ) {
+    const highlightColors = highlightedSections.get(getSectionKey(overlap));
+    if (!highlightColors && !hasHighlightedAncestor(overlap, highlightedSections)) {
       continue;
     }
     colorSection(ctx, {

@@ -1,10 +1,13 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine';
 
-import { OUTSIDE_ALL_SETS, RESERVED_LABELS } from '../constants.ts';
+import type { SetDefinitionId } from '../../../types.ts';
+import { RESERVED_LABELS } from '../constants.ts';
 import { createSetExpressionParser } from '../createSetExpressionParser.ts';
 
 const RESERVED = new Set<string>(RESERVED_LABELS);
 
+// operates on the raw, unresolved query text, so a label is correct here -
+// this is the one place in the simplifier a label is allowed to originate
 export const extractVariables = (node: MathJsonExpression): string[] => {
   if (typeof node === 'string') {
     return /^[A-Z]$/.test(node) && !RESERVED.has(node) ? [node] : [];
@@ -16,21 +19,25 @@ export const extractVariables = (node: MathJsonExpression): string[] => {
 };
 
 // minterm i represents the atom where variable[j] is present iff bit j of i is set.
-// this partition is symbolic, so minterm 0 (no variables) uses the label the parser
-// resolves rather than an identity that only the real set space has.
-const buildPartition = (variables: string[]): string[][] =>
+// the caller resolves what identifies "outside all sets" in its own identity space,
+// since a symbolic caller and the real set space disagree on what that is
+const buildPartition = (
+  variables: SetDefinitionId[],
+  outsideId: SetDefinitionId,
+): SetDefinitionId[][] =>
   Array.from({ length: 2 ** variables.length }, (_, i) => {
     const atom = variables.filter((_, j) => (i >> j) & 1);
-    return atom.length === 0 ? [OUTSIDE_ALL_SETS.label] : atom;
+    return atom.length === 0 ? [outsideId] : atom;
   });
 
 export const getTruthTable = (
   node: MathJsonExpression,
-  variables: string[],
+  variables: SetDefinitionId[],
+  outsideId: SetDefinitionId,
 ): number => {
-  const partition = buildPartition(variables);
-  // this partition is symbolic, so a label already is how a set is identified in it
-  const parse = createSetExpressionParser(partition, (label) => label);
+  const partition = buildPartition(variables, outsideId);
+  // node's leaves are already SetDefinitionIds by the time they reach here
+  const parse = createSetExpressionParser(partition, (id) => id);
   const result = parse(node);
 
   if (!result) return 0;

@@ -1,6 +1,11 @@
 import type { MathJsonExpression } from '@cortex-js/compute-engine';
 
-import { LATEX_SET_SYMBOLS, RESERVED_LABELS } from '../constants.ts';
+import type { SetDefinitionId, SetLabel } from '../../../types.ts';
+import {
+  LATEX_SET_SYMBOLS,
+  OUTSIDE_ALL_SETS,
+  RESERVED_LABELS,
+} from '../constants.ts';
 import { parseMathJSON } from '../parseMathJSON.ts';
 import { dnfToMathJson, mathJsonToLatex } from './dnf.ts';
 import { minimizeDNF } from './quine-mccluskey.ts';
@@ -41,6 +46,21 @@ const stripDoubleComplement = (
   return [head, ...args.map(stripDoubleComplement)] as MathJsonExpression;
 };
 
+// walks leaves only, so Omega and operator heads pass through untouched
+const mapLeaves = (
+  node: MathJsonExpression,
+  resolve: (leaf: string) => string,
+): MathJsonExpression => {
+  if (typeof node === 'string') {
+    return node === LATEX_SET_SYMBOLS.OMEGA ? node : resolve(node);
+  }
+
+  if (!Array.isArray(node)) return node;
+
+  const [head, ...args] = node;
+  return [head, ...args.map((arg) => mapLeaves(arg, resolve))] as MathJsonExpression;
+};
+
 const countOperatorWeight = (latex: string): number => {
   const strippedLatex = stripWhitespace(latex);
   return Object.entries(OPERATOR_WEIGHTS).reduce(
@@ -52,10 +72,12 @@ const countOperatorWeight = (latex: string): number => {
 
 const trySimplify = (
   node: MathJsonExpression,
-  variables: string[],
+  variables: SetDefinitionId[],
   originalLatex: string,
+  outsideId: SetDefinitionId,
+  toLabel: (id: SetDefinitionId) => SetLabel,
 ): string | null => {
-  const truthTable = getTruthTable(node, variables);
+  const truthTable = getTruthTable(node, variables, outsideId);
   const oneMinterms = getOneMinterms(truthTable, variables.length);
 
   if (oneMinterms.length === 0 || oneMinterms.length === 2 ** variables.length)
@@ -64,33 +86,56 @@ const trySimplify = (
   const terms = minimizeDNF(oneMinterms, variables);
   const simplified = dnfToMathJson(terms);
 
-  if (getTruthTable(simplified, variables) !== truthTable) return null;
+  if (getTruthTable(simplified, variables, outsideId) !== truthTable) return null;
 
-  const result = mathJsonToLatex(simplified);
+  const result = mathJsonToLatex(mapLeaves(simplified, toLabel));
   if (stripWhitespace(result) === stripWhitespace(originalLatex)) return null;
 
   return result;
 };
 
-const simplifyOnce = (latex: string, definedSets?: string[]): string | null => {
+const simplifyOnce = (
+  latex: string,
+  definedLabels: SetLabel[] | undefined,
+  resolveId: (label: SetLabel) => SetDefinitionId,
+  toLabel: (id: SetDefinitionId) => SetLabel,
+): string | null => {
   const expression = parseMathJSON(latex);
   if (!expression) return null;
 
-  const node = expression.json;
+  const rawNode = expression.json;
 
-  const canvasVars = definedSets?.filter((v) => !RESERVED.has(v)).sort();
-  const variables =
-    canvasVars && canvasVars.length > 0 ? canvasVars : extractVariables(node);
+  const canvasVars = definedLabels?.filter((v) => !RESERVED.has(v)).sort();
+  const usedLabels =
+    canvasVars && canvasVars.length > 0
+      ? canvasVars
+      : extractVariables(rawNode);
 
-  if (variables.length === 0 || variables.length > MAX_VARIABLES) return null;
+  if (usedLabels.length === 0 || usedLabels.length > MAX_VARIABLES) return null;
 
-  return trySimplify(node, variables, latex);
+  const variables = usedLabels.map(resolveId);
+  const node = mapLeaves(rawNode, resolveId);
+  const outsideId = resolveId(OUTSIDE_ALL_SETS.label);
+
+  return trySimplify(node, variables, latex, outsideId, toLabel);
 };
 
+// only this boundary and simplifyOnce's egress ever touch a display label;
+// everything between them is identified by SetDefinitionId, per createSetExpressionParser.ts
 export const simplify = (
   latex: string,
-  definedSets?: string[],
+  labelToId?: Record<SetLabel, SetDefinitionId>,
 ): string | null => {
+  const definedLabels = labelToId ? Object.keys(labelToId) : undefined;
+  // falls back to the label as its own identity when there is no real set space to resolve against
+  const resolveId = (label: SetLabel) => labelToId?.[label] ?? label;
+  const idToLabel = labelToId
+    ? Object.fromEntries(
+        Object.entries(labelToId).map(([label, id]) => [id, label]),
+      )
+    : undefined;
+  const toLabel = (id: SetDefinitionId) => idToLabel?.[id] ?? id;
+
   const expression = parseMathJSON(latex);
   const stripped = expression
     ? mathJsonToLatex(stripDoubleComplement(expression.json))
@@ -107,7 +152,7 @@ export const simplify = (
   let bestWeight = best ? countOperatorWeight(best) : originalWeight;
 
   for (let i = 0; i < MAX_SIMPLIFICATION_ITERATIONS; i++) {
-    const next = simplifyOnce(current, definedSets);
+    const next = simplifyOnce(current, definedLabels, resolveId, toLabel);
     if (!next) break;
     current = next;
 

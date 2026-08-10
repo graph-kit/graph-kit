@@ -5,7 +5,7 @@ import { type Ref, ref } from 'vue';
 import type { HighlightQuery, HighlightQueryId } from './types.ts';
 
 // the rendered mathfield owns its caret and its displayed value, so it takes the commands
-export type QueryEditor = {
+type QueryEditor = {
   insert: (latexString: HighlightQuery) => void;
   replace: (latexString: HighlightQuery) => void;
 };

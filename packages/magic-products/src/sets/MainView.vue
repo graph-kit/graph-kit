@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { nullThrows } from '@core/utils/assert';
   import { MagicProduct } from '@magic/shared/product';
 
   import { computed } from 'vue';
@@ -105,12 +106,6 @@
     for (const setId of [...focusedSetIds.value]) removeDefinition(setId);
   };
 
-  magic.shortcuts.add({
-    id: 'delete-set',
-    callback: () => deleteFocusedSets(),
-    key: 'backspace',
-  });
-
   magic.surface.draw.content.value = (ctx) => {
     draw(ctx, {
       definitions: definitions.value,
@@ -125,7 +120,19 @@
 
   magic.surface.domEvents.subscribe('onDblClick', createSet);
 
+  magic.shortcuts.add({
+    id: 'delete-set',
+    callback: deleteFocusedSets,
+    key: 'backspace',
+  });
+
   const cursor = useCursorStyle(definitions, magic.surface.cursorCoordinates);
+
+  magic.surface.lifecycleEvents.subscribe('onAfterRepaint', () => {
+    const canvas = nullThrows(magic.surface.canvas.value, 'canvas not defined');
+    if (canvas.style.cursor === cursor.value) return;
+    canvas.style.cursor = cursor.value;
+  });
 </script>
 
 <template>

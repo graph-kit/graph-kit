@@ -26,6 +26,8 @@ export type CanvasProps = {
   canvas: Ref<HTMLCanvasElement | undefined>;
   camera: Omit<Camera, 'cleanup'>;
   cursorCoordinates: Ref<Coordinate>;
+  /** where a mouse event landed in world coordinates, for hit tests against the event itself */
+  toWorldCoordinates: (ev: MouseEvent) => Coordinate;
   /** the slice of the world on screen, for fills and clips that cover everything visible */
   visibleWorldRect: ComputedRef<WorldRect>;
   ref: CanvasRef;

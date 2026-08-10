@@ -90,10 +90,8 @@ export const useCanvas: UseCanvas = () => {
   const { events: domEvents, cleanup: cleanupDOMEvents } = useDOMEvents(canvas);
 
   const { cleanup: cleanupCamera, ...camera } = useCamera(canvas, domEvents);
-  const { worldCoordinates: cursorCoordinates } = useWorldCoordinates(
-    canvas,
-    domEvents,
-  );
+  const { worldCoordinates: cursorCoordinates, toWorldCoordinates } =
+    useWorldCoordinates(camera.state, domEvents);
   const visibleWorldRect = useVisibleWorldRect(camera.state, canvasBoxSize);
 
   const pattern = useBackgroundPattern(
@@ -115,6 +113,7 @@ export const useCanvas: UseCanvas = () => {
     canvas,
     camera,
     cursorCoordinates,
+    toWorldCoordinates,
     visibleWorldRect,
     ref: {
       canvasRef: (ref) => (canvas.value = ref),

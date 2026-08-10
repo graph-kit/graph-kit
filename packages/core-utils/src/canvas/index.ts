@@ -68,31 +68,6 @@ export const getCanvasTransform = (ctx: CanvasRenderingContext2D) => {
 };
 
 /**
- * converts client coordinates into world coordinates by undoing the camera's pan and zoom.
- *
- * @example
- * // camera panned 10px left, not zoomed
- * getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
- * // { x: -10, y: 0, zoom: 1 }
- */
-export const getWorldCoordinates = (
-  clientCoords: ClientCoords,
-  ctx: CanvasRenderingContext2D,
-): WithZoom<Coords> => {
-  // measuring forces layout, so this is for one off callers like event handlers
-  const rect = ctx.canvas.getBoundingClientRect();
-  const localX = clientCoords.clientX - rect.left;
-  const localY = clientCoords.clientY - rect.top;
-
-  const { panX, panY, zoom } = getCanvasTransform(ctx);
-
-  const x = (localX - panX) / zoom;
-  const y = (localY - panY) / zoom;
-
-  return { x, y, zoom };
-};
-
-/**
  * client coordinates are the raw coordinates corresponding to the clients physical screen.
  *
  * the top left corner is (0, 0) and bottom right corner is (window.innerWidth, window.innerHeight).

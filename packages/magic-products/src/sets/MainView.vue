@@ -10,9 +10,8 @@
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
   import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
-  import { isOutsideAllSetsSection } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
-  import { HighlightGroup } from './types.ts';
+  import { HighlightQueryId, Section } from './types.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
@@ -20,19 +19,20 @@
     setsProductState: { sets, queryAnalysis, theme, highlights },
   } = useSetsProduct();
 
-  const { activeHighlights } = queryAnalysis;
+  const { queryIdToSections } = queryAnalysis;
 
   const { definitions, sharedSections, addDefinition, removeDefinition } = sets;
 
-  const sectionsToHighlight = computed<HighlightGroup[]>(() => {
-    return activeHighlights.value
-      .map((group) => ({
-        ...group,
-        sections: group.sections.filter(
-          (section) => !isOutsideAllSetsSection(section),
-        ),
-      }))
-      .filter((group) => group.sections.length > 0);
+  // the eye-toggle in HighlightRow hides a query's paint without touching whether it resolves
+  const visibleQueryIdToSections = computed(() => {
+    const sectionsByQueryId = new Map<HighlightQueryId, Section[]>();
+
+    for (const [queryId, sections] of queryIdToSections.value) {
+      if (highlights.getQuery(queryId).isHidden) continue;
+      sectionsByQueryId.set(queryId, sections);
+    }
+
+    return sectionsByQueryId;
   });
 
   const { isResizing } = useCircleResize({
@@ -46,22 +46,16 @@
     isResizing,
   });
 
-  const { focusedSetIds, isFocused, setFocus } = useSetFocus({
+  const focus = useSetFocus({
     surface: magic.surface,
     definitions,
-  });
-
-  const outsideColors = computed(() => {
-    return activeHighlights.value
-      .filter((group) => group.sections.some(isOutsideAllSetsSection))
-      .map((group) => highlights.getQuery(group.queryId).color);
   });
 
   const sectionKeyToColors = computed(() => {
     const map = new Map<SectionKey, Color[]>();
 
-    for (const { queryId, sections } of sectionsToHighlight.value) {
-      const color = highlights.getQuery(queryId).color;
+    for (const [queryId, sections] of visibleQueryIdToSections.value) {
+      const { color } = highlights.getQuery(queryId);
       for (const section of sections) {
         const key = getSectionKey(section);
         const existing = map.get(key) ?? [];
@@ -75,11 +69,14 @@
 
   const createSet = () => {
     const definition = addDefinition(magic.surface.cursorCoordinates.value);
-    setFocus(definition.id);
+    focus.set(definition.id);
   };
 
   const deleteFocusedSets = () => {
-    for (const setId of [...focusedSetIds.value]) removeDefinition(setId);
+    const focusedSetIds = sets.definitions.value
+      .map((s) => s.id)
+      .filter(focus.isFocused);
+    for (const setId of focusedSetIds) removeDefinition(setId);
   };
 
   magic.surface.draw.content.value = (ctx) => {
@@ -89,8 +86,7 @@
         definitions: definitions.value,
         overlaps: sharedSections.value,
         sectionKeyToColors: sectionKeyToColors.value,
-        isSetFocused: isFocused,
-        outsideColors: outsideColors.value,
+        isSetFocused: focus.isFocused,
       },
       theme.value.set,
     );

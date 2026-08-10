@@ -1,7 +1,7 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
 import { CanvasProps } from '@canvas/surface/types';
 
-import { ComputedRef, type Ref, computed, ref } from 'vue';
+import { type Ref, computed, ref } from 'vue';
 
 import type { SetDefinition, SetDefinitionId } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
@@ -16,12 +16,10 @@ type SetFocusProps = {
  * delete shortcut, and which circles draw with the focus outline
  */
 export type SetFocusControls = {
-  /** every set currently focused, which clicking the canvas replaces wholesale */
-  focusedSetIds: ComputedRef<ReadonlySet<SetDefinitionId>>;
   /** whether a set is focused, for drawing it differently */
   isFocused: (id: SetDefinitionId) => boolean;
   /** focuses a set on its own, dropping whatever was focused before */
-  setFocus: (id: SetDefinitionId) => void;
+  set: (id: SetDefinitionId) => void;
 };
 
 export const useSetFocus = ({
@@ -61,8 +59,7 @@ export const useSetFocus = ({
   surface.domEvents.subscribe('onMouseDown', focusSetAtCursor);
 
   return {
-    focusedSetIds: computed(() => focusedSetIds.value),
     isFocused: (id) => focusedSetIds.value.has(id),
-    setFocus,
+    set: setFocus,
   };
 };

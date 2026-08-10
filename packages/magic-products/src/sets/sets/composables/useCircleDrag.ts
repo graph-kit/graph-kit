@@ -27,7 +27,7 @@ export const useCircleDrag = ({
     },
     (definition, diff) => {
       const { at } = definition.display;
-      at.x = at.x + diff.x;
-      at.y = at.y + diff.y;
+      at.x += diff.x;
+      at.y += diff.y;
     },
   );

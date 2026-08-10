@@ -1,10 +1,6 @@
 import { CanvasProps } from '@canvas/surface/types';
-import {
-  CURSOR,
-  CURSOR_FALLBACK,
-  Cursor,
-  isValidCursor,
-} from '@core/themes/index';
+import { CURSOR_FALLBACK } from '@core/themes/index';
+import { CURSOR, Cursor, isValidCursor } from '@core/utils/cursor';
 import { CoreGetters } from '@graph/core/getters';
 import { EventHub } from '@graph/primitives/events/createEventHub';
 import { GraphGetters } from '@graph/primitives/getters/types';

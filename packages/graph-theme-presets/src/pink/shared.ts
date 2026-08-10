@@ -1,4 +1,4 @@
-import { CURSOR } from '@core/themes/index';
+import { CURSOR } from '@core/utils/cursor';
 import colors from '@core/utils/colors';
 
 const sharedText = {

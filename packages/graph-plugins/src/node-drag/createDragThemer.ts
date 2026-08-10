@@ -1,4 +1,4 @@
-import { CURSOR } from '@core/themes/index';
+import { CURSOR } from '@core/utils/cursor';
 import { DragStateControls } from '@graph/plugins-shared/drag';
 import { PluginOptions } from '@graph/plugins-shared/plugins';
 

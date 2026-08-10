@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import colors from '@core/utils/colors';
   import Button from '@magic/shared/Button';
   import HStack from '@magic/shared/HStack';
   import Tooltip from '@magic/shared/Tooltip';
@@ -100,7 +101,7 @@
     <Tooltip :label="isHidden ? 'Show highlight' : 'Hide highlight'">
       <template #trigger>
         <Button
-          :style="{ backgroundColor: isHidden ? 'gray' : color }"
+          :style="{ backgroundColor: isHidden ? colors.GRAY_500 : color }"
           @click="toggleHidden"
         />
       </template>

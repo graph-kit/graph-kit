@@ -3,6 +3,7 @@ import { FontWeight } from '@canvas/primitives/text/types';
 
 import { SetDefinition } from '../../types.ts';
 import { COLORS } from '../other/constants.ts';
+import { hatchPattern } from './hatchPattern.ts';
 
 type DrawCircleBackgroundProps = {
   set: SetDefinition;
@@ -14,11 +15,28 @@ export const drawCircleBackground = (
   props: DrawCircleBackgroundProps,
 ) => {
   const { set, highlightColors } = props;
-  if (highlightColors && highlightColors.length !== 1) return;
-  circle({
-    ...set.display,
-    fillColor: highlightColors?.[0] ?? COLORS.BACKGROUND,
-  }).draw(ctx);
+
+  if (!highlightColors || highlightColors.length === 1) {
+    circle({
+      ...set.display,
+      fillColor: highlightColors?.[0] ?? COLORS.BACKGROUND,
+    }).draw(ctx);
+    return;
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(
+    set.display.at.x,
+    set.display.at.y,
+    set.display.radius,
+    0,
+    2 * Math.PI,
+  );
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = hatchPattern(ctx, highlightColors);
+  ctx.fill();
+  ctx.restore();
 };
 
 type DrawCircleOutlineProps = {

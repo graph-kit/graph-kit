@@ -4,6 +4,7 @@ import type { Section, SetDefinition, SetDefinitionId } from '../../types.ts';
 import { getSetDefinition } from '../other/circleUtils.ts';
 import { COLORS } from '../other/constants.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
+import { hatchPattern } from './hatchPattern.ts';
 
 type DrawOverlappingAreaProps = {
   definitions: SetDefinition[];
@@ -40,6 +41,7 @@ const drawOverlappingAreas = (
     ctx.fillStyle = highlightColors[0];
   } else {
     ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = hatchPattern(ctx, highlightColors);
   }
 
   ctx.fillRect(

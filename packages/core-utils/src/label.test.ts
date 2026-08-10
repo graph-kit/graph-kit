@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { createLabelGenerator } from './createLabelGenerator.ts';
+import { createLabelGenerator } from './label.ts';
 
 describe(createLabelGenerator, () => {
   test('returns the first label in the sequence when no labels are active', () => {

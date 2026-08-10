@@ -9,8 +9,8 @@
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { LATEX_HOTKEYS } from '../other/constants.ts';
-  import LatexInput from './latex-input/LatexInput.vue';
-  import type { LatexInputInstance } from './latex-input/types.ts';
+  import LatexInput from './latex/LatexInput.vue';
+  import type { LatexInputInstance } from './latex/types.ts';
 
   const props = defineProps<{
     queryId: HighlightQueryId;

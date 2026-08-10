@@ -87,7 +87,7 @@
     />
     <Tooltip
       v-if="disambiguated && !hasError"
-      :label="`Ambiguous order of operations. Parsed as: ${disambiguated}`"
+      :label="`Ambiguous order of operations. Click to write it as: ${disambiguated}`"
     >
       <template #trigger>
         <!-- TODO replace with a proper icon button -->
@@ -97,10 +97,10 @@
 
     <Tooltip
       v-if="simplified && !hasError"
-      label="Simplify expression"
+      :label="`Simplify expression to: ${simplified}`"
     >
       <template #trigger>
-        <Button @click="applySimplification">simplify</Button>
+        <Button @click="applySimplification">Simplify</Button>
       </template>
     </Tooltip>
 

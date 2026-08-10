@@ -9,7 +9,7 @@
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
-  import HighlightRow from './HighlightRow.vue';
+  import Query from './Query.vue';
   import LatexButton from './latex-button/LatexButton.vue';
 
   const { highlights } = useProvidedSetsProductState();
@@ -31,7 +31,7 @@
 <template>
   <Well>
     <VStack>
-      <HighlightRow
+      <Query
         v-for="queryId in queryIds"
         :key="queryId"
         :queryId="queryId"
@@ -43,7 +43,7 @@
           @click="addHighlight"
           :disabled="queryIds.length > MAX_NUMBER_OF_HIGHLIGHTS"
         >
-          + Add Expression
+          + Add highlight
         </Button>
       </div>
 

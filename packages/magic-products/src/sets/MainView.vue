@@ -21,7 +21,7 @@
 
   const { queryIdToSections } = queryAnalysis;
 
-  // the eye-toggle in HighlightRow hides a query's paint without touching whether it resolves
+  // the eye-toggle in Query hides a query's paint without touching whether it resolves
   const visibleQueryIdToSections = computed(() => {
     const sectionsByQueryId = new Map<HighlightQueryId, Section[]>();
 

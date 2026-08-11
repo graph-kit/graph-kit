@@ -57,11 +57,10 @@
       <Well class="p-1">
         <Tooltip
           v-if="disambiguated"
-          :label="`Ambiguous order of operations. Click to write it as: ${disambiguated}`"
+          label="Operator precedence isn't standardized in set theory. Using parentheses makes evaluation order explicit."
         >
           <template #trigger>
-            <!-- TODO replace with a proper icon button -->
-            <Button @click="applyDisambiguation">&#9432;</Button>
+            <Button @click="applyDisambiguation">Disambiguate</Button>
           </template>
         </Tooltip>
 

@@ -55,6 +55,9 @@ export type SingleSourceOptions = {
   sourceNodeId: SourceNodeId;
 };
 
+export const distancesSlotId = 'path-finding/distances';
+export const frontierSlotId = 'path-finding/frontier';
+
 const singleSourceEffects = (
   graph: MagicGraph,
 ): SimulationEffects<SingleSourceFrame> => {
@@ -88,7 +91,7 @@ const singleSourceEffects = (
       {
         component: Distances,
         position: 'center-left',
-        id: 'path-finding/distances',
+        id: distancesSlotId,
       },
       {
         component: Frontier,

@@ -2,32 +2,32 @@ import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
 
 import { formatDistance } from '../distance.ts';
-import { slotIds } from './effects.ts';
+import { distancesSlotId, frontierSlotId } from './effects.ts';
 import { SingleSourceFrame } from './frame.ts';
 
 const componentSlotHighlight = (
-  slot: keyof typeof slotIds,
+  slot: typeof frontierSlotId | typeof distancesSlotId,
 ): ExplainerHighlight => ({
-  activate: (graph) => graph.magic.componentSlots.setHighlighted(slotIds[slot]),
+  activate: (graph) => graph.magic.componentSlots.setHighlighted(slot),
   deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
 });
 
 const highlights = {
   distances: {
     tooltipLabel: 'The cheapest trip we know to each node so far',
-    ...componentSlotHighlight('distances'),
+    ...componentSlotHighlight(distancesSlotId),
   },
   improve: {
     tooltipLabel: 'A cheaper way in! Write the new distance down',
-    ...componentSlotHighlight('distances'),
+    ...componentSlotHighlight(distancesSlotId),
   },
   keep: {
     tooltipLabel: 'The trip we already had is no worse, so nothing changes',
-    ...componentSlotHighlight('distances'),
+    ...componentSlotHighlight(distancesSlotId),
   },
   frontier: {
     tooltipLabel: 'Everything discovered but not yet finalized, cheapest first',
-    ...componentSlotHighlight('frontier'),
+    ...componentSlotHighlight(frontierSlotId),
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 

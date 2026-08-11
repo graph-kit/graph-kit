@@ -30,6 +30,8 @@ export type AllPairsOptions = {
   graph: MagicGraph;
 };
 
+export const matrixSlotId = 'path-finding/matrix';
+
 const allPairsEffects = (
   graph: MagicGraph,
 ): SimulationEffects<AllPairsFrame> => {
@@ -42,7 +44,7 @@ const allPairsEffects = (
   const lens: Lens = {
     id: 'path-finding/all-pairs',
     components: [
-      { component: Matrix, position: 'center-left', id: 'path-finding/matrix' },
+      { component: Matrix, position: 'center-left', id: matrixSlotId },
     ],
     activate: () => {
       for (const { themer } of themers) themer.activate();

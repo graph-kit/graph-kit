@@ -87,6 +87,7 @@
         sections: sections.value,
         sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: focus.isFocused,
+        bounds: magic.surface.visibleWorldRect.value,
       },
       theme.value.set,
     );

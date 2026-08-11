@@ -18,6 +18,17 @@ export type ClientCoords = Pick<MouseEvent, 'clientX' | 'clientY'>;
  */
 export type Coords = Coordinate;
 
+/**
+ * a rectangle in the canvas world, most often the slice of it the canvas
+ * currently shows. see `visibleWorldRect` on the canvas surface
+ */
+export type WorldRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export type WithZoom<T> = T & {
   /**
    * the scale factor of the canvas
@@ -54,35 +65,6 @@ export const getCanvasTransform = (ctx: CanvasRenderingContext2D) => {
   const panX = e / dpr;
   const panY = f / dpr;
   return { panX, panY, zoom };
-};
-
-/**
- * converts client coordinates into world coordinates by undoing the camera's pan and zoom.
- *
- * @example
- * // camera panned 10px left, not zoomed
- * getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
- * // { x: -10, y: 0, zoom: 1 }
- */
-export const getWorldCoordinates = (
-  clientCoords: ClientCoords,
-  ctx: CanvasRenderingContext2D,
-  /**
-   * the canvas's position on screen. measuring it forces layout, so callers on
-   * the draw path should pass one they already hold and leave the default to
-   * one off callers like event handlers
-   */
-  rect: Pick<DOMRect, 'left' | 'top'> = ctx.canvas.getBoundingClientRect(),
-): WithZoom<Coords> => {
-  const localX = clientCoords.clientX - rect.left;
-  const localY = clientCoords.clientY - rect.top;
-
-  const { panX, panY, zoom } = getCanvasTransform(ctx);
-
-  const x = (localX - panX) / zoom;
-  const y = (localY - panY) / zoom;
-
-  return { x, y, zoom };
 };
 
 /**

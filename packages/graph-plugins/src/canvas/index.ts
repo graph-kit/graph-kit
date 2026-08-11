@@ -2,7 +2,6 @@ import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasProps } from '@canvas/surface/types';
 import { createThemeController } from '@core/themes/index';
-import { getCtx, getWorldCoordinates } from '@core/utils/canvas/index';
 import { KeyboardEventEntries } from '@core/utils/types';
 import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { CoreEdge } from '@graph/primitives/types';
@@ -113,8 +112,7 @@ export const canvas =
       native event knows where it happened, so the hit test is redone against it
     */
     const graphMouseEvent = (event: MouseEvent): CanvasGraphMouseEvent => {
-      const { x, y } = getWorldCoordinates(event, getCtx(surface.canvas));
-      const coords = { x, y };
+      const coords = surface.toWorldCoordinates(event);
       const elements = aggregator.getCanvasElementsAtCoordinate(coords);
 
       return {

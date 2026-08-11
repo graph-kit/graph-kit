@@ -1,3 +1,4 @@
+import { nullThrows } from '@core/utils/assert';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import type { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 
@@ -19,8 +20,17 @@ export const usePanAndZoom = (
   const panY = ref(0);
   const zoom = ref(1);
 
+  const getCanvasRect = () =>
+    nullThrows(canvas.value, 'canvas not found').getBoundingClientRect();
+
+  /** the point a button press zooms toward, since it has no cursor to zoom toward */
+  const getCanvasCenter = () => {
+    const { left, top, width, height } = getCanvasRect();
+    return { clientX: left + width / 2, clientY: top + height / 2 };
+  };
+
   const setZoom = (ev: Pick<WheelEvent, 'clientX' | 'clientY' | 'deltaY'>) => {
-    const rect = canvas.value!.getBoundingClientRect();
+    const rect = getCanvasRect();
     const cx = ev.clientX - rect.left;
     const cy = ev.clientY - rect.top;
 
@@ -96,17 +106,9 @@ export const usePanAndZoom = (
   return {
     actions: {
       zoomIn: (increment = 12.5) =>
-        setZoom({
-          deltaY: -increment,
-          clientX: window.innerWidth / 2,
-          clientY: window.innerHeight / 2,
-        }),
+        setZoom({ deltaY: -increment, ...getCanvasCenter() }),
       zoomOut: (decrement = 12.5) =>
-        setZoom({
-          deltaY: decrement,
-          clientX: window.innerWidth / 2,
-          clientY: window.innerHeight / 2,
-        }),
+        setZoom({ deltaY: decrement, ...getCanvasCenter() }),
     },
     state: {
       panX,

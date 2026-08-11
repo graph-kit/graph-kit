@@ -7,6 +7,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { type DrawPattern, useBackgroundPattern } from './backgroundPattern.ts';
 import { useCamera } from './camera/index.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
+import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
 import { useDOMEvents } from './domEvents.ts';
 import { createCanvasLifecycleEventRegistry } from './events.ts';
 import type { DrawContent, UseCanvas } from './types.ts';
@@ -23,18 +24,16 @@ const REPAINT_FPS = 60;
 const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
 
 /**
- * measures the canvas, sizes its backing store to match at the current device
- * pixel ratio, and hands the measurement back so callers that need the canvas's
- * screen position do not have to pay for a second layout to get it
+ * sizes the canvas's backing store to its layout box at the current device
+ * pixel ratio, handing back that box in css pixels
  */
-const measureAndSizeCanvas = (canvas: HTMLCanvasElement | undefined) => {
+const sizeCanvas = (canvas: HTMLCanvasElement | undefined) => {
   if (!canvas) throw new Error('Canvas not found in DOM. Check ref link.');
 
   const dpr = getDevicePixelRatio();
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
-
   return rect;
 };
 
@@ -42,16 +41,14 @@ export const useCanvas: UseCanvas = () => {
   const canvas = ref<HTMLCanvasElement>();
   const canvasBoxSize = useElementSize(canvas);
 
+  /*
+    the layout box as of the last resize, not useElementSize's copy of it, which
+    reads 0 until its ResizeObserver fires a frame after mount
+  */
+  const canvasCssSize = { width: ref(0), height: ref(0) };
+
   const drawContent = ref<DrawContent>(() => {});
   const drawBackgroundPattern = ref<DrawPattern>(() => () => {});
-
-  /*
-    the background pattern needs the canvas's screen position to work out which
-    slice of the world is visible, and reading it forces layout. the canvas
-    fills the viewport, so the only thing that moves it is a resize, which is
-    already being watched
-  */
-  let canvasRect: Pick<DOMRect, 'left' | 'top'> = { left: 0, top: 0 };
 
   const lifecycleEvents = createEventHub(createCanvasLifecycleEventRegistry());
 
@@ -84,9 +81,15 @@ export const useCanvas: UseCanvas = () => {
     });
   };
 
-  onMounted(() => {
-    canvasRect = measureAndSizeCanvas(canvas.value);
+  const resizeCanvas = () => {
+    const { width, height } = sizeCanvas(canvas.value);
+    canvasCssSize.width.value = width;
+    canvasCssSize.height.value = height;
     ctx = getCtx(canvas);
+  };
+
+  onMounted(() => {
+    resizeCanvas();
     scheduleRepaint();
     lifecycleEvents.emit('onMounted');
   });
@@ -95,26 +98,26 @@ export const useCanvas: UseCanvas = () => {
     lifecycleEvents.emit('onBeforeUnmount');
   });
 
-  watch([canvasBoxSize.width, canvasBoxSize.height], () => {
-    canvasRect = measureAndSizeCanvas(canvas.value);
-    ctx = getCtx(canvas);
-  });
+  watch([canvasBoxSize.width, canvasBoxSize.height], resizeCanvas);
 
   const { events: domEvents, cleanup: cleanupDOMEvents } = useDOMEvents(canvas);
 
   const { cleanup: cleanupCamera, ...camera } = useCamera(canvas, domEvents);
-  const { worldCoordinates: cursorCoordinates } = useWorldCoordinates(
-    canvas,
-    domEvents,
-  );
+  const { worldCoordinates: cursorCoordinates, toWorldCoordinates } =
+    useWorldCoordinates(camera.state, domEvents);
+  const visibleWorldRect = useVisibleWorldRect(camera.state, canvasCssSize);
 
-  const pattern = useBackgroundPattern(camera.state, drawBackgroundPattern);
+  const pattern = useBackgroundPattern(
+    camera.state,
+    drawBackgroundPattern,
+    visibleWorldRect,
+  );
 
   const repaintCanvas = () => {
     if (!ctx) return;
     lifecycleEvents.emit('onBeforeRepaint');
     camera.transformAndClear(ctx);
-    pattern.draw(ctx, canvasRect);
+    pattern.draw(ctx);
     drawContent.value(ctx);
     lifecycleEvents.emit('onAfterRepaint');
   };
@@ -123,6 +126,8 @@ export const useCanvas: UseCanvas = () => {
     canvas,
     camera,
     cursorCoordinates,
+    toWorldCoordinates,
+    visibleWorldRect,
     ref: {
       canvasRef: (ref) => (canvas.value = ref),
       cleanup: (ref) => {

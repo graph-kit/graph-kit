@@ -1,3 +1,5 @@
+import type { WorldRect } from '@core/utils/canvas/index';
+
 import type { Section, SetDefinition } from '../../types.ts';
 import { SetColors } from '../../useSetsTheme.ts';
 import type { SetFocusControls } from '../composables/useSetFocus.ts';
@@ -18,6 +20,8 @@ type DrawProps = {
   sectionKeyToColors: Map<SectionKey, string[]>;
   /** whether a set carries the focus outline, see {@link SetFocusControls} */
   isSetFocused: SetFocusControls['isFocused'];
+  /** the area to paint within, which every clip is taken against */
+  bounds: WorldRect;
 };
 
 export const draw = (

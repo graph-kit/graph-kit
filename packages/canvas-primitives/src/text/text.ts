@@ -1,4 +1,4 @@
-import type { DeepRequired } from 'ts-essentials';
+import type { DeepReadonly, DeepRequired } from 'ts-essentials';
 
 import { rect } from '../shapes/rect/index.ts';
 import type { ShapeTextProps } from '../types/index.ts';
@@ -93,7 +93,16 @@ export const getShapeTextProps = (
   };
 };
 
-export const getTextAreaDimension = (text: Required<TextBlock>) => {
+type TextAreaDimensions = {
+  width: number;
+  height: number;
+  ascent: number;
+  descent: number;
+};
+
+export const getTextAreaDimension = (
+  text: Required<TextBlock>,
+): TextAreaDimensions => {
   const paddingVertical = HORIZONTAL_TEXT_PADDING;
 
   const { width, height, ascent, descent } = getTextDimensions(text);
@@ -115,7 +124,7 @@ export const getTextAreaDimension = (text: Required<TextBlock>) => {
 export const drawTextWithTextArea =
   (
     textArea: DeepRequired<TextAreaWithAnchorPoint>,
-    textAreaDimensions: ReturnType<typeof getTextAreaDimension>,
+    textAreaDimensions: DeepReadonly<TextAreaDimensions>,
   ) =>
   (ctx: CanvasRenderingContext2D) => {
     const { at, textBlock } = textArea;

@@ -1,3 +1,5 @@
+import { Prettify } from 'ts-essentials';
+
 import type { TextBlock } from './types.ts';
 
 type TextDimensions = {
@@ -41,7 +43,9 @@ const getMeasureCtx = () => {
 */
 const cache = new Map<string, TextDimensions>();
 
-export const getTextDimensions = (text: Required<TextBlock>) => {
+type Text = Prettify<Required<Omit<TextBlock, 'color'>>>;
+
+export const getTextDimensions = (text: Text) => {
   const { content, fontSize, fontWeight, fontFamily } = text;
 
   const font = `${fontWeight} ${fontSize}px ${fontFamily}`;

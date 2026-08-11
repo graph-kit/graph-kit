@@ -30,8 +30,6 @@ export const drawSetDefinitionCircle = (
       lineWidth: OUTLINE_WIDTH,
     },
     textArea: {
-      // the sections painted underneath show through the label
-      color: 'none',
       textBlock: {
         content: setDefinition.label,
         fontSize: LABEL_FONT_SIZE,

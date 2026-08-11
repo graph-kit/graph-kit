@@ -18,7 +18,6 @@ export const createNodeRenderFunction: CreateNodeRenderFunction = ({
         lineWidth: styles.border.width,
       },
       textArea: {
-        color: 'transparent',
         textBlock: styles.text,
       },
     });

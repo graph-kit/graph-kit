@@ -1,16 +1,16 @@
 import { getClientCoordinates } from '@core/utils/canvas/index';
-import type { DeepRequired } from 'ts-essentials';
 
 import { isPointInBoundingBox } from '../helpers.ts';
 import type { BoundingBox } from '../types/utility.ts';
+import type { PlacedTextArea } from './defaults.ts';
 import { getTextDimensions } from './getTextDimensions.ts';
 import { HORIZONTAL_TEXT_PADDING } from './text.ts';
-import type { OnTextAreaBlur, TextAreaWithAnchorPoint } from './types.ts';
+import type { OnTextAreaBlur } from './types.ts';
 
 export const createTextarea = (
   ctx: CanvasRenderingContext2D,
   onTextAreaBlur: OnTextAreaBlur,
-  textArea: DeepRequired<TextAreaWithAnchorPoint>,
+  textArea: PlacedTextArea,
 ) => {
   const { at, textBlock, activeColor: bgColor } = textArea;
 

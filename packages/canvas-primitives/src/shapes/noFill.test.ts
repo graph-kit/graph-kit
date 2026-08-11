@@ -1,3 +1,4 @@
+import { nullThrows } from '@core/utils/assert';
 import { describe, expect, it, vi } from 'vitest';
 
 import { arrow } from './arrow/index.ts';
@@ -11,6 +12,11 @@ import { square } from './square/index.ts';
 import { star } from './star/index.ts';
 import { triangle } from './triangle/index.ts';
 import { uturn } from './uturn/index.ts';
+
+// measuring wants a real 2d context, and these tests are about paint, not metrics
+vi.mock('../text/getTextDimensions.ts', () => ({
+  getTextDimensions: () => ({ width: 10, height: 10, ascent: 8, descent: 2 }),
+}));
 
 vi.mock('@core/utils/canvas/index', () => ({
   getClientCoordinates: vi.fn(),
@@ -123,5 +129,33 @@ describe('a shape given a fillColor', () => {
 
     expect(wasCalled('fill')).toBe(false);
     expect(wasCalled('stroke')).toBe(true);
+  });
+});
+
+const textBlock = { content: 'A' };
+
+const labelledCircle = (color?: string) =>
+  circle({ at, radius: 10, textArea: { color, textBlock } });
+
+const drawMatte = (shape: ReturnType<typeof labelledCircle>) => {
+  const { ctx, wasCalled } = recordingCtx();
+  nullThrows(shape.drawTextAreaMatte, 'labelled shape has a matte')(ctx);
+  return wasCalled;
+};
+
+describe('a text area matte', () => {
+  it('is not painted when no color is given', () => {
+    expect(drawMatte(labelledCircle())('fill')).toBe(false);
+  });
+
+  it('is painted when a color is given', () => {
+    expect(drawMatte(labelledCircle('white'))('fill')).toBe(true);
+  });
+
+  it('punches a hole rather than painting when the color is "none"', () => {
+    const shape = labelledCircle('none');
+
+    expect(drawMatte(shape)('fill')).toBe(false);
+    expect(shape.drawTextAreaHole).toBeDefined();
   });
 });

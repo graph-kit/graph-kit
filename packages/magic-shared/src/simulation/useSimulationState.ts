@@ -57,17 +57,12 @@ export const useSimulationState = (
   componentSlotControls: ComponentSlotControls,
   lensControls: LensControls,
 ): SimulationControls => {
-  /*
-    shallow because a simulation carries its lens, and a lens carries vue
-    component definitions. a deep ref would proxy those, and a proxied component
-    is what `:is` ends up rendering, which vue warns about on every patch
-  */
+  // shallow cus sims carry lenses which carry vue component definitions
   const simulation = shallowRef<Simulation<any>>();
 
   const getSimulation = () =>
     nullThrows(simulation.value, 'no running simulation!');
 
-  /** replaces the simulation wholesale, since a shallow ref does not see field writes */
   const patchSimulation = (fields: Partial<Simulation<any>>) => {
     simulation.value = { ...getSimulation(), ...fields };
   };

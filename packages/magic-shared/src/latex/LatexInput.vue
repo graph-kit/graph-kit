@@ -4,24 +4,13 @@
 
   import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
-  /**
-   * the slice of mathlive's MathfieldElement this component drives, declared here
-   * because mathlive's node entry omits the class and nodenext resolves to that entry.
-   */
-  type MathfieldElement = HTMLElement & {
-    value: string;
-    inlineShortcuts: Record<string, string>;
-    getValue: () => string;
-    executeCommand: (command: [string, string]) => void;
-  };
+  import type { MathfieldElement } from './types.ts';
 
   // the wrapper owns the sizing, so attrs stay on the math-field where consumers expect them
   defineOptions({ inheritAttrs: false });
 
   const props = withDefaults(
     defineProps<{
-      // TODO remove hotkeys from latex input props
-      hotkeys: Record<string, string>;
       width?: number;
       height?: number;
       /** paints the field as rejecting what it currently holds */
@@ -29,6 +18,11 @@
     }>(),
     { width: 400, height: 40, error: false },
   );
+
+  const emit = defineEmits<{
+    /** math-live has loaded in the keyboard */
+    ready: [mathfield: MathfieldElement];
+  }>();
 
   const attrClass = useAttrClass();
 
@@ -65,18 +59,6 @@
     latexString.value = latexInput.value.getValue();
   };
 
-  const onKeydown = (event: KeyboardEvent) => {
-    const isAlphabetical = /^[a-zA-Z]$/.test(event.key);
-
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (event.key.length !== 1) return;
-    if (!isAlphabetical) return;
-    if (event.key in props.hotkeys) return;
-
-    event.preventDefault();
-    latexInput.value?.executeCommand(['insert', event.key.toUpperCase()]);
-  };
-
   onMounted(async () => {
     // importing mathlive registers <math-field> against window, so it can only run in the browser
     await import('mathlive');
@@ -86,13 +68,8 @@
     const mathField = latexInput.value;
     if (!mathField) return;
 
-    mathField.inlineShortcuts = {
-      ...mathField.inlineShortcuts,
-      ...props.hotkeys,
-    };
-
     mathField.addEventListener('input', onInput);
-    mathField.addEventListener('keydown', onKeydown);
+    emit('ready', mathField);
   });
 
   onUnmounted(() => {
@@ -100,7 +77,6 @@
     if (!mathField) return;
 
     mathField.removeEventListener('input', onInput);
-    mathField.removeEventListener('keydown', onKeydown);
   });
 </script>
 

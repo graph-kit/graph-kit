@@ -10,7 +10,7 @@
 
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { LATEX_HOTKEYS } from '../other/constants.ts';
+  import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
 
   const props = defineProps<{
     queryId: HighlightQueryId;
@@ -80,8 +80,8 @@
     <LatexInput
       ref="latexInputRef"
       v-model="latexQueryString"
-      :hotkeys="LATEX_HOTKEYS"
       :error="hasError"
+      @ready="useSetsLatexField"
       @focus="emit('focus')"
     />
     <Tooltip

@@ -37,7 +37,7 @@ const getUndirectedGraphAdjacencyList = (graph: Graph) => {
  * @example getAdjacencyList(graph)
  * // { 'abc123': ['def456'], 'def456': ['abc123'] }
  */
-const getAdjacencyList = (graph: Graph) => {
+export const getAdjacencyList = (graph: Graph) => {
   const { directed: isGraphDirected } = graph.metadata;
   const fn = isGraphDirected
     ? getDirectedGraphAdjacencyList
@@ -57,22 +57,46 @@ const getAdjacencyList = (graph: Graph) => {
  * //   'def456': [{ id: 'abc123', weight: 1 }]
  * // }
  */
-const getWeightedAdjacencyList = (graph: Graph) => {
-  const adjList = getAdjacencyList(graph);
-  const adjListEntries = Object.entries(adjList);
+export const getWeightedAdjacencyList = (
+  graph: Graph,
+): WeightedAdjacencyList => {
+  const { directed: isGraphDirected } = graph.metadata;
 
-  return adjListEntries.reduce<WeightedAdjacencyList>(
-    (acc, [keyNodeId, toNodeIds]) => {
-      acc[keyNodeId] = toNodeIds.map((toNodeId) => ({
-        ...graph.getNode(toNodeId)!,
-        weight: graph.getEdge(
-          graph.helpers.nodes.getEdgeBetween(keyNodeId, toNodeId)!.id,
-        ).weight,
-      }));
-      return acc;
-    },
-    {},
-  );
+  const nodeById = new Map(graph.nodes().map((node) => [node.id, node]));
+
+  const adjList: WeightedAdjacencyList = {};
+  for (const nodeId of nodeById.keys()) adjList[nodeId] = [];
+
+  const addNeighbor = (
+    fromNodeId: string,
+    toNodeId: string,
+    weight: WeightedAdjacencyList[string][number]['weight'],
+  ) => {
+    const neighbors = adjList[fromNodeId];
+    const toNode = nodeById.get(toNodeId);
+    // an edge can outlive an endpoint, and joins no one until both exist
+    if (!neighbors || !toNode) return;
+    neighbors.push({ ...toNode, weight });
+  };
+
+  /*
+    walked edge by edge rather than looking an edge back up per neighbor.
+    getEdgeBetween finds the first edge joining a pair, so every parallel edge
+    between the same two nodes used to report the first one's weight
+  */
+  for (const edge of graph.edges()) {
+    const { weight } = graph.getEdge(edge.id);
+
+    addNeighbor(edge.source, edge.target, weight);
+
+    // a self loop makes one neighbor, not two
+    const isSelfLoop = edge.source === edge.target;
+    if (!isGraphDirected && !isSelfLoop) {
+      addNeighbor(edge.target, edge.source, weight);
+    }
+  }
+
+  return adjList;
 };
 
 export const adjacencyLists: AdjacencyListsPlugin = ({

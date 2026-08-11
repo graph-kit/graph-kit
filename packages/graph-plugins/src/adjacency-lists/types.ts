@@ -15,10 +15,7 @@ export type WeightedAdjacencyList = Record<
   (CoreNode & Pick<CoreGetters['getEdge'], 'weight'>)[]
 >;
 
-export type Graph = Pick<
-  CoreControls,
-  'metadata' | 'nodes' | 'edges' | 'helpers'
-> & {
+export type Graph = Pick<CoreControls, 'metadata' | 'nodes' | 'edges'> & {
   events: ConsumerEventsHub;
 } & GraphGetters<CoreGetters>;
 

@@ -1,13 +1,12 @@
 import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 
 import { formatDistance } from '../distance.ts';
-import { slotIds } from './effects.ts';
+import { matrixSlotId } from './effects.ts';
 import { AllPairsFrame } from './frame.ts';
 
 const matrixHighlight = (tooltipLabel: string): ExplainerHighlight => ({
   tooltipLabel,
-  activate: (graph) =>
-    graph.magic.componentSlots.setHighlighted(slotIds.matrix),
+  activate: (graph) => graph.magic.componentSlots.setHighlighted(matrixSlotId),
   deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
 });
 

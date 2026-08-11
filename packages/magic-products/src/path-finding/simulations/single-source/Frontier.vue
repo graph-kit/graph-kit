@@ -4,7 +4,6 @@
 
   import { computed } from 'vue';
 
-  import { slotIds } from './effects.ts';
   import { SingleSourceFrame } from './frame.ts';
 
   const currentFrame = useCurrentFrame<SingleSourceFrame>();
@@ -18,8 +17,5 @@
 </script>
 
 <template>
-  <NodeList
-    :ids="frontier"
-    :slot-id="slotIds.frontier"
-  />
+  <NodeList :ids="frontier" />
 </template>

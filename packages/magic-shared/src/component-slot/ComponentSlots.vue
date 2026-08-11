@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { useProvidedMagic } from '../product/context.ts';
-  import { SlotPosition } from './types.ts';
+  import { HighlightProps, SlotPosition } from './types.ts';
   import { useComponentBySlotPosition } from './useComponentsBySlotPosition.ts';
 
   const magic = useProvidedMagic();
@@ -29,6 +29,16 @@
     'bottom-middle': 'bottomMiddle',
     'bottom-right': 'bottomRight',
   };
+
+  const highlightProps = (id: string): HighlightProps => {
+    const isHighlighted = magic.componentSlots.highlightedId.value === id;
+    return {
+      isHighlighted,
+      classes: isHighlighted
+        ? 'border-4 border-red-500 rounded-lg'
+        : 'border-4 border-transparent rounded-lg',
+    };
+  };
 </script>
 
 <template>
@@ -38,9 +48,11 @@
     :class="props[propKeyByPosition[position]]"
   >
     <component
-      v-for="{ component, id } of components"
+      v-for="{ component, id } in components"
       :key="id"
       :is="component"
+      :highlight="highlightProps(id)"
+      :class="highlightProps(id).classes"
     />
   </div>
 </template>

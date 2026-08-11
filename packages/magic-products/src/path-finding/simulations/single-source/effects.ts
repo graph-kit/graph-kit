@@ -18,7 +18,11 @@ import { Ref } from 'vue';
 
 import Distances from './Distances.vue';
 import Frontier from './Frontier.vue';
-import { singleSourceExplainer } from './explainer.ts';
+import {
+  distancesSlotId,
+  frontierSlotId,
+  singleSourceExplainer,
+} from './explainer.ts';
 import { SingleSourceFrame, SingleSourceFunction } from './frame.ts';
 
 // exploring = the node the algorithm is standing on this frame.
@@ -55,11 +59,6 @@ export type SingleSourceOptions = {
   sourceNodeId: SourceNodeId;
 };
 
-export const slotIds = {
-  distances: 'path-finding/distances',
-  frontier: 'path-finding/frontier',
-} as const;
-
 const singleSourceEffects = (
   graph: MagicGraph,
 ): SimulationEffects<SingleSourceFrame> => {
@@ -90,8 +89,16 @@ const singleSourceEffects = (
   const lens: Lens = {
     id: 'path-finding/single-source',
     components: [
-      { component: Distances, position: 'center-left', id: slotIds.distances },
-      { component: Frontier, position: 'center-right', id: slotIds.frontier },
+      {
+        component: Distances,
+        position: 'center-left',
+        id: distancesSlotId,
+      },
+      {
+        component: Frontier,
+        position: 'center-right',
+        id: frontierSlotId,
+      },
     ],
     activate: () => {
       for (const { themer } of themers) themer.activate();

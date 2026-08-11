@@ -18,3 +18,8 @@ export type ComponentSlot = {
   component: Component;
   priority?: number;
 };
+
+export type HighlightProps = {
+  isHighlighted: boolean;
+  classes: string;
+};

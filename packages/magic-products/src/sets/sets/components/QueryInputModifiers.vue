@@ -48,7 +48,10 @@
     v-if="disambiguated || simplified"
     class="absolute right-0"
   >
-    <Dropdown align="center">
+    <Dropdown
+      align="center"
+      open-on="hover"
+    >
       <template #trigger>
         <IconButton
           label=""

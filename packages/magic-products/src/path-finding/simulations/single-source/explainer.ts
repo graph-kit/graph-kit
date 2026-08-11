@@ -2,8 +2,10 @@ import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
 
 import { formatDistance } from '../distance.ts';
-import { distancesSlotId, frontierSlotId } from './effects.ts';
 import { SingleSourceFrame } from './frame.ts';
+
+export const distancesSlotId = 'path-finding/distances';
+export const frontierSlotId = 'path-finding/frontier';
 
 const componentSlotHighlight = (
   slot: typeof frontierSlotId | typeof distancesSlotId,

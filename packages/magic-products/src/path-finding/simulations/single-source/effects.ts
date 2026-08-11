@@ -18,7 +18,11 @@ import { Ref } from 'vue';
 
 import Distances from './Distances.vue';
 import Frontier from './Frontier.vue';
-import { singleSourceExplainer } from './explainer.ts';
+import {
+  distancesSlotId,
+  frontierSlotId,
+  singleSourceExplainer,
+} from './explainer.ts';
 import { SingleSourceFrame, SingleSourceFunction } from './frame.ts';
 
 // exploring = the node the algorithm is standing on this frame.
@@ -54,9 +58,6 @@ export type SingleSourceOptions = {
   graph: MagicGraph;
   sourceNodeId: SourceNodeId;
 };
-
-export const distancesSlotId = 'path-finding/distances';
-export const frontierSlotId = 'path-finding/frontier';
 
 const singleSourceEffects = (
   graph: MagicGraph,
@@ -96,7 +97,7 @@ const singleSourceEffects = (
       {
         component: Frontier,
         position: 'center-right',
-        id: 'path-finding/frontier',
+        id: frontierSlotId,
       },
     ],
     activate: () => {

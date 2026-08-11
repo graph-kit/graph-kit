@@ -15,17 +15,22 @@
   const { highlights } = useProvidedSetsProductState();
 
   const isHidden = computed(() => props.query.isHidden);
-  const color = computed(() => props.query.color);
+  const color = computed(() =>
+    isHidden.value ? colors.GRAY_500 : props.query.color,
+  );
 
   const toggleHidden = () =>
     highlights.setHidden(props.query.id, !isHidden.value);
 </script>
 
 <template>
-  <Tooltip :label="isHidden ? 'Show highlight' : 'Hide highlight'">
+  <Tooltip
+    :label="isHidden ? 'Show highlight' : 'Hide highlight'"
+    side="left"
+  >
     <template #trigger>
       <Button
-        :style="{ backgroundColor: isHidden ? colors.GRAY_500 : color }"
+        :style="{ backgroundColor: color }"
         class="h-full"
         @click="toggleHidden"
       />

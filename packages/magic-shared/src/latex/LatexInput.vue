@@ -28,8 +28,8 @@
 
   const classes = computed(() =>
     cn(
-      'text-box h-full w-full rounded-md',
-      props.error ? 'bg-red-300 ring-red-600 outline-red-600' : 'bg-white',
+      'text-box h-full w-full rounded-md outline-none',
+      props.error ? 'bg-red-300' : 'bg-white',
       attrClass.value,
     ),
   );

@@ -9,6 +9,30 @@
   // the wrapper owns the sizing, so attrs stay on the math-field where consumers expect them
   defineOptions({ inheritAttrs: false });
 
+  // mathlive draws a 0.76em tall, 2px wide caret
+  const CARET_HEIGHT = '0.86em';
+  const CARET_WIDTH = '2px';
+
+  /** the caret sits in the shadow root behind no part, so its geometry is only reachable by adopting a stylesheet in */
+  const restyleCaret = (mathField: MathfieldElement) => {
+    const { shadowRoot } = mathField;
+    if (!shadowRoot) return;
+
+    const caretStyles = new CSSStyleSheet();
+    caretStyles.replaceSync(`
+      .ML__caret::after,
+      .ML__text-caret::after {
+        height: ${CARET_HEIGHT};
+        --_caret-width: ${CARET_WIDTH};
+      }
+    `);
+
+    shadowRoot.adoptedStyleSheets = [
+      ...shadowRoot.adoptedStyleSheets,
+      caretStyles,
+    ];
+  };
+
   const props = withDefaults(
     defineProps<{
       width?: number;
@@ -33,6 +57,13 @@
       attrClass.value,
     ),
   );
+
+  // mathlive renders the math at whatever font size it inherits, so scale it to the field
+  const wrapperStyle = computed(() => ({
+    width: `${props.width}px`,
+    height: `${props.height}px`,
+    fontSize: `${props.height / 2}px`,
+  }));
 
   const latexString = defineModel<string>({
     required: true,
@@ -69,6 +100,7 @@
     if (!mathField) return;
 
     mathField.addEventListener('input', onInput);
+    restyleCaret(mathField);
     emit('ready', mathField);
   });
 
@@ -82,7 +114,7 @@
 
 <template>
   <!-- mathlive only loads in the browser, so hold the space it will occupy to avoid a layout shift -->
-  <div :style="{ width: `${width}px`, height: `${height}px` }">
+  <div :style="wrapperStyle">
     <math-field
       v-if="mathfieldRegistered"
       ref="latexInput"
@@ -101,6 +133,13 @@
 
   math-field::part(menu-toggle) {
     display: none;
+  }
+
+  /* mathlive sizes its container to the content and bottom aligns it, which leaves the math and the caret sitting low in the field */
+  math-field::part(container) {
+    height: 100%;
+    min-height: 0;
+    align-items: center;
   }
 
   math-field {

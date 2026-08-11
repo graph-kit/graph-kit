@@ -26,10 +26,6 @@ describe('rect', () => {
       expect(r.name).toBe('rect');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(RECT_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults borderRadius to 0', () => {
       expect(RECT_SCHEMA_DEFAULTS.borderRadius).toBe(0);
     });

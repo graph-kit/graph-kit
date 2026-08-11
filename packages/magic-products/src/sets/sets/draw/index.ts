@@ -4,11 +4,7 @@ import type { Section, SetDefinition } from '../../types.ts';
 import { SetColors } from '../../useSetsTheme.ts';
 import type { SetFocusControls } from '../composables/useSetFocus.ts';
 import type { SectionKey } from '../other/sectionKey.ts';
-import {
-  DrawSetDefinitionCircleOptions,
-  drawCircleStroke,
-  drawCircleTextLabel,
-} from './circles.ts';
+import { drawSetDefinitionCircle } from './circles.ts';
 import { colorSections } from './colorSections.ts';
 
 type DrawProps = {
@@ -32,13 +28,11 @@ export const draw = (
   colorSections(ctx, props);
 
   for (const setDefinition of props.definitions) {
-    const options: DrawSetDefinitionCircleOptions = {
+    drawSetDefinitionCircle({
       setDefinition,
       isFocused: props.isSetFocused(setDefinition.id),
       ctx,
       colors,
-    };
-    drawCircleStroke(options);
-    drawCircleTextLabel(options);
+    });
   }
 };

@@ -26,10 +26,6 @@ describe('square', () => {
       expect(s.name).toBe('square');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(SQUARE_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults borderRadius to 0', () => {
       expect(SQUARE_SCHEMA_DEFAULTS.borderRadius).toBe(0);
     });

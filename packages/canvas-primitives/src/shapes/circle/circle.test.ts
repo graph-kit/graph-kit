@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CIRCLE_SCHEMA_DEFAULTS } from './defaults.ts';
 import { circle } from './index.ts';
 
 vi.mock('@core/utils/canvas/index', () => ({
@@ -24,10 +23,6 @@ describe('circle', () => {
     it('has name "circle"', () => {
       const c = circle({ at: { x: 0, y: 0 }, radius: 50 });
       expect(c.name).toBe('circle');
-    });
-
-    it('defaults fillColor to "black"', () => {
-      expect(CIRCLE_SCHEMA_DEFAULTS.fillColor).toBe('black');
     });
 
     it('maps radius to equal radiusX and radiusY in the bounding box', () => {

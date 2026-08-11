@@ -16,6 +16,7 @@ const meta = {
   component: Star,
   args: {
     ...STAR_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     innerRadius: 25,
     outerRadius: 50,
     at: { x: 60, y: 60 },

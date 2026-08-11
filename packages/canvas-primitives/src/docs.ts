@@ -35,7 +35,6 @@ const boundingBoxMarkerSchema = (bb: BoundingBox): RectSchema => ({
   at: bb.at,
   width: bb.width,
   height: bb.height,
-  fillColor: 'transparent',
   stroke: {
     color: 'green',
     lineWidth: 1,
@@ -48,7 +47,6 @@ const boundingBoxMarker = (bb: BoundingBox) =>
 const measuringStickSchema: SquareSchema = {
   at: { x: 0, y: 0 },
   size: 1008,
-  fillColor: 'transparent',
   stroke: {
     color: 'black',
     lineWidth: 4,

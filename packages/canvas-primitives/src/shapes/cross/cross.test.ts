@@ -26,10 +26,6 @@ describe('cross', () => {
       expect(c.name).toBe('cross');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(CROSS_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults lineWidth to 10', () => {
       expect(CROSS_SCHEMA_DEFAULTS.lineWidth).toBe(10);
     });

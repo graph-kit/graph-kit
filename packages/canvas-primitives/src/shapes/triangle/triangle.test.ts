@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { TRIANGLE_SCHEMA_DEFAULTS } from './defaults.ts';
 import { triangle } from './index.ts';
 
 vi.mock('@core/utils/canvas/index', () => ({
@@ -28,10 +27,6 @@ describe('triangle', () => {
         pointC: { x: 50, y: 100 },
       });
       expect(t.name).toBe('triangle');
-    });
-
-    it('defaults fillColor to "black"', () => {
-      expect(TRIANGLE_SCHEMA_DEFAULTS.fillColor).toBe('black');
     });
 
     it('returns the correct bounding box', () => {

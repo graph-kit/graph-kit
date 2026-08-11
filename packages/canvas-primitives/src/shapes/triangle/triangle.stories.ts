@@ -16,6 +16,7 @@ const meta = {
   component: Triangle,
   args: {
     ...TRIANGLE_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     pointA: { x: 90, y: 20 },
     pointB: { x: 20, y: 100 },
     pointC: { x: 160, y: 100 },

@@ -44,11 +44,13 @@ export const getShapeTextProps = (
     },
   } as const satisfies TextAreaWithAnchorPoint;
 
+  const isNoMatte = placedTextArea.color === 'none';
+
   const textAreaMatte = rect({
     at: placedTextArea.at,
     width: dimensions.width,
     height: dimensions.height,
-    fillColor: placedTextArea.color,
+    fillColor: isNoMatte ? undefined : placedTextArea.color,
   });
 
   const drawText = drawTextWithTextArea(placedTextArea, dimensions);
@@ -61,8 +63,6 @@ export const getShapeTextProps = (
   const startTextAreaEdit: StartTextAreaEdit = (ctx, onTextAreaBlur) => {
     createTextarea(ctx, onTextAreaBlur, placedTextArea);
   };
-
-  const isNoMatte = placedTextArea.color === 'none';
 
   const drawOverride =
     isNoMatte && drawShape

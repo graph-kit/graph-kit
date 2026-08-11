@@ -135,9 +135,12 @@ export const drawUTurnWithCtx = (schema: UTurnSchemaWithDefaults) => {
     drawLongShaft(ctx);
     drawShortShaft(ctx);
 
+    // the arc is nothing but its stroke, so with no paint there is nothing to draw
+    if (!color && circleGradient.length < 2) return;
+
     // draw the part that uturns
     ctx.beginPath();
-    ctx.strokeStyle = color;
+    if (color) ctx.strokeStyle = color;
 
     if (circleGradient.length >= 2) {
       const startAngle = Math.PI / 2 + rotation + 0.01;

@@ -1,10 +1,8 @@
 import { resolveDefaults } from '../../defaults/resolveDefaults.ts';
-import { FILL_COLOR_DEFAULTS } from '../../defaults/schema.ts';
 import type { TriangleSchema } from './types.ts';
 
-export const TRIANGLE_SCHEMA_DEFAULTS = {
-  ...FILL_COLOR_DEFAULTS,
-} as const satisfies Partial<TriangleSchema>;
+export const TRIANGLE_SCHEMA_DEFAULTS =
+  {} as const satisfies Partial<TriangleSchema>;
 
 type TriangleDefaults = typeof TRIANGLE_SCHEMA_DEFAULTS;
 

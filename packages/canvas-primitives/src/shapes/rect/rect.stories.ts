@@ -16,6 +16,7 @@ const meta = {
   component: Rect,
   args: {
     ...RECT_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     width: 200,
     height: 100,
     at: { x: 20, y: 20 },

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ELLIPSE_SCHEMA_DEFAULTS } from './defaults.ts';
 import { ellipse } from './index.ts';
 
 vi.mock('@core/utils/canvas/index', () => ({
@@ -24,10 +23,6 @@ describe('ellipse', () => {
     it('has name "ellipse"', () => {
       const e = ellipse({ at: { x: 0, y: 0 }, radiusX: 60, radiusY: 30 });
       expect(e.name).toBe('ellipse');
-    });
-
-    it('defaults fillColor to "black"', () => {
-      expect(ELLIPSE_SCHEMA_DEFAULTS.fillColor).toBe('black');
     });
 
     it('throws when radiusX is negative', () => {

@@ -4,18 +4,12 @@ import { generateId } from '@core/utils/id';
 import { type ComputedRef, type Ref, computed, ref } from 'vue';
 
 import { useLabelGetter } from './sets/composables/useLabel.ts';
-import { useSections } from './sets/composables/useSections.ts';
 import { getSetDefinition } from './sets/other/circleUtils.ts';
 import {
   DEFAULT_CIRCLE_RADIUS,
   OUTSIDE_ALL_SETS,
 } from './sets/other/constants.ts';
-import type {
-  Section,
-  SetDefinition,
-  SetDefinitionId,
-  SetLabel,
-} from './types.ts';
+import type { SetDefinition, SetDefinitionId, SetLabel } from './types.ts';
 
 export type SetDefinitions = {
   definitions: Ref<SetDefinition[]>;
@@ -30,7 +24,6 @@ export const createSetDefinitions = (): SetDefinitions => {
   const definitions = ref<SetDefinition[]>([]);
 
   const nextLabel = useLabelGetter(definitions);
-  const sections = useSections(definitions);
 
   const idByLabel = computed(() => {
     const ids: Record<SetLabel, SetDefinitionId> = {};

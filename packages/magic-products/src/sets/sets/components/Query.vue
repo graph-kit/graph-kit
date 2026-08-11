@@ -1,16 +1,16 @@
 <script setup lang="ts">
+  import { nullThrows } from '@core/utils/assert';
   import colors from '@core/utils/colors';
   import Button from '@magic/shared/Button';
   import HStack from '@magic/shared/HStack';
   import Tooltip from '@magic/shared/Tooltip';
+  import { LatexInput, type LatexInputInstance } from '@magic/shared/latex';
 
   import { computed, onUnmounted, ref } from 'vue';
 
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { LATEX_HOTKEYS } from '../other/constants.ts';
-  import LatexInput from './latex/LatexInput.vue';
-  import type { LatexInputInstance } from './latex/types.ts';
+  import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
 
   const props = defineProps<{
     queryId: HighlightQueryId;
@@ -61,32 +61,31 @@
   );
 
   // trigger example: $$ A\cup A $$
-  const applySimplification = () => {
-    if (!simplified.value) return;
-    highlights.replaceQuery(props.queryId, simplified.value);
-  };
+  const applySimplification = () =>
+    highlights.replaceQuery(
+      props.queryId,
+      nullThrows(simplified.value, 'simplified query is null'),
+    );
 
   // trigger example: $$ A\cap B\cup C $$
-  const applyDisambiguation = () => {
-    if (!disambiguated.value) return;
-    highlights.replaceQuery(props.queryId, disambiguated.value);
-  };
+  const applyDisambiguation = () =>
+    highlights.replaceQuery(
+      props.queryId,
+      nullThrows(disambiguated.value, 'disambiguated query is null'),
+    );
 </script>
 
 <template>
-  <HStack>
+  <HStack class="relative h-10">
     <LatexInput
       ref="latexInputRef"
       v-model="latexQueryString"
-      :hotkeys="LATEX_HOTKEYS"
-      :class="[
-        'rounded-md',
-        hasError ? 'bg-red-50 ring-2 ring-red-400' : 'bg-white',
-      ]"
+      :error="hasError"
+      @ready="useSetsLatexField"
       @focus="emit('focus')"
     />
     <Tooltip
-      v-if="disambiguated && !hasError"
+      v-if="disambiguated"
       :label="`Ambiguous order of operations. Click to write it as: ${disambiguated}`"
     >
       <template #trigger>
@@ -96,7 +95,7 @@
     </Tooltip>
 
     <Tooltip
-      v-if="simplified && !hasError"
+      v-if="simplified"
       :label="`Simplify expression to: ${simplified}`"
     >
       <template #trigger>
@@ -108,6 +107,7 @@
       <template #trigger>
         <Button
           :style="{ backgroundColor: isHidden ? colors.GRAY_500 : color }"
+          class="h-full"
           @click="toggleHidden"
         />
       </template>

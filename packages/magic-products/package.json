@@ -32,8 +32,6 @@
     "@vueuse/core": "catalog:",
     "ctrl-keys": "^1.0.6",
     "fraction.js": "^5.3.4",
-    "katex": "^0.18.1",
-    "mathlive": "^0.110.0",
     "tinycolor2": "catalog:"
   },
   "devDependencies": {

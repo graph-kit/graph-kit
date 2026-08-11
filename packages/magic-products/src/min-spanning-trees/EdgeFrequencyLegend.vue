@@ -10,9 +10,10 @@
 
   const graph = useProvidedGraph();
 
-  const totalMsts = computed(
-    () => graph.minimumSpanningTrees.all.value.msts.length,
-  );
+  const totalMsts = computed(() => {
+    const result = graph.minimumSpanningTrees.all.value;
+    return result.skipped ? 0 : result.msts.length;
+  });
 
   const GRADIENT_STOPS = 8;
   const gradient = computed(() => {

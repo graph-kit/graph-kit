@@ -31,9 +31,16 @@ export const SETTLE_MS = 1500;
 /** ~180 frames at 60fps, enough for per frame averages to stop moving */
 export const MEASURE_MS = 3000;
 
+/*
+  the dev playground rather than a real product, so the numbers move when the graph
+  itself does and not when a product adds a chip or a lens. it also persists nothing,
+  which is what keeps one scenario from measuring the scene the last one left behind
+*/
+const ROUTE = '/dev';
+
 export const scenarios: Scenario[] = [
-  { name: 'idle-10', route: '/traversals', nodes: 10 },
-  { name: 'idle-25', route: '/traversals', nodes: 25 },
-  { name: 'idle-50', route: '/traversals', nodes: 50 },
-  { name: 'hover-25', route: '/traversals', nodes: 25, sweepCursor: true },
+  { name: 'idle-10', route: ROUTE, nodes: 10 },
+  { name: 'idle-25', route: ROUTE, nodes: 25 },
+  { name: 'idle-50', route: ROUTE, nodes: 50 },
+  { name: 'hover-25', route: ROUTE, nodes: 25, sweepCursor: true },
 ];

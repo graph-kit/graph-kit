@@ -28,7 +28,10 @@ const MST_COLORS = [
 ];
 
 export const allMstsChip = (graph: Graph): LensChipDefinition => {
-  const msts = computed(() => graph.minimumSpanningTrees.all.value.msts);
+  const msts = computed(() => {
+    const result = graph.minimumSpanningTrees.all.value;
+    return result.skipped ? [] : result.msts;
+  });
 
   const mstIndexFromId = (edgeId: string) => Number(edgeId.split('-').at(0));
   let activeMstIndex: number | undefined = undefined;

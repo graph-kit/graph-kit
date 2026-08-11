@@ -40,6 +40,46 @@ const VIEWPORT = { width: 1440, height: 900 };
 
 const TOOLS_TIMEOUT_MS = 30_000;
 
+/*
+  page.evaluate has no timeout of its own, so a scene that never returns hangs
+  the run until the job is killed, with nothing in the log to say where. long
+  enough that a slow runner building fifty nodes is not cut off
+*/
+const SCENE_TIMEOUT_MS = 60_000;
+
+const RUN_STARTED_AT = Date.now();
+
+/*
+  stderr because stdout carries the report itself when --out is not given.
+
+  every line is stamped with how far into the run it happened and names the
+  stage it is entering rather than the one it finished, so a run that dies or
+  hangs points at what it was doing instead of leaving the last completed step
+  as the only clue
+*/
+const log = (message: string) => {
+  const elapsed = ((Date.now() - RUN_STARTED_AT) / 1000).toFixed(1);
+  process.stderr.write(`[${elapsed.padStart(6)}s] ${message}\n`);
+};
+
+/** turns a hang into a failure that says which scenario and how long it waited */
+const withTimeout = async <T>(work: Promise<T>, ms: number, what: string) => {
+  let timer: NodeJS.Timeout | undefined;
+
+  const expiry = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${what} after ${ms / 1000}s.`)),
+      ms,
+    );
+  });
+
+  try {
+    return await Promise.race([work, expiry]);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 const waitForPerfTools = async (page: Page, url: string) => {
   try {
     await page.waitForFunction(() => window.__graphPerf !== undefined, null, {
@@ -82,26 +122,53 @@ const measureScenario = async (
   scenario: Scenario,
 ): Promise<ScenarioResult> => {
   const url = new URL(scenario.route, baseUrl).toString();
+  const stage = (message: string) => log(`  ${scenario.name}: ${message}`);
 
+  /*
+    the page's own failures are invisible from here otherwise. a scene that
+    throws surfaces as a stalled evaluate or an empty report, and this is what
+    says which it was
+  */
+  page.on('pageerror', (error) => stage(`page error: ${error.message}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') stage(`console error: ${message.text()}`);
+  });
+
+  stage(`navigating to ${url}`);
   await page.goto(url, { waitUntil: 'load' });
+
+  stage('waiting for the perf tools to register');
   await waitForPerfTools(page, url);
 
-  await page.evaluate(
-    ([nodes, seed]) => window.__graphPerf?.scene({ nodes, seed }),
-    [scenario.nodes, SCENE_SEED],
+  stage(`building a ${scenario.nodes} node scene at seed ${SCENE_SEED}`);
+  await withTimeout(
+    page.evaluate(
+      ([nodes, seed]) => window.__graphPerf?.scene({ nodes, seed }),
+      [scenario.nodes, SCENE_SEED],
+    ),
+    SCENE_TIMEOUT_MS,
+    `${scenario.name} never finished building its scene`,
   );
 
   // a graph still animating its nodes in draws differently from a settled one
+  stage(`settling for ${SETTLE_MS}ms`);
   await page.waitForTimeout(SETTLE_MS);
 
+  stage('starting the call counter');
   await page.evaluate(() => {
     window.__graphPerf?.countCalls();
     window.__graphPerf?.reset();
   });
 
-  if (scenario.sweepCursor) await sweepCursor(page, MEASURE_MS);
-  else await page.waitForTimeout(MEASURE_MS);
+  if (scenario.sweepCursor) {
+    stage(`sweeping the cursor for ${MEASURE_MS}ms`);
+    await sweepCursor(page, MEASURE_MS);
+  } else {
+    stage(`measuring idle for ${MEASURE_MS}ms`);
+    await page.waitForTimeout(MEASURE_MS);
+  }
 
+  stage('collecting the report');
   const report = await page.evaluate(
     () => window.__graphPerf?.report() as PerfReport,
   );
@@ -118,6 +185,11 @@ const measureScenario = async (
         'these numbers would be fiction rather than an improvement.',
     );
   }
+
+  stage(
+    `done, ${frames} frames at ${report.timing.fps.toFixed(1)}fps, ` +
+      `draw p50 ${report.timing.draw.p50.toFixed(2)}ms`,
+  );
 
   return {
     scenario: scenario.name,
@@ -137,17 +209,37 @@ const main = async () => {
     },
   });
 
+  log(`measuring ${values.commit} at ${values.url}`);
+  log(
+    `${scenarios.length} scenarios: ${scenarios.map(({ name }) => name).join(', ')}`,
+  );
+
+  log('launching chromium');
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: VIEWPORT });
 
   const results: ScenarioResult[] = [];
 
   try {
-    for (const scenario of scenarios) {
-      process.stderr.write(`measuring ${scenario.name}\n`);
-      results.push(await measureScenario(page, values.url, scenario));
+    for (const [index, scenario] of scenarios.entries()) {
+      log(`scenario ${index + 1}/${scenarios.length}: ${scenario.name}`);
+
+      /*
+        a context per scenario, because the products persist their graph to
+        local storage and restore it on mount. sharing one leaves every scenario
+        after the first building its scene on top of the previous one, which
+        both inflates the size being measured and collides the scene's node ids
+      */
+      const context = await browser.newContext({ viewport: VIEWPORT });
+
+      try {
+        const page = await context.newPage();
+        results.push(await measureScenario(page, values.url, scenario));
+      } finally {
+        await context.close();
+      }
     }
   } finally {
+    log('closing chromium');
     await browser.close();
   }
 
@@ -159,8 +251,22 @@ const main = async () => {
 
   const serialized = JSON.stringify(runResult, null, 2);
 
-  if (values.out) await writeFile(values.out, serialized);
-  else process.stdout.write(serialized);
+  if (values.out) {
+    await writeFile(values.out, serialized);
+    log(`wrote ${results.length} scenarios to ${values.out}`);
+  } else {
+    process.stdout.write(serialized);
+  }
 };
 
-await main();
+/*
+  the stack alone lands in the log as an unattributed playwright trace. this
+  names the run that failed first, so the workflow's two measure steps are
+  telling apart at a glance
+*/
+try {
+  await main();
+} catch (error) {
+  log(`run failed: ${error instanceof Error ? error.message : String(error)}`);
+  throw error;
+}

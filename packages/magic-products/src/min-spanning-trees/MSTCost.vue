@@ -4,18 +4,23 @@
   import WellVue from '@magic/shared/Well';
   import { Explainer, ExplainerText } from '@magic/shared/explainer';
   import { useProvidedGraph } from '@magic/shared/product';
+  import Fraction from 'fraction.js';
 
   import { computed } from 'vue';
 
   const graph = useProvidedGraph();
+  const result = computed(() => graph.minimumSpanningTrees.all.value);
+
+  // over the plugin's maxNodes nothing is enumerated, so there is no cost to show
   const mst = computed(() =>
-    nullThrows(
-      graph.minimumSpanningTrees.all.value.msts.at(0),
-      'no mst in graph!',
-    ),
+    result.value.skipped
+      ? []
+      : nullThrows(result.value.msts.at(0), 'no mst in graph!'),
   );
 
-  const cost = computed(() => graph.minimumSpanningTrees.all.value.totalWeight);
+  const cost = computed(() =>
+    result.value.skipped ? new Fraction(0) : result.value.totalWeight,
+  );
 
   const themer = graph.theme.createThemer({
     canvas: {
@@ -32,6 +37,13 @@
   });
 
   const mstCostExplainer = computed<Explainer>(() => {
+    if (result.value.skipped) {
+      return {
+        content: `graph is too large to enumerate every minimum spanning tree`,
+        highlights: [],
+      };
+    }
+
     const stringOfPluses = mst.value
       .map((edge) => `{${edge.id}} + `)
       .join('')

@@ -13,6 +13,7 @@ import { interactive } from '@graph/plugins/interactive/index';
 import { InteractiveOptions } from '@graph/plugins/interactive/options';
 import { marquee } from '@graph/plugins/marquee/index';
 import { minimumSpanningTrees } from '@graph/plugins/minimum-spanning-trees/index';
+import { MinimumSpanningTreesOptions } from '@graph/plugins/minimum-spanning-trees/options';
 import { nodeDrag } from '@graph/plugins/node-drag/index';
 import { NodeDragOptions } from '@graph/plugins/node-drag/options';
 import { nodeLabel } from '@graph/plugins/node-label/index';
@@ -37,6 +38,7 @@ export type UseGraphOptions = {
   core?: Partial<CoreOptions>;
   interactive?: Partial<InteractiveOptions>;
   nodeDrag?: Partial<NodeDragOptions>;
+  minimumSpanningTrees?: Partial<MinimumSpanningTreesOptions>;
 };
 
 const graphPlugins = (
@@ -55,7 +57,7 @@ const graphPlugins = (
   interactive(options.interactive ?? {}),
   animation,
   phantom,
-  minimumSpanningTrees,
+  minimumSpanningTrees(options.minimumSpanningTrees ?? {}),
 ];
 
 const createGraphWithPlugins = (

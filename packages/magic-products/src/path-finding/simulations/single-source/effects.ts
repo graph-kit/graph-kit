@@ -55,11 +55,6 @@ export type SingleSourceOptions = {
   sourceNodeId: SourceNodeId;
 };
 
-export const slotIds = {
-  distances: 'path-finding/distances',
-  frontier: 'path-finding/frontier',
-} as const;
-
 const singleSourceEffects = (
   graph: MagicGraph,
 ): SimulationEffects<SingleSourceFrame> => {
@@ -90,8 +85,16 @@ const singleSourceEffects = (
   const lens: Lens = {
     id: 'path-finding/single-source',
     components: [
-      { component: Distances, position: 'center-left', id: slotIds.distances },
-      { component: Frontier, position: 'center-right', id: slotIds.frontier },
+      {
+        component: Distances,
+        position: 'center-left',
+        id: 'path-finding/distances',
+      },
+      {
+        component: Frontier,
+        position: 'center-right',
+        id: 'path-finding/frontier',
+      },
     ],
     activate: () => {
       for (const { themer } of themers) themer.activate();

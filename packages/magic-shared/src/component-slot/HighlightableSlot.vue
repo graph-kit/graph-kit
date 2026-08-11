@@ -1,11 +1,10 @@
 <script setup lang="ts">
-  import { computed } from 'vue';
+  import { computed, useAttrs } from 'vue';
 
   import { useProvidedMagic } from '../product/context.ts';
 
   const props = withDefaults(
     defineProps<{
-      slotId: string;
       unstyled?: boolean;
     }>(),
     {
@@ -13,10 +12,12 @@
     },
   );
 
+  const attrs = useAttrs();
+
   const magic = useProvidedMagic();
 
   const highlighted = computed(
-    () => props.slotId === magic.componentSlots.highlightedId.value,
+    () => attrs['slot-id'] === magic.componentSlots.highlightedId.value,
   );
 
   const classes = computed(() => {

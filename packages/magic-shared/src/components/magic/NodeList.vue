@@ -16,7 +16,6 @@
       ids: readonly string[];
       /** which edge the panel slides out past when the list empties */
       exitSide?: 'left' | 'right';
-      slotId?: string;
     }>(),
     { exitSide: 'right' },
   );
@@ -121,7 +120,6 @@
 
 <template>
   <HighlightableSlot
-    :slot-id="slotId ?? 'undefined'"
     v-slot="{ highlighted, classes: highlightClasses }"
     unstyled
   >

@@ -41,6 +41,7 @@
       v-for="{ component, id } of components"
       :key="id"
       :is="component"
+      :slot-id="id"
     />
   </div>
 </template>

@@ -10,7 +10,6 @@
   import { computed } from 'vue';
 
   import { formatDistance } from '../distance.ts';
-  import { slotIds } from './effects.ts';
   import { SingleSourceFrame } from './frame.ts';
 
   const graph = useProvidedGraph();
@@ -33,7 +32,6 @@
 
 <template>
   <HighlightableSlot
-    :slot-id="slotIds.distances"
     v-slot="{ classes }"
     unstyled
   >

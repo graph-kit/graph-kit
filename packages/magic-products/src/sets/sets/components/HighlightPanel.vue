@@ -3,6 +3,7 @@
   import HStack from '@magic/shared/HStack';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
+  import { LatexButton } from '@magic/shared/latex';
 
   import { ref } from 'vue';
 
@@ -10,7 +11,6 @@
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
   import Query from './Query.vue';
-  import LatexButton from './latex/LatexButton.vue';
 
   const { highlights } = useProvidedSetsProductState();
   const { queryIds, addQuery, insertIntoQuery } = highlights;

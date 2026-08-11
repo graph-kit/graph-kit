@@ -1,5 +1,8 @@
 <script setup lang="ts">
-  import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+  import { cn } from '@core/components/cn';
+  import { useAttrClass } from '@core/components/composables/useAttrClass';
+
+  import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
   /**
    * the slice of mathlive's MathfieldElement this component drives, declared here
@@ -21,8 +24,20 @@
       hotkeys: Record<string, string>;
       width?: number;
       height?: number;
+      /** paints the field as rejecting what it currently holds */
+      error?: boolean;
     }>(),
-    { width: 400, height: 40 },
+    { width: 400, height: 40, error: false },
+  );
+
+  const attrClass = useAttrClass();
+
+  const classes = computed(() =>
+    cn(
+      'text-box h-full w-full rounded-md',
+      props.error ? 'bg-red-300 ring-red-600 outline-red-600' : 'bg-white',
+      attrClass.value,
+    ),
   );
 
   const latexString = defineModel<string>({
@@ -95,8 +110,8 @@
     <math-field
       v-if="mathfieldRegistered"
       ref="latexInput"
-      v-bind="$attrs"
-      class="text-box h-full w-full"
+      v-bind="{ ...$attrs, class: undefined }"
+      :class="classes"
     />
   </div>
 </template>

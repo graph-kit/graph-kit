@@ -420,12 +420,6 @@ importers:
       fraction.js:
         specifier: ^5.3.4
         version: 5.3.4
-      katex:
-        specifier: ^0.18.1
-        version: 0.18.1
-      mathlive:
-        specifier: ^0.110.0
-        version: 0.110.0
       tinycolor2:
         specifier: 'catalog:'
         version: 1.6.0
@@ -490,9 +484,15 @@ importers:
       ctrl-keys:
         specifier: ^1.0.6
         version: 1.0.6
+      katex:
+        specifier: ^0.18.1
+        version: 0.18.1
       lz-string:
         specifier: ^1.5.0
         version: 1.5.0
+      mathlive:
+        specifier: ^0.110.0
+        version: 0.110.0
     devDependencies:
       nuxt:
         specifier: ^4.1.2

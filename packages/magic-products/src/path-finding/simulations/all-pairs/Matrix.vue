@@ -65,10 +65,7 @@
 </script>
 
 <template>
-  <Well
-    v-if="nodeIds.length > 0"
-    :class="highlight.classes"
-  >
+  <Well v-if="nodeIds.length > 0">
     <VStack class="gap-2">
       <span class="text-sm font-bold opacity-60">From \ To</span>
       <div class="max-h-[50vh] max-w-[40vw] overflow-auto">

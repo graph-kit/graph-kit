@@ -35,8 +35,8 @@
     return {
       isHighlighted,
       classes: isHighlighted
-        ? 'border-4 border-red-500 rounded-md'
-        : 'border-4 border-transparent rounded-md',
+        ? 'border-4 border-red-500 rounded-lg'
+        : 'border-4 border-transparent rounded-lg',
     };
   };
 </script>
@@ -47,14 +47,12 @@
     :key="position"
     :class="props[propKeyByPosition[position]]"
   >
-    <template
-      v-for="{ component, id } in components"
-      :key="id"
-    >
-      <component
-        :is="component"
-        :highlight="highlightProps(id)"
-      />
-    </template>
+    <component
+      v-for="component in components"
+      :key="component.id"
+      :is="component.component"
+      :class="highlightProps(component.id).classes"
+      :highlight="highlightProps(component.id)"
+    />
   </div>
 </template>

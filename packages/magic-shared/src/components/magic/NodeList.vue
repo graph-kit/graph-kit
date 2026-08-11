@@ -3,10 +3,15 @@
 
   import { onUnmounted, ref, toRefs, watch } from 'vue';
 
-  import { HighlightProps } from '../../component-slot/types.ts';
+  import { useHighlightState } from '../../component-slot/useHighlightState.ts';
   import VStack from '../layout/VStack.vue';
   import Well from '../layout/Well.vue';
   import Node from './Node.vue';
+
+  // the panel slides and repositions itself, so the highlight ring has to be
+  // drawn on the panel directly rather than landing wherever the host's
+  // automatic class fallthrough would put it
+  defineOptions({ inheritAttrs: false });
 
   /** matches the leave duration in the style block below + 250ms for a breather gap */
   const NODE_EXIT_MS = 350 + 100;
@@ -16,10 +21,11 @@
       ids: readonly string[];
       /** which edge the panel slides out past when the list empties */
       exitSide?: 'left' | 'right';
-      highlight?: HighlightProps;
     }>(),
     { exitSide: 'right' },
   );
+
+  const highlight = useHighlightState();
 
   const { ids: nodeIds } = toRefs(props);
 

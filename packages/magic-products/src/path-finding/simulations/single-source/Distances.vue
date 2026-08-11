@@ -14,10 +14,6 @@
 
   const graph = useProvidedGraph();
 
-  defineProps<{
-    highlight: HighlightProps;
-  }>();
-
   const currentFrame = useCurrentFrame<SingleSourceFrame>();
 
   /*
@@ -35,10 +31,7 @@
 </script>
 
 <template>
-  <Well
-    v-if="rows.length > 0"
-    :class="highlight.classes"
-  >
+  <Well v-if="rows.length > 0">
     <VStack class="gap-2">
       <span class="text-sm font-bold opacity-60">Distance</span>
       <VStack class="gap-2 max-h-[50vh] overflow-y-auto pr-1">

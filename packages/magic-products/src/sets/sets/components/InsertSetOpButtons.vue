@@ -5,11 +5,15 @@
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';
 
+  const props = defineProps<{
+    queryId: string;
+  }>();
+
   const { highlights } = useProvidedSetsProductState();
   const { insertIntoQuery } = highlights;
 
   const insertLatexString = (latexString: string) => {
-    insertIntoQuery(focusedQueryId.value, latexString);
+    insertIntoQuery(props.queryId, latexString);
   };
 </script>
 

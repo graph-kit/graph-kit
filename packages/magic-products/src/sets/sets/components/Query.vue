@@ -11,6 +11,7 @@
   import type { HighlightQueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
+  import QueryToggleHidden from './QueryToggleHidden.vue';
 
   const props = defineProps<{
     queryId: HighlightQueryId;
@@ -24,18 +25,13 @@
 
   const { highlights, queryAnalysis } = useProvidedSetsProductState();
 
+  const query = computed(() => highlights.getQuery(props.queryId));
+
   const latexQueryString = computed({
-    get: () => highlights.getQuery(props.queryId).latexQueryString,
+    get: () => query.value.latexQueryString,
     set: (latexString) =>
       highlights.setLatexQueryString(props.queryId, latexString),
   });
-
-  const isHidden = computed(() => highlights.getQuery(props.queryId).isHidden);
-
-  const color = computed(() => highlights.getQuery(props.queryId).color);
-
-  const toggleHidden = () =>
-    highlights.setHidden(props.queryId, !isHidden.value);
 
   const hasError = computed(
     () => queryAnalysis.queryErrors.value[props.queryId],
@@ -75,15 +71,7 @@
 
 <template>
   <HStack class="relative h-10">
-    <Tooltip :label="isHidden ? 'Show highlight' : 'Hide highlight'">
-      <template #trigger>
-        <Button
-          :style="{ backgroundColor: isHidden ? colors.GRAY_500 : color }"
-          class="h-full"
-          @click="toggleHidden"
-        />
-      </template>
-    </Tooltip>
+    <QueryToggleHidden :query="query" />
 
     <LatexInput
       ref="latexInputRef"

@@ -13,14 +13,17 @@ type QueryEditor = {
   replace: (latexString: HighlightQuery) => void;
 };
 
+export type Query = {
+  id: string;
+  latexQueryString: HighlightQuery;
+  isHidden: boolean;
+  color: Color;
+};
+
 export type HighlightQueries = {
   // the highlights in render order, each resolved to its data through getQuery
   queryIds: Ref<HighlightQueryId[]>;
-  getQuery: (queryId: HighlightQueryId) => {
-    latexQueryString: HighlightQuery;
-    isHidden: boolean;
-    color: Color;
-  };
+  getQuery: (queryId: HighlightQueryId) => Query;
   addQuery: () => HighlightQueryId;
   setLatexQueryString: (
     queryId: HighlightQueryId,
@@ -65,6 +68,7 @@ export const createHighlightQueries = (): HighlightQueries => {
     queryIds,
 
     getQuery: (queryId) => ({
+      id: queryId,
       latexQueryString: latexQueryStrings.value[queryId] ?? '',
       isHidden: hiddenQueryIds.value.has(queryId),
       color: nullThrows(

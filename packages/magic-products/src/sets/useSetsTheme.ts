@@ -5,7 +5,6 @@ import { Magic } from '@magic/shared/product';
 import { computed } from 'vue';
 
 export type SetColors = {
-  unhighlighted: string;
   outline: {
     default: string;
     focused: string;
@@ -30,7 +29,6 @@ export const useSetsTheme = (magic: Magic) => {
 
   return computed<SetsTheme>(() => ({
     set: {
-      unhighlighted: theme.value.canvas['node.default.color'],
       outline: {
         default: theme.value.canvas['node.default.border.color'],
         focused: theme.value.focus['node.focus.border.color'],

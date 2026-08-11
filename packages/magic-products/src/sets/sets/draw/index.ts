@@ -1,21 +1,18 @@
-import { getWorldCoordinates } from '@core/utils/canvas/index';
-
 import type { Section, SetDefinition } from '../../types.ts';
 import { SetColors } from '../../useSetsTheme.ts';
 import type { SetFocusControls } from '../composables/useSetFocus.ts';
-import { OUTSIDE_ALL_SETS } from '../other/constants.ts';
-import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
+import type { SectionKey } from '../other/sectionKey.ts';
 import {
-  drawCircleBackground,
-  drawCircleLabel,
-  drawCircleOutline,
+  DrawSetDefinitionCircleOptions,
+  drawCircleStroke,
+  drawCircleTextLabel,
 } from './circles.ts';
-import { colorAllSections } from './colorAllSections.ts';
-import { hatchPattern } from './hatchPattern.ts';
+import { colorSections } from './colorSections.ts';
 
 type DrawProps = {
   /** every set to draw, as a circle with its label */
   definitions: SetDefinition[];
+  /** every atomic region of the set space, painted where highlighted */
   sections: Section[];
   /** colors painted over a section, keyed by the sets forming it */
   sectionKeyToColors: Map<SectionKey, string[]>;
@@ -28,54 +25,16 @@ export const draw = (
   props: DrawProps,
   colors: SetColors,
 ) => {
-  const { sectionKeyToColors } = props;
+  colorSections(ctx, props);
 
-  // the region no set covers fills the whole canvas rather than clipping to circles
-  const outsideColors = sectionKeyToColors.get(
-    getSectionKey([OUTSIDE_ALL_SETS.identity]),
-  );
-
-  if (outsideColors) {
-    const start = getWorldCoordinates({ clientX: 0, clientY: 0 }, ctx);
-    const end = getWorldCoordinates(
-      { clientX: window.innerWidth, clientY: window.innerHeight },
+  for (const setDefinition of props.definitions) {
+    const options: DrawSetDefinitionCircleOptions = {
+      setDefinition,
+      isFocused: props.isSetFocused(setDefinition.id),
       ctx,
-    );
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = hatchPattern(ctx, outsideColors);
-    ctx.fillRect(start.x, start.y, end.x - start.x, end.y - start.y);
-    ctx.restore();
-  }
-
-  for (const set of props.definitions) {
-    drawCircleBackground(
-      ctx,
-      {
-        set,
-        highlightColors:
-          sectionKeyToColors.get(getSectionKey([set.id])) ?? null,
-      },
       colors,
-    );
-  }
-
-  colorAllSections(
-    ctx,
-    {
-      definitions: props.definitions,
-      sections: props.sections,
-      sectionKeyToColors,
-    },
-    colors,
-  );
-
-  for (const set of props.definitions) {
-    const options = {
-      set,
-      isFocused: props.isSetFocused(set.id),
     };
-    drawCircleOutline(ctx, options, colors);
-    drawCircleLabel(ctx, options, colors);
+    drawCircleStroke(options);
+    drawCircleTextLabel(options);
   }
 };

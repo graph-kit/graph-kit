@@ -1,83 +1,41 @@
-import { circle } from '@canvas/primitives/shapes/circle/index';
 import { FontWeight } from '@canvas/primitives/text/types';
 
 import { SetDefinition } from '../../types.ts';
 import { SetColors } from '../../useSetsTheme.ts';
-import { hatchPattern } from './hatchPattern.ts';
 
-type DrawCircleBackgroundProps = {
-  set: SetDefinition;
-  highlightColors: string[] | null;
-};
-
-export const drawCircleBackground = (
-  ctx: CanvasRenderingContext2D,
-  props: DrawCircleBackgroundProps,
-  colors: SetColors,
-) => {
-  const { set, highlightColors } = props;
-
-  if (!highlightColors || highlightColors.length === 1) {
-    circle({
-      ...set.display,
-      fillColor: highlightColors?.[0] ?? colors.unhighlighted,
-    }).draw(ctx);
-    return;
-  }
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(
-    set.display.at.x,
-    set.display.at.y,
-    set.display.radius,
-    0,
-    2 * Math.PI,
-  );
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = hatchPattern(ctx, highlightColors);
-  ctx.fill();
-  ctx.restore();
-};
-
-type DrawCircleOutlineProps = {
-  set: SetDefinition;
+export type DrawSetDefinitionCircleOptions = {
+  ctx: CanvasRenderingContext2D;
+  setDefinition: SetDefinition;
   isFocused: boolean;
+  colors: SetColors;
 };
 
-export const drawCircleOutline = (
-  ctx: CanvasRenderingContext2D,
-  props: DrawCircleOutlineProps,
-  colors: SetColors,
-) => {
-  const { outline } = colors;
+export const drawCircleStroke = (options: DrawSetDefinitionCircleOptions) => {
   const {
-    at: { x, y },
-    radius,
-  } = props.set.display;
+    colors: { outline },
+    ctx,
+    isFocused,
+    setDefinition,
+  } = options;
+
+  const { at, radius } = setDefinition.display;
+
   ctx.beginPath();
-  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.arc(at.x, at.y, radius, 0, 2 * Math.PI);
   ctx.lineWidth = 8;
-  ctx.strokeStyle = props.isFocused ? outline.focused : outline.default;
+  ctx.strokeStyle = isFocused ? outline.focused : outline.default;
   ctx.stroke();
 };
 
-type DrawCircleLabelProps = {
-  set: SetDefinition;
-  isFocused: boolean;
-};
-
-export const drawCircleLabel = (
-  ctx: CanvasRenderingContext2D,
-  props: DrawCircleLabelProps,
-  colors: SetColors,
+export const drawCircleTextLabel = (
+  options: DrawSetDefinitionCircleOptions,
 ) => {
+  const { setDefinition, ctx, colors } = options;
   const {
     label,
-    display: {
-      at: { x, y },
-    },
-  } = props.set;
+    display: { at },
+  } = setDefinition;
+
   const fontWeight: FontWeight = 'bold';
   const fontSize = 24;
   const fontFamily = 'Arial';
@@ -86,6 +44,6 @@ export const drawCircleLabel = (
   ctx.fillStyle = color;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label, x, y);
+  ctx.fillText(label, at.x, at.y);
   ctx.stroke();
 };

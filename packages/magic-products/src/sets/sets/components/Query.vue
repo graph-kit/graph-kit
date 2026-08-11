@@ -37,8 +37,6 @@
   const toggleHidden = () =>
     highlights.setHidden(props.queryId, !isHidden.value);
 
-  // TODO disambiguation and simplifications shouldn't even populate
-  // in query error condition.
   const hasError = computed(
     () => queryAnalysis.queryErrors.value[props.queryId],
   );
@@ -77,6 +75,16 @@
 
 <template>
   <HStack class="relative h-10">
+    <Tooltip :label="isHidden ? 'Show highlight' : 'Hide highlight'">
+      <template #trigger>
+        <Button
+          :style="{ backgroundColor: isHidden ? colors.GRAY_500 : color }"
+          class="h-full"
+          @click="toggleHidden"
+        />
+      </template>
+    </Tooltip>
+
     <LatexInput
       ref="latexInputRef"
       v-model="latexQueryString"
@@ -100,16 +108,6 @@
     >
       <template #trigger>
         <Button @click="applySimplification">Simplify</Button>
-      </template>
-    </Tooltip>
-
-    <Tooltip :label="isHidden ? 'Show highlight' : 'Hide highlight'">
-      <template #trigger>
-        <Button
-          :style="{ backgroundColor: isHidden ? colors.GRAY_500 : color }"
-          class="h-full"
-          @click="toggleHidden"
-        />
       </template>
     </Tooltip>
   </HStack>

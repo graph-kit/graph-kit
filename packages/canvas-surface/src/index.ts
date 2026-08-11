@@ -23,7 +23,10 @@ const REPAINT_FPS = 60;
 */
 const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
 
-/** sizes the canvas's backing store to its layout box at the current device pixel ratio */
+/**
+ * sizes the canvas's backing store to its layout box at the current device
+ * pixel ratio, handing back that box in css pixels
+ */
 const sizeCanvas = (canvas: HTMLCanvasElement | undefined) => {
   if (!canvas) throw new Error('Canvas not found in DOM. Check ref link.');
 
@@ -31,11 +34,18 @@ const sizeCanvas = (canvas: HTMLCanvasElement | undefined) => {
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
+  return rect;
 };
 
 export const useCanvas: UseCanvas = () => {
   const canvas = ref<HTMLCanvasElement>();
   const canvasBoxSize = useElementSize(canvas);
+
+  /*
+    the layout box as of the last resize, not useElementSize's copy of it, which
+    reads 0 until its ResizeObserver fires a frame after mount
+  */
+  const canvasCssSize = { width: ref(0), height: ref(0) };
 
   const drawContent = ref<DrawContent>(() => {});
   const drawBackgroundPattern = ref<DrawPattern>(() => () => {});
@@ -71,9 +81,15 @@ export const useCanvas: UseCanvas = () => {
     });
   };
 
-  onMounted(() => {
-    sizeCanvas(canvas.value);
+  const resizeCanvas = () => {
+    const { width, height } = sizeCanvas(canvas.value);
+    canvasCssSize.width.value = width;
+    canvasCssSize.height.value = height;
     ctx = getCtx(canvas);
+  };
+
+  onMounted(() => {
+    resizeCanvas();
     scheduleRepaint();
     lifecycleEvents.emit('onMounted');
   });
@@ -82,17 +98,14 @@ export const useCanvas: UseCanvas = () => {
     lifecycleEvents.emit('onBeforeUnmount');
   });
 
-  watch([canvasBoxSize.width, canvasBoxSize.height], () => {
-    sizeCanvas(canvas.value);
-    ctx = getCtx(canvas);
-  });
+  watch([canvasBoxSize.width, canvasBoxSize.height], resizeCanvas);
 
   const { events: domEvents, cleanup: cleanupDOMEvents } = useDOMEvents(canvas);
 
   const { cleanup: cleanupCamera, ...camera } = useCamera(canvas, domEvents);
   const { worldCoordinates: cursorCoordinates, toWorldCoordinates } =
     useWorldCoordinates(camera.state, domEvents);
-  const visibleWorldRect = useVisibleWorldRect(camera.state, canvasBoxSize);
+  const visibleWorldRect = useVisibleWorldRect(camera.state, canvasCssSize);
 
   const pattern = useBackgroundPattern(
     camera.state,

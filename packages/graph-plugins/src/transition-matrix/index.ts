@@ -1,39 +1,53 @@
-import { CoreNode } from '@graph/primitives/types';
 import { computed } from '@reactive/primitives/index';
 import Fraction from 'fraction.js';
 
-import { AdjacencyListsControls } from '../adjacency-lists/types.ts';
-import { TransitionMatrix, TransitionMatrixPlugin } from './types.ts';
+import {
+  TransitionMatrix,
+  TransitionMatrixGraph,
+  TransitionMatrixPlugin,
+} from './types.ts';
 
+/**
+ * builds the matrix straight from the node and edge lists.
+ *
+ * rows and columns are indexed by position in `nodes()`, which is the same
+ * order `nodeIdToIndex` reports, so the matrix and any index taken against it
+ * come from one list rather than two that have to be trusted to agree
+ */
 export const getTransitionMatrix = (
-  adjList: ReturnType<AdjacencyListsControls['weighted']>,
-  nodeToIndex: (id: CoreNode['id']) => number,
-) => {
-  const adjListEntries = Object.entries(adjList);
-  const nodeCount = adjListEntries.length;
+  graph: TransitionMatrixGraph,
+): TransitionMatrix => {
+  const nodes = graph.nodes();
+  const nodeCount = nodes.length;
+
+  const indexOfNode = new Map(nodes.map((node, index) => [node.id, index]));
 
   const matrix: TransitionMatrix = Array.from({ length: nodeCount }, () =>
     Array.from({ length: nodeCount }, () => new Fraction(0)),
   );
 
-  for (const [nodeId, neighbors] of adjListEntries) {
-    const fromIndex = nodeToIndex(nodeId)!;
+  const { directed } = graph.metadata;
 
-    for (const neighbor of neighbors) {
-      const toIndex = nodeToIndex(neighbor.id)!;
-      matrix[fromIndex][toIndex] = neighbor.weight;
-    }
+  for (const edge of graph.edges()) {
+    const fromIndex = indexOfNode.get(edge.source);
+    const toIndex = indexOfNode.get(edge.target);
+
+    // an edge can outlive an endpoint, and contributes nothing until both exist
+    if (fromIndex === undefined || toIndex === undefined) continue;
+
+    const { weight } = graph.getEdge(edge.id);
+
+    matrix[fromIndex][toIndex] = weight;
+    if (!directed) matrix[toIndex][fromIndex] = weight;
   }
 
   return matrix;
 };
 
-export const transitionMatrix: TransitionMatrixPlugin = ({ controls }) => ({
+export const transitionMatrix: TransitionMatrixPlugin = ({
+  controls,
+  getters,
+}) => ({
   name: 'transitionMatrix',
-  controls: computed(() =>
-    getTransitionMatrix(
-      controls.adjacencyLists.weighted(),
-      controls.nodeIdToIndex,
-    ),
-  ),
+  controls: computed(() => getTransitionMatrix({ ...controls, ...getters })),
 });

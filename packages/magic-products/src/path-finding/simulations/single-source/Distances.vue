@@ -3,7 +3,6 @@
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { HighlightProps } from '@magic/shared/component-slot/types';
   import { useProvidedGraph } from '@magic/shared/product';
   import { useCurrentFrame } from '@magic/shared/simulation';
 

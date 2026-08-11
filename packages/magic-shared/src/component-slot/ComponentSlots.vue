@@ -48,11 +48,11 @@
     :class="props[propKeyByPosition[position]]"
   >
     <component
-      v-for="component in components"
-      :key="component.id"
-      :is="component.component"
-      :class="highlightProps(component.id).classes"
-      :highlight="highlightProps(component.id)"
+      v-for="{ component, id } in components"
+      :key="id"
+      :is="component"
+      :highlight="highlightProps(id)"
+      :class="highlightProps(id).classes"
     />
   </div>
 </template>

@@ -2,7 +2,6 @@
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { HighlightProps } from '@magic/shared/component-slot/types';
   import { GNode } from '@magic/shared/graph';
   import { useProvidedGraph } from '@magic/shared/product';
   import { useCurrentFrame } from '@magic/shared/simulation';
@@ -15,10 +14,6 @@
   import { AllPairsFrame } from './frame.ts';
 
   const graph = useProvidedGraph();
-
-  defineProps<{
-    highlight: HighlightProps;
-  }>();
 
   const currentFrame = useCurrentFrame<AllPairsFrame>();
 

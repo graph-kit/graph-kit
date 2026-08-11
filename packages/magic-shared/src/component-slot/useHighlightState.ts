@@ -2,6 +2,8 @@ import { computed, useAttrs } from 'vue';
 
 import { HighlightProps } from './types.ts';
 
+const highlightAttr = 'highlight';
+
 /**
  * reads the highlight state ComponentSlots.vue passes down. components that
  * want their own control over rendering it should pair this with
@@ -10,8 +12,8 @@ import { HighlightProps } from './types.ts';
  */
 export const useHighlightState = () => {
   const attrs = useAttrs();
-  if (!('highlight' in attrs)) return;
+  if (!(highlightAttr in attrs)) return;
   // highlightedId can change for the lifetime of this component, so this
   // stays a live binding into attrs rather than a one-time snapshot of it
-  return computed(() => attrs.highlight as HighlightProps);
+  return computed(() => attrs[highlightAttr] as HighlightProps);
 };

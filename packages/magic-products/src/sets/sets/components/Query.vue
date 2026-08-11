@@ -45,6 +45,8 @@
         latexInputRef.value?.replaceLatexString(latexString),
     }),
   );
+
+  const previewValue = ref<string>();
 </script>
 
 <template>
@@ -55,11 +57,14 @@
       ref="latexInputRef"
       v-model="latexQueryString"
       :error="hasError"
+      :preview-value="previewValue"
       @ready="useSetsLatexField"
       @focus="emit('focus')"
-      :preview-value="`$$ A $$`"
     />
 
-    <QueryInputModifiers :query="query" />
+    <QueryInputModifiers
+      :query="query"
+      v-model="previewValue"
+    />
   </HStack>
 </template>

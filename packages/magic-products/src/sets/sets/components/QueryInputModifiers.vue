@@ -16,6 +16,8 @@
     query: Query;
   }>();
 
+  const previewValue = defineModel<string>();
+
   const { highlights, queryAnalysis } = useProvidedSetsProductState();
 
   const simplified = computed(
@@ -60,7 +62,13 @@
           label="Operator precedence isn't standardized in set theory. Using parentheses makes evaluation order explicit."
         >
           <template #trigger>
-            <Button @click="applyDisambiguation">Disambiguate</Button>
+            <Button
+              @mouseenter="previewValue = disambiguated"
+              @mouseleave="previewValue = undefined"
+              @vue:unmounted="previewValue = undefined"
+              @click="applyDisambiguation"
+              >Disambiguate</Button
+            >
           </template>
         </Tooltip>
 
@@ -69,7 +77,13 @@
           :label="`Simplify expression to: ${simplified}`"
         >
           <template #trigger>
-            <Button @click="applySimplification">Simplify</Button>
+            <Button
+              @mouseenter="previewValue = simplified"
+              @mouseleave="previewValue = undefined"
+              @vue:unmounted="previewValue = undefined"
+              @click="applySimplification"
+              >Simplify</Button
+            >
           </template>
         </Tooltip>
       </Well>

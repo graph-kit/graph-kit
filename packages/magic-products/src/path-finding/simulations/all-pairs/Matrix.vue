@@ -2,7 +2,7 @@
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { HighlightableSlot } from '@magic/shared/component-slot';
+  import { HighlightProps } from '@magic/shared/component-slot/types';
   import { GNode } from '@magic/shared/graph';
   import { useProvidedGraph } from '@magic/shared/product';
   import { useCurrentFrame } from '@magic/shared/simulation';
@@ -15,6 +15,10 @@
   import { AllPairsFrame } from './frame.ts';
 
   const graph = useProvidedGraph();
+
+  defineProps<{
+    highlight: HighlightProps;
+  }>();
 
   const currentFrame = useCurrentFrame<AllPairsFrame>();
 
@@ -61,56 +65,51 @@
 </script>
 
 <template>
-  <HighlightableSlot
-    v-slot="{ classes }"
-    unstyled
+  <Well
+    v-if="nodeIds.length > 0"
+    :class="highlight.classes"
   >
-    <Well
-      v-if="nodeIds.length > 0"
-      :class="classes"
-    >
-      <VStack class="gap-2">
-        <span class="text-sm font-bold opacity-60">From \ To</span>
-        <div class="max-h-[50vh] max-w-[40vw] overflow-auto">
-          <table class="border-separate border-spacing-1">
-            <thead>
-              <tr>
-                <th></th>
-                <th
-                  v-for="to in nodeIds"
-                  :key="to"
-                >
-                  <Node
-                    :id="to"
-                    :scale="0.45"
-                  />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="from in nodeIds"
-                :key="from"
+    <VStack class="gap-2">
+      <span class="text-sm font-bold opacity-60">From \ To</span>
+      <div class="max-h-[50vh] max-w-[40vw] overflow-auto">
+        <table class="border-separate border-spacing-1">
+          <thead>
+            <tr>
+              <th></th>
+              <th
+                v-for="to in nodeIds"
+                :key="to"
               >
-                <th>
-                  <Node
-                    :id="from"
-                    :scale="0.45"
-                  />
-                </th>
-                <td
-                  v-for="to in nodeIds"
-                  :key="to"
-                  class="rounded-sm px-2 text-center font-bold tabular-nums"
-                  :style="{ backgroundColor: cellTint(from, to) }"
-                >
-                  {{ formatDistance(matrix?.[from]?.[to]) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </VStack>
-    </Well>
-  </HighlightableSlot>
+                <Node
+                  :id="to"
+                  :scale="0.45"
+                />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="from in nodeIds"
+              :key="from"
+            >
+              <th>
+                <Node
+                  :id="from"
+                  :scale="0.45"
+                />
+              </th>
+              <td
+                v-for="to in nodeIds"
+                :key="to"
+                class="rounded-sm px-2 text-center font-bold tabular-nums"
+                :style="{ backgroundColor: cellTint(from, to) }"
+              >
+                {{ formatDistance(matrix?.[from]?.[to]) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </VStack>
+  </Well>
 </template>

@@ -3,7 +3,7 @@
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { HighlightableSlot } from '@magic/shared/component-slot';
+  import { HighlightProps } from '@magic/shared/component-slot/types';
   import { useProvidedGraph } from '@magic/shared/product';
   import { useCurrentFrame } from '@magic/shared/simulation';
 
@@ -13,6 +13,10 @@
   import { SingleSourceFrame } from './frame.ts';
 
   const graph = useProvidedGraph();
+
+  defineProps<{
+    highlight: HighlightProps;
+  }>();
 
   const currentFrame = useCurrentFrame<SingleSourceFrame>();
 
@@ -31,32 +35,27 @@
 </script>
 
 <template>
-  <HighlightableSlot
-    v-slot="{ classes }"
-    unstyled
+  <Well
+    v-if="rows.length > 0"
+    :class="highlight.classes"
   >
-    <Well
-      v-if="rows.length > 0"
-      :class="classes"
-    >
-      <VStack class="gap-2">
-        <span class="text-sm font-bold opacity-60">Distance</span>
-        <VStack class="gap-2 max-h-[50vh] overflow-y-auto pr-1">
-          <HStack
-            v-for="row in rows"
-            :key="row.id"
-            class="gap-3 justify-between"
-          >
-            <Node
-              :id="row.id"
-              :scale="0.6"
-            />
-            <span class="font-bold tabular-nums">
-              {{ formatDistance(row.distance) }}
-            </span>
-          </HStack>
-        </VStack>
+    <VStack class="gap-2">
+      <span class="text-sm font-bold opacity-60">Distance</span>
+      <VStack class="gap-2 max-h-[50vh] overflow-y-auto pr-1">
+        <HStack
+          v-for="row in rows"
+          :key="row.id"
+          class="gap-3 justify-between"
+        >
+          <Node
+            :id="row.id"
+            :scale="0.6"
+          />
+          <span class="font-bold tabular-nums">
+            {{ formatDistance(row.distance) }}
+          </span>
+        </HStack>
       </VStack>
-    </Well>
-  </HighlightableSlot>
+    </VStack>
+  </Well>
 </template>

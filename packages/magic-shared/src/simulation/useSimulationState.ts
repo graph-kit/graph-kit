@@ -1,7 +1,7 @@
 import { nullThrows } from '@core/utils/assert';
 import { delta } from '@core/utils/delta/index';
 
-import { ComputedRef, computed, ref } from 'vue';
+import { ComputedRef, computed, ref, shallowRef } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { LensControls } from '../lens/useLensState.ts';
@@ -57,10 +57,15 @@ export const useSimulationState = (
   componentSlotControls: ComponentSlotControls,
   lensControls: LensControls,
 ): SimulationControls => {
-  const simulation = ref<Simulation<any>>();
+  // shallow cus sims carry lenses which carry vue component definitions
+  const simulation = shallowRef<Simulation<any>>();
 
   const getSimulation = () =>
     nullThrows(simulation.value, 'no running simulation!');
+
+  const patchSimulation = (fields: Partial<Simulation<any>>) => {
+    simulation.value = { ...getSimulation(), ...fields };
+  };
 
   const allFrames = computed(() => getSimulation().frames);
 
@@ -224,7 +229,7 @@ export const useSimulationState = (
           lensControls.remove(previousViolationLens.id);
         if (violation.lens) lensControls.add(violation.lens);
       }
-      sim.violation = violation;
+      patchSimulation({ violation });
       return { previousViolationId, currentViolationId: violation.id };
     }
 
@@ -235,7 +240,7 @@ export const useSimulationState = (
       if (previousViolation.lens) {
         lensControls.remove(previousViolation.lens.id);
       }
-      sim.violation = undefined;
+      patchSimulation({ violation: undefined });
     }
     return { previousViolationId, currentViolationId: undefined };
   };
@@ -251,7 +256,10 @@ export const useSimulationState = (
     // graph is invalid, don't recompute frames against it
     if (currentViolationId) {
       if (currentViolationId !== previousViolationId) {
-        sim.onViolation?.(nullThrows(sim.violation, 'violation missing'));
+        const violated = getSimulation();
+        violated.onViolation?.(
+          nullThrows(violated.violation, 'violation missing'),
+        );
       }
       return;
     }
@@ -263,8 +271,7 @@ export const useSimulationState = (
 
     const oldFrame = currentFrame.value;
 
-    sim.frames = frames;
-    sim.playhead = playhead;
+    patchSimulation({ frames, playhead });
 
     const newFrame = currentFrame.value;
 

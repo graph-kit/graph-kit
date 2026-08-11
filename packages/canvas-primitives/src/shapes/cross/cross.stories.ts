@@ -16,6 +16,7 @@ const meta = {
   component: Cross,
   args: {
     ...CROSS_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     size: 100,
     at: { x: 60, y: 60 },
     ...DOC_MARKING_DEFAULTS,

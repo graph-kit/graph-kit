@@ -16,6 +16,7 @@ const meta = {
   component: Square,
   args: {
     ...SQUARE_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     size: 100,
     at: { x: 20, y: 20 },
     ...DOC_MARKING_DEFAULTS,

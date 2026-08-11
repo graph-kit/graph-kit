@@ -16,6 +16,7 @@ const meta = {
   component: Scribble,
   args: {
     ...SCRIBBLE_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     type: 'draw',
     points: [
       { x: 20, y: 20 },

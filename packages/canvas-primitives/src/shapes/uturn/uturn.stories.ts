@@ -16,6 +16,7 @@ const meta = {
   component: UTurn,
   args: {
     ...UTURN_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     at: { x: 20, y: 60 },
     spacing: 15,
     upDistance: 70,

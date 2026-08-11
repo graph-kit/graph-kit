@@ -25,7 +25,9 @@ export type TextArea = {
    */
   textBlock: TextBlock;
   /**
-   * the color of the text area
+   * the matte painted behind the text. omit it to paint no matte, leaving
+   * whatever is already on the canvas showing behind the text. `'none'` goes
+   * further and punches the text area out of the shape itself
    */
   color?: string;
   /**

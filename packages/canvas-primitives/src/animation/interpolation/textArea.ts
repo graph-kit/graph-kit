@@ -11,11 +11,6 @@ export const interpolateTextArea: InterpolationFunction<
   TextAreaWithDefaults
 > = (keyframes, defaultEasing, fallback) => {
   return (progress) => {
-    const colorKeyframes = keyframes.map((kf): ColorKeyframe => ({
-      ...kf,
-      value: kf.value.color,
-    }));
-
     const activeColorKeyframes = keyframes.map((kf): ColorKeyframe => ({
       ...kf,
       value: kf.value.activeColor,
@@ -31,11 +26,18 @@ export const interpolateTextArea: InterpolationFunction<
       value: kf.value.textBlock.fontSize,
     }));
 
-    const textAreaColor = interpolateColor(
-      colorKeyframes,
-      defaultEasing,
-      fallback.color,
-    );
+    // a text area with no matte has no color to move toward, so it stays absent
+    const { color: fallbackColor } = fallback;
+    const textAreaColor =
+      fallbackColor &&
+      interpolateColor(
+        keyframes.map((kf): ColorKeyframe => ({
+          ...kf,
+          value: kf.value.color ?? fallbackColor,
+        })),
+        defaultEasing,
+        fallbackColor,
+      );
     const textColor = interpolateColor(
       textColorKeyframes,
       defaultEasing,
@@ -60,7 +62,7 @@ export const interpolateTextArea: InterpolationFunction<
         color: textColor(progress),
         fontSize: textFontSize(progress),
       },
-      color: textAreaColor(progress),
+      color: textAreaColor ? textAreaColor(progress) : undefined,
       activeColor: textAreaActiveColor(progress),
     };
   };

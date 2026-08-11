@@ -13,14 +13,18 @@ export const drawLineWithCtx =
 
     if (width === 0) return;
 
+    const hasGradient = fillGradient && fillGradient.length >= 2;
+    // the line is nothing but its stroke, so with no paint there is nothing to draw
+    if (!color && !hasGradient) return;
+
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(start.x, start.y);
     ctx.lineTo(end.x, end.y);
     ctx.lineWidth = width;
-    ctx.strokeStyle = color;
+    if (color) ctx.strokeStyle = color;
 
-    if (fillGradient && fillGradient.length >= 2) {
+    if (hasGradient) {
       const gradient = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
       fillGradient.forEach(({ offset, color }) => {
         gradient.addColorStop(offset, color);

@@ -1,10 +1,10 @@
-import type { DeepRequired } from 'ts-essentials';
-
-import type { TextArea as TextAreaSchema } from '../types/schema.ts';
+import type {
+  AnchorPoint,
+  TextArea as TextAreaSchema,
+} from '../types/schema.ts';
 import type { TextArea, TextBlock } from './types.ts';
 
 export const TEXTAREA_DEFAULTS = {
-  color: 'white',
   activeColor: 'white',
 } as const satisfies Omit<TextArea, 'textBlock'>;
 
@@ -15,26 +15,29 @@ export const TEXT_BLOCK_DEFAULTS = {
   fontFamily: 'Arial',
 } as const satisfies Omit<TextBlock, 'content'>;
 
-const getTextAreaWithDefaults = (
-  textArea: TextArea,
-): DeepRequired<TextArea> => {
-  const textBlockWithDefaults: Required<TextBlock> = {
+/**
+ * a {@link TextArea} with every optional filled in, except `color`, whose
+ * absence is itself the instruction to paint no matte
+ */
+export type TextAreaWithDefaults = {
+  textBlock: Required<TextBlock>;
+  color?: TextArea['color'];
+  activeColor: string;
+};
+
+/** a {@link TextAreaWithDefaults} that has been placed on the canvas */
+export type PlacedTextArea = TextAreaWithDefaults & AnchorPoint;
+
+const getTextAreaWithDefaults = (textArea: TextArea): TextAreaWithDefaults => ({
+  textBlock: {
     ...TEXT_BLOCK_DEFAULTS,
     ...textArea.textBlock,
-  };
-
-  const textAreaWithDefaults: DeepRequired<TextArea> = {
-    textBlock: textBlockWithDefaults,
-    color: textArea.color ?? TEXTAREA_DEFAULTS.color,
-    activeColor: textArea.activeColor ?? TEXTAREA_DEFAULTS.activeColor,
-  };
-
-  return textAreaWithDefaults;
-};
+  },
+  color: textArea.color,
+  activeColor: textArea.activeColor ?? TEXTAREA_DEFAULTS.activeColor,
+});
 
 export const resolveTextArea = (ta: TextAreaSchema['textArea']) =>
   ta && {
     textArea: getTextAreaWithDefaults(ta),
   };
-
-export type TextAreaWithDefaults = ReturnType<typeof getTextAreaWithDefaults>;

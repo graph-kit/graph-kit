@@ -1,17 +1,13 @@
-import type { DeepReadonly, DeepRequired } from 'ts-essentials';
+import type { DeepReadonly } from 'ts-essentials';
 
 import { rect } from '../shapes/rect/index.ts';
 import type { ShapeTextProps } from '../types/index.ts';
 import type { Coordinate } from '../types/utility.ts';
 import { createTextarea } from './createTextarea.ts';
-import type { TextAreaWithDefaults } from './defaults.ts';
+import type { PlacedTextArea, TextAreaWithDefaults } from './defaults.ts';
 import { drawWithNoMatte } from './drawWithNoMatte.ts';
 import { getTextDimensions } from './getTextDimensions.ts';
-import type {
-  StartTextAreaEdit,
-  TextAreaWithAnchorPoint,
-  TextBlock,
-} from './types.ts';
+import type { StartTextAreaEdit, TextBlock } from './types.ts';
 
 export const HORIZONTAL_TEXT_PADDING = 20;
 
@@ -42,13 +38,15 @@ export const getShapeTextProps = (
       x: at.x - dimensions.width / 2,
       y: at.y - dimensions.height / 2,
     },
-  } as const satisfies TextAreaWithAnchorPoint;
+  } as const satisfies PlacedTextArea;
+
+  const isNoMatte = placedTextArea.color === 'none';
 
   const textAreaMatte = rect({
     at: placedTextArea.at,
     width: dimensions.width,
     height: dimensions.height,
-    fillColor: placedTextArea.color,
+    fillColor: isNoMatte ? undefined : placedTextArea.color,
   });
 
   const drawText = drawTextWithTextArea(placedTextArea, dimensions);
@@ -61,8 +59,6 @@ export const getShapeTextProps = (
   const startTextAreaEdit: StartTextAreaEdit = (ctx, onTextAreaBlur) => {
     createTextarea(ctx, onTextAreaBlur, placedTextArea);
   };
-
-  const isNoMatte = placedTextArea.color === 'none';
 
   const drawOverride =
     isNoMatte && drawShape
@@ -123,7 +119,7 @@ export const getTextAreaDimension = (
 
 export const drawTextWithTextArea =
   (
-    textArea: DeepRequired<TextAreaWithAnchorPoint>,
+    textArea: PlacedTextArea,
     textAreaDimensions: DeepReadonly<TextAreaDimensions>,
   ) =>
   (ctx: CanvasRenderingContext2D) => {

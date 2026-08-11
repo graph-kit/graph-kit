@@ -1,13 +1,11 @@
 import { resolveDefaults } from '../../defaults/resolveDefaults.ts';
 import {
-  FILL_COLOR_DEFAULTS,
   LINE_WIDTH_DEFAULTS,
   ROTATION_DEFAULTS,
 } from '../../defaults/schema.ts';
 import type { UTurnSchema } from './types.ts';
 
 export const UTURN_SCHEMA_DEFAULTS = {
-  ...FILL_COLOR_DEFAULTS,
   ...ROTATION_DEFAULTS,
   ...LINE_WIDTH_DEFAULTS,
 } as const satisfies Partial<UTurnSchema>;

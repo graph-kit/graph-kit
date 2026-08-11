@@ -26,10 +26,6 @@ describe('star', () => {
       expect(s.name).toBe('star');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(STAR_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults rotation to 0', () => {
       expect(STAR_SCHEMA_DEFAULTS.rotation).toBe(0);
     });

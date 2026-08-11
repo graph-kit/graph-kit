@@ -16,6 +16,7 @@ const meta = {
   component: Line,
   args: {
     ...LINE_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     start: { x: 30, y: 60 },
     end: { x: 200, y: 60 },
     ...DOC_MARKING_DEFAULTS,

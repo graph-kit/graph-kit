@@ -16,6 +16,7 @@ const meta = {
   component: Circle,
   args: {
     ...CIRCLE_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     radius: 50,
     at: { x: 60, y: 60 },
     ...DOC_MARKING_DEFAULTS,

@@ -7,6 +7,9 @@ export const drawScribbleWithCtx =
     const { type, fillColor: color, brushWeight, points } = schema;
 
     const draw = () => {
+      // a scribble is nothing but its stroke, so with no paint there is nothing to draw
+      if (!color) return;
+
       if (points.length === 1) {
         circle({
           at: points[0],

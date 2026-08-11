@@ -32,10 +32,6 @@ describe('scribble', () => {
       expect(s.name).toBe('scribble');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(SCRIBBLE_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults brushWeight to 3', () => {
       expect(SCRIBBLE_SCHEMA_DEFAULTS.brushWeight).toBe(3);
     });

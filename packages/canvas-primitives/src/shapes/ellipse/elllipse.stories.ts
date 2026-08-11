@@ -16,6 +16,7 @@ const meta = {
   component: Ellipse,
   args: {
     ...ELLIPSE_SCHEMA_DEFAULTS,
+    fillColor: 'black',
     radiusX: 50,
     radiusY: 50,
     at: { x: 60, y: 60 },

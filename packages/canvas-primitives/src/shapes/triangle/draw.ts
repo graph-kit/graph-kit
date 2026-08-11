@@ -5,12 +5,14 @@ export const drawTriangleWithCtx =
   (schema: TriangleSchemaWithDefaults) => (ctx: CanvasRenderingContext2D) => {
     const { pointA, pointB, pointC, fillColor, stroke, fillGradient } = schema;
 
+    const hasGradient = fillGradient && fillGradient.length >= 2;
+
     ctx.beginPath();
     ctx.moveTo(pointA.x, pointA.y);
     ctx.lineTo(pointB.x, pointB.y);
     ctx.lineTo(pointC.x, pointC.y);
 
-    if (fillGradient && fillGradient.length >= 2) {
+    if (hasGradient) {
       const baseMidpoint = {
         x: (pointB.x + pointC.x) / 2,
         y: (pointB.y + pointC.y) / 2,
@@ -25,11 +27,11 @@ export const drawTriangleWithCtx =
         gradient.addColorStop(offset, color);
       });
       ctx.fillStyle = gradient;
-    } else {
+    } else if (fillColor) {
       ctx.fillStyle = fillColor;
     }
 
-    ctx.fill();
+    if (hasGradient || fillColor) ctx.fill();
     ctx.closePath();
 
     if (stroke) drawStrokeOntoShape(ctx, stroke);

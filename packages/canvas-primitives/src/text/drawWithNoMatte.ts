@@ -1,8 +1,6 @@
-import type { DeepRequired } from 'ts-essentials';
-
 import { withScratchCanvas } from '../offscreen.ts';
+import type { PlacedTextArea } from './defaults.ts';
 import type { getTextAreaDimension } from './text.ts';
-import type { TextAreaWithAnchorPoint } from './types.ts';
 
 type DrawFn = (ctx: CanvasRenderingContext2D) => void;
 type TextAreaDimensions = ReturnType<typeof getTextAreaDimension>;
@@ -13,7 +11,7 @@ type TextAreaDimensions = ReturnType<typeof getTextAreaDimension>;
  */
 const punchTextAreaHole = (
   offCtx: CanvasRenderingContext2D,
-  textArea: DeepRequired<TextAreaWithAnchorPoint>,
+  textArea: PlacedTextArea,
   dimensions: TextAreaDimensions,
 ) => {
   offCtx.globalCompositeOperation = 'destination-out';
@@ -41,7 +39,7 @@ const punchTextAreaHole = (
 export const drawWithNoMatte = (
   ctx: CanvasRenderingContext2D,
   drawShape: DrawFn,
-  textArea: DeepRequired<TextAreaWithAnchorPoint>,
+  textArea: PlacedTextArea,
   dimensions: TextAreaDimensions,
   drawText: DrawFn,
 ) => {

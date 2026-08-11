@@ -39,8 +39,10 @@ export const drawRectWithCtx =
         normalizedWidth,
         normalizedHeight,
       );
-      ctx.fillStyle = fillColor;
-      ctx.fill();
+      if (fillColor) {
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+      }
     } else {
       const maxRadius = Math.min(normalizedWidth / 2, normalizedHeight / 2);
       const constrainedTopLeft = Math.min(topLeft, maxRadius);
@@ -112,8 +114,10 @@ export const drawRectWithCtx =
       }
 
       ctx.closePath();
-      ctx.fillStyle = fillColor;
-      ctx.fill();
+      if (fillColor) {
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+      }
     }
 
     if (stroke) drawStrokeOntoShape(ctx, stroke);

@@ -26,10 +26,6 @@ describe('line', () => {
       expect(l.name).toBe('line');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(LINE_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults lineWidth to 10', () => {
       expect(LINE_SCHEMA_DEFAULTS.lineWidth).toBe(10);
     });

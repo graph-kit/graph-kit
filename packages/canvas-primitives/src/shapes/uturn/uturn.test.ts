@@ -31,10 +31,6 @@ describe('uturn', () => {
       expect(u.name).toBe('uturn');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(UTURN_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults rotation to 0', () => {
       expect(UTURN_SCHEMA_DEFAULTS.rotation).toBe(0);
     });

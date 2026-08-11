@@ -26,10 +26,6 @@ describe('arrow', () => {
       expect(a.name).toBe('arrow');
     });
 
-    it('defaults fillColor to "black"', () => {
-      expect(ARROW_SCHEMA_DEFAULTS.fillColor).toBe('black');
-    });
-
     it('defaults lineWidth to 10', () => {
       expect(ARROW_SCHEMA_DEFAULTS.lineWidth).toBe(10);
     });

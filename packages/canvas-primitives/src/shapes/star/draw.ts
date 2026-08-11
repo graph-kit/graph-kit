@@ -11,6 +11,8 @@ export const drawStarWithCtx = (schema: StarSchemaWithDefaults) => {
   } = schema;
 
   return (ctx: CanvasRenderingContext2D) => {
+    if (!color) return;
+
     ctx.save();
     ctx.beginPath();
     ctx.translate(at.x, at.y);

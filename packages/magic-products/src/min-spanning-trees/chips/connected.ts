@@ -15,12 +15,20 @@ const COLOR_LIST = [
 ];
 
 export const connectedChip = (graph: Graph): LensChipDefinition => {
-  const mstConnected = computed(
-    () => graph.minimumSpanningTrees.all.value.connected,
-  );
   const components = computed(
     () => graph.characteristics.connected.value.components,
   );
+
+  /*
+    over the mst cap nothing is enumerated, but connectivity does not need an mst to
+    answer: one component means one tree spans the graph
+  */
+  const mstConnected = computed(() => {
+    const result = graph.minimumSpanningTrees.all.value;
+    return result.skipped
+      ? components.value.value.length === 1
+      : result.connected;
+  });
 
   const themer = createNodeThemer(graph, (node) => {
     const componentIndex = nullThrows(

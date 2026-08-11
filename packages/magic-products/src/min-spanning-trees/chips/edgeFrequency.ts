@@ -28,7 +28,10 @@ const frequencyWidth = (ratio: number) =>
   linearInterpolate(MIN_WIDTH, MAX_WIDTH, ratio);
 
 export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
-  const msts = computed(() => graph.minimumSpanningTrees.all.value.msts);
+  const msts = computed(() => {
+    const result = graph.minimumSpanningTrees.all.value;
+    return result.skipped ? [] : result.msts;
+  });
   const totalMsts = computed(() => msts.value.length);
 
   const frequencyByEdgeId = computed(() => {
@@ -53,7 +56,9 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
   const hoverLabel = (edge: CoreEdge) => {
     const frequency = frequencyOf(edge.id);
     const inAllMsts = frequency === totalMsts.value;
-    return inAllMsts ? `In all ${totalMsts.value} MSTs` : `In ${frequency}/${totalMsts.value} MSTs`;
+    return inAllMsts
+      ? `In all ${totalMsts.value} MSTs`
+      : `In ${frequency}/${totalMsts.value} MSTs`;
   };
 
   const themer = graph.theme.createThemer({

@@ -3,6 +3,7 @@ import { fractionIsInteger, fractionToDecimal } from '@core/utils/math';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
+import Fraction from 'fraction.js';
 import tinycolor from 'tinycolor2';
 
 import { computed } from 'vue';
@@ -10,10 +11,15 @@ import { computed } from 'vue';
 import MSTCost from '../MSTCost.vue';
 
 export const totalCostChip = (graph: Graph): LensChipDefinition => {
-  const msts = computed(() => graph.minimumSpanningTrees.all.value.msts);
-  const totalMstCost = computed(
-    () => graph.minimumSpanningTrees.all.value.totalWeight,
-  );
+  const result = computed(() => graph.minimumSpanningTrees.all.value);
+  const msts = computed(() => {
+    const value = result.value;
+    return value.skipped ? [] : value.msts;
+  });
+  const totalMstCost = computed(() => {
+    const value = result.value;
+    return value.skipped ? new Fraction(0) : value.totalWeight;
+  });
 
   const colorMstEdge = (edge: CoreEdge, resolveUnderneath: () => Color) => {
     const mst = msts.value.at(0);

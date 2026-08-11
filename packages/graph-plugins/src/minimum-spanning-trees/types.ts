@@ -7,14 +7,18 @@ export type MstEdge = CoreEdge & {
   weight: Fraction;
 };
 
-export type MinimumSpanningTreesResult = {
-  /** every MST of the graph, or every minimum spanning forest when disconnected */
-  msts: MstEdge[][];
-  /** the weight shared by every entry in `msts` */
-  totalWeight: Fraction;
-  /** whether the returned trees span every node, false for a forest */
-  connected: boolean;
-};
+export type MinimumSpanningTreesResult =
+  | {
+      skipped: false;
+      /** every MST of the graph, or every minimum spanning forest when disconnected */
+      msts: MstEdge[][];
+      /** the weight shared by every entry in `msts` */
+      totalWeight: Fraction;
+      /** whether the returned trees span every node, false for a forest */
+      connected: boolean;
+    }
+  /** the graph was larger than the plugin's `maxNodes`, so nothing was enumerated */
+  | { skipped: true };
 
 export type MinimumSpanningTreesControls = {
   all: () => MinimumSpanningTreesResult;

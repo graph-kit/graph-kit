@@ -1,6 +1,9 @@
 <script setup lang="ts">
   import HStack from '@magic/shared/HStack';
-  import { LatexInput, type LatexInputInstance } from '@magic/shared/latex';
+  import {
+    LatexInputWithPreview,
+    type LatexInputWithPreviewInstance,
+  } from '@magic/shared/latex';
 
   import { computed, onUnmounted, ref } from 'vue';
 
@@ -18,7 +21,7 @@
     focus: [];
   }>();
 
-  const latexInputRef = ref<LatexInputInstance | null>(null);
+  const latexInputRef = ref<LatexInputWithPreviewInstance | null>(null);
 
   const { highlights, queryAnalysis } = useProvidedSetsProductState();
 
@@ -48,12 +51,13 @@
   <HStack class="relative h-10">
     <QueryToggleHidden :query="query" />
 
-    <LatexInput
+    <LatexInputWithPreview
       ref="latexInputRef"
       v-model="latexQueryString"
       :error="hasError"
       @ready="useSetsLatexField"
       @focus="emit('focus')"
+      :preview-value="`$$ A $$`"
     />
 
     <QueryInputModifiers :query="query" />

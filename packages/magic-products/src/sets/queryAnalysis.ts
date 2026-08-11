@@ -71,6 +71,7 @@ export type QueryAnalysis = {
 export const useQueryAnalysis = (
   highlights: HighlightQueries,
   sets: SetDefinitions,
+  sections: ComputedRef<Section[]>,
 ): QueryAnalysis => {
   const definedSetLabels = computed(() =>
     sets.definitions.value.map(({ label }) => label),
@@ -82,7 +83,7 @@ export const useQueryAnalysis = (
   */
   const queryIdToAnalysis = computed(() => {
     const parse = createSetExpressionParser(
-      sets.allSections.value,
+      sections.value,
       (label) => sets.idByLabel.value[label],
     );
     const labels = definedSetLabels.value;

@@ -16,7 +16,7 @@
 
   const {
     magic,
-    setsProductState: { sets, queryAnalysis, theme, highlights },
+    setsProductState: { sets, sections, queryAnalysis, theme, highlights },
   } = useSetsProduct();
 
   const { queryIdToSections } = queryAnalysis;
@@ -84,7 +84,7 @@
       ctx,
       {
         definitions: sets.definitions.value,
-        sections: sets.allSections.value,
+        sections: sections.value,
         sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: focus.isFocused,
       },

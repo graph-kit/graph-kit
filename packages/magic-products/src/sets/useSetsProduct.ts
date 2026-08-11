@@ -15,6 +15,8 @@ import {
 import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
 import HighlightPanel from './sets/components/HighlightPanel.vue';
+import { useSections } from './sets/composables/useSections.ts';
+import { Section } from './types.ts';
 import { useCanvasTheme } from './useCanvasTheme.ts';
 import { SetsTheme, useSetsTheme } from './useSetsTheme.ts';
 
@@ -24,18 +26,21 @@ export type SetsProductState = {
   // everything the queries resolve to once read against the set space
   queryAnalysis: QueryAnalysis;
   theme: ComputedRef<SetsTheme>;
+  sections: ComputedRef<Section[]>;
 };
 
 const useSetsProductState = (magic: Magic): SetsProductState => {
   const highlights = createHighlightQueries();
   const sets = createSetDefinitions();
   const theme = useSetsTheme(magic);
+  const sections = useSections(sets.definitions);
 
   return {
     highlights,
     sets,
-    queryAnalysis: useQueryAnalysis(highlights, sets),
+    queryAnalysis: useQueryAnalysis(highlights, sets, sections),
     theme,
+    sections,
   };
 };
 

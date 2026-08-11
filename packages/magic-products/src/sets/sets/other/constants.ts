@@ -34,6 +34,11 @@ export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.label] as const;
 
 export const DEFAULT_CIRCLE_RADIUS = 70;
 
+// kept above the edge grab buffer so a shrunken circle stays resizable
+export const MIN_CIRCLE_RADIUS = 35;
+
+export const MAX_CIRCLE_RADIUS = 10_000;
+
 export const KEYBOARD_KEY_TO_LATEX = {
   I: '\\cap',
   U: '\\cup',

@@ -4,6 +4,7 @@ import type { Ref } from 'vue';
 
 import type { SetDefinition } from '../../types.ts';
 import { isOnEdge } from '../other/circleUtils.ts';
+import { MAX_CIRCLE_RADIUS, MIN_CIRCLE_RADIUS } from '../other/constants.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleResizeProps = {
@@ -27,7 +28,10 @@ export const useCircleResize = ({
       const dx = at.x - coords.x;
       const dy = at.y - coords.y;
       const distanceFromCenterToCursor = Math.hypot(dx, dy);
-      definition.display.radius = distanceFromCenterToCursor;
+      definition.display.radius = Math.min(
+        Math.max(distanceFromCenterToCursor, MIN_CIRCLE_RADIUS),
+        MAX_CIRCLE_RADIUS,
+      );
     },
   );
 

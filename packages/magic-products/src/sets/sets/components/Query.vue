@@ -28,13 +28,9 @@
 
   const latexInputRef = ref<LatexInputWithPreviewInstance | null>(null);
 
-  const {
-    queries: { queries, getQuery },
-    queryAnalysis,
-  } = useProvidedSetsProductState();
+  const { queries, queryAnalysis } = useProvidedSetsProductState();
 
-  // held rather than looked up per read, since a row is keyed by its query and never handed another
-  const query = getQuery(props.queryId);
+  const query = queries.getQuery(props.queryId);
 
   const hasError = computed(() => queryAnalysis.queryErrors.value[query.id]);
 
@@ -74,12 +70,15 @@
     </HStack>
 
     <TooltipVue
-      v-if="queries.length > 1"
+      v-if="queries.queries.value.length > 1"
       label="Remove"
       side="right"
     >
       <template #trigger>
-        <Button class="hover:text-red-500 bg-transparent p-0">
+        <Button
+          @click="queries.removeQuery(query.id)"
+          class="hover:text-red-500 bg-transparent p-0"
+        >
           <Icon
             :path="mdiClose"
             :size="26"

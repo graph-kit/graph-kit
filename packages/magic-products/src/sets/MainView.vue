@@ -26,7 +26,7 @@
     const sectionsByQueryId = new Map<QueryId, Section[]>();
 
     for (const [queryId, sections] of queryIdToSections.value) {
-      if (queries.getQuery(queryId).isHidden) continue;
+      if (queries.getQuery(queryId).hidden) continue;
       sectionsByQueryId.set(queryId, sections);
     }
 

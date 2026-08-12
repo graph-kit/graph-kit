@@ -11,26 +11,26 @@
     query: Query;
   }>();
 
-  const isHidden = computed(() => props.query.isHidden);
+  const hidden = computed(() => props.query.hidden);
   const color = computed(() =>
-    isHidden.value ? colors.GRAY_500 : props.query.color,
+    hidden.value ? colors.GRAY_500 : props.query.color,
   );
 
   const toggleHidden = () => {
-    props.query.isHidden = !isHidden.value;
+    props.query.hidden = !hidden.value;
   };
 </script>
 
 <template>
   <Tooltip
-    :label="isHidden ? 'Show highlight' : 'Hide highlight'"
+    :label="hidden ? 'Show highlight' : 'Hide highlight'"
     side="left"
   >
     <template #trigger>
       <Button
+        @click="toggleHidden"
         :style="{ backgroundColor: color }"
         class="h-full"
-        @click="toggleHidden"
       />
     </template>
   </Tooltip>

@@ -77,7 +77,7 @@
 
         <Tooltip
           v-if="simplified"
-          :label="`Simplify expression to: ${simplified}`"
+          label="This expression can be simplified."
         >
           <template #trigger>
             <Button

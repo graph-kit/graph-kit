@@ -13,34 +13,38 @@
   const CARET_HEIGHT = '0.86em';
   const CARET_WIDTH = '2px';
 
-  /** the caret sits in the shadow root behind no part, so its geometry is only reachable by adopting a stylesheet in */
-  const restyleCaret = (mathField: MathfieldElement) => {
+  /** these sit in the shadow root behind no part, so they are only reachable by adopting a stylesheet in */
+  const restyleShadowRoot = (mathField: MathfieldElement) => {
     const { shadowRoot } = mathField;
     if (!shadowRoot) return;
 
-    const caretStyles = new CSSStyleSheet();
-    caretStyles.replaceSync(`
+    const styles = new CSSStyleSheet();
+    styles.replaceSync(`
       .ML__caret::after,
       .ML__text-caret::after {
         height: ${CARET_HEIGHT};
         --_caret-width: ${CARET_WIDTH};
       }
+
+      /* mathlive paints every focused text mode run, which reads as the placeholder being selected */
+      .ML__content-placeholder .ML__text {
+        background: transparent;
+      }
     `);
 
-    shadowRoot.adoptedStyleSheets = [
-      ...shadowRoot.adoptedStyleSheets,
-      caretStyles,
-    ];
+    shadowRoot.adoptedStyleSheets = [...shadowRoot.adoptedStyleSheets, styles];
   };
 
   const props = withDefaults(
     defineProps<{
       width?: number;
       height?: number;
+      /** latex shown while the field is empty */
+      placeholder?: string;
       /** paints the field as rejecting what it currently holds */
       error?: boolean;
     }>(),
-    { width: 400, height: 40, error: false },
+    { width: 400, height: 40, placeholder: '', error: false },
   );
 
   const emit = defineEmits<{
@@ -49,6 +53,10 @@
   }>();
 
   const attrClass = useAttrClass();
+
+  const latexString = defineModel<string>({
+    required: true,
+  });
 
   const classes = computed(() =>
     cn(
@@ -64,10 +72,6 @@
     height: `${props.height}px`,
     fontSize: `${props.height / 2}px`,
   }));
-
-  const latexString = defineModel<string>({
-    required: true,
-  });
 
   const latexInput = ref<MathfieldElement | null>(null);
   const mathfieldRegistered = ref(false);
@@ -100,7 +104,7 @@
     if (!mathField) return;
 
     mathField.addEventListener('input', onInput);
-    restyleCaret(mathField);
+    restyleShadowRoot(mathField);
     emit('ready', mathField);
   });
 
@@ -120,6 +124,7 @@
       ref="latexInput"
       v-bind="{ ...$attrs, class: undefined }"
       :class="classes"
+      :placeholder="placeholder"
     />
   </div>
 </template>
@@ -145,5 +150,6 @@
   math-field {
     --contains-highlight-background-color: rgb(200, 200, 200);
     --contains-highlight-color: rgb(45, 45, 45);
+    cursor: text;
   }
 </style>

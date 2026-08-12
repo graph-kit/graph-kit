@@ -18,6 +18,7 @@
       error?: boolean;
       width?: number;
       height?: number;
+      placeholder?: string;
     }>(),
     { previewValue: '', error: false },
   );
@@ -99,6 +100,7 @@
     :width="width"
     :height="height"
     :read-only="inPreview || undefined"
+    :placeholder="placeholder"
     :tabindex="inPreview ? -1 : undefined"
     @ready="onReady"
   />

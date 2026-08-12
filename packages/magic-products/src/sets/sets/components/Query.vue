@@ -58,6 +58,7 @@
       v-model="latexQueryString"
       :error="hasError"
       :preview-value="previewValue"
+      placeholder="\text{e.g. } A \cup B"
       @ready="useSetsLatexField"
       @focus="emit('focus')"
     />

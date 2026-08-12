@@ -7,19 +7,26 @@ import { type ComputedRef, computed, ref } from 'vue';
 import { QUERY_COLORS } from './sets/other/constants.ts';
 import type { LatexQueryString, QueryId } from './types.ts';
 
-// the rendered mathfield owns its caret and its displayed value, so it takes the commands
-type QueryEditor = {
+// inserting at the caret only means something while a mathfield is mounted, so it renders this
+type QueryEditorCommands = {
   insert: (latexString: LatexQueryString) => void;
+};
+
+// the commands once a query owns them, carrying the only write it allows
+type QueryEditor = QueryEditorCommands & {
+  // the one way a query's latex moves, so a rewrite always reads as one
   replace: (latexString: LatexQueryString) => void;
 };
 
 // the live object rather than a snapshot, so every edit to a query is an assignment onto it
 export type Query = {
   id: string;
-  latexQueryString: LatexQueryString;
+  // written only through the editor, so a rewrite can never leave the mathfield showing something else
+  readonly latexQueryString: LatexQueryString;
   isHidden: boolean;
   color: Color;
-  editor: QueryEditor;
+  get editor(): QueryEditor;
+  set editor(commands: QueryEditorCommands);
 };
 
 export type Queries = {
@@ -34,19 +41,40 @@ const nextColor = (queryCountBeforeThisOne: number): Color =>
   QUERY_COLORS[queryCountBeforeThisOne % QUERY_COLORS.length];
 
 // stands in until the query's mathfield mounts, so the commands never need a null check
-export const NO_EDITOR: QueryEditor = {
+export const NO_EDITOR: QueryEditorCommands = {
   insert: () => {},
-  replace: () => {},
 };
 
 // color comes from the count so it is fixed at creation, keeping a query's color stable
-const createQuery = (queryCountBeforeThisOne: number): Query => ({
-  id: generateId(),
-  latexQueryString: '',
-  isHidden: false,
-  color: nextColor(queryCountBeforeThisOne),
-  editor: NO_EDITOR,
-});
+const createQuery = (queryCountBeforeThisOne: number): Query => {
+  // private, so replace is the only way the string can move
+  const latexQueryString = ref<LatexQueryString>('');
+
+  // the mathfield reconciles itself against what it is handed, so this reaches it through the model
+  const replace = (latexString: LatexQueryString) => {
+    latexQueryString.value = latexString;
+  };
+
+  let editor: QueryEditor = { ...NO_EDITOR, replace };
+
+  return {
+    id: generateId(),
+    isHidden: false,
+    color: nextColor(queryCountBeforeThisOne),
+
+    get latexQueryString() {
+      return latexQueryString.value;
+    },
+
+    get editor() {
+      return editor;
+    },
+
+    set editor(commands) {
+      editor = { ...commands, replace };
+    },
+  };
+};
 
 export const createQueries = (): Queries => {
   const queries = ref<Query[]>([createQuery(0)]);

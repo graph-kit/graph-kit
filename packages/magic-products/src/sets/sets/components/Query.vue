@@ -41,8 +41,6 @@
   query.editor = {
     insert: (latexString) =>
       latexInputRef.value?.insertIntoLatexString(latexString),
-    replace: (latexString) =>
-      latexInputRef.value?.replaceLatexString(latexString),
   };
 
   onUnmounted(() => {
@@ -57,8 +55,10 @@
     <QueryToggleHidden :query="query" />
 
     <HStack class="relative">
+      <!-- not a v-model, since the query's latex is read only and moves through replace -->
       <LatexInputWithPreview
-        v-model="query.latexQueryString"
+        :model-value="query.latexQueryString"
+        @update:model-value="query.editor.replace"
         ref="latexInputRef"
         data-query-focus
         :error="hasError"

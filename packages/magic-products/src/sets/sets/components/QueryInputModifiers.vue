@@ -29,19 +29,15 @@
     () => queryAnalysis.disambiguatedQueries.value[props.query.id],
   );
 
-  // the mathfield owns what it displays, so a rewrite has to reach it as well as the query
-  const rewriteQuery = (latexString: string) => {
-    props.query.latexQueryString = latexString;
-    props.query.editor.replace(latexString);
-  };
-
   // trigger example: $$ A\cup A $$
   const applySimplification = () =>
-    rewriteQuery(nullThrows(simplified.value, 'simplified query is null'));
+    props.query.editor.replace(
+      nullThrows(simplified.value, 'simplified query is null'),
+    );
 
   // trigger example: $$ A\cap B\cup C $$
   const applyDisambiguation = () =>
-    rewriteQuery(
+    props.query.editor.replace(
       nullThrows(disambiguated.value, 'disambiguated query is null'),
     );
 </script>

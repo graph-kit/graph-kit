@@ -54,6 +54,12 @@
     latexString.value = latex;
   });
 
+  // a rewrite arriving from the model, which the preview outranks until it is cleared
+  watch(latexString, (latex) => {
+    if (inPreview.value) return;
+    displayedString.value = latex;
+  });
+
   const showCurrentValue = () => {
     latexInput.value?.replaceLatexString(
       props.previewValue || latexString.value,
@@ -76,18 +82,13 @@
   };
 
   // the field is inert while previewing, so it takes no commands either
-
   const insertIntoLatexString = (latex: string) => {
     if (inPreview.value) return;
     latexInput.value?.insertIntoLatexString(latex);
   };
 
-  const replaceLatexString = (latex: string) => {
-    if (inPreview.value) return;
-    latexInput.value?.replaceLatexString(latex);
-  };
-
-  defineExpose({ insertIntoLatexString, replaceLatexString });
+  // a rewrite is not a command, it arrives as the model and the field reconciles against it
+  defineExpose({ insertIntoLatexString });
 </script>
 
 <template>

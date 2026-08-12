@@ -2,7 +2,7 @@
   import { cn } from '@core/components/cn';
   import { useAttrClass } from '@core/components/composables/useAttrClass';
 
-  import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
   import type { MathfieldElement } from './types.ts';
 
@@ -95,6 +95,17 @@
     if (!latexInput.value) return;
     latexString.value = latexInput.value.getValue();
   };
+
+  /*
+    mathlive reinserts the whole expression on every write, which drops the caret to the
+    end, so the field is only rewritten when the model says something it is not showing.
+    typing is what onInput wrote back above, so it compares equal and stops here
+  */
+  watch(latexString, (latex) => {
+    if (!latexInput.value) return;
+    if (latex === latexInput.value.getValue()) return;
+    latexInput.value.value = latex;
+  });
 
   onMounted(async () => {
     // importing mathlive registers <math-field> against window, so it can only run in the browser

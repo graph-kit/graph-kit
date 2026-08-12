@@ -390,6 +390,9 @@ importers:
       '@canvas/surface':
         specifier: workspace:*
         version: link:../canvas-surface
+      '@core/components':
+        specifier: workspace:*
+        version: link:../core-components
       '@core/utils':
         specifier: workspace:*
         version: link:../core-utils

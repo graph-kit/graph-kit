@@ -18,21 +18,25 @@
     props.ids
       .map((id) => graph.getEdge(id))
       .sort((a, b) => a.weight.compare(b.weight))
-      .map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        weight: edge.weight.toFraction(),
-      })),
+      .map((edge) => {
+        const [source, target] = [edge.source, edge.target].sort((a, b) =>
+          graph.getNode(a).label.localeCompare(graph.getNode(b).label),
+        );
+
+        return {
+          id: edge.id,
+          source,
+          target,
+          weight: edge.weight.toFraction(),
+        };
+      }),
   );
 </script>
 
 <template>
   <Well v-if="rows.length > 0">
     <VStack class="gap-2">
-      <span class="text-sm font-bold opacity-60"
-        >{{ title }} ({{ rows.length }})</span
-      >
+      <span class="font-bold">{{ title }} ({{ rows.length }})</span>
       <VStack class="gap-2 max-h-[38vh] overflow-y-auto pr-1">
         <HStack
           v-for="row in rows"

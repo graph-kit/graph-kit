@@ -21,15 +21,19 @@ import { Ref } from 'vue';
 
 import Considering from './components/Considering.vue';
 import Excluded from './components/Excluded.vue';
-import Unexplored from './components/Unexplored.vue';
 import { kruskalsExplainer, primsExplainer } from './explainer.ts';
-import { KruskalsFrame, KruskalsFunction, PrimsFrame, PrimsFunction } from './frame.ts';
+import {
+  KruskalsFrame,
+  KruskalsFunction,
+  PrimsFrame,
+  PrimsFunction,
+} from './frame.ts';
 
 // exploring = the tree side node the current decision is anchored to, plus
 //   both endpoints of the edge just selected, so the edge and the node it's
 //   about to add to the tree read as one event
 // settled = already grown into the tree
-// frontier = the far side of a potential edge 
+// frontier = the far side of a potential edge
 // anchor = start node (user picked)
 type PrimsNodeConcept = 'exploring' | 'settled' | 'frontier' | 'anchor';
 
@@ -119,11 +123,16 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
 
   const syncToFrame = (frame: PrimsFrame) => {
     const selectedEdgeEndpoints = frame.selectedEdge
-      ? [graph.getEdge(frame.selectedEdge).source, graph.getEdge(frame.selectedEdge).target]
+      ? [
+          graph.getEdge(frame.selectedEdge).source,
+          graph.getEdge(frame.selectedEdge).target,
+        ]
       : [];
 
     exploring.setIds(
-      frame.activeNodeId ? [frame.activeNodeId, ...selectedEdgeEndpoints] : selectedEdgeEndpoints,
+      frame.activeNodeId
+        ? [frame.activeNodeId, ...selectedEdgeEndpoints]
+        : selectedEdgeEndpoints,
     );
     settled.setIds(frame.treeNodeIds);
     frontier.setIds(frame.pendingNodeIds ?? []);
@@ -137,9 +146,16 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
   const lens: Lens = {
     id: 'min-spanning-trees/prims',
     components: [
-      { component: Unexplored, position: 'center-left', id: primsSlotIds.unexplored },
-      { component: Excluded, position: 'center-left', id: primsSlotIds.excluded },
-      { component: Considering, position: 'center-right', id: primsSlotIds.considering },
+      {
+        component: Excluded,
+        position: 'center-left',
+        id: primsSlotIds.excluded,
+      },
+      {
+        component: Considering,
+        position: 'center-right',
+        id: primsSlotIds.considering,
+      },
     ],
     activate: () => {
       for (const { themer } of themers) themer.activate();
@@ -175,7 +191,8 @@ export const primsSimulationDefinition = (
         return { id: 'no-edges' };
       }
     })
-    .minNodes(2).build(),
+    .minNodes(2)
+    .build(),
   collectFrames: (collector) => {
     prims(
       options.graph,
@@ -250,11 +267,14 @@ export const kruskalsSimulationDefinition = (
   kruskals: KruskalsFunction,
   options: KruskalsSimulationOptions,
 ): SimulationDefinition<KruskalsFrame> => ({
-  guard: new SimulationGuardBuilder(options.graph).minNodes(2).custom(() => {
+  guard: new SimulationGuardBuilder(options.graph)
+    .minNodes(2)
+    .custom(() => {
       if (options.graph.edges.value.length < 1) {
         return { id: 'no-edges' };
       }
-    }).build(),
+    })
+    .build(),
   collectFrames: (collector) => {
     kruskals(options.graph)(collector);
   },

@@ -7,11 +7,14 @@ import { primsSlotIds } from './shared.ts';
 
 const describeEdge = (graph: Graph, edgeId: string) => {
   const edge = graph.getEdge(edgeId);
-  return `{${edge.source}}-{${edge.id}}-{${edge.target}}`;
+  return `{${edge.id}}`;
 };
 
 const listEdges = (graph: Graph, edgeIds: readonly string[]) => {
-  const described = edgeIds.map((id) => describeEdge(graph, id));
+  const described = edgeIds
+    .map((id) => graph.getEdge(id))
+    .sort((a, b) => a.weight.compare(b.weight))
+    .map((edge) => describeEdge(graph, edge.id));
   if (described.length <= 1) return described.join('');
   return `${described.slice(0, -1).join(', ')} and ${described.at(-1)}`;
 };
@@ -42,7 +45,7 @@ const highlights = {
     ...componentSlotHighlight('excluded'),
   },
   added: {
-    tooltipLabel: 'The edge just chosen be added to the minimum spanning tree',
+    tooltipLabel: 'This edge is now part of the minimum spanning tree',
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 
@@ -69,10 +72,9 @@ export const primsExplainer =
 
     if (frame.type === 'consider-edges') {
       return {
-        content: `The list of edges [In Consideration] now includes every edge connecting a [Tree] node to a Non-Tree node: ${listEdges(graph, frame.edges)}`,
+        content: `The list of edges [In Consideration] now includes every edge connecting a [Tree] node to a [Non-Tree] node: ${listEdges(graph, frame.edges)}`,
         highlights: [
           highlights.considering,
-          highlights.tree,
           highlights.tree,
           highlights.nonTree,
         ],
@@ -85,7 +87,7 @@ export const primsExplainer =
       if (frame.tiedEdges) {
         const tied = listEdges(graph, frame.tiedEdges);
         return {
-          content: `${tied} are tied for cheapest of the edges [In Consideration], so ${winner} is chosen arbitrarily and [Added] to the [Tree]`,
+          content: `Edges ${tied} are tied for cheapest of the edges [In Consideration], so ${winner} is chosen arbitrarily and [Added] to the [Tree]`,
           highlights: [
             highlights.considering,
             highlights.added,
@@ -95,8 +97,8 @@ export const primsExplainer =
       }
 
       return {
-        content: `${winner} is the cheapest of the [In Consideration] edges, so it gets [Added] to the [Tree]`,
-        highlights: [highlights.added, highlights.considering, highlights.tree],
+        content: `Edge ${winner} is the cheapest of the edges [In Consideration], so it gets [Added] to the [Tree]`,
+        highlights: [highlights.considering, highlights.added, highlights.tree],
       };
     }
 
@@ -104,7 +106,7 @@ export const primsExplainer =
       const excluded = listEdges(graph, frame.edges);
       const plural = frame.edges.length > 1;
       return {
-        content: `${excluded} ${plural ? 'are' : 'is'} [Excluded] because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would cause a loop`,
+        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} [Excluded] because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would cause a loop`,
         highlights: [highlights.excluded, highlights.tree],
       };
     }

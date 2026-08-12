@@ -7,6 +7,15 @@ import {
   PrimsStep,
 } from './frame.ts';
 
+const shuffleEdges = (edges: GEdge[]) => {
+  const shuffledEdges = [...edges];
+  for (let i = shuffledEdges.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledEdges[i], shuffledEdges[j]] = [shuffledEdges[j], shuffledEdges[i]];
+  }
+  return shuffledEdges;
+};
+
 export const prims: PrimsFunction =
   (graph, startNodeId) => (frameCollector) => {
     const nodeIds = graph.nodes.value.map((node) => node.id);
@@ -104,15 +113,7 @@ export const prims: PrimsFunction =
       const tied = candidateEdges.filter((edge) =>
         edge.weight.equals(cheapestSoFar.weight),
       );
-      /*
-      Picking tied[0] here would always favor whichever tied edge happens to
-      be earliest in the graph's edge array (creation order). The all
-      MST algorithm for the "total cost" chip breaks ties the exact same
-      way. A graph with many MST would usually end up with the same "arbitrary" tree almost 
-      every run, no matter the start node, even when lots of equally valid MSTs exist. 
-      Picking randomly among the tied edges keeps every valid MST reachable
-    */
-      const winner = tied[Math.floor(Math.random() * tied.length)];
+      const winner = tied[0];
       const winnerNode = farNode(winner);
       const winnerSource = treeNode(winner);
 

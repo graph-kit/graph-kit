@@ -115,7 +115,7 @@ export const primsExplainer =
       const excluded = listEdges(graph, frame.edges);
       const plural = frame.edges.length > 1;
       return {
-        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} [Excluded] from further consideration`,
+        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} added to the [Excluded] list`,
         highlights: [highlights.excluded],
       };
     }

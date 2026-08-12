@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import HStack from '@magic/shared/HStack';
-  import LatexButton from '@magic/shared/latex/LatexButton.vue';
+  import { LatexButton } from '@magic/shared/latex';
 
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { KEYBOARD_KEY_TO_LATEX } from '../other/constants.ts';

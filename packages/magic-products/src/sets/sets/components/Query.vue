@@ -55,6 +55,7 @@
 
     <LatexInputWithPreview
       ref="latexInputRef"
+      data-query-focus
       v-model="latexQueryString"
       :error="hasError"
       :preview-value="previewValue"

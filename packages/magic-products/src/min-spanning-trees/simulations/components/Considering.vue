@@ -8,11 +8,13 @@
 
   const currentFrame = useCurrentFrame<PrimsFrame>();
   const considering = computed(() => currentFrame.value?.candidateEdges ?? []);
+  const selected = computed(() => currentFrame.value?.selectedEdge);
 </script>
 
 <template>
   <EdgeListPanel
     title="In Consideration"
     :ids="considering"
+    :selected-id="selected"
   />
 </template>

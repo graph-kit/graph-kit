@@ -108,6 +108,8 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
   const tree = createEdgeIdThemer(graph, edgeRoles.tree);
   const candidateEdge = createEdgeIdThemer(graph, edgeRoles.candidate);
   const crossingEdge = createEdgeIdThemer(graph, edgeRoles.crossing);
+  // colored solid before excludedEdgeIds picks them up and fades them
+  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
   const excludedEdge = createExcludedEdgeThemer(graph);
 
   const themers = [
@@ -118,6 +120,7 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     tree,
     candidateEdge,
     crossingEdge,
+    excludingEdge,
     excludedEdge,
   ];
 
@@ -140,6 +143,7 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     tree.setIds(frame.treeEdgeIds);
     candidateEdge.setIds(frame.candidateEdges ?? []);
     crossingEdge.setIds(frame.selectedEdge ? [frame.selectedEdge] : []);
+    excludingEdge.setIds(frame.excludingEdges ?? []);
     excludedEdge.setIds(frame.excludedEdgeIds);
   };
 

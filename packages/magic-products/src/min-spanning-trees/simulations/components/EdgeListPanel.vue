@@ -10,6 +10,7 @@
   const props = defineProps<{
     title: string;
     ids: readonly string[];
+    selectedId?: string;
   }>();
 
   const graph = useProvidedGraph();
@@ -37,11 +38,14 @@
   <Well v-if="rows.length > 0">
     <VStack class="gap-2">
       <span class="font-bold">{{ title }} ({{ rows.length }})</span>
-      <VStack class="gap-2 max-h-[38vh] overflow-y-auto pr-1">
+      <VStack class="gap-2 max-h-[38vh] overflow-y-auto px-1">
         <HStack
           v-for="row in rows"
           :key="row.id"
-          class="gap-2 items-center justify-between"
+          class="gap-2 items-center justify-between rounded-md px-1 transition-colors"
+          :class="
+            row.id === selectedId ? 'bg-amber-500/15 ring-1 ring-amber-500' : ''
+          "
         >
           <Node
             :id="row.source"

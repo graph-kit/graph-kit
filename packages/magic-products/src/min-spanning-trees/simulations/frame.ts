@@ -29,6 +29,13 @@ type SelectEdgeFrame = {
   tiedEdges?: readonly GEdge['id'][];
 };
 
+// the edges about to be ruled out, called out (but not yet faded) so the
+// "why" reads before the "then it's gone"
+type ExcludingEdgesFrame = {
+  type: 'excluding-edges';
+  edges: readonly GEdge['id'][];
+};
+
 type ExcludeEdgesFrame = {
   type: 'exclude-edges';
   edges: readonly GEdge['id'][];
@@ -44,6 +51,7 @@ export type PrimsStep =
   | EndFrame
   | ConsiderEdgesFrame
   | SelectEdgeFrame
+  | ExcludingEdgesFrame
   | ExcludeEdgesFrame
   | UnreachableFrame;
 
@@ -59,6 +67,9 @@ export type PrimsHighlights = {
   pendingNodeIds?: readonly GNode['id'][];
   candidateEdges?: readonly GEdge['id'][];
   selectedEdge?: GEdge['id'];
+  // edges called out as about-to-be-excluded, before excludedEdgeIds picks
+  // them up and they fade
+  excludingEdges?: readonly GEdge['id'][];
 };
 
 export type PrimsFrame = PrimsStep & PrimsState & PrimsHighlights;

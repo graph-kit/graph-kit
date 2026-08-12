@@ -102,12 +102,21 @@ export const primsExplainer =
       };
     }
 
-    if (frame.type === 'exclude-edges') {
+    if (frame.type === 'excluding-edges') {
       const excluded = listEdges(graph, frame.edges);
       const plural = frame.edges.length > 1;
       return {
         content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} [Excluded] because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would cause a loop`,
         highlights: [highlights.excluded, highlights.tree],
+      };
+    }
+
+    if (frame.type === 'exclude-edges') {
+      const excluded = listEdges(graph, frame.edges);
+      const plural = frame.edges.length > 1;
+      return {
+        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} [Excluded] from further consideration`,
+        highlights: [highlights.excluded],
       };
     }
 

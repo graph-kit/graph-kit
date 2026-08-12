@@ -25,6 +25,11 @@
     focusedQueryId.value = undefined;
   };
 
+  const addAndFocusQuery = () => {
+    const id = addQuery();
+    setTimeout(() => (focusedQueryId.value = id), 100);
+  };
+
   /* a field blurs on the press that starts an interaction, so what keeps the ops open is where that interaction lands, not the blur */
   const holdsQueryFocus = (target: EventTarget | null) =>
     target instanceof Element && !!target.closest('[data-query-focus]');
@@ -59,7 +64,7 @@
       >
         <template #trigger>
           <Button
-            @click="addQuery"
+            @click="addAndFocusQuery"
             :path="mdiPlus"
             class="rounded-b-none rounded-t-xl text-md w-14 h-6"
           >

@@ -1,6 +1,7 @@
 import { nullThrows } from '@core/utils/assert';
 import type { Color } from '@core/utils/colors';
 import { generateId } from '@core/utils/id';
+import type { MathfieldElement } from '@magic/shared/latex';
 
 import { type ComputedRef, computed, ref } from 'vue';
 
@@ -9,6 +10,8 @@ import type { LatexQueryString, QueryId } from './types.ts';
 
 /** Every way a query's latex can be written, since it cannot be assigned directly. */
 type QueryEditor = {
+  /** The rendered mathfield, or null while the query has none mounted. */
+  element: MathfieldElement | null;
   /** Inserts at the caret, which only exists while the query's mathfield is mounted. */
   insert: (latexString: LatexQueryString) => void;
   /** Rewrites the query in full, leaving the mathfield to reconcile against it. */
@@ -16,7 +19,7 @@ type QueryEditor = {
 };
 
 /** What a mounted mathfield contributes, the rest of the editor being the query's own. */
-type QueryEditorCommands = Pick<QueryEditor, 'insert'>;
+type QueryEditorCommands = Pick<QueryEditor, 'element' | 'insert'>;
 
 /** A live query rather than a snapshot, so what is read through it is never stale. */
 export type Query = {
@@ -39,12 +42,18 @@ export type Queries = {
   removeQuery: (queryId: QueryId) => void;
 };
 
-// assigns by creation order, cycling the palette once every query gets one
-const nextColor = (queryCountBeforeThisOne: number): Color =>
-  QUERY_COLORS[queryCountBeforeThisOne % QUERY_COLORS.length];
+/*
+  the first color none of the given queries hold, so removing one puts its color back in
+  play. the palette outnumbers the queries a panel allows, making the fallback unreachable
+*/
+const nextColor = (queries: Query[]): Color =>
+  QUERY_COLORS.find(
+    (color) => !queries.some((query) => query.color === color),
+  ) ?? QUERY_COLORS[0];
 
 /** Stands in until a query's mathfield mounts, so a command never needs a null check. */
 export const NO_EDITOR: QueryEditorCommands = {
+  element: null,
   insert: () => {},
 };
 
@@ -52,11 +61,23 @@ export const NO_EDITOR: QueryEditorCommands = {
 const createQuery = (color: Color): Query => {
   const latexQueryString = ref<LatexQueryString>('');
 
-  const replace = (latexString: LatexQueryString) => {
-    latexQueryString.value = latexString;
-  };
+  let commands: QueryEditorCommands = NO_EDITOR;
 
-  let editor: QueryEditor = { ...NO_EDITOR, replace };
+  /*
+    one object reading through to whatever commands are current, rather than one built per
+    assignment. a copy would freeze element to the null it holds before the field mounts
+  */
+  const editor: QueryEditor = {
+    get element() {
+      return commands.element;
+    },
+
+    insert: (latexString) => commands.insert(latexString),
+
+    replace: (latexString) => {
+      latexQueryString.value = latexString;
+    },
+  };
 
   return {
     id: generateId(),
@@ -71,14 +92,14 @@ const createQuery = (color: Color): Query => {
       return editor;
     },
 
-    set editor(commands) {
-      editor = { ...commands, replace };
+    set editor(replacement) {
+      commands = replacement;
     },
   };
 };
 
 export const createQueries = (): Queries => {
-  const queries = ref<Query[]>([createQuery(nextColor(0))]);
+  const queries = ref<Query[]>([createQuery(nextColor([]))]);
 
   return {
     queries: computed(() => queries.value),
@@ -90,7 +111,7 @@ export const createQueries = (): Queries => {
       ),
 
     addQuery: () => {
-      const query = createQuery(nextColor(queries.value.length));
+      const query = createQuery(nextColor(queries.value));
       queries.value.push(query);
       return query.id;
     },

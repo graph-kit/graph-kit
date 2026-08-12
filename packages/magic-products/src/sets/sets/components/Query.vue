@@ -3,18 +3,14 @@
   import HStack from '@magic/shared/HStack';
   import Icon from '@magic/shared/Icon';
   import TooltipVue from '@magic/shared/Tooltip';
-  import {
-    LatexInputWithPreview,
-    type LatexInputWithPreviewInstance,
-  } from '@magic/shared/latex';
+  import { LatexInputWithPreview } from '@magic/shared/latex';
   import { mdiClose } from '@mdi/js';
 
-  import { computed, onUnmounted, ref } from 'vue';
+  import { computed, ref } from 'vue';
 
-  import { NO_EDITOR } from '../../queries.ts';
   import { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
+  import { useQueryEditor } from '../composables/useQueryEditor.ts';
   import QueryInputModifiers from './QueryInputModifiers.vue';
   import QueryToggleHidden from './QueryToggleHidden.vue';
 
@@ -26,22 +22,13 @@
     focus: [];
   }>();
 
-  const latexInputRef = ref<LatexInputWithPreviewInstance | null>(null);
-
   const { queries, queryAnalysis } = useProvidedSetsProductState();
 
   const query = queries.getQuery(props.queryId);
 
   const hasError = computed(() => queryAnalysis.queryErrors.value[query.id]);
 
-  query.editor = {
-    insert: (latexString) =>
-      latexInputRef.value?.insertIntoLatexString(latexString),
-  };
-
-  onUnmounted(() => {
-    query.editor = NO_EDITOR;
-  });
+  const { onReady } = useQueryEditor(query);
 
   const previewValue = ref<string>();
 </script>
@@ -55,12 +42,11 @@
       <LatexInputWithPreview
         :model-value="query.latexQueryString"
         @update:model-value="query.editor.replace"
-        ref="latexInputRef"
         data-query-focus
         :error="hasError"
         :preview-value="previewValue"
         placeholder="\text{e.g. } A \cup B"
-        @ready="useSetsLatexField"
+        @ready="onReady"
         @focus="emit('focus')"
       />
       <QueryInputModifiers

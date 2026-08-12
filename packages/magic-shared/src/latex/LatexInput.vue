@@ -78,18 +78,13 @@
   const latexInput = ref<MathfieldElement | null>(null);
   const mathfieldRegistered = ref(false);
 
-  const insertIntoLatexString = (latex: string) => {
-    if (!latexInput.value) return;
-    latexInput.value.executeCommand(['insert', latex]);
-  };
-
   const replaceLatexString = (latex: string) => {
     if (!latexInput.value) return;
     latexInput.value.value = latex;
     latexString.value = latex;
   };
 
-  defineExpose({ insertIntoLatexString, replaceLatexString });
+  defineExpose({ replaceLatexString });
 
   const onInput = () => {
     if (!latexInput.value) return;

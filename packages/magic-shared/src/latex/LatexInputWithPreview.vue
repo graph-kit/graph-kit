@@ -80,15 +80,6 @@
     showCurrentValue();
     emit('ready', field);
   };
-
-  // the field is inert while previewing, so it takes no commands either
-  const insertIntoLatexString = (latex: string) => {
-    if (inPreview.value) return;
-    latexInput.value?.insertIntoLatexString(latex);
-  };
-
-  // a rewrite is not a command, it arrives as the model and the field reconciles against it
-  defineExpose({ insertIntoLatexString });
 </script>
 
 <template>

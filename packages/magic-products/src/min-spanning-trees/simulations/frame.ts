@@ -135,6 +135,9 @@ type KruskalsState = {
 export type KruskalsHighlights = {
   activeEdgeId?: GEdge['id'];
   activeNodeIds?: readonly GNode['id'][];
+  // the edge called out as about-to-be-excluded, before excludedEdgeIds
+  // picks it up and it fades
+  excludingEdgeId?: GEdge['id'];
 };
 
 export type KruskalsFrame = KruskalsStep & KruskalsState & KruskalsHighlights;

@@ -122,7 +122,7 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
         frame({
           type: 'reject-edge',
           edge: edge.id,
-          activeEdgeId: edge.id,
+          excludingEdgeId: edge.id,
           activeNodeIds: [edge.source, edge.target],
         }),
       );

@@ -236,15 +236,28 @@ const kruskalsEffects = (
 
   const tree = createEdgeIdThemer(graph, kruskalsEdgeRoles.tree);
   const crossingEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.crossing);
+  // colored solid before excludedEdgeIds picks it up and fades it
+  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
   const excludedEdge = createExcludedEdgeThemer(graph);
 
-  const themers = [active, settled, tree, crossingEdge, excludedEdge];
+  // activation order is paint order (later wins on overlapping ids), so
+  // active/crossing must activate after settled/tree to stay visible when a
+  // node or edge is both newly touched and already part of the tree
+  const themers = [
+    settled,
+    active,
+    tree,
+    crossingEdge,
+    excludingEdge,
+    excludedEdge,
+  ];
 
   const syncToFrame = (frame: KruskalsFrame) => {
     active.setIds(frame.activeNodeIds ?? []);
     settled.setIds(frame.treeNodeIds);
     tree.setIds(frame.treeEdgeIds);
     crossingEdge.setId(frame.activeEdgeId);
+    excludingEdge.setId(frame.excludingEdgeId);
     excludedEdge.setIds(frame.excludedEdgeIds);
   };
 

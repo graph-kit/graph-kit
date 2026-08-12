@@ -60,8 +60,10 @@
 
   const classes = computed(() =>
     cn(
-      'text-box h-full w-full rounded-md outline-none',
-      props.error ? 'bg-red-300' : 'bg-white',
+      'text-box h-full w-full rounded-md outline-none transition-colors',
+      props.error
+        ? 'bg-red-300'
+        : 'bg-gray-100 hover:bg-white focus-within:bg-white',
       attrClass.value,
     ),
   );
@@ -138,6 +140,11 @@
 
   math-field::part(menu-toggle) {
     display: none;
+  }
+
+  /* mathlive's placeholder gray is pitched at a white field, which leaves it washed out on the unfocused one */
+  math-field::part(placeholder) {
+    color: rgb(107, 114, 128);
   }
 
   /* mathlive sizes its container to the content and bottom aligns it, which leaves the math and the caret sitting low in the field */

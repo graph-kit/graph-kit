@@ -1,27 +1,30 @@
 import type { MathfieldElement } from '@magic/shared/latex';
 
-import { LATEX_HOTKEYS } from '../other/constants.ts';
+import { SET_OP_TO_LATEX, SYMBOL_KEY_TO_LATEX } from '../other/constants.ts';
+
+// widened so a letter that carries no operator reads as undefined instead of failing to index
+const OPERATOR_BY_LETTER: Record<string, string | undefined> = SET_OP_TO_LATEX;
 
 /**
  * teaches a latex field the alphabet a set query is written in.
  *
- * sets are named with capital letters, so a lowercase keystroke is always a typo rather
- * than a different variable.
+ * sets are named with capital letters, so every letter types its capital and shift is the
+ * only thing that asks for an operator, leaving the case that lands out of the meaning.
  */
 export const useSetsLatexField = (mathfield: MathfieldElement) => {
   mathfield.inlineShortcuts = {
     ...mathfield.inlineShortcuts,
-    ...LATEX_HOTKEYS,
+    ...SYMBOL_KEY_TO_LATEX,
   };
 
-  // a hotkey letter is left alone so its shortcut still expands into an operator
   mathfield.addEventListener('keydown', (event) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (event.key.length !== 1) return;
     if (!/^[a-zA-Z]$/.test(event.key)) return;
-    if (event.key in LATEX_HOTKEYS) return;
+
+    const letter = event.key.toUpperCase();
+    const operator = event.shiftKey ? OPERATOR_BY_LETTER[letter] : undefined;
 
     event.preventDefault();
-    mathfield.executeCommand(['insert', event.key.toUpperCase()]);
+    mathfield.executeCommand(['insert', operator ?? letter]);
   });
 };

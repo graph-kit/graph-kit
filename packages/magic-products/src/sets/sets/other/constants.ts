@@ -39,7 +39,8 @@ export const MIN_CIRCLE_RADIUS = 35;
 
 export const MAX_CIRCLE_RADIUS = 10_000;
 
-export const KEYBOARD_KEY_TO_LATEX = {
+// every set operator, keyed by the character that inserts it
+export const SET_OP_TO_LATEX = {
   I: '\\cap',
   U: '\\cup',
   D: '\\triangle',
@@ -49,15 +50,11 @@ export const KEYBOARD_KEY_TO_LATEX = {
   '\\': '\\setminus',
 } as const;
 
-export const ADDITIONAL_KEY_BINDINGS = {
-  '-': '\\setminus',
-  '+': '\\cup',
-} as const;
-
-// every key that expands into latex as a query is typed
-export const LATEX_HOTKEYS = {
-  ...KEYBOARD_KEY_TO_LATEX,
-  ...ADDITIONAL_KEY_BINDINGS,
+// a letter names a set until shift asks it for its operator, while these name no set and expand as they are typed
+export const SYMBOL_KEY_TO_LATEX = {
+  '\\': SET_OP_TO_LATEX['\\'],
+  '-': SET_OP_TO_LATEX['\\'],
+  '+': SET_OP_TO_LATEX.U,
 } as const;
 
 export const LATEX_SET_SYMBOLS = {

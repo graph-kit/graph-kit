@@ -1,4 +1,5 @@
 import type LatexInput from './LatexInput.vue';
+import type LatexInputWithPreview from './LatexInputWithPreview.vue';
 
 /**
  * the slice of mathlive's MathfieldElement this component drives, declared here
@@ -13,3 +14,8 @@ export type MathfieldElement = HTMLElement & {
 
 /** what a template ref to a LatexInput holds, including its exposed commands */
 export type LatexInputInstance = InstanceType<typeof LatexInput>;
+
+/** what a template ref to a LatexInputWithPreview holds, including its exposed commands */
+export type LatexInputWithPreviewInstance = InstanceType<
+  typeof LatexInputWithPreview
+>;

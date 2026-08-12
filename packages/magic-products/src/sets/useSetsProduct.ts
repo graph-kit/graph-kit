@@ -14,7 +14,7 @@ import {
 } from './highlightQueries.ts';
 import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
-import HighlightPanel from './sets/components/HighlightPanel.vue';
+import QueryPanel from './sets/components/QueryPanel.vue';
 import { useSections } from './sets/composables/useSections.ts';
 import { Section } from './types.ts';
 import { useCanvasTheme } from './useCanvasTheme.ts';
@@ -81,7 +81,7 @@ export const useSetsProduct = () => {
 
   magic.componentSlots.add({
     id: 'sets/highlight-panel',
-    component: HighlightPanel,
+    component: QueryPanel,
     position: 'bottom-middle',
   });
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import Button from '@magic/shared/Button';
   import HStackVue from '@magic/shared/HStack';
+  import Tooltip from '@magic/shared/Tooltip';
   import { useProvidedMagicGraph } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities';
 
@@ -31,18 +32,24 @@
 
 <template>
   <HStackVue v-if="!graph.magic.simulation.current.value">
-    <Button
-      @click="startPrims"
-      class="text-lg"
-      :disabled="!focusedNode"
-    >
-      Prim's
-    </Button>
+    <Tooltip :label="focusedNode ? undefined : 'Select a node to start'">
+      <template #trigger>
+        <span class="inline-block">
+          <Button
+            @click="startPrims"
+            class="text-lg"
+            :disabled="!focusedNode"
+          >
+            Run Prim's
+          </Button>
+        </span>
+      </template>
+    </Tooltip>
     <Button
       @click="startKruskals"
       class="text-lg"
     >
-      Kruskal's
+      Run Kruskal's
     </Button>
   </HStackVue>
 </template>

@@ -21,7 +21,12 @@ import { Ref } from 'vue';
 
 import Considering from './components/Considering.vue';
 import Excluded from './components/Excluded.vue';
-import { kruskalsExplainer, primsExplainer } from './explainer.ts';
+import {
+  kruskalsExplainer,
+  kruskalsSlotIds,
+  primsExplainer,
+  primsSlotIds,
+} from './explainer.ts';
 import {
   KruskalsFrame,
   KruskalsFunction,
@@ -54,12 +59,6 @@ const edgeRoles = {
   crossing: 'crossing',
   tree: 'tree',
 } as const satisfies Record<PrimsEdgeConcept, EdgeRole>;
-
-export const primsSlotIds = {
-  unexplored: 'min-spanning-trees/prims/unexplored',
-  considering: 'min-spanning-trees/prims/considering',
-  excluded: 'min-spanning-trees/prims/excluded',
-} as const;
 
 export type StartNodeId = Ref<GNode['id'] | undefined>;
 
@@ -263,6 +262,18 @@ const kruskalsEffects = (
 
   const lens: Lens = {
     id: 'min-spanning-trees/kruskals',
+    components: [
+      {
+        component: Excluded,
+        position: 'center-left',
+        id: kruskalsSlotIds.excluded,
+      },
+      {
+        component: Considering,
+        position: 'center-right',
+        id: kruskalsSlotIds.considering,
+      },
+    ],
     activate: () => {
       for (const { themer } of themers) themer.activate();
     },

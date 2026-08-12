@@ -57,26 +57,24 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   const sortedEdges = shuffled.toSorted((a, b) => a.weight.compare(b.weight));
+  const sortedEdgeIds = sortedEdges.map((edge) => edge.id);
 
   const treeNodes = new Set<GNode['id']>();
   const treeEdges: string[] = [];
   const excludedEdges: string[] = [];
 
-  const frame = <T extends KruskalsStep>(
-    fields: T & KruskalsHighlights,
-  ): KruskalsFrame => ({
-    treeNodeIds: [...treeNodes],
-    treeEdgeIds: [...treeEdges],
-    excludedEdgeIds: [...excludedEdges],
-    ...fields,
-  });
+  const frame = (fields: KruskalsStep & KruskalsHighlights): KruskalsFrame => {
+    const decided = new Set([...treeEdges, ...excludedEdges]);
+    return {
+      treeNodeIds: [...treeNodes],
+      treeEdgeIds: [...treeEdges],
+      excludedEdgeIds: [...excludedEdges],
+      candidateEdges: sortedEdgeIds.filter((id) => !decided.has(id)),
+      ...fields,
+    };
+  };
 
-  frameCollector.add(
-    frame({
-      type: 'start',
-      sortedEdges: sortedEdges.map((edge) => edge.id),
-    }),
-  );
+  frameCollector.add(frame({ type: 'start' }));
 
   for (let i = 0; i < sortedEdges.length; i++) {
     const edge = sortedEdges[i];
@@ -87,6 +85,7 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
         edge: edge.id,
         activeEdgeId: edge.id,
         activeNodeIds: [edge.source, edge.target],
+        selectedEdge: edge.id,
       }),
     );
 
@@ -97,6 +96,7 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
           edge: edge.id,
           activeEdgeId: edge.id,
           activeNodeIds: [edge.source, edge.target],
+          selectedEdge: edge.id,
         }),
       );
 

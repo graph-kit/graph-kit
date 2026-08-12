@@ -80,7 +80,6 @@ export type KruskalsFunction = (
 
 type KruskalsStartFrame = {
   type: 'start';
-  sortedEdges: readonly GEdge['id'][];
 };
 
 type KruskalsEndFrame = {
@@ -130,13 +129,13 @@ type KruskalsState = {
   treeNodeIds: readonly GNode['id'][];
   treeEdgeIds: readonly GEdge['id'][];
   excludedEdgeIds: readonly GEdge['id'][];
+  candidateEdges: readonly GEdge['id'][];
 };
 
 export type KruskalsHighlights = {
   activeEdgeId?: GEdge['id'];
   activeNodeIds?: readonly GNode['id'][];
-  // the edge called out as about-to-be-excluded, before excludedEdgeIds
-  // picks it up and it fades
+  selectedEdge?: GEdge['id'];
   excludingEdgeId?: GEdge['id'];
 };
 

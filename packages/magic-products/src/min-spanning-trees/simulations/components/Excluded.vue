@@ -3,10 +3,10 @@
 
   import { computed } from 'vue';
 
-  import { PrimsFrame } from '../frame.ts';
+  import { KruskalsFrame, PrimsFrame } from '../frame.ts';
   import EdgeListPanel from './EdgeListPanel.vue';
 
-  const currentFrame = useCurrentFrame<PrimsFrame>();
+  const currentFrame = useCurrentFrame<PrimsFrame | KruskalsFrame>();
   const excluded = computed(() => currentFrame.value?.excludedEdgeIds ?? []);
 </script>
 

@@ -3,7 +3,17 @@ import { Graph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
 import { KruskalsFrame, PrimsFrame } from './frame.ts';
-import { primsSlotIds } from './shared.ts';
+
+export const primsSlotIds = {
+  unexplored: 'min-spanning-trees/prims/unexplored',
+  considering: 'min-spanning-trees/prims/considering',
+  excluded: 'min-spanning-trees/prims/excluded',
+} as const;
+
+export const kruskalsSlotIds = {
+  considering: 'min-spanning-trees/kruskals/considering',
+  excluded: 'min-spanning-trees/kruskals/excluded',
+} as const;
 
 const describeEdge = (graph: Graph, edgeId: string) => {
   const edge = graph.getEdge(edgeId);
@@ -19,35 +29,49 @@ const listEdges = (graph: Graph, edgeIds: readonly string[]) => {
   return `${described.slice(0, -1).join(', ')} and ${described.at(-1)}`;
 };
 
-const componentSlotHighlight = (
-  slot: keyof typeof primsSlotIds,
-): ExplainerHighlight => ({
-  activate: (graph) =>
-    graph.magic.componentSlots.setHighlighted(primsSlotIds[slot]),
+const componentSlotHighlight = (slotId: string): ExplainerHighlight => ({
+  activate: (graph) => graph.magic.componentSlots.setHighlighted(slotId),
   deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
 });
 
-const highlights = {
+const sharedHighlights = {
   tree: {
     tooltipLabel: 'The edges already in the minimum spanning tree',
   },
   nonTree: {
     tooltipLabel: 'The edges not yet in the minimum spanning tree',
   },
-  considering: {
-    tooltipLabel:
-      'Every edge that connects a tree node to a non-tree node is currently eligible to be added to the minimum spanning tree',
-    ...componentSlotHighlight('considering'),
-  },
-  excluded: {
-    tooltipLabel:
-      'Edges ruled out because both ends are already in the minimum spanning tree and adding it would create a loop',
-    ...componentSlotHighlight('excluded'),
-  },
   added: {
     tooltipLabel: 'This edge is now part of the minimum spanning tree',
   },
 } as const satisfies Record<string, ExplainerHighlight>;
+
+const considerAndExcludeHighlights = (slotIds: {
+  considering: string;
+  excluded: string;
+}) =>
+  ({
+    considering: {
+      tooltipLabel:
+        'Every edge that connects a tree node to a non-tree node is currently eligible to be added to the minimum spanning tree',
+      ...componentSlotHighlight(slotIds.considering),
+    },
+    excluded: {
+      tooltipLabel:
+        'Edges ruled out because both ends are already in the minimum spanning tree and adding it would create a loop',
+      ...componentSlotHighlight(slotIds.excluded),
+    },
+  }) as const satisfies Record<string, ExplainerHighlight>;
+
+const highlights = {
+  ...sharedHighlights,
+  ...considerAndExcludeHighlights(primsSlotIds),
+};
+
+const kruskalsHighlights = {
+  ...sharedHighlights,
+  ...considerAndExcludeHighlights(kruskalsSlotIds),
+};
 
 export const primsExplainer =
   (graph: Graph) =>
@@ -135,7 +159,8 @@ export const kruskalsExplainer =
   (frame: KruskalsFrame): Explainer | undefined => {
     if (frame.type === 'start') {
       return {
-        content: `Sorting every edge by weight, cheapest first: ${listEdges(graph, frame.sortedEdges)}`,
+        content: `Every edge is sorted by weight, cheapest first, and added to the [Considering] list`,
+        highlights: [kruskalsHighlights.considering],
       };
     }
 
@@ -146,27 +171,29 @@ export const kruskalsExplainer =
         .reduce((sum, weight) => sum.add(weight), new Fraction(0));
       return {
         content: `Done! The [Tree] is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of ${cost}`,
-        highlights: [highlights.tree],
+        highlights: [kruskalsHighlights.tree],
       };
     }
 
     if (frame.type === 'consider-edge') {
       return {
-        content: `Considering ${describeEdge(graph, frame.edge)}, the next cheapest edge not yet decided`,
+        content: `Considering ${describeEdge(graph, frame.edge)}, the cheapest of the edges [In Consideration]`,
+        highlights: [kruskalsHighlights.considering],
       };
     }
 
     if (frame.type === 'accept-edge') {
       return {
         content: `${describeEdge(graph, frame.edge)} connects two parts of the graph that were still separate, so it's [Added] to the [Tree]`,
-        highlights: [highlights.added, highlights.tree],
+        highlights: [kruskalsHighlights.added, kruskalsHighlights.tree],
       };
     }
 
     if (frame.type === 'reject-edge') {
+      const excluded = describeEdge(graph, frame.edge);
       return {
-        content: `${describeEdge(graph, frame.edge)} already connects two nodes in the same part of the [Tree], so adding it would only create a loop. It's ruled out`,
-        highlights: [highlights.tree],
+        content: `Edge ${excluded} is [Excluded] because both ends are already in the [Tree], therefore it would cause a loop`,
+        highlights: [highlights.excluded, highlights.tree],
       };
     }
 
@@ -174,8 +201,8 @@ export const kruskalsExplainer =
       const count = frame.edges.length;
       const plural = count > 1;
       return {
-        content: `Every node is already connected, so the ${count} remaining edge${plural ? 's are' : ' is'} not needed`,
-        highlights: [highlights.tree],
+        content: `Every node is already connected, so the ${count} remaining edge${plural ? 's are' : ' is'} [Excluded] without needing a decision`,
+        highlights: [kruskalsHighlights.excluded],
       };
     }
 
@@ -184,7 +211,7 @@ export const kruskalsExplainer =
       const plural = count > 1;
       return {
         content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the [Tree]: the graph is disconnected`,
-        highlights: [highlights.tree],
+        highlights: [kruskalsHighlights.tree],
       };
     }
   };

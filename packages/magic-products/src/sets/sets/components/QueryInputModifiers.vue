@@ -19,7 +19,7 @@
 
   const previewValue = defineModel<string>();
 
-  const { queries, queryAnalysis } = useProvidedSetsProductState();
+  const { queryAnalysis } = useProvidedSetsProductState();
 
   const simplified = computed(
     () => queryAnalysis.simplifiedQueries.value[props.query.id],
@@ -29,17 +29,19 @@
     () => queryAnalysis.disambiguatedQueries.value[props.query.id],
   );
 
+  // the mathfield owns what it displays, so a rewrite has to reach it as well as the query
+  const rewriteQuery = (latexString: string) => {
+    props.query.latexQueryString = latexString;
+    props.query.editor.replace(latexString);
+  };
+
   // trigger example: $$ A\cup A $$
   const applySimplification = () =>
-    queries.replaceQuery(
-      props.query.id,
-      nullThrows(simplified.value, 'simplified query is null'),
-    );
+    rewriteQuery(nullThrows(simplified.value, 'simplified query is null'));
 
   // trigger example: $$ A\cap B\cup C $$
   const applyDisambiguation = () =>
-    queries.replaceQuery(
-      props.query.id,
+    rewriteQuery(
       nullThrows(disambiguated.value, 'disambiguated query is null'),
     );
 </script>

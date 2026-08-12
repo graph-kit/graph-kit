@@ -10,8 +10,9 @@
     queryId: string;
   }>();
 
-  const { queries } = useProvidedSetsProductState();
-  const { insertIntoQuery } = queries;
+  const {
+    queries: { getQuery },
+  } = useProvidedSetsProductState();
 
   /** what each symbol means and how to type it, since the glyph alone only reads to someone who knows it */
   const SET_OP_TOOLTIPS: Record<keyof typeof SET_OP_TO_LATEX, string> = {
@@ -25,7 +26,7 @@
   };
 
   const insertLatexString = (latexString: string) => {
-    insertIntoQuery(props.queryId, latexString);
+    getQuery(props.queryId).editor.insert(latexString);
   };
 </script>
 

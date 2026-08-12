@@ -11,6 +11,7 @@
 
   import { computed, onUnmounted, ref } from 'vue';
 
+  import { NO_EDITOR } from '../../queries.ts';
   import { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
@@ -28,29 +29,25 @@
   const latexInputRef = ref<LatexInputWithPreviewInstance | null>(null);
 
   const {
-    queries: { queries, getQuery, setLatexQueryString, registerQueryEditor },
+    queries: { queries, getQuery },
     queryAnalysis,
   } = useProvidedSetsProductState();
 
-  const query = computed(() => getQuery(props.queryId));
+  // held rather than looked up per read, since a row is keyed by its query and never handed another
+  const query = getQuery(props.queryId);
 
-  const latexQueryString = computed({
-    get: () => query.value.latexQueryString,
-    set: (latexString) => setLatexQueryString(query.value.id, latexString),
+  const hasError = computed(() => queryAnalysis.queryErrors.value[query.id]);
+
+  query.editor = {
+    insert: (latexString) =>
+      latexInputRef.value?.insertIntoLatexString(latexString),
+    replace: (latexString) =>
+      latexInputRef.value?.replaceLatexString(latexString),
+  };
+
+  onUnmounted(() => {
+    query.editor = NO_EDITOR;
   });
-
-  const hasError = computed(
-    () => queryAnalysis.queryErrors.value[query.value.id],
-  );
-
-  onUnmounted(
-    registerQueryEditor(props.queryId, {
-      insert: (latexString) =>
-        latexInputRef.value?.insertIntoLatexString(latexString),
-      replace: (latexString) =>
-        latexInputRef.value?.replaceLatexString(latexString),
-    }),
-  );
 
   const previewValue = ref<string>();
 </script>
@@ -61,7 +58,7 @@
 
     <HStack class="relative">
       <LatexInputWithPreview
-        v-model="latexQueryString"
+        v-model="query.latexQueryString"
         ref="latexInputRef"
         data-query-focus
         :error="hasError"

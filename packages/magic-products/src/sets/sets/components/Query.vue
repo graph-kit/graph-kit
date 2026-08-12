@@ -7,11 +7,11 @@
     LatexInputWithPreview,
     type LatexInputWithPreviewInstance,
   } from '@magic/shared/latex';
-  import { mdiClose, mdiCross, mdiDelete } from '@mdi/js';
+  import { mdiClose } from '@mdi/js';
 
   import { computed, onUnmounted, ref } from 'vue';
 
-  import type { QueryId } from '../../types.ts';
+  import { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
   import QueryInputModifiers from './QueryInputModifiers.vue';

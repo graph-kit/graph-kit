@@ -10,15 +10,15 @@
 
   import { ref } from 'vue';
 
-  import type { HighlightQueryId } from '../../types.ts';
+  import type { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import InsertSetOpButtons from './InsertSetOpButtons.vue';
   import Query from './Query.vue';
 
-  const { highlights } = useProvidedSetsProductState();
-  const { queryIds, addQuery } = highlights;
+  const { queries } = useProvidedSetsProductState();
+  const { queryIds, addQuery } = queries;
 
-  const focusedQueryId = ref<HighlightQueryId>();
+  const focusedQueryId = ref<QueryId>();
 
   const unfocusQuery = () => {
     focusedQueryId.value = undefined;

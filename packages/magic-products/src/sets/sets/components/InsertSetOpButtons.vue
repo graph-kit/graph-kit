@@ -10,8 +10,8 @@
     queryId: string;
   }>();
 
-  const { highlights } = useProvidedSetsProductState();
-  const { insertIntoQuery } = highlights;
+  const { queries } = useProvidedSetsProductState();
+  const { insertIntoQuery } = queries;
 
   /** what each symbol means and how to type it, since the glyph alone only reads to someone who knows it */
   const SET_OP_TOOLTIPS: Record<keyof typeof SET_OP_TO_LATEX, string> = {

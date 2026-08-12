@@ -30,6 +30,6 @@ export type SetDefinition = {
 export type Section = SetDefinitionId[];
 
 // unparsed set notation latex, parsed into the sections it matches so they can be colored
-export type HighlightQuery = string;
+export type LatexQueryString = string;
 
-export type HighlightQueryId = string;
+export type QueryId = string;

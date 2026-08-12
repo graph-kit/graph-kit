@@ -1,6 +1,6 @@
 import { type ComputedRef, computed } from 'vue';
 
-import type { HighlightQueries } from './highlightQueries.ts';
+import type { Queries } from './queries.ts';
 import type { SetDefinitions } from './setDefinitions.ts';
 import {
   type ParseSetExpression,
@@ -13,23 +13,18 @@ import {
 import { parseMathJSON } from './sets/other/parseMathJSON.ts';
 import { simplify } from './sets/other/simplifier/index.ts';
 import { extractVariables } from './sets/other/simplifier/truthTable.ts';
-import type {
-  HighlightQuery,
-  HighlightQueryId,
-  Section,
-  SetLabel,
-} from './types.ts';
+import type { LatexQueryString, QueryId, Section, SetLabel } from './types.ts';
 
 /**
  * one query read against the current set space. `isValid` gates `sections`, so
  * checking it hands back the resolved sections without a second null check
  */
 type AnalyzedQuery =
-  | { latexQueryString: HighlightQuery; isValid: true; sections: Section[] }
-  | { latexQueryString: HighlightQuery; isValid: false; sections: null };
+  | { latexQueryString: LatexQueryString; isValid: true; sections: Section[] }
+  | { latexQueryString: LatexQueryString; isValid: false; sections: null };
 
 const analyzeQuery = (
-  latexQueryString: HighlightQuery,
+  latexQueryString: LatexQueryString,
   parse: ParseSetExpression,
   definedLabels: SetLabel[],
 ): AnalyzedQuery => {
@@ -61,15 +56,15 @@ const analyzeQuery = (
 };
 
 export type QueryAnalysis = {
-  queryErrors: ComputedRef<Record<HighlightQueryId, boolean>>;
-  simplifiedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
-  disambiguatedQueries: ComputedRef<Record<HighlightQueryId, string | null>>;
+  queryErrors: ComputedRef<Record<QueryId, boolean>>;
+  simplifiedQueries: ComputedRef<Record<QueryId, string | null>>;
+  disambiguatedQueries: ComputedRef<Record<QueryId, string | null>>;
   // the sections each query resolves to, keyed by query, skipping erroring queries
-  queryIdToSections: ComputedRef<Map<HighlightQueryId, Section[]>>;
+  queryIdToSections: ComputedRef<Map<QueryId, Section[]>>;
 };
 
 export const useQueryAnalysis = (
-  highlights: HighlightQueries,
+  queries: Queries,
   sets: SetDefinitions,
   sections: ComputedRef<Section[]>,
 ): QueryAnalysis => {
@@ -87,10 +82,10 @@ export const useQueryAnalysis = (
       (label) => sets.idByLabel.value[label],
     );
     const labels = definedSetLabels.value;
-    const analyses = new Map<HighlightQueryId, AnalyzedQuery>();
+    const analyses = new Map<QueryId, AnalyzedQuery>();
 
-    for (const queryId of highlights.queryIds.value) {
-      const { latexQueryString } = highlights.getQuery(queryId);
+    for (const queryId of queries.queryIds.value) {
+      const { latexQueryString } = queries.getQuery(queryId);
       analyses.set(queryId, analyzeQuery(latexQueryString, parse, labels));
     }
 
@@ -98,7 +93,7 @@ export const useQueryAnalysis = (
   });
 
   const queryErrors = computed(() => {
-    const errors: Record<HighlightQueryId, boolean> = {};
+    const errors: Record<QueryId, boolean> = {};
 
     for (const [queryId, { isValid }] of queryIdToAnalysis.value) {
       errors[queryId] = !isValid;
@@ -108,7 +103,7 @@ export const useQueryAnalysis = (
   });
 
   const simplifiedQueries = computed(() => {
-    const queries: Record<HighlightQueryId, string | null> = {};
+    const queries: Record<QueryId, string | null> = {};
 
     for (const [
       queryId,
@@ -123,7 +118,7 @@ export const useQueryAnalysis = (
   });
 
   const disambiguatedQueries = computed(() => {
-    const queries: Record<HighlightQueryId, string | null> = {};
+    const queries: Record<QueryId, string | null> = {};
 
     for (const [
       queryId,
@@ -141,7 +136,7 @@ export const useQueryAnalysis = (
   });
 
   const queryIdToSections = computed(() => {
-    const sectionsByQueryId = new Map<HighlightQueryId, Section[]>();
+    const sectionsByQueryId = new Map<QueryId, Section[]>();
 
     for (const [queryId, analysis] of queryIdToAnalysis.value) {
       if (!analysis.isValid) continue;

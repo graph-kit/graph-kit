@@ -1,20 +1,24 @@
 <script setup lang="ts">
+  import Button from '@magic/shared/Button';
   import HStack from '@magic/shared/HStack';
+  import Icon from '@magic/shared/Icon';
+  import TooltipVue from '@magic/shared/Tooltip';
   import {
     LatexInputWithPreview,
     type LatexInputWithPreviewInstance,
   } from '@magic/shared/latex';
+  import { mdiClose, mdiCross, mdiDelete } from '@mdi/js';
 
   import { computed, onUnmounted, ref } from 'vue';
 
-  import type { HighlightQueryId } from '../../types.ts';
+  import type { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
   import QueryInputModifiers from './QueryInputModifiers.vue';
   import QueryToggleHidden from './QueryToggleHidden.vue';
 
   const props = defineProps<{
-    queryId: HighlightQueryId;
+    queryId: QueryId;
   }>();
 
   const emit = defineEmits<{
@@ -23,14 +27,14 @@
 
   const latexInputRef = ref<LatexInputWithPreviewInstance | null>(null);
 
-  const { highlights, queryAnalysis } = useProvidedSetsProductState();
+  const { queries, queryAnalysis } = useProvidedSetsProductState();
 
-  const query = computed(() => highlights.getQuery(props.queryId));
+  const query = computed(() => queries.getQuery(props.queryId));
 
   const latexQueryString = computed({
     get: () => query.value.latexQueryString,
     set: (latexString) =>
-      highlights.setLatexQueryString(query.value.id, latexString),
+      queries.setLatexQueryString(query.value.id, latexString),
   });
 
   const hasError = computed(
@@ -38,7 +42,7 @@
   );
 
   onUnmounted(
-    highlights.registerQueryEditor(props.queryId, {
+    queries.registerQueryEditor(props.queryId, {
       insert: (latexString) =>
         latexInputRef.value?.insertIntoLatexString(latexString),
       replace: (latexString) =>
@@ -50,23 +54,39 @@
 </script>
 
 <template>
-  <HStack class="relative h-10">
+  <HStack class="h-10">
     <QueryToggleHidden :query="query" />
 
-    <LatexInputWithPreview
-      ref="latexInputRef"
-      data-query-focus
-      v-model="latexQueryString"
-      :error="hasError"
-      :preview-value="previewValue"
-      placeholder="\text{e.g. } A \cup B"
-      @ready="useSetsLatexField"
-      @focus="emit('focus')"
-    />
+    <HStack class="relative">
+      <LatexInputWithPreview
+        v-model="latexQueryString"
+        ref="latexInputRef"
+        data-query-focus
+        :error="hasError"
+        :preview-value="previewValue"
+        placeholder="\text{e.g. } A \cup B"
+        @ready="useSetsLatexField"
+        @focus="emit('focus')"
+      />
+      <QueryInputModifiers
+        v-model="previewValue"
+        :query="query"
+      />
+    </HStack>
 
-    <QueryInputModifiers
-      :query="query"
-      v-model="previewValue"
-    />
+    <TooltipVue
+      v-if="queries.queryIds.value.length > 1"
+      label="Remove"
+      side="right"
+    >
+      <template #trigger>
+        <Button class="hover:text-red-500 bg-transparent p-0">
+          <Icon
+            :path="mdiClose"
+            :size="26"
+          />
+        </Button>
+      </template>
+    </TooltipVue>
   </HStack>
 </template>

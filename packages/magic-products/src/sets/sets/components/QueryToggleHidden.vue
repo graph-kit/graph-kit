@@ -5,22 +5,21 @@
 
   import { computed } from 'vue';
 
-  import { Query } from '../../highlightQueries.ts';
+  import { Query } from '../../queries.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
 
   const props = defineProps<{
     query: Query;
   }>();
 
-  const { highlights } = useProvidedSetsProductState();
+  const { queries } = useProvidedSetsProductState();
 
   const isHidden = computed(() => props.query.isHidden);
   const color = computed(() =>
     isHidden.value ? colors.GRAY_500 : props.query.color,
   );
 
-  const toggleHidden = () =>
-    highlights.setHidden(props.query.id, !isHidden.value);
+  const toggleHidden = () => queries.setHidden(props.query.id, !isHidden.value);
 </script>
 
 <template>

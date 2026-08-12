@@ -10,7 +10,7 @@
 
   import { computed } from 'vue';
 
-  import { Query } from '../../highlightQueries.ts';
+  import { Query } from '../../queries.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
 
   const props = defineProps<{
@@ -19,7 +19,7 @@
 
   const previewValue = defineModel<string>();
 
-  const { highlights, queryAnalysis } = useProvidedSetsProductState();
+  const { queries, queryAnalysis } = useProvidedSetsProductState();
 
   const simplified = computed(
     () => queryAnalysis.simplifiedQueries.value[props.query.id],
@@ -31,14 +31,14 @@
 
   // trigger example: $$ A\cup A $$
   const applySimplification = () =>
-    highlights.replaceQuery(
+    queries.replaceQuery(
       props.query.id,
       nullThrows(simplified.value, 'simplified query is null'),
     );
 
   // trigger example: $$ A\cap B\cup C $$
   const applyDisambiguation = () =>
-    highlights.replaceQuery(
+    queries.replaceQuery(
       props.query.id,
       nullThrows(disambiguated.value, 'disambiguated query is null'),
     );

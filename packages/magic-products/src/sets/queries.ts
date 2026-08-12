@@ -4,65 +4,56 @@ import { generateId } from '@core/utils/id';
 
 import { type Ref, ref } from 'vue';
 
-import { HIGHLIGHT_COLORS } from './sets/other/constants.ts';
-import type { HighlightQuery, HighlightQueryId } from './types.ts';
+import { QUERY_COLORS } from './sets/other/constants.ts';
+import type { LatexQueryString, QueryId } from './types.ts';
 
 // the rendered mathfield owns its caret and its displayed value, so it takes the commands
 type QueryEditor = {
-  insert: (latexString: HighlightQuery) => void;
-  replace: (latexString: HighlightQuery) => void;
+  insert: (latexString: LatexQueryString) => void;
+  replace: (latexString: LatexQueryString) => void;
 };
 
 export type Query = {
   id: string;
-  latexQueryString: HighlightQuery;
+  latexQueryString: LatexQueryString;
   isHidden: boolean;
   color: Color;
 };
 
-export type HighlightQueries = {
-  // the highlights in render order, each resolved to its data through getQuery
-  queryIds: Ref<HighlightQueryId[]>;
-  getQuery: (queryId: HighlightQueryId) => Query;
-  addQuery: () => HighlightQueryId;
+export type Queries = {
+  // the queries in render order, each resolved to its data through getQuery
+  queryIds: Ref<QueryId[]>;
+  getQuery: (queryId: QueryId) => Query;
+  addQuery: () => QueryId;
   setLatexQueryString: (
-    queryId: HighlightQueryId,
-    latexQueryString: HighlightQuery,
+    queryId: QueryId,
+    latexQueryString: LatexQueryString,
   ) => void;
-  setHidden: (queryId: HighlightQueryId, isHidden: boolean) => void;
-  registerQueryEditor: (
-    queryId: HighlightQueryId,
-    editor: QueryEditor,
-  ) => () => void;
-  insertIntoQuery: (
-    queryId: HighlightQueryId,
-    latexString: HighlightQuery,
-  ) => void;
+  setHidden: (queryId: QueryId, isHidden: boolean) => void;
+  registerQueryEditor: (queryId: QueryId, editor: QueryEditor) => () => void;
+  insertIntoQuery: (queryId: QueryId, latexString: LatexQueryString) => void;
   // rewrites the whole query, unlike setLatexQueryString it also updates what the editor shows
-  replaceQuery: (
-    queryId: HighlightQueryId,
-    latexString: HighlightQuery,
-  ) => void;
+  replaceQuery: (queryId: QueryId, latexString: LatexQueryString) => void;
 };
 
 // assigns by creation order, cycling the palette once every query gets one
 const nextColor = (queryCountBeforeThisOne: number): Color =>
-  HIGHLIGHT_COLORS[queryCountBeforeThisOne % HIGHLIGHT_COLORS.length];
+  QUERY_COLORS[queryCountBeforeThisOne % QUERY_COLORS.length];
 
-export const createHighlightQueries = (): HighlightQueries => {
+export const createQueries = (): Queries => {
   const initialQueryId = generateId();
-  const queryIds = ref<HighlightQueryId[]>([initialQueryId]);
+  const queryIds = ref<QueryId[]>([initialQueryId]);
 
   // kept beside the ids rather than in them so a query is nothing but its latex string
-  const latexQueryStrings = ref<Record<HighlightQueryId, HighlightQuery>>({});
-  const hiddenQueryIds = ref(new Set<HighlightQueryId>());
+  const latexQueryStrings = ref<Record<QueryId, LatexQueryString>>({});
+  const hiddenQueryIds = ref(new Set<QueryId>());
   // assigned once at creation and never reassigned, so a query's color is stable
-  const colorsByQueryId = ref<Record<HighlightQueryId, Color>>({
+  const colorsByQueryId = ref<Record<QueryId, Color>>({
     [initialQueryId]: nextColor(0),
   });
 
   // a plain map because editors are imperative, not something a render depends on
-  const queryEditors = new Map<HighlightQueryId, QueryEditor>();
+  const queryEditors = new Map<QueryId, QueryEditor>();
 
   return {
     queryIds,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { cn } from '@core/components/cn';
   import { nullThrows } from '@core/utils/assert';
   import Button from '@magic/shared/Button';
   import Dropdown from '@magic/shared/Dropdown';
@@ -56,7 +57,12 @@
         <IconButton
           label=""
           :path="mdiInformationOutline"
-          class="text-black bg-gray-300 hover:bg-gray-400 rounded-none rounded-r-md h-10"
+          :class="
+            cn(
+              'text-black bg-gray-300 hover:bg-gray-400 rounded-none rounded-r-md h-10',
+              previewValue && 'invisible',
+            )
+          "
         />
       </template>
       <Well class="p-1">

@@ -8,10 +8,18 @@ import { type ComputedRef, computed, ref } from 'vue';
 import { QUERY_COLORS } from './sets/other/constants.ts';
 import type { LatexQueryString, QueryId } from './types.ts';
 
+/** Handed the mathfield the query mounted, the one place one is guaranteed to exist. */
+export type QueryMountedCallback = (element: MathfieldElement) => void;
+
 /** Every way a query's latex can be written, since it cannot be assigned directly. */
 type QueryEditor = {
-  /** The rendered mathfield, or null while the query has none mounted. */
-  element: MathfieldElement | null;
+  /**
+   * Registers against the query's mathfield mounting and returns the unregister. Runs the
+   * callback right away when one is already mounted, so a late caller is not left waiting.
+   */
+  onMounted: (callback: QueryMountedCallback) => () => void;
+  /** Hands the query the mathfield rendering it, returning the handback for unmount. */
+  mount: (commands: QueryEditorCommands) => () => void;
   /** Inserts at the caret, which only exists while the query's mathfield is mounted. */
   insert: (latexString: LatexQueryString) => void;
   /** Rewrites the query in full, leaving the mathfield to reconcile against it. */
@@ -19,7 +27,10 @@ type QueryEditor = {
 };
 
 /** What a mounted mathfield contributes, the rest of the editor being the query's own. */
-type QueryEditorCommands = Pick<QueryEditor, 'element' | 'insert'>;
+type QueryEditorCommands = Pick<QueryEditor, 'insert'> & {
+  /** Never null, since a field only hands its commands over once it has an element. */
+  element: MathfieldElement;
+};
 
 /** A live query rather than a snapshot, so what is read through it is never stale. */
 export type Query = {
@@ -28,8 +39,7 @@ export type Query = {
   readonly latexQueryString: LatexQueryString;
   hidden: boolean;
   color: Color;
-  get editor(): QueryEditor;
-  set editor(commands: QueryEditorCommands);
+  readonly editor: QueryEditor;
 };
 
 export type Queries = {
@@ -37,7 +47,7 @@ export type Queries = {
   queries: ComputedRef<Query[]>;
   /** Throws when no query carries the id. */
   getQuery: (queryId: QueryId) => Query;
-  addQuery: () => QueryId;
+  addQuery: () => Query;
   /** Does nothing when no query carries the id. */
   removeQuery: (queryId: QueryId) => void;
 };
@@ -51,28 +61,39 @@ const nextColor = (queries: Query[]): Color =>
     (color) => !queries.some((query) => query.color === color),
   ) ?? QUERY_COLORS[0];
 
-/** Stands in until a query's mathfield mounts, so a command never needs a null check. */
-export const NO_EDITOR: QueryEditorCommands = {
-  element: null,
-  insert: () => {},
-};
-
 // takes its color rather than picking one, since only the caller knows the queries already out
 const createQuery = (color: Color): Query => {
   const latexQueryString = ref<LatexQueryString>('');
 
-  let commands: QueryEditorCommands = NO_EDITOR;
+  // null until a mathfield renders the query, which is well after the query itself exists
+  let commands: QueryEditorCommands | null = null;
+  const mountedCallbacks = new Set<QueryMountedCallback>();
 
   /*
-    one object reading through to whatever commands are current, rather than one built per
-    assignment. a copy would freeze element to the null it holds before the field mounts
+    the query holds the callbacks rather than the mathfield, so subscribing before one is
+    rendered still reaches the mount that comes later
   */
   const editor: QueryEditor = {
-    get element() {
-      return commands.element;
+    onMounted: (callback) => {
+      if (commands) callback(commands.element);
+
+      mountedCallbacks.add(callback);
+      return () => {
+        mountedCallbacks.delete(callback);
+      };
     },
 
-    insert: (latexString) => commands.insert(latexString),
+    mount: (mounted) => {
+      commands = mounted;
+      for (const callback of mountedCallbacks) callback(mounted.element);
+
+      // checked by identity, so a stale field's unmount cannot clear the one that replaced it
+      return () => {
+        if (commands === mounted) commands = null;
+      };
+    },
+
+    insert: (latexString) => commands?.insert(latexString),
 
     replace: (latexString) => {
       latexQueryString.value = latexString;
@@ -83,17 +104,10 @@ const createQuery = (color: Color): Query => {
     id: generateId(),
     hidden: false,
     color,
+    editor,
 
     get latexQueryString() {
       return latexQueryString.value;
-    },
-
-    get editor() {
-      return editor;
-    },
-
-    set editor(replacement) {
-      commands = replacement;
     },
   };
 };
@@ -113,7 +127,7 @@ export const createQueries = (): Queries => {
     addQuery: () => {
       const query = createQuery(nextColor(queries.value));
       queries.value.push(query);
-      return query.id;
+      return query;
     },
 
     removeQuery: (queryId) => {

@@ -26,8 +26,12 @@
   };
 
   const addAndFocusQuery = () => {
-    const id = addQuery();
-    setTimeout(() => (focusedQueryId.value = id), 100);
+    const query = addQuery();
+    query.editor.onMounted((editorRef) => {
+      console.log('mounted', query.color);
+      focusedQueryId.value = query.id;
+      editorRef.focus();
+    });
   };
 
   /* a field blurs on the press that starts an interaction, so what keeps the ops open is where that interaction lands, not the blur */

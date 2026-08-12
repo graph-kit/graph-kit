@@ -28,7 +28,7 @@
 
   const hasError = computed(() => queryAnalysis.queryErrors.value[query.id]);
 
-  const { onReady } = useQueryEditor(query);
+  const editor = useQueryEditor(query);
 
   const previewValue = ref<string>();
 </script>
@@ -46,7 +46,8 @@
         :error="hasError"
         :preview-value="previewValue"
         placeholder="\text{e.g. } A \cup B"
-        @ready="onReady"
+        @ready="editor.onMounted"
+        @vue:unmounted="editor.onUnmounted"
         @focus="emit('focus')"
       />
       <QueryInputModifiers

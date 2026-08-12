@@ -1,8 +1,8 @@
 import type { MathfieldElement } from '@magic/shared/latex';
 
-import { onUnmounted, ref } from 'vue';
+import { onUnmounted } from 'vue';
 
-import { NO_EDITOR, type Query } from '../../queries.ts';
+import type { Query } from '../../queries.ts';
 import { useSetsLatexField } from './useSetsLatexField.ts';
 
 /**
@@ -13,26 +13,17 @@ import { useSetsLatexField } from './useSetsLatexField.ts';
  * loaded and there is an element to hand over.
  */
 export const useQueryEditor = (query: Query) => {
-  const mathfield = ref<MathfieldElement | null>(null);
+  // undefined until the field is ready, which a component can unmount without ever reaching
+  let unmount: (() => void) | undefined;
 
-  const onReady = (element: MathfieldElement) => {
-    mathfield.value = element;
+  const onMounted = (element: MathfieldElement) => {
     useSetsLatexField(element);
+
+    unmount = query.editor.mount({
+      element,
+      insert: (latexString) => element.executeCommand(['insert', latexString]),
+    });
   };
 
-  query.editor = {
-    // a getter, so the query reads the element rather than the null standing in before mount
-    get element() {
-      return mathfield.value;
-    },
-
-    insert: (latexString) =>
-      mathfield.value?.executeCommand(['insert', latexString]),
-  };
-
-  onUnmounted(() => {
-    query.editor = NO_EDITOR;
-  });
-
-  return { onReady };
+  return { onMounted, onUnmounted: unmount };
 };

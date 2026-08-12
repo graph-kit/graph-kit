@@ -4,9 +4,9 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 import { computed } from 'vue';
 
-import EdgeFrequencyLegend from '../EdgeFrequencyLegend.vue';
+import EdgeFrequencyDisplay from '../EdgeFrequencyDisplay.vue';
 
-const MIN_WIDTH = 4;
+const MIN_WIDTH = 5;
 const MAX_WIDTH = 30;
 
 const linearInterpolate = (min: number, max: number, ratio: number) =>
@@ -65,7 +65,7 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
       ...themer,
       components: [
         {
-          component: EdgeFrequencyLegend,
+          component: EdgeFrequencyDisplay,
           position: 'center-left',
         },
       ],

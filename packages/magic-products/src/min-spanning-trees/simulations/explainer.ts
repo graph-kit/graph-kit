@@ -3,10 +3,11 @@ import { Graph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
 import { KruskalsFrame, PrimsFrame } from './frame.ts';
+import { primsSlotIds } from './shared.ts';
 
 const describeEdge = (graph: Graph, edgeId: string) => {
   const edge = graph.getEdge(edgeId);
-  return `{${edge.source}}-{${edge.target}} (${edge.weight.toFraction()})`;
+  return `{${edge.source}}-{${edge.id}}-{${edge.target}}`;
 };
 
 const listEdges = (graph: Graph, edgeIds: readonly string[]) => {
@@ -15,16 +16,33 @@ const listEdges = (graph: Graph, edgeIds: readonly string[]) => {
   return `${described.slice(0, -1).join(', ')} and ${described.at(-1)}`;
 };
 
+const componentSlotHighlight = (
+  slot: keyof typeof primsSlotIds,
+): ExplainerHighlight => ({
+  activate: (graph) =>
+    graph.magic.componentSlots.setHighlighted(primsSlotIds[slot]),
+  deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
+});
+
 const highlights = {
   tree: {
-    tooltipLabel: 'The edges already grown into the minimum spanning tree',
+    tooltipLabel: 'The edges already in the minimum spanning tree',
   },
-  frontier: {
+  nonTree: {
+    tooltipLabel: 'The edges not yet in the minimum spanning tree',
+  },
+  considering: {
     tooltipLabel:
-      'Every edge currently eligible to grow into the tree. It connects a tree node to a node outside of the tree',
+      'Every edge that connects a tree node to a non-tree node is currently eligible to be added to the minimum spanning tree',
+    ...componentSlotHighlight('considering'),
+  },
+  excluded: {
+    tooltipLabel:
+      'Edges ruled out because both ends are already in the minimum spanning tree and adding it would create a loop',
+    ...componentSlotHighlight('excluded'),
   },
   added: {
-    tooltipLabel: 'The edge just chosen to grow the tree',
+    tooltipLabel: 'The edge just chosen be added to the minimum spanning tree',
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 
@@ -51,16 +69,13 @@ export const primsExplainer =
 
     if (frame.type === 'consider-edges') {
       return {
-        content: `The [Frontier] now includes every edge connecting the [Tree] to a node not in the [Tree]: ${listEdges(graph, frame.edges)}`,
-        highlights: [highlights.frontier, highlights.tree, highlights.tree],
-      };
-    }
-
-    if (frame.type === 'compare-edges') {
-      const left = describeEdge(graph, frame.left);
-      const right = describeEdge(graph, frame.right);
-      return {
-        content: `Comparing weights of ${left} to ${right}. Which one costs less?`,
+        content: `The list of edges [In Consideration] now includes every edge connecting a [Tree] node to a Non-Tree node: ${listEdges(graph, frame.edges)}`,
+        highlights: [
+          highlights.considering,
+          highlights.tree,
+          highlights.tree,
+          highlights.nonTree,
+        ],
       };
     }
 
@@ -70,14 +85,18 @@ export const primsExplainer =
       if (frame.tiedEdges) {
         const tied = listEdges(graph, frame.tiedEdges);
         return {
-          content: `${tied} are tied for for lowest weight, so ${winner} is chosen arbitrarily and [Added] to the [Tree]`,
-          highlights: [highlights.added, highlights.tree],
+          content: `${tied} are tied for cheapest of the edges [In Consideration], so ${winner} is chosen arbitrarily and [Added] to the [Tree]`,
+          highlights: [
+            highlights.considering,
+            highlights.added,
+            highlights.tree,
+          ],
         };
       }
 
       return {
-        content: `${winner} is chosen because it has the smallest weight, so it gets [Added] to the [Tree]`,
-        highlights: [highlights.added, highlights.tree],
+        content: `${winner} is the cheapest of the [In Consideration] edges, so it gets [Added] to the [Tree]`,
+        highlights: [highlights.added, highlights.considering, highlights.tree],
       };
     }
 
@@ -85,8 +104,8 @@ export const primsExplainer =
       const excluded = listEdges(graph, frame.edges);
       const plural = frame.edges.length > 1;
       return {
-        content: `${excluded} ${plural ? 'are' : 'is'} ruled out because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would cause a loop`,
-        highlights: [highlights.tree],
+        content: `${excluded} ${plural ? 'are' : 'is'} [Excluded] because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would cause a loop`,
+        highlights: [highlights.excluded, highlights.tree],
       };
     }
 

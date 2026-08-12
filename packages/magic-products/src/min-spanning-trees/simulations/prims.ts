@@ -94,18 +94,6 @@ export const prims: PrimsFunction = (graph, startNodeId) => (frameCollector) => 
     let cheapestSoFar = candidateEdges[0];
     for (let i = 1; i < candidateEdges.length; i++) {
       const challenger = candidateEdges[i];
-
-      frameCollector.add(
-        frame({
-          type: 'compare-edges',
-          left: cheapestSoFar.id,
-          right: challenger.id,
-          pendingNodeIds: candidateNodeIds,
-          candidateEdges: candidateEdgeIds,
-          currentComparison: [cheapestSoFar.id, challenger.id],
-        }),
-      );
-
       // lt = less than
       if (challenger.weight.lt(cheapestSoFar.weight)) cheapestSoFar = challenger;
     }

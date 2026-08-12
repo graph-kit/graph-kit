@@ -19,10 +19,15 @@ import tinycolor from 'tinycolor2';
 
 import { Ref } from 'vue';
 
+import Considering from './components/Considering.vue';
+import Excluded from './components/Excluded.vue';
+import Unexplored from './components/Unexplored.vue';
 import { kruskalsExplainer, primsExplainer } from './explainer.ts';
 import { KruskalsFrame, KruskalsFunction, PrimsFrame, PrimsFunction } from './frame.ts';
 
-// exploring = the tree side node the current decision is anchored to 
+// exploring = the tree side node the current decision is anchored to, plus
+//   both endpoints of the edge just selected, so the edge and the node it's
+//   about to add to the tree read as one event
 // settled = already grown into the tree
 // frontier = the far side of a potential edge 
 // anchor = start node (user picked)
@@ -45,6 +50,12 @@ const edgeRoles = {
   crossing: 'crossing',
   tree: 'tree',
 } as const satisfies Record<PrimsEdgeConcept, EdgeRole>;
+
+export const primsSlotIds = {
+  unexplored: 'min-spanning-trees/prims/unexplored',
+  considering: 'min-spanning-trees/prims/considering',
+  excluded: 'min-spanning-trees/prims/excluded',
+} as const;
 
 export type StartNodeId = Ref<GNode['id'] | undefined>;
 
@@ -107,21 +118,29 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
   ];
 
   const syncToFrame = (frame: PrimsFrame) => {
-    exploring.setId(frame.activeNodeId);
+    const selectedEdgeEndpoints = frame.selectedEdge
+      ? [graph.getEdge(frame.selectedEdge).source, graph.getEdge(frame.selectedEdge).target]
+      : [];
+
+    exploring.setIds(
+      frame.activeNodeId ? [frame.activeNodeId, ...selectedEdgeEndpoints] : selectedEdgeEndpoints,
+    );
     settled.setIds(frame.treeNodeIds);
     frontier.setIds(frame.pendingNodeIds ?? []);
     anchor.setId(frame.anchorNodeId);
     tree.setIds(frame.treeEdgeIds);
     candidateEdge.setIds(frame.candidateEdges ?? []);
-    crossingEdge.setIds([
-      ...(frame.currentComparison ?? []),
-      ...(frame.selectedEdge ? [frame.selectedEdge] : []),
-    ]);
+    crossingEdge.setIds(frame.selectedEdge ? [frame.selectedEdge] : []);
     excludedEdge.setIds(frame.excludedEdgeIds);
   };
 
   const lens: Lens = {
     id: 'min-spanning-trees/prims',
+    components: [
+      { component: Unexplored, position: 'center-left', id: primsSlotIds.unexplored },
+      { component: Excluded, position: 'center-left', id: primsSlotIds.excluded },
+      { component: Considering, position: 'center-right', id: primsSlotIds.considering },
+    ],
     activate: () => {
       for (const { themer } of themers) themer.activate();
     },

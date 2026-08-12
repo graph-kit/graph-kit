@@ -21,13 +21,6 @@ type ConsiderEdgesFrame = {
   edges: readonly GEdge['id'][];
 };
 
-// comparing two edges to see which is cheaper
-type CompareEdgesFrame = {
-  type: 'compare-edges';
-  left: GEdge['id'];
-  right: GEdge['id'];
-};
-
 // the edge that was chosen to grow the tree
 type SelectEdgeFrame = {
   type: 'select-edge';
@@ -50,7 +43,6 @@ export type PrimsStep =
   | StartFrame
   | EndFrame
   | ConsiderEdgesFrame
-  | CompareEdgesFrame
   | SelectEdgeFrame
   | ExcludeEdgesFrame
   | UnreachableFrame;
@@ -66,7 +58,6 @@ export type PrimsHighlights = {
   activeNodeId?: GNode['id'];
   pendingNodeIds?: readonly GNode['id'][];
   candidateEdges?: readonly GEdge['id'][];
-  currentComparison?: readonly GEdge['id'][];
   selectedEdge?: GEdge['id'];
 };
 

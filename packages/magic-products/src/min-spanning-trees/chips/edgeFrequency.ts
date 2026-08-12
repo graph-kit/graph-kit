@@ -1,28 +1,14 @@
-import colors from '@core/utils/colors';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
-import tinycolor from 'tinycolor2';
 
 import { computed } from 'vue';
 
-import EdgeFrequencyLegend from '../EdgeFrequencyLegend.vue';
-
-const BASE_COLOR = colors.INDIGO_600;
 const MIN_WIDTH = 4;
-const MAX_WIDTH = 20;
-const MIN_ALPHA = 0.25;
-const MAX_ALPHA = 1;
-const MAX_DARKEN = 18;
+const MAX_WIDTH = 30;
 
 const linearInterpolate = (min: number, max: number, ratio: number) =>
   min + (max - min) * ratio;
-
-export const frequencyColor = (ratio: number) =>
-  tinycolor(BASE_COLOR)
-    .darken(ratio * MAX_DARKEN)
-    .setAlpha(linearInterpolate(MIN_ALPHA, MAX_ALPHA, ratio))
-    .toHex8String();
 
 const frequencyWidth = (ratio: number) =>
   linearInterpolate(MIN_WIDTH, MAX_WIDTH, ratio);
@@ -50,40 +36,25 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
   const ratioOf = (edgeId: string) =>
     totalMsts.value === 0 ? 0 : frequencyOf(edgeId) / totalMsts.value;
 
-  const colorByFrequency = (edge: CoreEdge) => frequencyColor(ratioOf(edge.id));
   const widthByFrequency = (edge: CoreEdge) => frequencyWidth(ratioOf(edge.id));
-
-  const hoverLabel = (edge: CoreEdge) => {
-    const frequency = frequencyOf(edge.id);
-    const inAllMsts = frequency === totalMsts.value;
-    return inAllMsts
-      ? `In all ${totalMsts.value} MSTs`
-      : `In ${frequency}/${totalMsts.value} MSTs`;
-  };
 
   const themer = graph.theme.createThemer({
     canvas: {
-      'edge.default.color': colorByFrequency,
       'edge.default.width': widthByFrequency,
-      'edge.hover.color': colorByFrequency,
       'edge.hover.width': widthByFrequency,
-      'edge.hover.text.content': hoverLabel,
+    },
+    focus: {
+      'edge.focus.width': widthByFrequency,
     },
   });
 
   return {
     title: 'Edge Frequency',
     tooltipLabel:
-      'Shows how often each edge shows up across every possible minimum spanning tree.',
+      'How often each edge shows up across every possible minimum spanning tree',
     lens: {
       id: 'edge-frequency',
       ...themer,
-      components: [
-        {
-          component: EdgeFrequencyLegend,
-          position: 'bottom-middle',
-        },
-      ],
     },
   };
 };

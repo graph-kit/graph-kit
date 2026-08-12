@@ -27,14 +27,16 @@
 
   const latexInputRef = ref<LatexInputWithPreviewInstance | null>(null);
 
-  const { queries, queryAnalysis } = useProvidedSetsProductState();
+  const {
+    queries: { queries, getQuery, setLatexQueryString, registerQueryEditor },
+    queryAnalysis,
+  } = useProvidedSetsProductState();
 
-  const query = computed(() => queries.getQuery(props.queryId));
+  const query = computed(() => getQuery(props.queryId));
 
   const latexQueryString = computed({
     get: () => query.value.latexQueryString,
-    set: (latexString) =>
-      queries.setLatexQueryString(query.value.id, latexString),
+    set: (latexString) => setLatexQueryString(query.value.id, latexString),
   });
 
   const hasError = computed(
@@ -42,7 +44,7 @@
   );
 
   onUnmounted(
-    queries.registerQueryEditor(props.queryId, {
+    registerQueryEditor(props.queryId, {
       insert: (latexString) =>
         latexInputRef.value?.insertIntoLatexString(latexString),
       replace: (latexString) =>
@@ -75,7 +77,7 @@
     </HStack>
 
     <TooltipVue
-      v-if="queries.queryIds.value.length > 1"
+      v-if="queries.length > 1"
       label="Remove"
       side="right"
     >

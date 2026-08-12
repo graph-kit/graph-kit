@@ -15,8 +15,9 @@
   import InsertSetOpButtons from './InsertSetOpButtons.vue';
   import Query from './Query.vue';
 
-  const { queries } = useProvidedSetsProductState();
-  const { queryIds, addQuery } = queries;
+  const {
+    queries: { queries, addQuery },
+  } = useProvidedSetsProductState();
 
   const focusedQueryId = ref<QueryId>();
 
@@ -38,7 +39,7 @@
     unfocusQuery();
   });
 
-  const MAX_NUMBER_OF_HIGHLIGHTS = 5;
+  const MAX_NUMBER_OF_QUERIES = 5;
 </script>
 
 <template>
@@ -53,7 +54,7 @@
     </WellVue>
     <div>
       <Tooltip
-        v-if="queryIds.length < MAX_NUMBER_OF_HIGHLIGHTS"
+        v-if="queries.length < MAX_NUMBER_OF_QUERIES"
         label="Add highlight region"
       >
         <template #trigger>
@@ -69,10 +70,10 @@
       <Well class="rounded-tl-none">
         <VStack class="flex-col-reverse">
           <Query
-            v-for="queryId in queryIds"
-            :key="queryId"
-            :queryId="queryId"
-            @focus="focusedQueryId = queryId"
+            v-for="{ id } in queries"
+            :key="id"
+            :queryId="id"
+            @focus="focusedQueryId = id"
           />
         </VStack>
       </Well>

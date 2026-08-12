@@ -64,7 +64,7 @@ export type QueryAnalysis = {
 };
 
 export const useQueryAnalysis = (
-  queries: Queries,
+  { queries }: Queries,
   sets: SetDefinitions,
   sections: ComputedRef<Section[]>,
 ): QueryAnalysis => {
@@ -84,9 +84,8 @@ export const useQueryAnalysis = (
     const labels = definedSetLabels.value;
     const analyses = new Map<QueryId, AnalyzedQuery>();
 
-    for (const queryId of queries.queryIds.value) {
-      const { latexQueryString } = queries.getQuery(queryId);
-      analyses.set(queryId, analyzeQuery(latexQueryString, parse, labels));
+    for (const { id, latexQueryString } of queries.value) {
+      analyses.set(id, analyzeQuery(latexQueryString, parse, labels));
     }
 
     return analyses;

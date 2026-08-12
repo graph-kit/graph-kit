@@ -2,7 +2,7 @@ import { nullThrows } from '@core/utils/assert';
 import type { Color } from '@core/utils/colors';
 import { generateId } from '@core/utils/id';
 
-import { type Ref, ref } from 'vue';
+import { type ComputedRef, computed, ref } from 'vue';
 
 import { QUERY_COLORS } from './sets/other/constants.ts';
 import type { LatexQueryString, QueryId } from './types.ts';
@@ -18,11 +18,12 @@ export type Query = {
   latexQueryString: LatexQueryString;
   isHidden: boolean;
   color: Color;
+  editor: QueryEditor;
 };
 
 export type Queries = {
-  // the queries in render order, each resolved to its data through getQuery
-  queryIds: Ref<QueryId[]>;
+  // every query in render order
+  queries: ComputedRef<Query[]>;
   getQuery: (queryId: QueryId) => Query;
   addQuery: () => QueryId;
   setLatexQueryString: (
@@ -40,62 +41,67 @@ export type Queries = {
 const nextColor = (queryCountBeforeThisOne: number): Color =>
   QUERY_COLORS[queryCountBeforeThisOne % QUERY_COLORS.length];
 
+// stands in until the query's mathfield mounts, so the commands never need a null check
+const NO_EDITOR: QueryEditor = {
+  insert: () => {},
+  replace: () => {},
+};
+
+// color comes from the count so it is fixed at creation, keeping a query's color stable
+const createQuery = (queryCountBeforeThisOne: number): Query => ({
+  id: generateId(),
+  latexQueryString: '',
+  isHidden: false,
+  color: nextColor(queryCountBeforeThisOne),
+  editor: NO_EDITOR,
+});
+
 export const createQueries = (): Queries => {
-  const initialQueryId = generateId();
-  const queryIds = ref<QueryId[]>([initialQueryId]);
+  const queries = ref<Query[]>([createQuery(0)]);
 
-  // kept beside the ids rather than in them so a query is nothing but its latex string
-  const latexQueryStrings = ref<Record<QueryId, LatexQueryString>>({});
-  const hiddenQueryIds = ref(new Set<QueryId>());
-  // assigned once at creation and never reassigned, so a query's color is stable
-  const colorsByQueryId = ref<Record<QueryId, Color>>({
-    [initialQueryId]: nextColor(0),
-  });
-
-  // a plain map because editors are imperative, not something a render depends on
-  const queryEditors = new Map<QueryId, QueryEditor>();
+  const getQuery = (queryId: QueryId) =>
+    nullThrows(
+      queries.value.find(({ id }) => id === queryId),
+      `no query with id ${queryId}`,
+    );
 
   return {
-    queryIds,
+    // handed out as a computed so the list is read through the actions below
+    queries: computed(() => queries.value),
 
-    getQuery: (queryId) => ({
-      id: queryId,
-      latexQueryString: latexQueryStrings.value[queryId] ?? '',
-      isHidden: hiddenQueryIds.value.has(queryId),
-      color: nullThrows(
-        colorsByQueryId.value[queryId],
-        `no color assigned to query ${queryId}`,
-      ),
-    }),
+    getQuery,
 
     addQuery: () => {
-      const queryId = generateId();
-      colorsByQueryId.value[queryId] = nextColor(queryIds.value.length);
-      queryIds.value.push(queryId);
-      return queryId;
+      const query = createQuery(queries.value.length);
+      queries.value.push(query);
+      return query.id;
     },
 
     setLatexQueryString: (queryId, latexQueryString) => {
-      latexQueryStrings.value[queryId] = latexQueryString;
+      getQuery(queryId).latexQueryString = latexQueryString;
     },
 
     setHidden: (queryId, isHidden) => {
-      if (isHidden) hiddenQueryIds.value.add(queryId);
-      else hiddenQueryIds.value.delete(queryId);
+      getQuery(queryId).isHidden = isHidden;
     },
 
     registerQueryEditor: (queryId, editor) => {
-      queryEditors.set(queryId, editor);
-      return () => queryEditors.delete(queryId);
+      // the query is captured so unregistering still works once it has been removed
+      const query = getQuery(queryId);
+      query.editor = editor;
+      return () => {
+        query.editor = NO_EDITOR;
+      };
     },
 
     insertIntoQuery: (queryId, latexString) => {
-      queryEditors.get(queryId)?.insert(latexString);
+      getQuery(queryId).editor.insert(latexString);
     },
 
     replaceQuery: (queryId, latexString) => {
-      latexQueryStrings.value[queryId] = latexString;
-      queryEditors.get(queryId)?.replace(latexString);
+      const query = getQuery(queryId);
+      query.latexQueryString = latexString;
+      query.editor.replace(latexString);
     },
   };
 };

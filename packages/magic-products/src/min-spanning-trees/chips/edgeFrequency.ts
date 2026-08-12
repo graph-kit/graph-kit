@@ -4,16 +4,18 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 import { computed } from 'vue';
 
+import EdgeFrequencyLegend from '../EdgeFrequencyLegend.vue';
+
 const MIN_WIDTH = 4;
 const MAX_WIDTH = 30;
 
 const linearInterpolate = (min: number, max: number, ratio: number) =>
   min + (max - min) * ratio;
 
-const frequencyWidth = (ratio: number) =>
+export const frequencyWidth = (ratio: number) =>
   linearInterpolate(MIN_WIDTH, MAX_WIDTH, ratio);
 
-export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
+export const useEdgeFrequency = (graph: Graph) => {
   const msts = computed(() => {
     const result = graph.minimumSpanningTrees.all.value;
     return result.skipped ? [] : result.msts;
@@ -36,6 +38,12 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
   const ratioOf = (edgeId: string) =>
     totalMsts.value === 0 ? 0 : frequencyOf(edgeId) / totalMsts.value;
 
+  return { totalMsts, frequencyOf, ratioOf };
+};
+
+export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
+  const { ratioOf } = useEdgeFrequency(graph);
+
   const widthByFrequency = (edge: CoreEdge) => frequencyWidth(ratioOf(edge.id));
 
   const themer = graph.theme.createThemer({
@@ -55,6 +63,12 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
     lens: {
       id: 'edge-frequency',
       ...themer,
+      components: [
+        {
+          component: EdgeFrequencyLegend,
+          position: 'center-left',
+        },
+      ],
     },
   };
 };

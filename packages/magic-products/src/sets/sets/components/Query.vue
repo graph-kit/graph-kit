@@ -31,6 +31,22 @@
   const editor = useQueryEditor(query);
 
   const previewValue = ref<string>();
+
+  const removeButtonSizePx = 26;
+
+  const showRemoveButton = computed(() => {
+    return queries.queries.value.length > 1;
+  });
+
+  const latexInputWidthPx = computed(() => {
+    const defaultInputWidthPx = 400;
+    const hStackGapWidthPx = 8; // tailwind gap-2 = 8px
+    let widthPx = defaultInputWidthPx;
+    if (!showRemoveButton.value) {
+      widthPx += removeButtonSizePx + hStackGapWidthPx;
+    }
+    return widthPx;
+  });
 </script>
 
 <template>
@@ -48,6 +64,7 @@
         placeholder="\text{e.g. } A \cup B"
         @mounted="editor.onMounted"
         @unmounted="editor.onUnmounted"
+        :width="latexInputWidthPx"
         @focus="emit('focus')"
       />
       <QueryInputModifiers
@@ -57,7 +74,7 @@
     </HStack>
 
     <TooltipVue
-      v-if="queries.queries.value.length > 1"
+      v-if="showRemoveButton"
       label="Remove"
       side="right"
     >
@@ -68,7 +85,7 @@
         >
           <Icon
             :path="mdiClose"
-            :size="26"
+            :size="removeButtonSizePx"
           />
         </Button>
       </template>

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { parseMathJSON } from './parseMathJSON.ts';
 
-
 describe(parseMathJSON, () => {
   it('reads negation as its own head', () => {
     expect(parseMathJSON('\\neg A').json).toEqual(['Negation', 'A']);
@@ -16,6 +15,7 @@ describe(parseMathJSON, () => {
       'Negation',
       ['Negation', 'A'],
     ]);
+  });
 
   it('binds negation tighter than the set operators around it', () => {
     expect(parseMathJSON('\\neg A \\cup B').json).toEqual([

@@ -2,9 +2,7 @@
   import Button from '@magic/shared/Button';
   import Tooltip from '@magic/shared/Tooltip';
   import VStack from '@magic/shared/VStack';
-  import VStackVue from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import WellVue from '@magic/shared/Well';
   import { mdiPlus } from '@mdi/js';
   import { useActiveElement } from '@vueuse/core';
 
@@ -39,16 +37,16 @@
 </script>
 
 <template>
-  <VStackVue>
+  <VStack>
     <!-- the ops extend the field they act on, so pressing them must never pull focus out of it -->
-    <WellVue
+    <Well
       v-if="focusedQueryId"
-      class="min-w-0"
+      class="p-2"
       :data-query-focus="focusedQueryId"
       @mousedown.prevent
     >
       <InsertSetOpButtons :queryId="focusedQueryId" />
-    </WellVue>
+    </Well>
     <div>
       <Tooltip
         v-if="queries.length < MAX_NUMBER_OF_QUERIES"
@@ -74,5 +72,5 @@
         </VStack>
       </Well>
     </div>
-  </VStackVue>
+  </VStack>
 </template>

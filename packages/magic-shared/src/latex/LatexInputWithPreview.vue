@@ -12,7 +12,10 @@
 
   const props = withDefaults(
     defineProps<{
-      /** shown in place of the model value, holding the field inert for as long as it is set */
+      /**
+       * shown in place of the model value, holding the field inert for as long as it is set.
+       * an empty string previews an empty field, so only undefined reads as previewing nothing
+       */
       previewValue?: string;
       /** paints the field as rejecting what it currently holds, ignored while previewing */
       error?: boolean;
@@ -20,7 +23,7 @@
       height?: number;
       placeholder?: string;
     }>(),
-    { previewValue: '', error: false },
+    { error: false },
   );
 
   const emit = defineEmits<{
@@ -38,7 +41,7 @@
   const latexInput = ref<LatexInputInstance | null>(null);
   const mathfield = ref<MathfieldElement | null>(null);
 
-  const inPreview = computed(() => !!props.previewValue);
+  const inPreview = computed(() => props.previewValue !== undefined);
 
   const classes = computed(() =>
     cn(inPreview.value && 'pointer-events-none bg-blue-200', attrClass.value),
@@ -63,7 +66,7 @@
 
   const showCurrentValue = () => {
     latexInput.value?.replaceLatexString(
-      props.previewValue || latexString.value,
+      props.previewValue ?? latexString.value,
     );
   };
 
@@ -84,6 +87,7 @@
 </script>
 
 <template>
+  <!-- an empty preview is a value in its own right, so it drops the placeholder that would read as an empty field -->
   <LatexInput
     ref="latexInput"
     v-bind="{ ...$attrs, class: undefined }"
@@ -93,7 +97,7 @@
     :width="width"
     :height="height"
     :read-only="inPreview || undefined"
-    :placeholder="placeholder"
+    :placeholder="inPreview ? '' : placeholder"
     :tabindex="inPreview ? -1 : undefined"
     @mounted="onMounted"
     @unmounted="emit('unmounted')"

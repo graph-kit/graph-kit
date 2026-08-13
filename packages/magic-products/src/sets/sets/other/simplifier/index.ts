@@ -84,8 +84,18 @@ const trySimplify = (
   const truthTable = getTruthTable(node, variables, outsideId);
   const oneMinterms = getOneMinterms(truthTable, variables.length);
 
-  if (oneMinterms.length === 0 || oneMinterms.length === 2 ** variables.length)
-    return null;
+  // a full cover is the universal set, which minimizes to a term of no literals for DNF to write
+  if (oneMinterms.length === 2 ** variables.length) {
+    const universalSet = mathJsonToLatex(LATEX_SET_SYMBOLS.OMEGA);
+    return stripWhitespace(originalLatex) === universalSet
+      ? null
+      : universalSet;
+  }
+
+  // an empty cover is the empty set, which a query writes as nothing at all
+  if (oneMinterms.length === 0) {
+    return stripWhitespace(originalLatex) === '' ? null : '';
+  }
 
   const terms = minimizeDNF(oneMinterms, variables);
   const simplified = dnfToMathJson(terms);
@@ -154,11 +164,12 @@ export const simplify = (
 
   let current = baseLatex;
   let best: string | null = baseLatex !== latex ? baseLatex : null;
-  let bestWeight = best ? countOperatorWeight(best) : originalWeight;
+  let bestWeight = best !== null ? countOperatorWeight(best) : originalWeight;
 
+  // every check below is against null rather than falsy, since the empty set simplifies to ''
   for (let i = 0; i < MAX_SIMPLIFICATION_ITERATIONS; i++) {
     const next = simplifyOnce(current, definedLabels, resolveId, toLabel);
-    if (!next) break;
+    if (next === null) break;
     current = next;
 
     const weight = countOperatorWeight(next);
@@ -168,7 +179,7 @@ export const simplify = (
     }
   }
 
-  if (!best || bestWeight >= originalWeight) return null;
+  if (best === null || bestWeight >= originalWeight) return null;
 
   return best;
 };

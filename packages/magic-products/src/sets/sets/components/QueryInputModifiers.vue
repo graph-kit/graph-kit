@@ -37,12 +37,18 @@
   };
 
   // trigger example: $$ A\cap B\cup C $$
-  const applyDisambiguation = () => {};
+  const applyDisambiguation = () => {
+    props.query.editor.replace(
+      nullThrows(disambiguated.value, 'disambiguated query is null'),
+    );
+    props.query.editor.element?.focus();
+  };
 </script>
 
 <template>
+  <!-- checked against null rather than falsy, since a query selecting nothing simplifies to '' -->
   <div
-    v-if="disambiguated || simplified"
+    v-if="disambiguated !== null || simplified !== null"
     class="absolute right-0"
   >
     <Dropdown
@@ -57,7 +63,7 @@
           :class="
             cn(
               'text-black bg-gray-300 hover:bg-gray-400 rounded-none rounded-r-md h-10',
-              previewValue && 'invisible',
+              previewValue !== undefined && 'invisible',
             )
           "
         />
@@ -78,7 +84,7 @@
       </Tooltip>
 
       <Tooltip
-        v-if="simplified"
+        v-if="simplified !== null"
         label="This expression can be simplified."
       >
         <template #trigger>

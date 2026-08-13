@@ -21,29 +21,30 @@ const RESERVED = new Set<string>(RESERVED_LABELS);
 const OPERATOR_WEIGHTS = {
   '\\cup': 1,
   '\\cap': 1,
+  '\\neg': 1,
+  // both spellings of the complement postfix, which is a negation written the other way
   '^{\\complement}': 1,
+  '^\\complement': 1,
   '\\setminus': 2,
   '\\triangle': 3,
 } as const;
 
 const stripWhitespace = (s: string) => s.replace(/\s/g, '');
 
-const stripDoubleComplement = (
-  node: MathJsonExpression,
-): MathJsonExpression => {
+const stripDoubleNegation = (node: MathJsonExpression): MathJsonExpression => {
   if (!Array.isArray(node)) return node;
 
   const [head, ...args] = node;
 
   if (
-    head === LATEX_SET_SYMBOLS.COMPLEMENT &&
+    head === LATEX_SET_SYMBOLS.NEGATION &&
     Array.isArray(args[0]) &&
-    args[0][0] === LATEX_SET_SYMBOLS.COMPLEMENT
+    args[0][0] === LATEX_SET_SYMBOLS.NEGATION
   ) {
-    return stripDoubleComplement(args[0][1] as MathJsonExpression);
+    return stripDoubleNegation(args[0][1] as MathJsonExpression);
   }
 
-  return [head, ...args.map(stripDoubleComplement)] as MathJsonExpression;
+  return [head, ...args.map(stripDoubleNegation)] as MathJsonExpression;
 };
 
 // walks leaves only, so Omega and operator heads pass through untouched
@@ -58,7 +59,10 @@ const mapLeaves = (
   if (!Array.isArray(node)) return node;
 
   const [head, ...args] = node;
-  return [head, ...args.map((arg) => mapLeaves(arg, resolve))] as MathJsonExpression;
+  return [
+    head,
+    ...args.map((arg) => mapLeaves(arg, resolve)),
+  ] as MathJsonExpression;
 };
 
 const countOperatorWeight = (latex: string): number => {
@@ -86,7 +90,8 @@ const trySimplify = (
   const terms = minimizeDNF(oneMinterms, variables);
   const simplified = dnfToMathJson(terms);
 
-  if (getTruthTable(simplified, variables, outsideId) !== truthTable) return null;
+  if (getTruthTable(simplified, variables, outsideId) !== truthTable)
+    return null;
 
   const result = mathJsonToLatex(mapLeaves(simplified, toLabel));
   if (stripWhitespace(result) === stripWhitespace(originalLatex)) return null;
@@ -138,7 +143,7 @@ export const simplify = (
 
   const expression = parseMathJSON(latex);
   const stripped = expression
-    ? mathJsonToLatex(stripDoubleComplement(expression.json))
+    ? mathJsonToLatex(stripDoubleNegation(expression.json))
     : null;
   const baseLatex =
     stripped && stripWhitespace(stripped) !== stripWhitespace(latex)

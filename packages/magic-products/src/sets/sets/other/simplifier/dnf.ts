@@ -3,8 +3,8 @@ import type { MathJsonExpression } from '@cortex-js/compute-engine';
 import { LATEX_SET_SYMBOLS } from '../constants.ts';
 import type { DNFTerm } from './quine-mccluskey.ts';
 
-const complement = (arg: MathJsonExpression): MathJsonExpression => [
-  LATEX_SET_SYMBOLS.COMPLEMENT,
+const negation = (arg: MathJsonExpression): MathJsonExpression => [
+  LATEX_SET_SYMBOLS.NEGATION,
   arg,
 ];
 
@@ -31,7 +31,7 @@ const foldBinary = (
   return [op, items[0], foldBinary(op, items.slice(1))];
 };
 
-// (A ∩ B^c) ∪ (A^c ∩ B) → A △ B
+// (A ∩ ¬B) ∪ (¬A ∩ B) → A △ B
 const matchSymmetricDiff = (terms: DNFTerm[]): MathJsonExpression | null => {
   if (terms.length !== 2) return null;
 
@@ -52,8 +52,8 @@ const matchSymmetricDiff = (terms: DNFTerm[]): MathJsonExpression | null => {
   return null;
 };
 
-// (A ∩ B) ∪ (A^c ∩ B^c) → (A △ B)^c
-const matchComplementSymmetricDiff = (
+// (A ∩ B) ∪ (¬A ∩ ¬B) → ¬(A △ B)
+const matchNegatedSymmetricDiff = (
   terms: DNFTerm[],
 ): MathJsonExpression | null => {
   if (terms.length !== 2) return null;
@@ -75,7 +75,7 @@ const matchComplementSymmetricDiff = (
 
   const [a, b] = [...posTerm.positive];
 
-  return complement(symmetricDifference(a, b));
+  return negation(symmetricDifference(a, b));
 };
 
 const termToMathJson = (term: DNFTerm): MathJsonExpression => {
@@ -89,15 +89,15 @@ const termToMathJson = (term: DNFTerm): MathJsonExpression => {
     return difference(a, b);
   }
 
-  // (A ∪ B ∪ ...)^c
+  // ¬(A ∪ B ∪ ...)
   if (positive.size === 0 && negative.size > 0) {
-    return complement(foldBinary(LATEX_SET_SYMBOLS.UNION, [...negative]));
+    return negation(foldBinary(LATEX_SET_SYMBOLS.UNION, [...negative]));
   }
 
   // General intersection of literals
   const literals: MathJsonExpression[] = [
     ...positive,
-    ...[...negative].map((v) => complement(v)),
+    ...[...negative].map((v) => negation(v)),
   ];
 
   return foldBinary(LATEX_SET_SYMBOLS.INTERSECTION, literals);
@@ -107,8 +107,8 @@ export const dnfToMathJson = (terms: DNFTerm[]): MathJsonExpression => {
   const symDiff = matchSymmetricDiff(terms);
   if (symDiff) return symDiff;
 
-  const compSymDiff = matchComplementSymmetricDiff(terms);
-  if (compSymDiff) return compSymDiff;
+  const negatedSymDiff = matchNegatedSymmetricDiff(terms);
+  if (negatedSymDiff) return negatedSymDiff;
 
   return foldBinary(LATEX_SET_SYMBOLS.UNION, terms.map(termToMathJson));
 };
@@ -121,7 +121,9 @@ const isFunctionExpression = (
   Array.isArray(expr) && expr.length > 0 && typeof expr[0] === 'string';
 
 export const mathJsonToLatex = (node: MathJsonExpression): string => {
-  if (typeof node === 'string') return node;
+  // a set label is its own latex, but the universal set is a symbol name standing in for one
+  if (typeof node === 'string')
+    return node === LATEX_SET_SYMBOLS.OMEGA ? '\\Omega' : node;
   if (!Array.isArray(node)) return '';
 
   if (!isFunctionExpression(node)) return '';
@@ -131,7 +133,7 @@ export const mathJsonToLatex = (node: MathJsonExpression): string => {
   const ASSOCIATIVE = [LATEX_SET_SYMBOLS.UNION, LATEX_SET_SYMBOLS.INTERSECTION];
 
   const wrap = (child: MathJsonExpression): string => {
-    if (typeof child === 'string') return child;
+    if (typeof child === 'string') return mathJsonToLatex(child);
     if (!Array.isArray(child)) return '';
 
     if (!isFunctionExpression(child)) return '';
@@ -147,7 +149,8 @@ export const mathJsonToLatex = (node: MathJsonExpression): string => {
 
     const inner = mathJsonToLatex(child);
 
-    return childHead !== LATEX_SET_SYMBOLS.COMPLEMENT
+    // negation binds tighter than every operator it can sit under, so it never needs parenthesizing
+    return childHead !== LATEX_SET_SYMBOLS.NEGATION
       ? `\\left(${inner}\\right)`
       : inner;
   };
@@ -167,8 +170,8 @@ export const mathJsonToLatex = (node: MathJsonExpression): string => {
     case LATEX_SET_SYMBOLS.SYMMETRIC_DIFFERENCE:
       return `${wrap(args[0])} \\triangle ${wrap(args[1])}`;
 
-    case LATEX_SET_SYMBOLS.COMPLEMENT:
-      return `${wrap(args[0])}^{\\complement}`;
+    case LATEX_SET_SYMBOLS.NEGATION:
+      return `\\neg ${wrap(args[0])}`;
 
     default:
       return String(node);

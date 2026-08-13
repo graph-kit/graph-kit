@@ -17,6 +17,8 @@ export const useQueryEditor = (query: Query) => {
   const onMounted = (element: MathfieldElement) => {
     useSetsLatexField(element);
 
+    query.editor.element = element;
+
     unmount = query.editor.mount({
       element,
       insert: (latexString) => element.executeCommand(['insert', latexString]),

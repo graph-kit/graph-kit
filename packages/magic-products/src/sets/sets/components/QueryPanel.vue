@@ -6,9 +6,9 @@
   import Well from '@magic/shared/Well';
   import WellVue from '@magic/shared/Well';
   import { mdiPlus } from '@mdi/js';
-  import { useEventListener } from '@vueuse/core';
+  import { useActiveElement } from '@vueuse/core';
 
-  import { ref } from 'vue';
+  import { computed } from 'vue';
 
   import type { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
@@ -19,33 +19,21 @@
     queries: { queries, addQuery },
   } = useProvidedSetsProductState();
 
-  const focusedQueryId = ref<QueryId>();
+  // the mathfield is the focus target itself, so descending into its shadow root would look past it
+  const activeElement = useActiveElement({ deep: false });
 
-  const unfocusQuery = () => {
-    focusedQueryId.value = undefined;
-  };
+  /* a query holds focus through every region that acts on it, not just its field, so an op the field blurs into still reads as the query's own */
+  const focusedQueryId = computed<QueryId | undefined>(
+    () =>
+      activeElement.value
+        ?.closest('[data-query-focus]')
+        ?.getAttribute('data-query-focus') ?? undefined,
+  );
 
   const addAndFocusQuery = () => {
     const query = addQuery();
-    query.editor.onMounted((editorRef) => {
-      focusedQueryId.value = query.id;
-      editorRef.focus();
-    });
+    query.editor.onMounted((editorRef) => editorRef.focus());
   };
-
-  /* a field blurs on the press that starts an interaction, so what keeps the ops open is where that interaction lands, not the blur */
-  const holdsQueryFocus = (target: EventTarget | null) =>
-    target instanceof Element && !!target.closest('[data-query-focus]');
-
-  useEventListener('pointerdown', ({ target }) => {
-    if (holdsQueryFocus(target)) return;
-    unfocusQuery();
-  });
-
-  useEventListener('focusin', ({ target }) => {
-    if (holdsQueryFocus(target)) return;
-    unfocusQuery();
-  });
 
   const MAX_NUMBER_OF_QUERIES = 5;
 </script>
@@ -55,7 +43,7 @@
     <!-- the ops extend the field they act on, so pressing them must never pull focus out of it -->
     <WellVue
       v-if="focusedQueryId"
-      data-query-focus
+      :data-query-focus="focusedQueryId"
       @mousedown.prevent
     >
       <InsertSetOpButtons :queryId="focusedQueryId" />
@@ -81,7 +69,6 @@
             v-for="{ id } in queries"
             :key="id"
             :queryId="id"
-            @focus="focusedQueryId = id"
           />
         </VStack>
       </Well>

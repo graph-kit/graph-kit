@@ -5,7 +5,6 @@
   import Dropdown from '@magic/shared/Dropdown';
   import IconButton from '@magic/shared/IconButton';
   import Tooltip from '@magic/shared/Tooltip';
-  import Well from '@magic/shared/Well';
   import { mdiInformationOutline } from '@mdi/js';
 
   import { computed } from 'vue';
@@ -30,16 +29,15 @@
   );
 
   // trigger example: $$ A\cup A $$
-  const applySimplification = () =>
+  const applySimplification = () => {
     props.query.editor.replace(
       nullThrows(simplified.value, 'simplified query is null'),
     );
+    props.query.editor.element?.focus();
+  };
 
   // trigger example: $$ A\cap B\cup C $$
-  const applyDisambiguation = () =>
-    props.query.editor.replace(
-      nullThrows(disambiguated.value, 'disambiguated query is null'),
-    );
+  const applyDisambiguation = () => {};
 </script>
 
 <template>
@@ -50,6 +48,7 @@
     <Dropdown
       align="center"
       open-on="hover"
+      class="flex min-w-0 flex-col gap-1"
     >
       <template #trigger>
         <IconButton
@@ -63,37 +62,35 @@
           "
         />
       </template>
-      <Well class="p-1">
-        <Tooltip
-          v-if="disambiguated"
-          label="Operator precedence isn't standardized in set theory. Using parentheses makes evaluation order explicit."
-        >
-          <template #trigger>
-            <Button
-              @mouseenter="previewValue = disambiguated"
-              @mouseleave="previewValue = undefined"
-              @vue:unmounted="previewValue = undefined"
-              @click="applyDisambiguation"
-              >Disambiguate</Button
-            >
-          </template>
-        </Tooltip>
+      <Tooltip
+        v-if="disambiguated"
+        label="Operator precedence isn't standardized in set theory. Using parentheses makes evaluation order explicit."
+      >
+        <template #trigger>
+          <Button
+            @mouseenter="previewValue = disambiguated"
+            @mouseleave="previewValue = undefined"
+            @vue:unmounted="previewValue = undefined"
+            @click="applyDisambiguation"
+            >Disambiguate</Button
+          >
+        </template>
+      </Tooltip>
 
-        <Tooltip
-          v-if="simplified"
-          label="This expression can be simplified."
-        >
-          <template #trigger>
-            <Button
-              @mouseenter="previewValue = simplified"
-              @mouseleave="previewValue = undefined"
-              @vue:unmounted="previewValue = undefined"
-              @click="applySimplification"
-              >Simplify</Button
-            >
-          </template>
-        </Tooltip>
-      </Well>
+      <Tooltip
+        v-if="simplified"
+        label="This expression can be simplified."
+      >
+        <template #trigger>
+          <Button
+            @mouseenter="previewValue = simplified"
+            @mouseleave="previewValue = undefined"
+            @vue:unmounted="previewValue = undefined"
+            @click="applySimplification"
+            >Simplify</Button
+          >
+        </template>
+      </Tooltip>
     </Dropdown>
   </div>
 </template>

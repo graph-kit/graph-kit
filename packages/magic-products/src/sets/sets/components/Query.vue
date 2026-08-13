@@ -18,10 +18,6 @@
     queryId: QueryId;
   }>();
 
-  const emit = defineEmits<{
-    focus: [];
-  }>();
-
   const { queries, queryAnalysis } = useProvidedSetsProductState();
 
   const query = queries.getQuery(props.queryId);
@@ -58,14 +54,13 @@
       <LatexInputWithPreview
         :model-value="query.latexQueryString"
         @update:model-value="query.editor.replace"
-        data-query-focus
         :error="hasError"
         :preview-value="previewValue"
         placeholder="\text{e.g. } A \cup B"
         @mounted="editor.onMounted"
         @unmounted="editor.onUnmounted"
         :width="latexInputWidthPx"
-        @focus="emit('focus')"
+        :data-query-focus="query.id"
       />
       <QueryInputModifiers
         v-model="previewValue"

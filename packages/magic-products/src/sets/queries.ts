@@ -24,6 +24,8 @@ type QueryEditor = {
   insert: (latexString: LatexQueryString) => void;
   /** Rewrites the query in full, leaving the mathfield to reconcile against it. */
   replace: (latexString: LatexQueryString) => void;
+  /** element ref of mathfield LaTeX editor, null if not mounted. */
+  element: MathfieldElement | null;
 };
 
 /** What a mounted mathfield contributes, the rest of the editor being the query's own. */
@@ -35,7 +37,7 @@ type QueryEditorCommands = Pick<QueryEditor, 'insert'> & {
 /** A live query rather than a snapshot, so what is read through it is never stale. */
 export type Query = {
   id: string;
-  /** The query's current latex. Read only, so edit it through {@link Query.editor}. */
+  /** The query's current latex. Read only, so edit it through {@link Query['editor']}. */
   readonly latexQueryString: LatexQueryString;
   hidden: boolean;
   color: Color;
@@ -74,6 +76,8 @@ const createQuery = (color: Color): Query => {
     rendered still reaches the mount that comes later
   */
   const editor: QueryEditor = {
+    element: null,
+
     onMounted: (callback) => {
       if (commands) callback(commands.element);
 

@@ -43,6 +43,7 @@
     <!-- the ops extend the field they act on, so pressing them must never pull focus out of it -->
     <WellVue
       v-if="focusedQueryId"
+      class="min-w-0"
       :data-query-focus="focusedQueryId"
       @mousedown.prevent
     >

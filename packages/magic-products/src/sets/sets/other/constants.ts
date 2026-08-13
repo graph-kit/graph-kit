@@ -47,6 +47,7 @@ export const SET_OP_TO_LATEX = {
   O: '\\Omega',
   S: OUTSIDE_ALL_SETS.label,
   C: '^\\complement',
+  N: '\\neg',
   '\\': '\\setminus',
 } as const;
 

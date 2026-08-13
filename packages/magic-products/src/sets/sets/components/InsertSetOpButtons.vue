@@ -22,6 +22,7 @@
     O: 'Universal set (shift+o)',
     S: 'Outside all sets (s)',
     C: 'Complement (shift+c)',
+    N: 'Negation (shift+n)',
     '\\': 'Difference (\\ or -)',
   };
 

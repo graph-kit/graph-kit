@@ -25,7 +25,8 @@
 
   const emit = defineEmits<{
     /** math-live has loaded in the keyboard */
-    ready: [mathfield: MathfieldElement];
+    mounted: [mathfield: MathfieldElement];
+    unmounted: [];
   }>();
 
   const latexString = defineModel<string>({
@@ -54,6 +55,12 @@
     latexString.value = latex;
   });
 
+  // a rewrite arriving from the model, which the preview outranks until it is cleared
+  watch(latexString, (latex) => {
+    if (inPreview.value) return;
+    displayedString.value = latex;
+  });
+
   const showCurrentValue = () => {
     latexInput.value?.replaceLatexString(
       props.previewValue || latexString.value,
@@ -69,25 +76,11 @@
     },
   );
 
-  const onReady = (field: MathfieldElement) => {
+  const onMounted = (field: MathfieldElement) => {
     mathfield.value = field;
     showCurrentValue();
-    emit('ready', field);
+    emit('mounted', field);
   };
-
-  // the field is inert while previewing, so it takes no commands either
-
-  const insertIntoLatexString = (latex: string) => {
-    if (inPreview.value) return;
-    latexInput.value?.insertIntoLatexString(latex);
-  };
-
-  const replaceLatexString = (latex: string) => {
-    if (inPreview.value) return;
-    latexInput.value?.replaceLatexString(latex);
-  };
-
-  defineExpose({ insertIntoLatexString, replaceLatexString });
 </script>
 
 <template>
@@ -102,6 +95,7 @@
     :read-only="inPreview || undefined"
     :placeholder="placeholder"
     :tabindex="inPreview ? -1 : undefined"
-    @ready="onReady"
+    @mounted="onMounted"
+    @unmounted="emit('unmounted')"
   />
 </template>

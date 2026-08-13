@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { cn } from '@core/components/cn';
   import { nullThrows } from '@core/utils/assert';
   import Button from '@magic/shared/Button';
   import Dropdown from '@magic/shared/Dropdown';
@@ -9,7 +10,7 @@
 
   import { computed } from 'vue';
 
-  import { Query } from '../../highlightQueries.ts';
+  import { Query } from '../../queries.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
 
   const props = defineProps<{
@@ -18,7 +19,7 @@
 
   const previewValue = defineModel<string>();
 
-  const { highlights, queryAnalysis } = useProvidedSetsProductState();
+  const { queryAnalysis } = useProvidedSetsProductState();
 
   const simplified = computed(
     () => queryAnalysis.simplifiedQueries.value[props.query.id],
@@ -30,15 +31,13 @@
 
   // trigger example: $$ A\cup A $$
   const applySimplification = () =>
-    highlights.replaceQuery(
-      props.query.id,
+    props.query.editor.replace(
       nullThrows(simplified.value, 'simplified query is null'),
     );
 
   // trigger example: $$ A\cap B\cup C $$
   const applyDisambiguation = () =>
-    highlights.replaceQuery(
-      props.query.id,
+    props.query.editor.replace(
       nullThrows(disambiguated.value, 'disambiguated query is null'),
     );
 </script>
@@ -56,7 +55,12 @@
         <IconButton
           label=""
           :path="mdiInformationOutline"
-          class="text-black bg-gray-300 hover:bg-gray-400 rounded-none rounded-r-md h-10"
+          :class="
+            cn(
+              'text-black bg-gray-300 hover:bg-gray-400 rounded-none rounded-r-md h-10',
+              previewValue && 'invisible',
+            )
+          "
         />
       </template>
       <Well class="p-1">

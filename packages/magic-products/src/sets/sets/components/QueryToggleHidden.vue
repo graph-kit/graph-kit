@@ -5,34 +5,32 @@
 
   import { computed } from 'vue';
 
-  import { Query } from '../../highlightQueries.ts';
-  import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
+  import { Query } from '../../queries.ts';
 
   const props = defineProps<{
     query: Query;
   }>();
 
-  const { highlights } = useProvidedSetsProductState();
-
-  const isHidden = computed(() => props.query.isHidden);
+  const hidden = computed(() => props.query.hidden);
   const color = computed(() =>
-    isHidden.value ? colors.GRAY_500 : props.query.color,
+    hidden.value ? colors.GRAY_500 : props.query.color,
   );
 
-  const toggleHidden = () =>
-    highlights.setHidden(props.query.id, !isHidden.value);
+  const toggleHidden = () => {
+    props.query.hidden = !hidden.value;
+  };
 </script>
 
 <template>
   <Tooltip
-    :label="isHidden ? 'Show highlight' : 'Hide highlight'"
+    :label="hidden ? 'Show highlight' : 'Hide highlight'"
     side="left"
   >
     <template #trigger>
       <Button
+        @click="toggleHidden"
         :style="{ backgroundColor: color }"
         class="h-full"
-        @click="toggleHidden"
       />
     </template>
   </Tooltip>

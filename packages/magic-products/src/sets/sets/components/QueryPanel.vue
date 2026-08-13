@@ -10,18 +10,27 @@
 
   import { ref } from 'vue';
 
-  import type { HighlightQueryId } from '../../types.ts';
+  import type { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
   import InsertSetOpButtons from './InsertSetOpButtons.vue';
   import Query from './Query.vue';
 
-  const { highlights } = useProvidedSetsProductState();
-  const { queryIds, addQuery } = highlights;
+  const {
+    queries: { queries, addQuery },
+  } = useProvidedSetsProductState();
 
-  const focusedQueryId = ref<HighlightQueryId>();
+  const focusedQueryId = ref<QueryId>();
 
   const unfocusQuery = () => {
     focusedQueryId.value = undefined;
+  };
+
+  const addAndFocusQuery = () => {
+    const query = addQuery();
+    query.editor.onMounted((editorRef) => {
+      focusedQueryId.value = query.id;
+      editorRef.focus();
+    });
   };
 
   /* a field blurs on the press that starts an interaction, so what keeps the ops open is where that interaction lands, not the blur */
@@ -38,7 +47,7 @@
     unfocusQuery();
   });
 
-  const MAX_NUMBER_OF_HIGHLIGHTS = 5;
+  const MAX_NUMBER_OF_QUERIES = 5;
 </script>
 
 <template>
@@ -53,12 +62,12 @@
     </WellVue>
     <div>
       <Tooltip
-        v-if="queryIds.length < MAX_NUMBER_OF_HIGHLIGHTS"
+        v-if="queries.length < MAX_NUMBER_OF_QUERIES"
         label="Add highlight region"
       >
         <template #trigger>
           <Button
-            @click="addQuery"
+            @click="addAndFocusQuery"
             :path="mdiPlus"
             class="rounded-b-none rounded-t-xl text-md w-14 h-6"
           >
@@ -69,10 +78,10 @@
       <Well class="rounded-tl-none">
         <VStack class="flex-col-reverse">
           <Query
-            v-for="queryId in queryIds"
-            :key="queryId"
-            :queryId="queryId"
-            @focus="focusedQueryId = queryId"
+            v-for="{ id } in queries"
+            :key="id"
+            :queryId="id"
+            @focus="focusedQueryId = id"
           />
         </VStack>
       </Well>

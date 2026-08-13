@@ -4,8 +4,8 @@ import type { Section } from '../../types.ts';
 
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-// the palette a highlight query's color is assigned from, in creation order
-export const HIGHLIGHT_COLORS = [
+// the palette a query's color is assigned from, in creation order
+export const QUERY_COLORS = [
   colors.RED_500,
   colors.BLUE_500,
   colors.EMERALD_500,

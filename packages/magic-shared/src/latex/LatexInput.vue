@@ -2,7 +2,7 @@
   import { cn } from '@core/components/cn';
   import { useAttrClass } from '@core/components/composables/useAttrClass';
 
-  import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
   import type { MathfieldElement } from './types.ts';
 
@@ -49,7 +49,8 @@
 
   const emit = defineEmits<{
     /** math-live has loaded in the keyboard */
-    ready: [mathfield: MathfieldElement];
+    mounted: [mathfield: MathfieldElement];
+    unmounted: [];
   }>();
 
   const attrClass = useAttrClass();
@@ -78,23 +79,29 @@
   const latexInput = ref<MathfieldElement | null>(null);
   const mathfieldRegistered = ref(false);
 
-  const insertIntoLatexString = (latex: string) => {
-    if (!latexInput.value) return;
-    latexInput.value.executeCommand(['insert', latex]);
-  };
-
   const replaceLatexString = (latex: string) => {
     if (!latexInput.value) return;
     latexInput.value.value = latex;
     latexString.value = latex;
   };
 
-  defineExpose({ insertIntoLatexString, replaceLatexString });
+  defineExpose({ replaceLatexString });
 
   const onInput = () => {
     if (!latexInput.value) return;
     latexString.value = latexInput.value.getValue();
   };
+
+  /*
+    mathlive reinserts the whole expression on every write, which drops the caret to the
+    end, so the field is only rewritten when the model says something it is not showing.
+    typing is what onInput wrote back above, so it compares equal and stops here
+  */
+  watch(latexString, (latex) => {
+    if (!latexInput.value) return;
+    if (latex === latexInput.value.getValue()) return;
+    latexInput.value.value = latex;
+  });
 
   onMounted(async () => {
     // importing mathlive registers <math-field> against window, so it can only run in the browser
@@ -107,10 +114,11 @@
 
     mathField.addEventListener('input', onInput);
     restyleShadowRoot(mathField);
-    emit('ready', mathField);
+    emit('mounted', mathField);
   });
 
   onUnmounted(() => {
+    emit('unmounted');
     const mathField = latexInput.value;
     if (!mathField) return;
 

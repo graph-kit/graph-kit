@@ -8,10 +8,7 @@ import {
 
 import { ComputedRef, inject, provide } from 'vue';
 
-import {
-  type HighlightQueries,
-  createHighlightQueries,
-} from './highlightQueries.ts';
+import { type Queries, createQueries } from './queries.ts';
 import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
 import QueryPanel from './sets/components/QueryPanel.vue';
@@ -21,7 +18,7 @@ import { useCanvasTheme } from './useCanvasTheme.ts';
 import { SetsTheme, useSetsTheme } from './useSetsTheme.ts';
 
 export type SetsProductState = {
-  highlights: HighlightQueries;
+  queries: Queries;
   sets: SetDefinitions;
   // everything the queries resolve to once read against the set space
   queryAnalysis: QueryAnalysis;
@@ -30,15 +27,15 @@ export type SetsProductState = {
 };
 
 const useSetsProductState = (magic: Magic): SetsProductState => {
-  const highlights = createHighlightQueries();
+  const queries = createQueries();
   const sets = createSetDefinitions();
   const theme = useSetsTheme(magic);
   const sections = useSections(sets.definitions);
 
   return {
-    highlights,
+    queries,
     sets,
-    queryAnalysis: useQueryAnalysis(highlights, sets, sections),
+    queryAnalysis: useQueryAnalysis(queries, sets, sections),
     theme,
     sections,
   };
@@ -80,7 +77,7 @@ export const useSetsProduct = () => {
   provideSetsProductState(setsProductState);
 
   magic.componentSlots.add({
-    id: 'sets/highlight-panel',
+    id: 'sets/query-panel',
     component: QueryPanel,
     position: 'bottom-middle',
   });

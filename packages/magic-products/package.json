@@ -23,6 +23,7 @@
     "@canvas/primitives": "workspace:*",
     "@canvas/surface": "workspace:*",
     "@core/utils": "workspace:*",
+    "@core/components": "workspace:*",
     "@cortex-js/compute-engine": "^0.102.0",
     "@graph/plugins": "workspace:*",
     "@graph/primitives": "workspace:*",

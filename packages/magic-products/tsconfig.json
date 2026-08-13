@@ -9,6 +9,7 @@
     { "path": "../canvas-primitives" },
     { "path": "../canvas-surface" },
     { "path": "../core-utils" },
+    { "path": "../core-components" },
     { "path": "../graph-plugins" },
     { "path": "../graph-primitives" },
     { "path": "../graph-theme-presets" },

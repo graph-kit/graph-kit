@@ -1,72 +1,94 @@
 <script setup lang="ts">
+  import Button from '@magic/shared/Button';
   import HStack from '@magic/shared/HStack';
-  import {
-    LatexInputWithPreview,
-    type LatexInputWithPreviewInstance,
-  } from '@magic/shared/latex';
+  import Icon from '@magic/shared/Icon';
+  import TooltipVue from '@magic/shared/Tooltip';
+  import { LatexInputWithPreview } from '@magic/shared/latex';
+  import { mdiClose } from '@mdi/js';
 
-  import { computed, onUnmounted, ref } from 'vue';
+  import { computed, ref } from 'vue';
 
-  import type { HighlightQueryId } from '../../types.ts';
+  import { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
+  import { useQueryEditor } from '../composables/useQueryEditor.ts';
   import QueryInputModifiers from './QueryInputModifiers.vue';
   import QueryToggleHidden from './QueryToggleHidden.vue';
 
   const props = defineProps<{
-    queryId: HighlightQueryId;
+    queryId: QueryId;
   }>();
 
   const emit = defineEmits<{
     focus: [];
   }>();
 
-  const latexInputRef = ref<LatexInputWithPreviewInstance | null>(null);
+  const { queries, queryAnalysis } = useProvidedSetsProductState();
 
-  const { highlights, queryAnalysis } = useProvidedSetsProductState();
+  const query = queries.getQuery(props.queryId);
 
-  const query = computed(() => highlights.getQuery(props.queryId));
+  const hasError = computed(() => queryAnalysis.queryErrors.value[query.id]);
 
-  const latexQueryString = computed({
-    get: () => query.value.latexQueryString,
-    set: (latexString) =>
-      highlights.setLatexQueryString(query.value.id, latexString),
-  });
-
-  const hasError = computed(
-    () => queryAnalysis.queryErrors.value[query.value.id],
-  );
-
-  onUnmounted(
-    highlights.registerQueryEditor(props.queryId, {
-      insert: (latexString) =>
-        latexInputRef.value?.insertIntoLatexString(latexString),
-      replace: (latexString) =>
-        latexInputRef.value?.replaceLatexString(latexString),
-    }),
-  );
+  const editor = useQueryEditor(query);
 
   const previewValue = ref<string>();
+
+  const removeButtonSizePx = 26;
+
+  const showRemoveButton = computed(() => {
+    return queries.queries.value.length > 1;
+  });
+
+  const latexInputWidthPx = computed(() => {
+    const defaultInputWidthPx = 400;
+    const hStackGapWidthPx = 8; // tailwind gap-2 = 8px
+    let widthPx = defaultInputWidthPx;
+    if (!showRemoveButton.value) {
+      widthPx += removeButtonSizePx + hStackGapWidthPx;
+    }
+    return widthPx;
+  });
 </script>
 
 <template>
-  <HStack class="relative h-10">
+  <HStack class="h-10">
     <QueryToggleHidden :query="query" />
 
-    <LatexInputWithPreview
-      ref="latexInputRef"
-      data-query-focus
-      v-model="latexQueryString"
-      :error="hasError"
-      :preview-value="previewValue"
-      placeholder="\text{e.g. } A \cup B"
-      @ready="useSetsLatexField"
-      @focus="emit('focus')"
-    />
+    <HStack class="relative">
+      <!-- not a v-model, since the query's latex is read only and moves through replace -->
+      <LatexInputWithPreview
+        :model-value="query.latexQueryString"
+        @update:model-value="query.editor.replace"
+        data-query-focus
+        :error="hasError"
+        :preview-value="previewValue"
+        placeholder="\text{e.g. } A \cup B"
+        @mounted="editor.onMounted"
+        @unmounted="editor.onUnmounted"
+        :width="latexInputWidthPx"
+        @focus="emit('focus')"
+      />
+      <QueryInputModifiers
+        v-model="previewValue"
+        :query="query"
+      />
+    </HStack>
 
-    <QueryInputModifiers
-      :query="query"
-      v-model="previewValue"
-    />
+    <TooltipVue
+      v-if="showRemoveButton"
+      label="Remove"
+      side="right"
+    >
+      <template #trigger>
+        <Button
+          @click="queries.removeQuery(query.id)"
+          class="hover:text-red-500 bg-transparent p-0"
+        >
+          <Icon
+            :path="mdiClose"
+            :size="removeButtonSizePx"
+          />
+        </Button>
+      </template>
+    </TooltipVue>
   </HStack>
 </template>

@@ -46,8 +46,8 @@
         :error="hasError"
         :preview-value="previewValue"
         placeholder="\text{e.g. } A \cup B"
-        @ready="editor.onMounted"
-        @vue:unmounted="editor.onUnmounted"
+        @mounted="editor.onMounted"
+        @unmounted="editor.onUnmounted"
         @focus="emit('focus')"
       />
       <QueryInputModifiers

@@ -1,7 +1,5 @@
 import type { MathfieldElement } from '@magic/shared/latex';
 
-import { onUnmounted } from 'vue';
-
 import type { Query } from '../../queries.ts';
 import { useSetsLatexField } from './useSetsLatexField.ts';
 
@@ -25,5 +23,8 @@ export const useQueryEditor = (query: Query) => {
     });
   };
 
-  return { onMounted, onUnmounted: unmount };
+  return {
+    onMounted,
+    onUnmounted: () => unmount?.(),
+  };
 };

@@ -25,7 +25,8 @@
 
   const emit = defineEmits<{
     /** math-live has loaded in the keyboard */
-    ready: [mathfield: MathfieldElement];
+    mounted: [mathfield: MathfieldElement];
+    unmounted: [];
   }>();
 
   const latexString = defineModel<string>({
@@ -75,10 +76,10 @@
     },
   );
 
-  const onReady = (field: MathfieldElement) => {
+  const onMounted = (field: MathfieldElement) => {
     mathfield.value = field;
     showCurrentValue();
-    emit('ready', field);
+    emit('mounted', field);
   };
 </script>
 
@@ -94,6 +95,7 @@
     :read-only="inPreview || undefined"
     :placeholder="placeholder"
     :tabindex="inPreview ? -1 : undefined"
-    @ready="onReady"
+    @mounted="onMounted"
+    @unmounted="emit('unmounted')"
   />
 </template>

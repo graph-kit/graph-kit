@@ -28,7 +28,6 @@
   const addAndFocusQuery = () => {
     const query = addQuery();
     query.editor.onMounted((editorRef) => {
-      console.log('mounted', query.color);
       focusedQueryId.value = query.id;
       editorRef.focus();
     });

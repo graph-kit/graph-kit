@@ -49,7 +49,8 @@
 
   const emit = defineEmits<{
     /** math-live has loaded in the keyboard */
-    ready: [mathfield: MathfieldElement];
+    mounted: [mathfield: MathfieldElement];
+    unmounted: [];
   }>();
 
   const attrClass = useAttrClass();
@@ -113,10 +114,11 @@
 
     mathField.addEventListener('input', onInput);
     restyleShadowRoot(mathField);
-    emit('ready', mathField);
+    emit('mounted', mathField);
   });
 
   onUnmounted(() => {
+    emit('unmounted');
     const mathField = latexInput.value;
     if (!mathField) return;
 

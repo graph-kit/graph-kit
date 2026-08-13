@@ -25,14 +25,14 @@
 </script>
 
 <template>
-  <Well class="p-2 bg-transparent">
+  <Well class="p-2 bg-transparent dark:bg-transparent">
     <HStack>
       <Well
         v-for="mode of ANNOTATION_MODES"
         class="p-0"
       >
         <ToggleIconButton
-          class="bg-transparent"
+          class="bg-transparent dark:bg-transparent"
           :path="modeToIcon[mode]"
           :model-value="controls.mode() === mode"
           @click="controls.setMode(mode)"
@@ -41,7 +41,7 @@
       </Well>
       <Well class="p-0">
         <IconButton
-          class="bg-transparent"
+          class="bg-transparent dark:bg-transparent"
           :path="mdiTrashCan"
           @click="controls.clear()"
           label="Remove All Annotations"

@@ -76,7 +76,7 @@
       <template #trigger>
         <Button
           @click="queries.removeQuery(query.id)"
-          class="hover:text-red-500 bg-transparent p-0"
+          class="hover:text-red-500 bg-transparent dark:bg-transparent dark:hover:bg-transparent p-0"
         >
           <Icon
             :path="mdiClose"

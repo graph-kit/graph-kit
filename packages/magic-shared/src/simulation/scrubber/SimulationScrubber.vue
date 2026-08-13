@@ -9,19 +9,16 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import { useProvidedMagic } from '../../product/context.ts';
-  import { useThemeToClasses } from '../../useThemeToClasses.ts';
   import { useRunningSimulation } from '../useRunningSimulation.ts';
   import SimulationExplainerText from './SimulationExplainerText.vue';
 
   const { simulation, violation } = useRunningSimulation();
 
-  const violationThemeClasses = useThemeToClasses({
-    dark: 'bg-red-900 border-red-900',
-    light: 'bg-red-400 border-red-400',
-  });
+  const VIOLATION_CLASSES =
+    'bg-red-400 border-red-400 dark:bg-red-900 dark:border-red-900';
 
   const violationClasses = computed(() =>
-    violation.value ? violationThemeClasses.value : '',
+    violation.value ? VIOLATION_CLASSES : '',
   );
 
   const baseWellClasses = 'p-0 rounded-full';
@@ -29,7 +26,8 @@
   const wellClass = computed(() => cn(violationClasses.value, baseWellClasses));
   const size = 48;
 
-  const iconButtonClasses = 'bg-transparent px-8 rounded-full';
+  const iconButtonClasses =
+    'bg-transparent dark:bg-transparent px-8 rounded-full';
 
   const percentageComplete = computed(() => {
     const totalFrames = simulation.value.frames.length;

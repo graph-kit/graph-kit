@@ -19,7 +19,7 @@ export const dark = {
     'canvas.cursor': CURSOR_FALLBACK,
     'canvas.patternColor': (alpha) => colors.GRAY_500 + alpha,
 
-    'edge.default.color': colors.STONE_900,
+    'edge.default.color': colors.GRAY_900,
     'edge.default.cursor': shared.edge.cursor,
     'edge.default.text.color': shared.edge.text.color,
     'edge.default.text.content': shared.edge.text.content,
@@ -27,7 +27,7 @@ export const dark = {
     'edge.default.text.size': shared.edge.text.size,
     'edge.default.width': shared.edge.width,
 
-    'edge.hover.color': colors.STONE_900,
+    'edge.hover.color': colors.GRAY_900,
     'edge.hover.cursor': shared.edge.cursor,
     'edge.hover.text.color': shared.edge.text.color,
     'edge.hover.text.content': shared.edge.text.content,
@@ -37,7 +37,7 @@ export const dark = {
 
     'node.default.border.color': colors.GRAY_900,
     'node.default.border.width': shared.node.borderWidth,
-    'node.default.color': colors.STONE_600,
+    'node.default.color': colors.GRAY_700,
     'node.default.cursor': shared.node.cursor,
     'node.default.size': shared.node.size,
     'node.default.text.color': shared.node.text.color,
@@ -47,7 +47,7 @@ export const dark = {
 
     'node.hover.border.color': colors.GRAY_900,
     'node.hover.border.width': shared.node.borderWidth,
-    'node.hover.color': colors.STONE_600,
+    'node.hover.color': colors.GRAY_700,
     'node.hover.cursor': shared.node.cursor,
     'node.hover.size': shared.node.size,
     'node.hover.text.color': shared.node.text.color,
@@ -66,7 +66,7 @@ export const dark = {
 
     'node.focus.border.color': colors.RED_700,
     'node.focus.border.width': shared.node.borderWidth,
-    'node.focus.color': colors.STONE_600,
+    'node.focus.color': colors.GRAY_700,
     'node.focus.cursor': shared.node.cursor,
     'node.focus.size': shared.node.size,
     'node.focus.text.color': shared.node.text.color,

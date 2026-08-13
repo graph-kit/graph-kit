@@ -13,6 +13,22 @@ body {
   overscroll-behavior: none;
 }
 
+/* mirrors the canvas.color each graph theme preset paints, so the two never seam */
+:root {
+  --canvas-color-light: var(--color-gray-300);
+  --canvas-color-dark: var(--color-gray-600);
+}
+
+/* the page sits under the canvas until it paints, so it wears the canvas color
+   rather than flashing white underneath */
+html.light {
+  background-color: var(--canvas-color-light);
+}
+
+html.dark {
+  background-color: var(--canvas-color-dark);
+}
+
 /* our branded text color */
 @utility text-magic {
   @apply bg-linear-to-tr from-purple-500 to-orange-500 text-transparent bg-clip-text;

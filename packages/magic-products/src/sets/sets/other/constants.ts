@@ -46,9 +46,9 @@ export const SET_OP_TO_LATEX = {
   D: '\\triangle',
   O: '\\Omega',
   S: OUTSIDE_ALL_SETS.label,
-  C: '^\\complement',
   N: '\\neg',
   '\\': '\\setminus',
+  C: '^\\complement',
 } as const;
 
 // a letter names a set until shift asks it for its operator, while these name no set and expand as they are typed
@@ -63,7 +63,8 @@ export const LATEX_SET_SYMBOLS = {
   UNION: 'Union',
   INTERSECTION: 'Intersection',
   SYMMETRIC_DIFFERENCE: 'SymmetricDifference',
-  COMPLEMENT: 'Complement',
+  // the one head that is ours rather than the compute engine's, see parseMathJSON.ts
+  NEGATION: 'Negation',
   OMEGA: 'Omega',
 } as const;
 

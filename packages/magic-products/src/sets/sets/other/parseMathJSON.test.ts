@@ -2,41 +2,44 @@ import { describe, expect, it } from 'vitest';
 
 import { parseMathJSON } from './parseMathJSON.ts';
 
-describe('parseMathJSON', () => {
-  it('reads negation as complement', () => {
-    expect(parseMathJSON('\\neg A').json).toEqual(['Complement', 'A']);
-    expect(parseMathJSON('\\lnot A').json).toEqual(['Complement', 'A']);
+describe(parseMathJSON, () => {
+  it('reads negation as its own head', () => {
+    expect(parseMathJSON('\\neg A').json).toEqual(['Negation', 'A']);
+    expect(parseMathJSON('\\lnot A').json).toEqual(['Negation', 'A']);
+  });
+
+  it('collapses the complement postfix into negation', () => {
+    expect(parseMathJSON('A^\\complement').json).toEqual(['Negation', 'A']);
+    expect(parseMathJSON('A^{\\complement}').json).toEqual(['Negation', 'A']);
+    expect(parseMathJSON('(A^\\complement)^\\complement').json).toEqual([
+      'Negation',
+      ['Negation', 'A'],
+    ]);
   });
 
   it('binds negation tighter than the set operators around it', () => {
     expect(parseMathJSON('\\neg A \\cup B').json).toEqual([
       'Union',
-      ['Complement', 'A'],
+      ['Negation', 'A'],
       'B',
     ]);
     expect(parseMathJSON('\\neg A \\cap \\neg B').json).toEqual([
       'Intersection',
-      ['Complement', 'A'],
-      ['Complement', 'B'],
+      ['Negation', 'A'],
+      ['Negation', 'B'],
     ]);
     expect(parseMathJSON('A \\setminus \\neg B').json).toEqual([
       'SetMinus',
       'A',
-      ['Complement', 'B'],
+      ['Negation', 'B'],
     ]);
   });
 
   it('negates a whole parenthesized expression', () => {
     expect(parseMathJSON('\\neg (A \\triangle B)').json).toEqual([
-      'Complement',
+      'Negation',
       ['SymmetricDifference', 'A', 'B'],
     ]);
-  });
-
-  it('reads negation and the complement postfix as the same operator', () => {
-    expect(parseMathJSON('\\neg A').json).toEqual(
-      parseMathJSON('A^\\complement').json,
-    );
   });
 
   it('leaves the untouched operators parsing as they did', () => {

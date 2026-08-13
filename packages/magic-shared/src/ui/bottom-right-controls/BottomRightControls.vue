@@ -29,7 +29,7 @@
         <template #trigger>
           <ToggleIconButton
             label="Settings"
-            class="p-4 bg-transparent"
+            class="p-4 bg-transparent dark:bg-transparent"
             :size="20"
             :path="mdiCog"
           />

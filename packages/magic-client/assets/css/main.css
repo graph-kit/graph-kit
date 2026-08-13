@@ -7,6 +7,9 @@
 
 @import 'katex/dist/katex.min.css';
 
+/* keyed off the html class rather than prefers-color-scheme so an explicit appearance wins */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* chrome turns horizontal overscroll into back/forward navigation, which yanks the user off the page mid drag */
 html,
 body {

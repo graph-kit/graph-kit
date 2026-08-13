@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "pnpm --filter client dev",
     "build": "pnpm --filter client build",
+    "preview": "pnpm --filter client preview",
     "storybook": "pnpm --filter @canvas/primitives storybook",
     "test": "vitest",
     "build:types": "vue-tsc -b tsconfig.json",

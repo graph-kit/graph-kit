@@ -4,19 +4,20 @@ import {
   useMounted,
   usePreferredDark,
 } from '@vueuse/core';
-import { useCookie, useHead, useNuxtApp } from 'nuxt/app';
+import { useCookie, useHead } from 'nuxt/app';
 
 import { computed, onMounted, watch } from 'vue';
 
 import {
   APPEARANCE_COOKIE_KEY,
   APPEARANCE_COOKIE_OPTIONS,
-  SYSTEM_APPEARANCE_COOKIE_KEY,
+  APPEARANCE_PREPAINT_SCRIPT,
+  DEFAULT_APPEARANCE,
   appearances,
 } from './appearances.ts';
 
-const DEFAULT_SCHEMA: BasicColorSchema = 'auto';
-const DEFAULT_SYSTEM: BasicColorMode = 'light';
+/** what prerendering bakes into the markup, since no cookie or media query reaches it */
+const PRERENDERED_APPEARANCE: BasicColorMode = 'light';
 
 const validAppearance = (appearance: unknown): appearance is BasicColorSchema =>
   appearances.some((candidate) => candidate === appearance);
@@ -29,18 +30,9 @@ export type AppearanceControls = ReturnType<typeof useProductAppearance>;
 export const useProductAppearance = (
   onAppearanceChanged: (color: BasicColorMode) => void,
 ) => {
-  // a cookie rides along on the request, so the server resolves the same appearance
-  // the client does rather than guessing and correcting after hydration
   const storedSchema = useCookie<BasicColorSchema>(APPEARANCE_COOKIE_KEY, {
     ...APPEARANCE_COOKIE_OPTIONS,
-    default: () => DEFAULT_SCHEMA,
-  });
-
-  // prefers-color-scheme is readable only in the browser, so the last answer it gave
-  // is stored too, which is what lets the server resolve 'auto'
-  const storedSystem = useCookie<BasicColorMode>(SYSTEM_APPEARANCE_COOKIE_KEY, {
-    ...APPEARANCE_COOKIE_OPTIONS,
-    default: () => DEFAULT_SYSTEM,
+    default: () => DEFAULT_APPEARANCE,
   });
 
   if (!validAppearance(storedSchema.value)) {
@@ -49,18 +41,8 @@ export const useProductAppearance = (
       storedSchema.value,
       '\n\nVacating stored appearance value.',
     );
-    storedSchema.value = DEFAULT_SCHEMA;
+    storedSchema.value = DEFAULT_APPEARANCE;
   }
-
-  // prerendered markup is baked before any request exists, so no cookie reached it and
-  // the first client render has to repeat those defaults before correcting on mount
-  const nuxtApp = useNuxtApp();
-  const hydratingPrerendered =
-    Boolean(nuxtApp.payload.prerenderedAt) && nuxtApp.isHydrating;
-  const hydrated = useMounted();
-  const cookiesMatchMarkup = computed(
-    () => !hydratingPrerendered || hydrated.value,
-  );
 
   const prefersDark = usePreferredDark();
 
@@ -68,29 +50,38 @@ export const useProductAppearance = (
     prefersDark.value ? 'dark' : 'light',
   );
 
+  // resolved eagerly rather than on mount so it agrees with what the pre-paint script
+  // already stamped, which is what stops the class from bouncing back once vue takes over
+  const documentAppearance = computed(() =>
+    resolve(storedSchema.value, system.value),
+  );
+
+  useHead({
+    // themes the document itself, and every dark: variant keys off this class
+    htmlAttrs: { class: documentAppearance },
+    script: [{ innerHTML: APPEARANCE_PREPAINT_SCRIPT, tagPosition: 'head' }],
+  });
+
+  // css follows the html class, but anything resolved in js has to hydrate against the
+  // baked markup first or vue will keep the prerendered value in production builds
+  const hydrated = useMounted();
+
   const state = computed<BasicColorMode>(() =>
-    cookiesMatchMarkup.value
-      ? resolve(storedSchema.value, storedSystem.value)
-      : resolve(DEFAULT_SCHEMA, DEFAULT_SYSTEM),
+    hydrated.value ? documentAppearance.value : PRERENDERED_APPEARANCE,
   );
 
   const schema = computed<BasicColorSchema>({
-    get: () => (cookiesMatchMarkup.value ? storedSchema.value : DEFAULT_SCHEMA),
-    set: (value) => (storedSchema.value = value),
+    get: () => (hydrated.value ? storedSchema.value : DEFAULT_APPEARANCE),
+    // the toggle group clears its value when the active option is clicked again
+    set: (value) => {
+      if (!validAppearance(value)) return;
+      storedSchema.value = value;
+    },
   });
-
-  // themes the document itself, and being part of the render means the server emits it
-  useHead({ htmlAttrs: { class: state } });
 
   watch(state, onAppearanceChanged);
 
-  watch(system, (value) => (storedSystem.value = value));
-
-  onMounted(() => {
-    onAppearanceChanged(state.value);
-    // recording what the browser actually reports keeps the next server render honest
-    storedSystem.value = system.value;
-  });
+  onMounted(() => onAppearanceChanged(state.value));
 
   return Object.assign(schema, { state });
 };

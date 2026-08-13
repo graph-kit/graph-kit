@@ -15,6 +15,7 @@ import {
   createFinalActionsProxy,
   createTransitEventHub,
   wrapActionsWithConsumerEvents,
+  wrapPositionsControlsWithConsumerEvents,
   wrapWeightsControlsWithConsumerEvents,
 } from './consumer-events.ts';
 import { createFinalRenderFunctionsProxy } from './final-render-functions.ts';
@@ -72,6 +73,10 @@ export const foldPlugins = (
     ...coreGraph.controls,
     weights: wrapWeightsControlsWithConsumerEvents(
       coreGraph.controls.weights,
+      consumerEvents,
+    ),
+    positions: wrapPositionsControlsWithConsumerEvents(
+      coreGraph.controls.positions,
       consumerEvents,
     ),
   };

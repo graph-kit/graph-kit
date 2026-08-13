@@ -1,7 +1,10 @@
 import { CanvasProps } from '@canvas/surface/types';
+import { PatchOp, ServerState } from '@multiplayer/protocol/server-state';
 import { BasicColorMode } from '@vueuse/core';
 
-import { ComputedRef } from 'vue';
+import { ComputedRef, Ref } from 'vue';
+
+import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../graph/types.ts';
@@ -34,6 +37,12 @@ export type LocalStorageField = {
    * debounce. A no-op when local storage was not opted into.
    */
   invalidate: () => void;
+  /**
+   * Restores whatever was persisted. Called by the harness rather than on mount,
+   * because a room's state has to win over it and only the harness knows whether
+   * one answered.
+   */
+  sync: () => void;
 };
 
 /**
@@ -45,7 +54,48 @@ export type MagicProductHost = {
   transit: TransitField;
   surface: CanvasProps;
   onAppearanceChanged: (color: BasicColorMode) => void;
+  // `any` so a host can narrow State at its definition site: pinning this to
+  // ServerState makes the contextual type for onForceResync's parameter ServerState
+  // too, and the narrowing validate exists to provide is lost. provisional until the
+  // singleton settles what shape this field actually needs.
+  multiplayer: MultiplayerHostField<any>;
   history?: HistoryField;
+};
+
+/**
+ * What the harness needs from a host to keep it in sync with the room. Mirrors the
+ * split {@link TransitControls} already makes: the host says whether state is its own,
+ * and separately how to take it on. It never decides what a failed check *means*, since
+ * only the multiplayer layer knows the productId, version and room it arrived under.
+ */
+export type MultiplayerHostField<State extends ServerState = ServerState> = {
+  /**
+   * Whether this server state belongs to this product. A false is an invariant
+   * violation rather than a recoverable case, reachable only through state routed
+   * under the wrong productId or a product encoding a shape it does not own, and the
+   * multiplayer layer is what reports and recovers from it.
+   */
+  validate: (state: ServerState) => state is State;
+  /**
+   * Adopt authoritative state wholesale, discarding whatever is on screen. The single
+   * inbound path for a room join, a product handoff and a drift resync alike, since all
+   * three mean the same thing. Only ever called with state that passed {@link validate}.
+   *
+   * Not expressed as {@link TransitField.decode} because the room's shape is not
+   * transit's, so denormalizing it is the host's job, and because adopting state may
+   * mean more than writing it (stopping a simulation, dropping a lens) which a raw
+   * decode gives nowhere to do.
+   *
+   * Declared method style on purpose: validate gates every call, so narrowing State
+   * here is sound by construction and worth the bivariance.
+   */
+  onForceResync(state: State): void;
+  /**
+   * Apply an incoming change from a peer, by making the same mutation the local action
+   * would have made. Throwing is a legitimate outcome: the version only advances once
+   * this returns, so a failure leaves a gap the next relay turns into a resync.
+   */
+  applyOps(ops: PatchOp[]): void;
 };
 
 export type MagicProductOptions = {
@@ -78,6 +128,16 @@ export type Magic = {
   annotations?: AnnotationsControls;
   lensChips?: LensChipDefinition[];
   localStorage: LocalStorageField;
+  /**
+   * The room connection, or undefined when this product has not opted into
+   * multiplayer, when no server is configured, or during prerender.
+   */
+  multiplayer?: MultiplayerControls;
+  /**
+   * True until the product knows what it is showing. The canvas is gated on it, so a
+   * room never appears as a flash of local content replaced a moment later.
+   */
+  restoring: Ref<boolean>;
 };
 
 export type GraphLensChipOption = (

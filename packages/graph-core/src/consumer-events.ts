@@ -7,6 +7,7 @@ import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import { DeepReadonly } from 'ts-essentials';
 
 import { CoreEventMap } from './events.ts';
+import { NodePositionEntry } from './positions/types.ts';
 import { EdgeWeightEntry } from './weights/types.ts';
 
 // owned and emitted by create-graph (not core itself), since only create-graph knows when a
@@ -39,6 +40,15 @@ export type ConsumerEventMap = {
   onElementsRemoved: (removals: DeepReadonly<ElementRemovalPayload>) => void;
   /** when one or more edge weights are changed */
   onEdgeWeightsChanged: (weights: DeepReadonly<EdgeWeightEntry[]>) => void;
+  /**
+   * when one or more node positions settle. fires once per drag rather than per frame,
+   * and deliberately does not imply onStructureChange, since moving a node changes
+   * neither the node set nor the edge set. for per frame motion use the core tier
+   * onNodeMoveStream instead.
+   */
+  onNodePositionsCommitted: (
+    positions: DeepReadonly<NodePositionEntry[]>,
+  ) => void;
 };
 
 // its own hub rather than part of ConsumerEventMap: encode/decode are about the graph

@@ -16,6 +16,14 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      // unset means multiplayer is switched off entirely, which is the correct state
+      // for a deployment without a room server rather than a failure to report
+      multiplayerServerUrl: process.env.MULTIPLAYER_SERVER_URL ?? '',
+    },
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },

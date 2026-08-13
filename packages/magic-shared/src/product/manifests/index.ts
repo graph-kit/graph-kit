@@ -8,6 +8,7 @@ import { MagicProductManifest } from './types.ts';
 export const manifests = {
   sets: {
     id: 'sets',
+    multiplayer: false,
     name: 'Magic Sets',
     navigation: {
       slug: 'sets',
@@ -27,6 +28,7 @@ export const manifests = {
   },
   'markov-chains': {
     id: 'markov-chains',
+    multiplayer: true,
     name: 'Magic Markov Chains',
     navigation: {
       slug: 'markov-chains',
@@ -46,6 +48,7 @@ export const manifests = {
   },
   'avl-trees': {
     id: 'avl-trees',
+    multiplayer: true,
     name: 'Magic AVL Trees',
     navigation: {
       slug: 'trees',
@@ -65,6 +68,7 @@ export const manifests = {
   },
   traversals: {
     id: 'traversals',
+    multiplayer: true,
     name: 'Magic Traversals',
     navigation: {
       slug: 'traversals',
@@ -84,6 +88,7 @@ export const manifests = {
   },
   'path-finding': {
     id: 'path-finding',
+    multiplayer: true,
     name: 'Magic Path Finding',
     navigation: {
       slug: 'path',
@@ -104,6 +109,7 @@ export const manifests = {
   },
   'min-spanning-trees': {
     id: 'min-spanning-trees',
+    multiplayer: true,
     name: 'Magic Minimum Spanning Trees',
     navigation: {
       slug: 'mst',
@@ -123,6 +129,7 @@ export const manifests = {
   },
   dev: {
     id: 'dev',
+    multiplayer: false,
     name: 'Dev Playground',
     navigation: {
       slug: 'dev',
@@ -134,6 +141,7 @@ export const manifests = {
   },
   welcome: {
     id: 'welcome',
+    multiplayer: false,
     name: 'Go To Experiences',
     navigation: {
       slug: 'welcome',

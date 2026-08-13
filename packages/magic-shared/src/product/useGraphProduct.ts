@@ -1,7 +1,15 @@
 import { useGraph } from '../graph/useGraph.ts';
+import { useGraphOutboundSync } from '../multiplayer/useGraphOutboundSync.ts';
+import { usePresenceBroadcast } from '../multiplayer/usePresenceBroadcast.ts';
+import { useSimulationSuspension } from '../multiplayer/useSimulationSuspension.ts';
 import { useGraphProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { provideGraph } from './context.ts';
+import { applyOpsToGraph } from './server-state-ops.ts';
+import {
+  isGraphServerState,
+  transitFromServerState,
+} from './server-state.ts';
 import { GraphProductOptions, MagicGraph, MagicProductHost } from './types.ts';
 import { useMagicProduct } from './useMagicProduct.ts';
 
@@ -17,6 +25,17 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     history: graph.history,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
+    multiplayer: {
+      validate: isGraphServerState,
+      applyOps: (ops) => applyOpsToGraph(graph, ops),
+      onForceResync: (state) => {
+        // the local payload supplies the sections the room deliberately omits, so
+        // adopting authoritative state never disturbs the camera this user has set
+        graph.transit.decode(
+          transitFromServerState(state, graph.transit.encode()),
+        );
+      },
+    },
   };
 
   const magic = useMagicProduct(host, {
@@ -30,7 +49,26 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
 
   graph.events.subscribe('onStructureChange', magic.localStorage.invalidate);
-  graph.nodeDrag.events.subscribe('onNodeDrop', magic.localStorage.invalidate);
+  // any settled move, not just a drag drop, so programmatic repositioning persists too
+  graph.events.subscribe(
+    'onNodePositionsCommitted',
+    magic.localStorage.invalidate,
+  );
+
+  if (magic.multiplayer) {
+    const { pushWholeState } = useGraphOutboundSync(
+      graph,
+      options.productId,
+      magic.multiplayer,
+    );
+    useSimulationSuspension(
+      magic.simulation,
+      options.productId,
+      magic.multiplayer,
+      pushWholeState,
+    );
+    usePresenceBroadcast(graph, options.productId, magic.multiplayer);
+  }
 
   if (lensChips) {
     magic.componentSlots.add({

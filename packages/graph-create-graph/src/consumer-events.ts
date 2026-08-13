@@ -1,5 +1,9 @@
 import { ConsumerEventMap, TransitEventMap } from '@graph/core/consumer-events';
 import {
+  NodePositionEntry,
+  NodePositionStoreControls,
+} from '@graph/core/positions/types';
+import {
   EdgeWeightEntry,
   EdgeWeightStoreControls,
 } from '@graph/core/weights/types';
@@ -26,6 +30,7 @@ const createConsumerEventRegistry =
     onElementsAdded: new Set(),
     onElementsRemoved: new Set(),
     onEdgeWeightsChanged: new Set(),
+    onNodePositionsCommitted: new Set(),
   });
 
 export type ConsumerEventHub = ReturnType<typeof createConsumerEventHub>;
@@ -46,11 +51,11 @@ export const createTransitEventHub = () =>
 const hasItems = (...arrays: unknown[][]) =>
   arrays.some((arr) => arr.length > 0);
 
-// onEdgeWeightsChanged is derived by wrapWeightsControlsWithConsumerEvents, not
-// from a TransactionPayload — weight sets aren't one of the wrapped actions above.
+// onEdgeWeightsChanged and onNodePositionsCommitted are derived by wrapping their own
+// store controls below, not from a TransactionPayload — neither goes through an action.
 type NonStructureChangeEvent = Exclude<
   keyof ConsumerEventMap,
-  'onStructureChange' | 'onEdgeWeightsChanged'
+  'onStructureChange' | 'onEdgeWeightsChanged' | 'onNodePositionsCommitted'
 >;
 
 const eventNameToPredicateMap: {
@@ -222,6 +227,49 @@ export const wrapWeightsControlsWithConsumerEvents = (
       const entries = weights.setMany(updates);
       emitChange(entries);
       return entries;
+    },
+  };
+};
+
+// same reasoning as weights: position writes don't go through an action, so create-graph
+// wraps the store to keep derivation authority. the stream is wrapped too, since a drag
+// commits through stop() rather than through set/setMany, and a consumer wanting "the
+// node settled here" must not have to know which path produced it.
+export const wrapPositionsControlsWithConsumerEvents = (
+  positions: NodePositionStoreControls,
+  hub: ConsumerEventHub,
+): NodePositionStoreControls => {
+  const emitCommitted = (entries: NodePositionEntry[]) => {
+    // an already stopped stream and an empty setMany both commit nothing, and a
+    // subscriber encoding this for the wire would broadcast a no-op
+    if (entries.length === 0) return;
+    // deliberately no onStructureChange: the node and edge sets are unchanged, and
+    // implying otherwise would rerun every structure listener on each drag
+    hub.emit('onNodePositionsCommitted', entries);
+  };
+
+  return {
+    ...positions,
+    set: (update) => {
+      const entry = positions.set(update);
+      emitCommitted([entry]);
+      return entry;
+    },
+    setMany: (updates) => {
+      const entries = positions.setMany(updates);
+      emitCommitted(entries);
+      return entries;
+    },
+    createStream: () => {
+      const stream = positions.createStream();
+      return {
+        ...stream,
+        stop: () => {
+          const committed = stream.stop();
+          emitCommitted(committed);
+          return committed;
+        },
+      };
     },
   };
 };

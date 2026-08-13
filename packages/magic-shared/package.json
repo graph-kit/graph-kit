@@ -104,6 +104,14 @@
       "types": "./dist/types/product/index.d.ts",
       "default": "./src/product/index.ts"
     },
+    "./multiplayer": {
+      "types": "./dist/types/multiplayer/index.d.ts",
+      "default": "./src/multiplayer/index.ts"
+    },
+    "./ui": {
+      "types": "./dist/types/ui/index.d.ts",
+      "default": "./src/ui/index.ts"
+    },
     "./simulation": {
       "types": "./dist/types/simulation/index.d.ts",
       "default": "./src/simulation/index.ts"
@@ -143,11 +151,15 @@
     "@core/themes": "workspace:*",
     "@graph/vue": "workspace:*",
     "@mdi/js": "^7.4.47",
+    "@multiplayer/protocol": "workspace:*",
     "@vueuse/core": "catalog:",
     "ctrl-keys": "^1.0.6",
+    "fast-json-patch": "^3.1.1",
+    "fraction.js": "^5.3.4",
     "katex": "^0.18.1",
     "lz-string": "^1.5.0",
-    "mathlive": "^0.110.0"
+    "mathlive": "^0.110.0",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "nuxt": "^4.1.2",

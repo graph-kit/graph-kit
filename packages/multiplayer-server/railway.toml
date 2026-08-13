@@ -1,0 +1,10 @@
+[build]
+builder = "RAILPACK"
+
+[build.config]
+nodeVersion = "24"
+
+[deploy]
+buildCommand = "pnpm install && pnpm --filter @multiplayer/server build"
+startCommand = "node packages/multiplayer-server/dist/index.js"
+healthcheckPath = "/health"

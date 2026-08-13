@@ -69,7 +69,7 @@ export const createNodePositionStore = (
         return entries;
       },
       stop: () => {
-        if (!activeStream) return;
+        if (!activeStream) return [];
         activeStream = false;
         devStreamRegistry?.unregister(unregisterToken);
         const committed = [...touchedNodeIds].map((nodeId) => ({
@@ -78,6 +78,7 @@ export const createNodePositionStore = (
         }));
         events.emit('onNodePositionsCommitted', committed);
         events.emit('onNodeMoveStreamEnd');
+        return committed;
       },
     };
     devStreamRegistry?.register(stream, undefined, unregisterToken);

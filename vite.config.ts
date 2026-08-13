@@ -29,6 +29,7 @@ export default defineConfig({
       '@graph/render-functions': r('packages/graph-render-functions/src'),
       '@graph/theme-presets': r('packages/graph-theme-presets/src'),
       '@graph/vue': r('packages/graph-vue/src'),
+      '@multiplayer/protocol': r('packages/multiplayer-protocol/src'),
     },
   },
 });

@@ -31,7 +31,7 @@
     whole point: the slots claim them individually
   -->
   <div
-    v-if="!magic.componentSlots.visibility.isHidden.value"
+    v-if="!magic.componentSlots.visibility.isHidden.value && !magic.restoring.value"
     class="fixed inset-0 overflow-hidden pointer-events-none"
   >
     <ComponentSlots
@@ -45,6 +45,14 @@
       :bottom-right="`${slotSharedClasses} ${alignEnd} bottom-6 right-6`"
     />
   </div>
+
+  <!--
+    the canvas stays mounted while state resolves, since tearing it down and back up
+    would lose the surface. it is only hidden, so the first frame anyone sees is the
+    state this product actually settled on rather than local content a room is about
+    to replace
+  -->
+  <div v-show="magic.restoring.value" class="fixed inset-0 z-50 bg-gray-100 dark:bg-gray-900" />
 
   <CanvasSurface v-bind="{ ...magic.surface.ref, $attrs }" />
 </template>

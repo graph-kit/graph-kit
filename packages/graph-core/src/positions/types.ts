@@ -25,8 +25,12 @@ export type NodePositionStreamControls = {
   set: (position: NodePositionUpdate) => NodePositionEntry;
   /** Updates multiple nodes' positions within this stream. */
   setMany: (positions: NodePositionUpdate[]) => NodePositionEntry[];
-  /** Closes the stream, signaling that all updates have been dispatched. */
-  stop: () => void;
+  /**
+   * Closes the stream, signaling that all updates have been dispatched. Returns the
+   * de-duplicated final position of every node the stream touched, so a caller wrapping
+   * the store can report the commit without re-deriving it. Empty if already stopped.
+   */
+  stop: () => NodePositionEntry[];
 };
 
 export type NodePositionStoreControls = {

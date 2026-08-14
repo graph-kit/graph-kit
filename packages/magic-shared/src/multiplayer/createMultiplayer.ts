@@ -193,14 +193,13 @@ export const createMultiplayer = (options: {
 
   const attachHandlers = (activeSocket: MultiplayerSocket) => {
     activeSocket.on('rosterChanged', (data) => {
-      // a roster can land in the gap between a kick or a disband and this socket
-      // hearing about it, and there is no room left for it to describe
+      // roster update may land in the gap between a kick or a disband
       if (!membership.value) return;
-      membership.value = { ...membership.value, data };
+      membership.value.data = data;
     });
 
     activeSocket.on('presenceChanged', ({ userId: peerId, entry }) => {
-      presence.value = { ...presence.value, [peerId]: entry };
+      presence.value[peerId] = entry;
     });
 
     activeSocket.on('serverStatePatched', (relay) => {
@@ -211,6 +210,8 @@ export const createMultiplayer = (options: {
       const host = activeHost.value;
       if (!host || activeProductId.value !== relay.productId) return;
 
+      console.log('patching server state');
+
       // ops are applied by whatever the product registered; the version only advances
       // once that succeeds, so a throwing applier leaves a gap the next relay catches
       sync.applyRemote(() => host.applyOps(relay.ops));
@@ -218,7 +219,7 @@ export const createMultiplayer = (options: {
     });
 
     activeSocket.on('serverStateReplaced', (relay) => {
-      // authoritative by definition, so it never consults the counter
+      console.log('replacing server state');
       adoptServerState(relay);
     });
 

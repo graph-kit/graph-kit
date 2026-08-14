@@ -16,6 +16,13 @@
     lensChips,
   });
 
+  graph.events._internal.core.subscribe(
+    'onNodePositionsCommitted',
+    (payload) => {
+      console.log('committed', payload);
+    },
+  );
+
   graph.magic.componentSlots.add({
     id: 'action-bar',
     component: ActionBar,

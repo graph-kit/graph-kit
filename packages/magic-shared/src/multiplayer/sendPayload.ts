@@ -21,6 +21,9 @@ export const createPayloadSenders = (options: {
     sendOps: (productId, ops) => {
       if (!canSend() || ops.length === 0) return;
 
+      console.log('sending op');
+      console.log(ops);
+
       requireSocket().emit('patchServerState', {
         payloadId: generatePayloadId(),
         productId,
@@ -30,6 +33,8 @@ export const createPayloadSenders = (options: {
 
     sendReplacement: (productId) => {
       if (!canSend()) return;
+
+      console.log('sending replacement');
 
       requireSocket().emit('replaceServerState', {
         payloadId: generatePayloadId(),

@@ -79,6 +79,6 @@ export type TransitEventMap = {
 export type ConsumerEventsHub = ReadonlyEventHub<ConsumerEventMap> & {
   transit: ReadonlyEventHub<TransitEventMap>;
   _internal: {
-    coreEvents: ReadonlyEventHub<CoreEventMap>;
+    core: ReadonlyEventHub<CoreEventMap>;
   };
 };

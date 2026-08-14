@@ -88,7 +88,7 @@ export const foldPlugins = (
     ...consumerEvents,
     transit: transitEvents,
     _internal: {
-      coreEvents: coreGraph.events,
+      core: coreGraph.events,
     },
   };
   let actions = coreGraph.actions;

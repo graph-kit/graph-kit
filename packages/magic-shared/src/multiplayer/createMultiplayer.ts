@@ -25,23 +25,12 @@ import {
 import { roomIdUrl } from './url.ts';
 
 /**
- * Marks a transaction as coming from the room, so the outbound handler can skip the echo
- * it would otherwise send straight back. Replaces the re-entrancy flag the op based sync
- * needed, and unlike that flag it survives anything asynchronous a host does on adopt.
+ * Marks a transaction as coming from the room, so the outbound handler doesn't re-broadcast it
  */
 const REMOTE_ORIGIN = Symbol('multiplayer/remote');
 
-/**
- * The room connection, owned once at the application root. Every product is its own
- * page, so a socket held by a harness would die on each navigation, and a host's would
- * disband their own room every time they switched products.
- */
 export const createMultiplayer = (options: {
   serverUrl: string;
-  /**
-   * how a host driven move becomes a navigation. supplied by the app root because
-   * mapping a productId to a url is a client concern the server knows nothing about
-   */
   onMovedToProduct?: (productId: ProductId) => void;
 }): MultiplayerControls => {
   const { onMovedToProduct } = options;
@@ -60,15 +49,12 @@ export const createMultiplayer = (options: {
 
   const inRoom = computed(() => membership.value !== null);
 
-  /** for the paths a room already gates, where a missing socket is a broken invariant */
   const requireSocket = () =>
     nullThrows(socket, 'multiplayer: acted on a room with no socket');
 
   const requireMountedProduct = () =>
     nullThrows(mountedProduct.value, 'multiplayer: no product mounted');
 
-  // built once rather than per recompute, so the identity a consumer holds onto stays
-  // stable across every roster and presence change
   const roomControls: RoomControls = {
     setTier: (targetId, nextTier) =>
       requireSocket().emit('setTier', { userId: targetId, tier: nextTier }),

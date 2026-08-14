@@ -50,7 +50,6 @@ const joinResultFor = (
   doc: encodeProductDoc(room, productId),
 });
 
-/** the io instance is returned only so a caller can close it */
 export const createSocketServer = (
   httpServer: HttpServer,
   options: { corsOrigins: string[] },
@@ -63,8 +62,6 @@ export const createSocketServer = (
   const rooms = createRoomStore();
 
   io.on('connection', (socket) => {
-    // fresh every connection and never reused, so a refresh or reconnect is
-    // indistinguishable from a first time join
     const userId: UserId = randomUUID();
     let currentRoomId: RoomId | null = null;
 
@@ -129,7 +126,6 @@ export const createSocketServer = (
 
     socket.on('joinRoom', ({ roomId, displayName, productId }, callback) => {
       const room = rooms.get(roomId);
-      // a dead room id is a non event, the client falls back quietly
       if (!room) return callback({ joined: false });
 
       currentRoomId = roomId;
@@ -151,8 +147,6 @@ export const createSocketServer = (
       broadcastRoster(room);
     });
 
-    // no ordering, no acknowledgement and nothing to refuse on grounds of staleness:
-    // merging an update twice or out of order lands on the same document either way
     socket.on('docUpdate', ({ productId, update }) => {
       const room = currentRoom();
       if (!room || !canWriteProduct(room, userId)) return;
@@ -201,8 +195,6 @@ export const createSocketServer = (
       broadcastRoster(room);
     });
 
-    // ungated on purpose: every tier broadcasts presence, including read. room wide
-    // rather than per product, since a roster panel shows everyone regardless of product
     socket.on('updatePresence', (entry) => {
       relayToRoom('presenceChanged', { userId, entry });
     });
@@ -212,7 +204,6 @@ export const createSocketServer = (
       if (!room || currentRoomId === null) return;
 
       if (isHost(room, userId)) {
-        // no migration and no grace period: a blip is treated the same as leaving
         io.to(currentRoomId).emit('roomDisbanded');
         rooms.delete(currentRoomId);
         return;

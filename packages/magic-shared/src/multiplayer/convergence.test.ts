@@ -19,7 +19,6 @@ import { GraphServerState } from '../product/server-state.ts';
 const emptyServerState = (): GraphServerState => ({
   nodes: {},
   edges: {},
-  plugins: {},
 });
 
 const graphStub = {

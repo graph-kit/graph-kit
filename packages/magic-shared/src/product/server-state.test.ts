@@ -47,26 +47,14 @@ describe('serverStateFromTransit', () => {
   it('never carries the camera into the room', () => {
     const serverState = serverStateFromTransit(transitPayload());
 
-    expect(serverState.plugins).not.toHaveProperty('canvas');
     expect(JSON.stringify(serverState)).not.toContain('panX');
   });
 
-  it('passes through plugins it has no special knowledge of', () => {
-    const payload = { ...transitPayload(), somePlugin: { arbitrary: true } };
-    const serverState = serverStateFromTransit(payload);
-
-    expect(serverState.plugins.somePlugin).toEqual({ arbitrary: true });
-  });
-
-  it('falls back for a node with no recorded label or position', () => {
+  it('throws on a node with no recorded label or position', () => {
     const payload = transitPayload();
     payload.core.nodes.push({ id: 'n3' });
-    const serverState = serverStateFromTransit(payload);
 
-    expect(serverState.nodes.n3).toEqual({
-      position: { x: 0, y: 0, z: 0 },
-      label: '?',
-    });
+    expect(() => serverStateFromTransit(payload)).toThrow('n3');
   });
 });
 
@@ -110,16 +98,6 @@ describe('round trip', () => {
     );
 
     expect(restored.canvas).toEqual({ panX: 99, panY: 99, zoom: 9 });
-  });
-
-  it('preserves pass-through plugin payloads', () => {
-    const payload = { ...transitPayload(), somePlugin: [1, 2, 3] };
-    const restored = transitFromServerState(
-      serverStateFromTransit(payload),
-      payload,
-    );
-
-    expect(restored.somePlugin).toEqual([1, 2, 3]);
   });
 });
 

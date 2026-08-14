@@ -14,9 +14,7 @@
   const magic = useProvidedMagic();
   const { multiplayer } = magic;
 
-  // the connection is provided by a client only plugin, so it is absent during
-  // prerender and present on hydration. rendering nothing until mounted makes both
-  // passes agree, rather than the server emitting a comment where a panel appears
+  // needed for ssr hydration
   const isMounted = useMounted();
 
   // 3 seconds of link copied confirmation state
@@ -36,7 +34,7 @@
   );
 
   const displayName = useLocalStorage('multiplayer-display-name', '');
-  const hasDisplayName = computed(() => displayName.value.trim().length > 0);
+  const hasDisplayName = computed(() => displayName.value.length > 0);
 
   const startRoom = async () => {
     if (!multiplayer) return;
@@ -48,7 +46,7 @@
       await multiplayer.actions.room.start({
         productId: magic.manifest.id as never,
         state: serverStateFromTransit(magic.transit.encode()),
-        displayName: displayName.value.trim(),
+        displayName: displayName.value,
       });
     } finally {
       isStartingRoom.value = false;
@@ -57,7 +55,7 @@
 
   const changeDisplayName = () => {
     if (!room.value.connected) return;
-    room.value.controls.setDisplayName(displayName.value.trim());
+    room.value.controls.setDisplayName(displayName.value);
   };
 
   const copyRoomLinkToClipboard = async () => {
@@ -82,7 +80,7 @@
   <Well v-if="isMounted && multiplayer">
     <VStack class="w-64">
       <TextInput
-        v-model="displayName"
+        v-model.trim="displayName"
         placeholder="Your display name"
       />
 

@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
 import { useMultiplayerProduct } from '../multiplayer/useMultiplayerProduct.ts';
+import { usePresenceBroadcast } from '../multiplayer/usePresenceBroadcast.ts';
 import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
@@ -43,6 +44,16 @@ export const useMagicProduct = (
     options.productId,
     host.multiplayer,
   );
+
+  // the surface is all presence needs, so every host broadcasts it rather than only
+  // the ones backed by a graph
+  if (multiplayer) {
+    usePresenceBroadcast({
+      surface: host.surface,
+      productId: options.productId,
+      multiplayer,
+    });
+  }
 
   const magic: Magic = {
     manifest,

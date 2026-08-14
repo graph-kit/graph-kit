@@ -12,7 +12,6 @@ import {
 import { useGraphProductShortcuts } from './shortcuts.ts';
 import { GraphProductOptions, MagicGraph } from './types.ts';
 import { useGraphOutboundSync } from './useGraphOutboundSync.ts';
-import { usePresenceBroadcast } from './usePresenceBroadcast.ts';
 
 /** adapts a graph to the harness host interface, see {@link useMagicProduct} */
 export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
@@ -59,7 +58,6 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   if (magic.multiplayer) {
     useGraphOutboundSync(graph, options.productId, magic.multiplayer);
-    usePresenceBroadcast(graph, options.productId, magic.multiplayer);
   }
 
   if (magic.lensChips) {

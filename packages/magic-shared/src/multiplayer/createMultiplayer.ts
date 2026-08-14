@@ -80,7 +80,7 @@ export const createMultiplayer = (options: {
 
   const payloadSenders = createPayloadSenders({
     requireSocket,
-    canSend: () => inRoom.value && !sync.isApplyingRemote,
+    canSend: () => inRoom.value && !sync.isApplyingRemote(),
     encodeActiveState,
   });
 

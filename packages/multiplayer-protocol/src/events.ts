@@ -14,22 +14,16 @@ import { AssignableTier } from './tiers.ts';
  * the client can quietly fall through on instead of throwing
  */
 export type JoinResult =
-  | { joined: false }
-  | (RoomMembership & {
-      joined: true;
-      /** absent when nobody has opened this product in the room yet */
-      doc: DocUpdate | null;
-    });
+  { joined: false } | (RoomMembership & { joined: true });
 
-/** what both ways into a room carry: the product it opens on, and who is arriving */
+/** who is arriving, which is all a room needs to admit someone */
 export type RoomEntryOptions = {
-  productId: ProductId;
   displayName: string;
 };
 
 export type ClientToServerEvents = {
   startRoom: (
-    options: RoomEntryOptions & { doc: DocUpdate },
+    options: RoomEntryOptions & { productId: ProductId; doc: DocUpdate },
     callback: (membership: RoomMembership) => void,
   ) => void;
 
@@ -40,11 +34,12 @@ export type ClientToServerEvents = {
 
   /**
    * Reports that this user navigated, which the server cannot derive. Separate from
-   * syncDoc because entering is a roster change everyone hears about.
+   * syncDoc because entering is a roster change everyone hears about. Answers with the
+   * product's document, absent when nobody in the room has opened it yet.
    */
   enterProduct: (
     options: { productId: ProductId },
-    callback: (result: JoinResult) => void,
+    callback: (doc: DocUpdate | null) => void,
   ) => void;
 
   /**

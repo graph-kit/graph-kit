@@ -356,6 +356,9 @@ importers:
 
   packages/magic-client:
     dependencies:
+      '@core/utils':
+        specifier: workspace:*
+        version: link:../core-utils
       '@magic/products':
         specifier: workspace:*
         version: link:../magic-products

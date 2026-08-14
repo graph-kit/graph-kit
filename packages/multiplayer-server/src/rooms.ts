@@ -59,13 +59,13 @@ const docFromUpdate = (update: DocUpdate): Y.Doc => {
 
 export const addMember = (
   room: Room,
-  options: { userId: UserId; displayName: string; productId: ProductId },
+  options: { userId: UserId; displayName: string },
 ): RosterEntry => {
   const entry: RosterEntry = {
     userId: options.userId,
     displayName: options.displayName,
     tier: DEFAULT_TIER,
-    productId: options.productId,
+    productId: null,
   };
   room.data.roster[options.userId] = entry;
   return entry;

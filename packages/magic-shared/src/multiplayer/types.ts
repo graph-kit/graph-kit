@@ -31,7 +31,9 @@ export type MultiplayerSocket = Socket<
 
 export type RoomActions = {
   /** the display name is supplied per call: the room is not where it is stored */
-  start: (options: RoomEntryOptions) => Promise<RoomId>;
+  start: (
+    options: RoomEntryOptions & { productId: ProductId },
+  ) => Promise<RoomId>;
   join: (options: RoomEntryOptions & { roomId: RoomId }) => Promise<JoinResult>;
   leave: () => void;
 };

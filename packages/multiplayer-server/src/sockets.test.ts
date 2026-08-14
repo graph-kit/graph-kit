@@ -2,6 +2,7 @@
 import { createServer } from 'node:http';
 import { AddressInfo } from 'node:net';
 
+import { DocUpdate } from '@multiplayer/protocol/doc';
 import {
   ClientToServerEvents,
   JoinResult,
@@ -96,12 +97,24 @@ const startRoom = (socket: ClientSocket) =>
 
 const joinRoom = (socket: ClientSocket, roomId: string) =>
   new Promise<JoinResult>((resolve) => {
-    socket.emit(
-      'joinRoom',
-      { roomId, displayName: 'Student', productId: 'traversals' },
-      resolve,
-    );
+    socket.emit('joinRoom', { roomId, displayName: 'Student' }, resolve);
   });
+
+const enterProduct = (socket: ClientSocket, productId: string) =>
+  new Promise<DocUpdate | null>((resolve) => {
+    socket.emit('enterProduct', { productId }, resolve);
+  });
+
+/** every client enters a product on its first mount, which is where its document comes from */
+const joinRoomAt = async (
+  socket: ClientSocket,
+  roomId: string,
+  productId: string,
+) => {
+  const result = await joinRoom(socket, roomId);
+  if (!result.joined) throw new Error('expected join to succeed');
+  return { ...result, doc: await enterProduct(socket, productId) };
+};
 
 beforeEach(async () => {
   httpServer = createServer();
@@ -120,16 +133,15 @@ afterEach(async () => {
 });
 
 describe('room lifecycle', () => {
-  it('hands a joiner the host seeded document', async () => {
+  it('hands a joiner the host seeded document on the product it enters', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
 
     const student = await connectClient();
-    const result = await joinRoom(student, roomId);
+    const { doc } = await joinRoomAt(student, roomId, 'traversals');
 
-    expect(result.joined).toBe(true);
-    if (!result.joined) return;
-    expect(readNodes(result.doc!)).toEqual({ a: { x: 0 } });
+    if (!doc) throw new Error('expected the seeded document');
+    expect(readNodes(doc)).toEqual({ a: { x: 0 } });
   });
 
   it('treats a dead room id as a non event rather than an error', async () => {
@@ -199,11 +211,11 @@ describe('product layer privilege', () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
     const student = await connectClient();
-    const joined = await joinRoom(student, roomId);
-    if (!joined.joined) throw new Error('expected join to succeed');
+    const { doc } = await joinRoomAt(student, roomId, 'traversals');
+    if (!doc) throw new Error('expected the seeded document');
 
     const caughtUp = new Y.Doc();
-    Y.applyUpdate(caughtUp, joined.doc!);
+    Y.applyUpdate(caughtUp, doc);
 
     host.emit('docUpdate', {
       productId: 'traversals',
@@ -287,11 +299,6 @@ describe('renaming', () => {
 });
 
 describe('document routing', () => {
-  const enterProduct = (socket: ClientSocket, productId: string) =>
-    new Promise<JoinResult>((resolve) => {
-      socket.emit('enterProduct', { productId }, resolve);
-    });
-
   // the server routes off the roster it already maintains, so nobody pays for
   // traffic on a product they are not looking at
   it('does not relay an update to someone on a different product', async () => {
@@ -362,13 +369,9 @@ describe('lazy document creation', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     const student = await connectClient();
-    await joinRoom(student, roomId);
-    const entered = await new Promise<JoinResult>((resolve) => {
-      student.emit('enterProduct', { productId: 'basic-trees' }, resolve);
-    });
+    const { doc } = await joinRoomAt(student, roomId, 'basic-trees');
 
-    expect(entered.joined).toBe(true);
-    if (!entered.joined) return;
-    expect(readNodes(entered.doc!)).toEqual({ seeded: { x: 9 } });
+    if (!doc) throw new Error('expected the lazily created document');
+    expect(readNodes(doc)).toEqual({ seeded: { x: 9 } });
   });
 });

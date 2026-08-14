@@ -15,7 +15,8 @@ export type RosterEntry = {
   userId: UserId;
   displayName: string;
   tier: Tier;
-  productId: ProductId;
+  /** null between joining a room and mounting the first product */
+  productId: ProductId | null;
 };
 
 export type Point = { x: number; y: number };

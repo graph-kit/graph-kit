@@ -13,7 +13,7 @@ import * as Y from 'yjs';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { UNNAMED_DISPLAY_NAME } from './constants.ts';
+import { REMOTE_ORIGIN, UNNAMED_DISPLAY_NAME } from './constants.ts';
 import {
   MultiplayerControls,
   MultiplayerSocket,
@@ -24,17 +24,15 @@ import {
 } from './types.ts';
 import { roomIdUrl } from './url.ts';
 
-/**
- * Marks a transaction as coming from the room, so the outbound handler doesn't re-broadcast it
- */
-const REMOTE_ORIGIN = Symbol('multiplayer/remote');
-
-export const createMultiplayer = (options: {
+type CreateMultiplayerOptions = {
   serverUrl: string;
-  onMovedToProduct?: (productId: ProductId) => void;
-}): MultiplayerControls => {
-  const { onMovedToProduct } = options;
+  onMovedToProduct: (productId: ProductId) => void;
+};
 
+export const createMultiplayer = ({
+  serverUrl,
+  onMovedToProduct,
+}: CreateMultiplayerOptions): MultiplayerControls => {
   const awaitingServerState = ref(roomIdUrl.read() !== null);
 
   const membership = ref<RoomMembership | null>(null);
@@ -113,15 +111,6 @@ export const createMultiplayer = (options: {
     return doc;
   };
 
-  /** applies what a join handed back, before the host binds and sees the result */
-  const adoptJoinResult = (doc: Y.Doc, result: JoinResult) => {
-    if (!result.joined) return;
-    adoptMembership(result);
-    // absent when nobody has opened this product in the room yet, which leaves the
-    // document empty and makes the host seed it instead
-    if (result.doc) Y.applyUpdate(doc, toDocUpdate(result.doc), REMOTE_ORIGIN);
-  };
-
   const attachHandlers = (activeSocket: MultiplayerSocket) => {
     activeSocket.on('rosterChanged', (data) => {
       // roster update may land in the gap between a kick or a disband
@@ -175,13 +164,10 @@ export const createMultiplayer = (options: {
 
   const ensureSocket = () => {
     if (socket) return socket;
-    socket = connect(options.serverUrl, { transports: ['websocket'] });
+    socket = connect(serverUrl, { transports: ['websocket'] });
     attachHandlers(socket);
     return socket;
   };
-
-  // once for the life of the connection, not per mount
-  let roomResolutionAttempted = false;
 
   const roomActions: RoomActions = {
     start: async ({ productId, displayName }) => {
@@ -202,22 +188,16 @@ export const createMultiplayer = (options: {
       // the id becomes shareable the moment the room exists, and survives a refresh
       roomIdUrl.write(started.roomId);
 
-      // nothing to resolve later: this connection is already in its room
-      roomResolutionAttempted = true;
       return started.roomId;
     },
 
-    join: async ({ roomId, productId, displayName }) => {
+    join: async ({ roomId, displayName }) => {
       const activeSocket = ensureSocket();
       const result = await new Promise<JoinResult>((resolve) => {
-        activeSocket.emit(
-          'joinRoom',
-          { roomId, displayName, productId },
-          resolve,
-        );
+        activeSocket.emit('joinRoom', { roomId, displayName }, resolve);
       });
 
-      adoptJoinResult(requireMountedProduct().doc, result);
+      if (result.joined) adoptMembership(result);
       return result;
     },
 
@@ -228,63 +208,49 @@ export const createMultiplayer = (options: {
     },
   };
 
+  /**
+   * Whether this connection has a room, settled once at construction. A product mount
+   * awaits the answer rather than producing it, so no mount is special.
+   */
+  const roomResolution = (async () => {
+    const targetRoomId = roomIdUrl.read();
+    if (!targetRoomId) return;
+
+    // no name to hand over yet: the panel that owns it has not mounted, so the room
+    // holds the placeholder until it renames through room.controls
+    const result = await roomActions.join({
+      roomId: targetRoomId,
+      displayName: UNNAMED_DISPLAY_NAME,
+    });
+
+    // a dead room id is a non event: strip it and carry on exactly as if the param had
+    // never been there, with no error surfaced
+    if (!result.joined) roomIdUrl.strip();
+  })();
+
   const productActions: ProductActions = {
-    // one call covers the roster update, the traffic routing and the initial state
     enter: async (productId, host) => {
       const doc = mountProduct(productId);
 
-      // resolution happens once for the life of the connection rather than per mount,
-      // so navigating between products never re-reads the url or re-joins
-      if (!roomResolutionAttempted) {
-        roomResolutionAttempted = true;
-        const targetRoomId = roomIdUrl.read();
-
-        if (targetRoomId) {
-          try {
-            // no name to hand over yet: the panel that owns it has not mounted, so the
-            // room holds the placeholder until it renames through room.controls
-            const result = await roomActions.join({
-              roomId: targetRoomId,
-              productId,
-              displayName: UNNAMED_DISPLAY_NAME,
-            });
-            // bound after the document is populated, so the host adopts the room rather
-            // than seeding it with whatever was on screen
-            host.bind(doc);
-            if (result.joined) return 'room';
-
-            // a dead room id is a non event: strip it and carry on exactly as if the
-            // param had never been there, with no error surfaced
-            roomIdUrl.strip();
-            return 'local';
-          } finally {
-            awaitingServerState.value = false;
-          }
-        }
-
-        awaitingServerState.value = false;
-      }
-
-      // the ordinary outcome for every page load outside a room, and the answer the
-      // harness needs before it restores anything local
-      if (!inRoom.value) {
-        host.bind(doc);
-        return 'local';
-      }
-
-      // navigating inside a room waits too: the new product mounts empty and the
-      // server is what fills it
-      awaitingServerState.value = true;
       try {
-        const result = await new Promise<JoinResult>((resolve) => {
-          requireSocket().emit('enterProduct', { productId }, resolve);
-        });
-        adoptJoinResult(doc, result);
-        host.bind(doc);
-        return 'room';
+        await roomResolution;
+        if (inRoom.value) {
+          // the product mounts empty and the server is what fills it, on the first
+          // mount and on every navigation inside a room alike
+          awaitingServerState.value = true;
+          const update = await new Promise<DocUpdate | null>((resolve) => {
+            requireSocket().emit('enterProduct', { productId }, resolve);
+          });
+          if (update) Y.applyUpdate(doc, toDocUpdate(update), REMOTE_ORIGIN);
+        }
       } finally {
         awaitingServerState.value = false;
       }
+
+      // bound after the document is populated, so the graph adopts the room's state
+      // rather than seeding it with whatever was on screen
+      host.bind(doc);
+      return inRoom.value ? 'room' : 'local';
     },
 
     /** on unmount. the connection, the room and the roster all outlive this */

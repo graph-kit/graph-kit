@@ -41,13 +41,11 @@ const joinResultFor = (
   room: Room,
   roomId: RoomId,
   userId: UserId,
-  productId: ProductId,
 ): JoinResult => ({
   joined: true,
   roomId,
   userId,
   data: room.data,
-  doc: encodeProductDoc(room, productId),
 });
 
 export const createSocketServer = (
@@ -124,26 +122,29 @@ export const createSocketServer = (
       callback({ roomId, userId, data: room.data });
     });
 
-    socket.on('joinRoom', ({ roomId, displayName, productId }, callback) => {
+    // admission only: which product the member lands on is what enterProduct answers,
+    // and every client sends one on its first mount
+    socket.on('joinRoom', ({ roomId, displayName }, callback) => {
       const room = rooms.get(roomId);
       if (!room) return callback({ joined: false });
 
       currentRoomId = roomId;
       socket.join(roomId);
-      enterProductChannel(productId);
-      addMember(room, { userId, displayName, productId });
+      addMember(room, { userId, displayName });
 
-      callback(joinResultFor(room, roomId, userId, productId));
+      callback(joinResultFor(room, roomId, userId));
       broadcastRoster(room);
     });
 
     socket.on('enterProduct', ({ productId }, callback) => {
       const room = currentRoom();
-      if (!room || currentRoomId === null) return callback({ joined: false });
+      // the same quiet answer syncDoc gives, since an empty product and no room at all
+      // leave the client with the same nothing to apply
+      if (!room) return callback(null);
 
       enterProductChannel(productId);
       setMemberProduct(room, userId, productId);
-      callback(joinResultFor(room, currentRoomId, userId, productId));
+      callback(encodeProductDoc(room, productId));
       broadcastRoster(room);
     });
 

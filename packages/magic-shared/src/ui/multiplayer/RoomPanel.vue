@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import { useMounted } from '@vueuse/core';
+
   import { computed, ref } from 'vue';
 
   import Button from '../../components/button/Button.vue';
@@ -11,6 +13,11 @@
 
   const magic = useProvidedMagic();
   const { multiplayer } = magic;
+
+  // the connection is provided by a client only plugin, so it is absent during
+  // prerender and present on hydration. rendering nothing until mounted makes both
+  // passes agree, rather than the server emitting a comment where a panel appears
+  const isMounted = useMounted();
 
   // 3 seconds of link copied confirmation state
   const LINK_COPIED_FEEDBACK_DURATION_MS = 3_000;
@@ -62,7 +69,7 @@
 </script>
 
 <template>
-  <Well v-if="multiplayer">
+  <Well v-if="isMounted && multiplayer">
     <VStack
       :gap="2"
       class="w-64"

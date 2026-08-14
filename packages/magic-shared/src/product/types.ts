@@ -2,7 +2,7 @@ import { CanvasProps } from '@canvas/surface/types';
 import { PatchOp, ServerState } from '@multiplayer/protocol/server-state';
 import { BasicColorMode } from '@vueuse/core';
 
-import { ComputedRef, Ref } from 'vue';
+import { ComputedRef } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../graph/types.ts';
@@ -132,11 +132,6 @@ export type Magic = {
    * multiplayer, when no server is configured, or during prerender.
    */
   multiplayer?: MultiplayerControls;
-  /**
-   * True until the product knows what it is showing. The canvas is gated on it, so a
-   * room never appears as a flash of local content replaced a moment later.
-   */
-  restoring: Ref<boolean>;
 };
 
 export type GraphLensChipOption = (

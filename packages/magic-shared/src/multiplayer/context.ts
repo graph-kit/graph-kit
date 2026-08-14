@@ -1,12 +1,18 @@
-import { inject, provide } from 'vue';
+import { App, inject } from 'vue';
 
 import { MultiplayerControls } from './createMultiplayer.ts';
 
 const MULTIPLAYER_KEY = 'MAGIC_MULTIPLAYER';
 
-/** called once at the application root, never by a product */
-export const provideMultiplayer = (multiplayer: MultiplayerControls) => {
-  provide(MULTIPLAYER_KEY, multiplayer);
+/**
+ * App level rather than component level, because the only caller is the root plugin and
+ * `provide()` needs an active component instance, which a plugin does not have.
+ */
+export const provideMultiplayer = (
+  app: App,
+  multiplayer: MultiplayerControls,
+): void => {
+  app.provide(MULTIPLAYER_KEY, multiplayer);
 };
 
 /**

@@ -10,7 +10,7 @@ export const useLocalStorageSync = (
 ): LocalStorageField => {
   const key = localStorageKey(productId);
 
-  const save = debounce(() => {
+  const invalidate = debounce(() => {
     window?.localStorage.setItem(key, JSON.stringify(transit.encode()));
   }, 500);
 
@@ -22,5 +22,5 @@ export const useLocalStorageSync = (
     transit.decode(JSON.parse(data));
   };
 
-  return { invalidate: save, sync };
+  return { invalidate, sync };
 };

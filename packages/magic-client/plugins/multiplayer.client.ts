@@ -32,5 +32,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
   });
 
-  nuxtApp.vueApp.runWithContext(() => provideMultiplayer(multiplayer));
+  provideMultiplayer(nuxtApp.vueApp, multiplayer);
 });

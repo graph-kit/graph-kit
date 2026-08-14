@@ -67,7 +67,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     usePresenceBroadcast(graph, options.productId, magic.multiplayer);
   }
 
-  if (lensChips) {
+  if (magic.lensChips) {
     magic.componentSlots.add({
       id: 'product/lens-chips',
       component: LensChipGroup,

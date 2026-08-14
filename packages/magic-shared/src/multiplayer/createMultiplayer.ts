@@ -66,6 +66,12 @@ export type MultiplayerControls = {
   presence: Ref<Record<UserId, PresenceEntry>>;
   tier: ComputedRef<Tier | null>;
   isHost: ComputedRef<boolean>;
+  /**
+   * True while the server is about to say what this product should show, so UI can
+   * hold the first frame rather than paint local state a moment before replacing it.
+   * Known before the first frame, since a pending join is visible in the url.
+   */
+  awaitingServerState: Ref<boolean>;
 
   /** reports the source so the caller knows whether to skip its local restore */
   enterProduct: (
@@ -132,6 +138,9 @@ export const createMultiplayer = (options: {
   );
 
   const connected = ref(false);
+  // read up front rather than discovered on mount, so a product that is about to be
+  // handed room state never paints local content first
+  const awaitingServerState = ref(readRoomIdFromUrl() !== null);
   const roomId = ref<RoomId | null>(null);
   const userId = ref<UserId | null>(null);
   const roomData = ref<RoomData>(emptyRoomData());
@@ -165,6 +174,7 @@ export const createMultiplayer = (options: {
   );
 
   const reset = () => {
+    awaitingServerState.value = false;
     roomId.value = null;
     userId.value = null;
     roomData.value = emptyRoomData();
@@ -336,6 +346,7 @@ export const createMultiplayer = (options: {
     presence,
     tier,
     isHost,
+    awaitingServerState,
 
     // one call covers the roster update, the traffic routing and the initial state
     enterProduct: async (
@@ -352,24 +363,37 @@ export const createMultiplayer = (options: {
         const targetRoomId = readRoomIdFromUrl();
 
         if (targetRoomId) {
-          const result = await joinRoomInternal(targetRoomId, productId);
-          if (result.joined) return 'room';
+          try {
+            const result = await joinRoomInternal(targetRoomId, productId);
+            if (result.joined) return 'room';
 
-          // a dead room id is a non event: strip it and carry on exactly as if the
-          // param had never been there, with no error surfaced
-          stripRoomIdFromUrl();
-          return 'local';
+            // a dead room id is a non event: strip it and carry on exactly as if the
+            // param had never been there, with no error surfaced
+            stripRoomIdFromUrl();
+            return 'local';
+          } finally {
+            awaitingServerState.value = false;
+          }
         }
+
+        awaitingServerState.value = false;
       }
 
       const activeSocket = socket;
       if (!activeSocket || !inRoom.value) return 'local';
 
-      const result = await new Promise<JoinResult>((resolve) => {
-        activeSocket.emit('enterProduct', { productId }, resolve);
-      });
-      adoptJoinResult(productId, result);
-      return 'room';
+      // navigating inside a room waits too: the new product mounts empty and the
+      // server is what fills it
+      awaitingServerState.value = true;
+      try {
+        const result = await new Promise<JoinResult>((resolve) => {
+          activeSocket.emit('enterProduct', { productId }, resolve);
+        });
+        adoptJoinResult(productId, result);
+        return 'room';
+      } finally {
+        awaitingServerState.value = false;
+      }
     },
 
     /** on unmount. the connection, the room and the roster all outlive this */

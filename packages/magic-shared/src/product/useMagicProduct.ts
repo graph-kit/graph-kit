@@ -1,4 +1,4 @@
-import { onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
@@ -44,10 +44,6 @@ export const useMagicProduct = (
     host.multiplayer,
   );
 
-  // true until the product knows what it is showing. the canvas is gated on it so a
-  // room never appears as a flash of local content replaced a moment later
-  const restoring = ref(true);
-
   const magic: Magic = {
     manifest,
     lens,
@@ -63,7 +59,6 @@ export const useMagicProduct = (
     history: host.history,
     localStorage,
     multiplayer,
-    restoring,
   };
 
   // ORDER MATTERS!
@@ -72,29 +67,28 @@ export const useMagicProduct = (
   // then local storage before link share, otherwise local storage content loads on top
   // of a shared link.
   const restoreLocal = () => {
-    localStorage.sync();
+    magic.localStorage.sync();
     if (magic.ui.linkSharing) loadFromLinkPayload(magic);
   };
 
   onMounted(async () => {
-    try {
-      // the only async step in startup. a product not in a room, or one with
-      // multiplayer switched off, resolves immediately to 'local'
-      const source = await multiplayer?.enterProduct(
-        options.productId,
-        host.multiplayer,
-      );
-      if (source !== 'room') restoreLocal();
-    } finally {
-      restoring.value = false;
-    }
+    // the only async step in startup. a product not in a room, or one with
+    // multiplayer switched off, resolves immediately to 'local'
+    const source = await magic.multiplayer?.enterProduct(
+      options.productId,
+      host.multiplayer,
+    );
+    if (source !== 'room') restoreLocal();
   });
 
-  if (multiplayer) {
-    componentSlots.add({
+  // the manifest flag rather than magic.multiplayer: the connection is client only, so
+  // gating on it would add this slot on the client and not the server, and the two
+  // slot lists would not hydrate against each other
+  if (magic.manifest.multiplayer) {
+    magic.componentSlots.add({
       id: 'product/room-panel',
       component: RoomPanel,
-      position: 'top-right',
+      position: 'center-right',
     });
   }
 

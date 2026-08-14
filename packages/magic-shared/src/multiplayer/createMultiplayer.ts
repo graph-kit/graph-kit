@@ -20,7 +20,7 @@ import { AssignableTier, Tier } from '@multiplayer/protocol/tiers';
 import { useLocalStorage } from '@vueuse/core';
 import { Socket, io as connect } from 'socket.io-client';
 
-import { computed, ref, shallowRef } from 'vue';
+import { ComputedRef, Ref, computed, ref, shallowRef } from 'vue';
 
 import { MultiplayerHostField } from '../product/types.ts';
 import { createSyncTracker } from './sync-tracker.ts';
@@ -54,13 +54,63 @@ const stripRoomIdFromUrl = () => {
  */
 export type ProductStateSource = 'room' | 'local';
 
+/** refs rather than signals: this is where the harness hands reactivity to products */
+export type MultiplayerControls = {
+  connected: Ref<boolean>;
+  inRoom: ComputedRef<boolean>;
+  roomId: Ref<RoomId | null>;
+  /** fresh every connection, so a refresh is indistinguishable from a first join */
+  userId: Ref<UserId | null>;
+  roster: ComputedRef<RosterEntry[]>;
+  /** higher frequency and lower stakes than the roster; nothing renders it yet */
+  presence: Ref<Record<UserId, PresenceEntry>>;
+  tier: ComputedRef<Tier | null>;
+  isHost: ComputedRef<boolean>;
+
+  /** reports the source so the caller knows whether to skip its local restore */
+  enterProduct: (
+    productId: ProductId,
+    host: MultiplayerHostField<any>,
+  ) => Promise<ProductStateSource>;
+  /** on unmount; the connection and the room outlive it */
+  leaveProduct: (productId: ProductId) => void;
+
+  /** seeds the room with the caller's current state */
+  startRoom: (productId: ProductId, state: ServerState) => Promise<RoomId>;
+  joinRoom: (roomId: RoomId, productId: ProductId) => Promise<JoinResult>;
+
+  /** a local convenience value, tied to no account */
+  displayName: Ref<string>;
+  /** empty coerces back to the placeholder so the roster never shows a blank row */
+  setDisplayName: (name: string) => void;
+
+  /** a no-op when suspended, or when the change came from the room itself */
+  sendOps: (productId: ProductId, ops: PatchOp[]) => void;
+  /** behind seeding, suspend-exit force push and undo */
+  sendReplacement: (productId: ProductId, state: ServerState) => void;
+
+  suspend: (productId: ProductId) => void;
+  resume: (productId: ProductId) => void;
+  isSuspended: (productId: ProductId) => boolean;
+  isApplyingRemote: () => boolean;
+
+  /** resyncs on mismatch, catching what the version counter cannot */
+  reportLocalHash: (productId: ProductId, localHash: string) => void;
+
+  setTier: (targetId: UserId, nextTier: AssignableTier) => void;
+  kickUser: (targetId: UserId) => void;
+  /** sends a productId; the client turns it into a navigation */
+  moveUser: (targetId: UserId, productId: ProductId) => void;
+  /** ungated by tier and unaffected by suspension, unlike everything above */
+  updatePresence: (entry: PresenceEntry) => void;
+
+  disconnect: () => void;
+};
+
 /**
  * The room connection, owned once at the application root. Every product is its own
- * page, so a socket held by a product's harness would die on each navigation, and a
- * host's would disband their own room every time they switched products.
- *
- * A mounting product registers itself here and deregisters on unmount. It never owns a
- * connection, a subscription or any room state.
+ * page, so a socket held by a harness would die on each navigation, and a host's would
+ * disband their own room every time they switched products.
  */
 export const createMultiplayer = (options: {
   serverUrl: string;
@@ -69,15 +119,17 @@ export const createMultiplayer = (options: {
    * mapping a productId to a url is a client concern the server knows nothing about
    */
   onMovedToProduct?: (productId: ProductId) => void;
-}) => {
+}): MultiplayerControls => {
   const { onMovedToProduct } = options;
   const sync = createSyncTracker();
 
-  // a local convenience value, never validated by any server and not tied to an
-  // account. the UI gates room creation and joining on it being set, so the fallback
-  // is only reachable by pasting a room link with nothing in storage
-  const displayName = useLocalStorage('multiplayer-display-name', '');
-  const displayNameOrFallback = () => displayName.value.trim() || '[Unknown]';
+  // defaults to a placeholder rather than empty because renaming is always allowed,
+  // so an unnamed join is fixable rather than something to gate room creation on
+  const FALLBACK_DISPLAY_NAME = '[Unknown]';
+  const displayName = useLocalStorage(
+    'multiplayer-display-name',
+    FALLBACK_DISPLAY_NAME,
+  );
 
   const connected = ref(false);
   const roomId = ref<RoomId | null>(null);
@@ -264,7 +316,7 @@ export const createMultiplayer = (options: {
         'joinRoom',
         {
           roomId: targetRoomId,
-          displayName: displayNameOrFallback(),
+          displayName: displayName.value,
           productId,
         },
         resolve,
@@ -285,15 +337,7 @@ export const createMultiplayer = (options: {
     tier,
     isHost,
 
-    /**
-     * Registers the mounting product and reports the navigation to the server, which
-     * routes its traffic off the roster from here. One call covers the roster update,
-     * the routing and the initial state.
-     *
-     * Reports where the product's state came from, because the caller has to know
-     * whether to run its local restore: a room's state must not be painted over by
-     * localStorage, and only this call knows whether a room answered.
-     */
+    // one call covers the roster update, the traffic routing and the initial state
     enterProduct: async (
       productId: ProductId,
       host: MultiplayerHostField<any>,
@@ -344,7 +388,7 @@ export const createMultiplayer = (options: {
       }>((resolve) => {
         activeSocket.emit(
           'startRoom',
-          { displayName: displayNameOrFallback(), productId, state },
+          { displayName: displayName.value, productId, state },
           (id, user, data) => resolve({ roomId: id, userId: user, data }),
         );
       });
@@ -367,6 +411,13 @@ export const createMultiplayer = (options: {
     joinRoom: joinRoomInternal,
 
     displayName,
+
+    // local first, so the field stays responsive whether or not a room is open
+    setDisplayName: (name: string) => {
+      displayName.value = name.trim() || FALLBACK_DISPLAY_NAME;
+      if (!inRoom.value) return;
+      socket?.emit('setDisplayName', { displayName: displayName.value });
+    },
 
     /** outbound. no-op when suspended or when this change came from the room itself */
     sendOps: (productId: ProductId, ops: PatchOp[]) => {
@@ -398,11 +449,6 @@ export const createMultiplayer = (options: {
     isSuspended: sync.isSuspended,
     isApplyingRemote: sync.isApplyingRemote,
 
-    /**
-     * Reports a freshly computed local hash so it can be compared against what the
-     * server last said. Catches the case the version counter cannot: the same number
-     * of applies landing on different state.
-     */
     reportLocalHash: (productId: ProductId, localHash: string) => {
       if (!inRoom.value || sync.isSuspended(productId)) return;
       if (!sync.hasDrifted(productId, localHash)) return;
@@ -429,5 +475,3 @@ export const createMultiplayer = (options: {
     },
   };
 };
-
-export type MultiplayerControls = ReturnType<typeof createMultiplayer>;

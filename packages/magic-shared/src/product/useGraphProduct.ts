@@ -6,10 +6,7 @@ import { useGraphProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { provideGraph } from './context.ts';
 import { applyOpsToGraph } from './server-state-ops.ts';
-import {
-  isGraphServerState,
-  transitFromServerState,
-} from './server-state.ts';
+import { isGraphServerState, transitFromServerState } from './server-state.ts';
 import { GraphProductOptions, MagicGraph, MagicProductHost } from './types.ts';
 import { useMagicProduct } from './useMagicProduct.ts';
 

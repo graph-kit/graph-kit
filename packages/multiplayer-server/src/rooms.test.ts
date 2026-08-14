@@ -130,7 +130,9 @@ describe('patchServerState', () => {
 describe('replaceServerState', () => {
   it('creates server state lazily on first write', () => {
     const room = seedRoom();
-    const receipt = replaceServerState(room, 'basic-trees', { core: { nodes: {} } });
+    const receipt = replaceServerState(room, 'basic-trees', {
+      core: { nodes: {} },
+    });
 
     expect(receipt.version).toBe(1);
     expect(getServerState(room, 'basic-trees')).not.toBeNull();
@@ -138,7 +140,9 @@ describe('replaceServerState', () => {
 
   it('overwrites wholesale and advances the version', () => {
     const room = seedRoom();
-    const receipt = replaceServerState(room, 'traversals', { core: { nodes: {} } });
+    const receipt = replaceServerState(room, 'traversals', {
+      core: { nodes: {} },
+    });
 
     expect(receipt.version).toBe(2);
     expect(room.products.traversals?.state).toEqual({ core: { nodes: {} } });
@@ -150,7 +154,9 @@ describe('replaceServerState', () => {
     patchServerState(room, 'traversals', [
       { op: 'add', path: '/core/nodes/b', value: { x: 5 } },
     ]);
-    const receipt = replaceServerState(room, 'traversals', { core: { nodes: {} } });
+    const receipt = replaceServerState(room, 'traversals', {
+      core: { nodes: {} },
+    });
 
     expect(receipt.version).toBe(3);
     expect(receipt.stateHash).toBe(

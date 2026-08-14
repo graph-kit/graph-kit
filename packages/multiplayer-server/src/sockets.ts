@@ -1,11 +1,12 @@
+import { randomUUID } from 'node:crypto';
+import type { Server as HttpServer } from 'node:http';
+
 import {
   ClientToServerEvents,
   JoinResult,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
 import { ProductId, RoomId, UserId } from '@multiplayer/protocol/room';
-import type { Server as HttpServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
 import { Server } from 'socket.io';
 
 import {
@@ -20,18 +21,20 @@ import {
   patchServerState,
   removeMember,
   replaceServerState,
+  setMemberDisplayName,
   setMemberProduct,
   setTier,
 } from './rooms.ts';
 
-const generateRoomId = () => randomUUID().replaceAll('-', '').slice(0, 10);
+const generateRoomId = (): RoomId =>
+  randomUUID().replaceAll('-', '').slice(0, 10);
 
 /**
  * server state traffic is routed to the people actually looking at that product rather than
  * to the whole room, so nobody pays for products they are not on. derived from the
  * roster the server already maintains, which is why clients never manage a subscription.
  */
-const productChannel = (roomId: RoomId, productId: ProductId) =>
+const productChannel = (roomId: RoomId, productId: ProductId): string =>
   `${roomId}:${productId}`;
 
 const joinResultFor = (
@@ -47,10 +50,11 @@ const joinResultFor = (
   serverState: getServerState(room, productId),
 });
 
+/** the io instance is returned only so a caller can close it */
 export const createSocketServer = (
   httpServer: HttpServer,
   options: { corsOrigins: string[] },
-) => {
+): Server<ClientToServerEvents, ServerToClientEvents> => {
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(
     httpServer,
     { cors: { origin: options.corsOrigins } },
@@ -108,7 +112,12 @@ export const createSocketServer = (
 
     socket.on('startRoom', ({ displayName, productId, state }, callback) => {
       const roomId = generateRoomId();
-      const room = createRoom({ hostId: userId, displayName, productId, state });
+      const room = createRoom({
+        hostId: userId,
+        displayName,
+        productId,
+        state,
+      });
 
       rooms.set(roomId, room);
       currentRoomId = roomId;
@@ -175,6 +184,15 @@ export const createSocketServer = (
         state,
         ...receipt,
       });
+    });
+
+    // ungated: renaming yourself authorizes nothing, and being able to do it mid
+    // session is what keeps an unnamed join from being a dead end
+    socket.on('setDisplayName', ({ displayName }) => {
+      const room = currentRoom();
+      if (!room) return;
+      if (!setMemberDisplayName(room, userId, displayName)) return;
+      broadcastRoster(room);
     });
 
     socket.on('setTier', ({ userId: targetId, tier }) => {

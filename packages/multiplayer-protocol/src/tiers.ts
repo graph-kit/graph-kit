@@ -15,9 +15,11 @@ const tierToRank: Record<Tier, number> = {
   read: 0,
 };
 
-export const rankOf = (tier: Tier) => tierToRank[tier];
+/** higher outranks lower; the only thing tier comparisons are built on */
+export const rankOf = (tier: Tier): number => tierToRank[tier];
 
-export const meetsFloor = (tier: Tier, floor: Tier) =>
+/** inclusive: a tier meets its own floor */
+export const meetsFloor = (tier: Tier, floor: Tier): boolean =>
   rankOf(tier) >= rankOf(floor);
 
 /** every product layer write, for every product, forever */
@@ -28,17 +30,13 @@ export const ROOM_COMMAND_FLOOR: Tier = 'admin';
 
 export const DEFAULT_TIER: Tier = 'read';
 
-/**
- * three independent conditions. the floor is not implied by the ordinal rule, since
- * strictly-below alone would let a Write user assign Read. the host guard is not in the
- * spec but is required for coherence: without it an Admin could demote the host, which
- * would orphan disband-on-host-disconnect.
- */
+// three independent conditions: strictly-below alone would let Write assign Read, and
+// without the host guard an Admin could demote the host and orphan disband-on-disconnect
 export const canSetTier = (
   callerTier: Tier,
   targetCurrentTier: Tier,
   nextTier: AssignableTier,
-) =>
+): boolean =>
   meetsFloor(callerTier, ROOM_COMMAND_FLOOR) &&
   targetCurrentTier !== 'host' &&
   rankOf(callerTier) > rankOf(nextTier);

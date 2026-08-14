@@ -2,25 +2,24 @@ import { PatchOp } from '@multiplayer/protocol/server-state';
 import Fraction from 'fraction.js';
 
 import { Graph } from '../graph/types.ts';
-import { GraphServerState, ServerEdge, ServerNode } from './server-state.ts';
+import { ServerEdge, ServerNode } from './server-state.ts';
 
 /**
- * Ops are produced and consumed at the *action* boundary, never per element type.
- *
- * Removing a node also removes its dangling edges, so encoding from onNodesRemoved and
- * onEdgesRemoved separately would broadcast two messages for one action. The receiver
- * would apply the node removal, derive the edge removal locally, and then be handed a
- * second message for edges that are already gone. Both messages are legitimately
- * outbound, so the provenance flag cannot catch it. Encoding whole actions makes it one
- * message applied in one call, with the derivation happening inside it and suppressed.
+ * Ops are produced and consumed at the action boundary, never per element type. Removing
+ * a node also removes its dangling edges, so encoding those separately would send two
+ * messages for one action and the receiver would derive the second itself first. The
+ * provenance flag cannot catch that, since both messages are legitimately outbound.
  */
 
-const nodePath = (nodeId: string) => `/nodes/${nodeId}`;
-const edgePath = (edgeId: string) => `/edges/${edgeId}`;
+const nodePath = (nodeId: string): string => `/nodes/${nodeId}`;
+const edgePath = (edgeId: string): string => `/edges/${edgeId}`;
 
 export const encodeElementsAdded = (
   graph: Graph,
-  added: { addedNodes: readonly { id: string }[]; addedEdges: readonly { id: string }[] },
+  added: {
+    addedNodes: readonly { id: string }[];
+    addedEdges: readonly { id: string }[];
+  },
 ): PatchOp[] => {
   const ops: PatchOp[] = [];
 
@@ -51,16 +50,21 @@ export const encodeElementsRemoved = (removed: {
   removedEdgeIds: readonly string[];
 }): PatchOp[] => [
   // edges first so the server never holds an edge whose endpoint is already gone
-  ...removed.removedEdgeIds.map(
-    (edgeId): PatchOp => ({ op: 'remove', path: edgePath(edgeId) }),
-  ),
-  ...removed.removedNodeIds.map(
-    (nodeId): PatchOp => ({ op: 'remove', path: nodePath(nodeId) }),
-  ),
+  ...removed.removedEdgeIds.map((edgeId): PatchOp => ({
+    op: 'remove',
+    path: edgePath(edgeId),
+  })),
+  ...removed.removedNodeIds.map((nodeId): PatchOp => ({
+    op: 'remove',
+    path: nodePath(nodeId),
+  })),
 ];
 
 export const encodePositionsCommitted = (
-  positions: readonly { nodeId: string; position: { x: number; y: number; z: number } }[],
+  positions: readonly {
+    nodeId: string;
+    position: { x: number; y: number; z: number };
+  }[],
 ): PatchOp[] =>
   positions.map((entry) => ({
     op: 'replace',
@@ -108,9 +112,14 @@ const parsePath = (path: string): ParsedPath => {
  * made, rather than through a separate decode path. Additions and removals are batched
  * into single actions so one inbound message stays one action on this side too.
  */
-export const applyOpsToGraph = (graph: Graph, ops: PatchOp[]) => {
+export const applyOpsToGraph = (graph: Graph, ops: PatchOp[]): void => {
   const addedNodes: { id: string; label: string; x: number; y: number }[] = [];
-  const addedEdges: { id: string; source: string; target: string; weight: Fraction }[] = [];
+  const addedEdges: {
+    id: string;
+    source: string;
+    target: string;
+    weight: Fraction;
+  }[] = [];
   const removedNodeIds: string[] = [];
   const removedEdgeIds: string[] = [];
   const movedNodes: { nodeId: string; update: { x: number; y: number } }[] = [];
@@ -185,14 +194,3 @@ export const applyOpsToGraph = (graph: Graph, ops: PatchOp[]) => {
 
   if (relabeledNodes.length > 0) graph.nodeLabel.setMany(relabeledNodes);
 };
-
-/** the four events that compile to ops, kept here so the pairing stays visible */
-export const serverStateOps = {
-  encodeElementsAdded,
-  encodeElementsRemoved,
-  encodePositionsCommitted,
-  encodeWeightsChanged,
-  applyOpsToGraph,
-};
-
-export type { GraphServerState };

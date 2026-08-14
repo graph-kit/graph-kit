@@ -14,5 +14,5 @@ export const provideMultiplayer = (multiplayer: MultiplayerControls) => {
  * plugin is client only, so nothing is provided during prerender, and a deployment
  * without a configured server runs the whole app with multiplayer simply switched off.
  */
-export const useProvidedMultiplayer = () =>
+export const useProvidedMultiplayer = (): MultiplayerControls | undefined =>
   inject<MultiplayerControls | undefined>(MULTIPLAYER_KEY, undefined);

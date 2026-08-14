@@ -4,12 +4,11 @@ import { BasicColorMode } from '@vueuse/core';
 
 import { ComputedRef, Ref } from 'vue';
 
-import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
-
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../graph/types.ts';
 import { UseGraphOptions } from '../graph/useGraph.ts';
 import { LensControls } from '../lens/useLensState.ts';
+import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';

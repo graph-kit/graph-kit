@@ -19,8 +19,14 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // unset means multiplayer is switched off entirely, which is the correct state
-      // for a deployment without a room server rather than a failure to report
-      multiplayerServerUrl: process.env.MULTIPLAYER_SERVER_URL ?? '',
+      // for a deployment without a room server rather than a failure to report.
+      // `pnpm dev` runs the room server alongside the client, so it defaults to that
+      // one locally and stays empty for any build that has not been told otherwise
+      multiplayerServerUrl:
+        process.env.MULTIPLAYER_SERVER_URL ??
+        (process.env.NODE_ENV === 'development'
+          ? 'http://localhost:4000'
+          : ''),
     },
   },
 

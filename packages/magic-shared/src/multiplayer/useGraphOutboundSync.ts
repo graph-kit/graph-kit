@@ -1,5 +1,5 @@
 import { debounce } from '@core/utils/debounce';
-import { hashServerState } from '@multiplayer/protocol/server-state';
+import { PatchOp, hashServerState } from '@multiplayer/protocol/server-state';
 
 import { onUnmounted } from 'vue';
 
@@ -14,31 +14,30 @@ import {
 import { serverStateFromTransit } from '../product/server-state.ts';
 import { MultiplayerControls } from './createMultiplayer.ts';
 
+export type GraphOutboundSync = {
+  /** behind undo and suspend-exit, neither of which can be expressed as an op */
+  pushWholeState: () => void;
+};
+
 /** long enough that a burst of edits verifies once, short enough to catch drift fast */
 const DRIFT_CHECK_DELAY = 1000;
 
 /**
- * Subscribes the four events that compile to ops and sends what they produce.
- *
- * Subscription driven on purpose, never watcher driven. Provenance is a re-entrancy
- * flag on the singleton, which is only sound because graph events emit synchronously
- * inside the mutation's own stack frame. A watcher flushes on a microtask, by which
- * point the flag has cleared and every applied remote change echoes straight back out.
+ * Subscribes the four events that compile to ops. Subscription driven, never watcher
+ * driven: provenance is a re-entrancy flag that only holds because graph events emit
+ * synchronously, and a watcher would flush after it cleared.
  */
 export const useGraphOutboundSync = (
   graph: Graph,
   productId: ProductId,
   multiplayer: MultiplayerControls,
-) => {
-  /**
-   * Recomputing the local hash means a whole encode, so it runs on a debounce rather
-   * than per message. Drift does not need sub second detection, and doing this on every
-   * inbound relay would reintroduce exactly the per message whole graph cost that ruled
-   * out syncing wholesale state in the first place.
-   */
+): GraphOutboundSync => {
   // the debounce has no cancel, so a timer scheduled just before unmount would encode
   // a graph that is being torn down
   let mounted = true;
+
+  // debounced because recomputing means a whole encode, and drift does not need
+  // sub second detection
 
   const verifyNoDrift = debounce(() => {
     if (!mounted) return;
@@ -48,7 +47,7 @@ export const useGraphOutboundSync = (
     multiplayer.reportLocalHash(productId, localHash);
   }, DRIFT_CHECK_DELAY);
 
-  const send = (ops: ReturnType<typeof encodeElementsRemoved>) => {
+  const send = (ops: PatchOp[]): void => {
     multiplayer.sendOps(productId, ops);
     verifyNoDrift();
   };
@@ -74,12 +73,7 @@ export const useGraphOutboundSync = (
     send(encodeWeightsChanged(weights as never));
   });
 
-  /**
-   * Undo restores a snapshot rather than replaying an inverse, so there is no op to
-   * send. It goes out as a wholesale override, which clobbers whatever landed since the
-   * snapshot was taken, consistent with the room's last-write-wins policy everywhere
-   * else.
-   */
+  // undo restores a snapshot rather than an inverse, so there is no op to send
   const pushWholeState = () => {
     multiplayer.sendReplacement(
       productId,

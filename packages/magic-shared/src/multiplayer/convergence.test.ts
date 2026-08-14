@@ -1,7 +1,4 @@
-import {
-  PatchOp,
-  hashServerState,
-} from '@multiplayer/protocol/server-state';
+import { PatchOp, hashServerState } from '@multiplayer/protocol/server-state';
 import { applyPatch } from 'fast-json-patch';
 import { describe, expect, it } from 'vitest';
 

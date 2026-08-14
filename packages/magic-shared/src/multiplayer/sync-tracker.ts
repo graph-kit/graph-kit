@@ -1,8 +1,8 @@
 import { ProductId } from '@multiplayer/protocol/room';
 
 /**
- * what the harness knows about one product's server state: how far it has caught up, and
- * whether it is currently ignoring the room entirely
+ * what the harness knows about one product's server state: how far it has caught up,
+ * and whether it is currently ignoring the room entirely
  */
 type ProductSync = {
   /** the last version this client successfully applied, not merely received */
@@ -14,18 +14,41 @@ type ProductSync = {
 /** what a client should do with an inbound relay */
 export type RelayVerdict = 'apply' | 'resync' | 'ignore';
 
+/**
+ * The provenance and drift rules. The singleton owns one of these for the life of the
+ * connection, which is why none of it may live on a per product harness instance.
+ */
+export type SyncTracker = {
+  /** marks an inbound apply so outbound encoders can skip the echo it would cause */
+  applyRemote: <Result>(apply: () => Result) => Result;
+  isApplyingRemote: () => boolean;
+  /** client side only: the server keeps broadcasting either way */
+  suspend: (productId: ProductId) => void;
+  resume: (productId: ProductId) => void;
+  isSuspended: (productId: ProductId) => boolean;
+  /** after a successful apply, never on receipt, so a failed apply leaves a gap */
+  recordApplied: (
+    productId: ProductId,
+    version: number,
+    stateHash: string,
+  ) => void;
+  /** a gap means something was missed, and the only safe answer is a resync */
+  verdictFor: (productId: ProductId, version: number) => RelayVerdict;
+  /** catches what the counter cannot: same apply count, different state */
+  hasDrifted: (productId: ProductId, localHash: string) => boolean;
+  /** adopts a version outright rather than advancing */
+  reset: (productId: ProductId, version: number, stateHash: string) => void;
+  forget: (productId: ProductId) => void;
+  clear: () => void;
+};
+
 const emptySync = (): ProductSync => ({
   version: 0,
   stateHash: '',
   suspended: false,
 });
 
-/**
- * the provenance and drift rules, kept free of sockets and vue so they can be tested
- * directly. the singleton owns one of these for the life of the connection, which is
- * why none of it may live on a per product harness instance.
- */
-export const createSyncTracker = () => {
+export const createSyncTracker = (): SyncTracker => {
   const productIdToSync = new Map<ProductId, ProductSync>();
 
   const syncFor = (productId: ProductId) => {
@@ -43,12 +66,7 @@ export const createSyncTracker = () => {
   let applyDepth = 0;
 
   return {
-    /**
-     * Runs an inbound apply with provenance marked. Every outbound encoder checks
-     * {@link isApplyingRemote} and returns early, which is what stops a client from
-     * rebroadcasting a change it only just received.
-     */
-    applyRemote: <Result>(apply: () => Result): Result => {
+    applyRemote: (apply) => {
       applyDepth++;
       try {
         return apply();
@@ -61,36 +79,23 @@ export const createSyncTracker = () => {
 
     isApplyingRemote: () => applyDepth > 0,
 
-    suspend: (productId: ProductId) => {
+    suspend: (productId) => {
       syncFor(productId).suspended = true;
     },
 
-    resume: (productId: ProductId) => {
+    resume: (productId) => {
       syncFor(productId).suspended = false;
     },
 
-    isSuspended: (productId: ProductId) => syncFor(productId).suspended,
+    isSuspended: (productId) => syncFor(productId).suspended,
 
-    /**
-     * Records a version the client has caught up to. Called after a successful apply,
-     * never on receipt, so an op that arrived intact but failed to apply locally leaves
-     * a gap the next relay detects.
-     */
-    recordApplied: (
-      productId: ProductId,
-      version: number,
-      stateHash: string,
-    ) => {
+    recordApplied: (productId, version, stateHash) => {
       const sync = syncFor(productId);
       sync.version = version;
       sync.stateHash = stateHash;
     },
 
-    /**
-     * Whether an inbound relay is the next one expected. A gap means something was
-     * missed, and the only safe response is to take the server's state wholesale.
-     */
-    verdictFor: (productId: ProductId, version: number): RelayVerdict => {
+    verdictFor: (productId, version) => {
       const sync = syncFor(productId);
       if (sync.suspended) return 'ignore';
       // a replay of something already applied, which dedupe on the server should
@@ -100,26 +105,20 @@ export const createSyncTracker = () => {
       return 'resync';
     },
 
-    /**
-     * Compares a freshly computed local hash against what the server reported. Catches
-     * the case a version counter cannot: the same number of applies landing on
-     * different state.
-     */
-    hasDrifted: (productId: ProductId, localHash: string) => {
+    hasDrifted: (productId, localHash) => {
       const sync = syncFor(productId);
       // nothing applied yet means there is nothing to have drifted from
       if (sync.stateHash === '') return false;
       return sync.stateHash !== localHash;
     },
 
-    /** a fresh server state replaces rather than advances, so it never consults the counter */
-    reset: (productId: ProductId, version: number, stateHash: string) => {
+    reset: (productId, version, stateHash) => {
       const sync = syncFor(productId);
       sync.version = version;
       sync.stateHash = stateHash;
     },
 
-    forget: (productId: ProductId) => {
+    forget: (productId) => {
       productIdToSync.delete(productId);
     },
 
@@ -128,5 +127,3 @@ export const createSyncTracker = () => {
     },
   };
 };
-
-export type SyncTracker = ReturnType<typeof createSyncTracker>;

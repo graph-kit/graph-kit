@@ -8,18 +8,15 @@ import { MultiplayerControls } from './createMultiplayer.ts';
 const PRESENCE_INTERVAL = 50;
 
 /**
- * Presence is deliberately off the command path: every tier broadcasts it, including
- * read, and it is never gated by privilege or by suspension. Suspension gates the
- * product's state; where a user's attention is keeps updating regardless.
- *
- * cameraState and cursorPosition have no consumer yet. They are populated now so cursor
- * indicators and spectate mode are additive later rather than new wiring.
+ * Off the command path: every tier broadcasts, and suspension does not apply, since it
+ * gates product state rather than where someone is looking. Nothing renders this yet;
+ * it is populated so cursors and spectate mode are additive later.
  */
 export const usePresenceBroadcast = (
   graph: Graph,
   productId: ProductId,
   multiplayer: MultiplayerControls,
-) => {
+): void => {
   let lastSentAt = 0;
 
   const send = () => {

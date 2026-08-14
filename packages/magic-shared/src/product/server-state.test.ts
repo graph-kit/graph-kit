@@ -88,7 +88,10 @@ describe('round trip', () => {
       nodeLabel: [],
       canvas: { panX: 0, panY: 0, zoom: 1 },
     };
-    const restored = transitFromServerState(serverStateFromTransit(payload), payload);
+    const restored = transitFromServerState(
+      serverStateFromTransit(payload),
+      payload,
+    );
 
     expect(restored).toEqual(payload);
   });
@@ -96,16 +99,25 @@ describe('round trip', () => {
   // a resync must not disturb the camera the local user has set
   it('takes the camera from local state, not from the room', () => {
     const remote = transitPayload();
-    const local = { ...transitPayload(), canvas: { panX: 99, panY: 99, zoom: 9 } };
+    const local = {
+      ...transitPayload(),
+      canvas: { panX: 99, panY: 99, zoom: 9 },
+    };
 
-    const restored = transitFromServerState(serverStateFromTransit(remote), local);
+    const restored = transitFromServerState(
+      serverStateFromTransit(remote),
+      local,
+    );
 
     expect(restored.canvas).toEqual({ panX: 99, panY: 99, zoom: 9 });
   });
 
   it('preserves pass-through plugin payloads', () => {
     const payload = { ...transitPayload(), somePlugin: [1, 2, 3] };
-    const restored = transitFromServerState(serverStateFromTransit(payload), payload);
+    const restored = transitFromServerState(
+      serverStateFromTransit(payload),
+      payload,
+    );
 
     expect(restored.somePlugin).toEqual([1, 2, 3]);
   });

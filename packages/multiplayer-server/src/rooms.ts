@@ -20,7 +20,12 @@ import {
   canSetTier,
   meetsFloor,
 } from '@multiplayer/protocol/tiers';
-import { applyPatch } from 'fast-json-patch';
+// default import then destructure: fast-json-patch is CJS with no exports map, so Node
+// cannot statically resolve a named import from it. the esbuild bundle papers over this
+// with interop, which is why it only surfaces under tsx in dev
+import fastJsonPatch from 'fast-json-patch';
+
+const { applyPatch } = fastJsonPatch;
 
 export type Room = {
   data: RoomData;
@@ -76,22 +81,26 @@ export const addMember = (
   return entry;
 };
 
-export const removeMember = (room: Room, userId: UserId) => {
+/** roster removal only; a non host leaving never disbands anything */
+export const removeMember = (room: Room, userId: UserId): void => {
   delete room.data.roster[userId];
 };
 
-export const isHost = (room: Room, userId: UserId) =>
+/** host is a singleton set at room creation and never reassigned */
+export const isHost = (room: Room, userId: UserId): boolean =>
   room.data.hostId === userId;
 
-export const tierOf = (room: Room, userId: UserId): Tier | undefined =>
+const tierOf = (room: Room, userId: UserId): Tier | undefined =>
   room.data.roster[userId]?.tier;
 
-export const canWriteProduct = (room: Room, userId: UserId) => {
+/** one flat rule for every product layer write, for every product */
+export const canWriteProduct = (room: Room, userId: UserId): boolean => {
   const tier = tierOf(room, userId);
   return tier !== undefined && meetsFloor(tier, PRODUCT_WRITE_FLOOR);
 };
 
-export const canRunRoomCommand = (room: Room, userId: UserId) => {
+/** moveUser and kickUser share this floor; setTier uses the ordinal rule instead */
+export const canRunRoomCommand = (room: Room, userId: UserId): boolean => {
   const tier = tierOf(room, userId);
   return tier !== undefined && meetsFloor(tier, ROOM_COMMAND_FLOOR);
 };
@@ -148,22 +157,36 @@ export const replaceServerState = (
   return writeReceipt(record);
 };
 
+/** ungated: a display name authorizes nothing */
+export const setMemberDisplayName = (
+  room: Room,
+  userId: UserId,
+  displayName: string,
+): boolean => {
+  const entry = room.data.roster[userId];
+  if (!entry) return false;
+  entry.displayName = displayName;
+  return true;
+};
+
+/** records where a member navigated, which is what server state relays route off */
 export const setMemberProduct = (
   room: Room,
   userId: UserId,
   productId: ProductId,
-) => {
+): void => {
   const entry = room.data.roster[userId];
   if (!entry) return;
   entry.productId = productId;
 };
 
+/** false when refused, so the caller can skip the rebroadcast */
 export const setTier = (
   room: Room,
   callerId: UserId,
   targetId: UserId,
   nextTier: AssignableTier,
-) => {
+): boolean => {
   const callerTier = tierOf(room, callerId);
   const target = room.data.roster[targetId];
   if (!callerTier || !target) return false;
@@ -173,16 +196,26 @@ export const setTier = (
   return true;
 };
 
-export const createRoomStore = () => {
+/** every live room, held in memory: a redeploy drops all of them, by design */
+export type RoomStore = {
+  get: (roomId: RoomId) => Room | undefined;
+  set: (roomId: RoomId, room: Room) => void;
+  /** disband retains nothing */
+  delete: (roomId: RoomId) => void;
+  has: (roomId: RoomId) => boolean;
+};
+
+export const createRoomStore = (): RoomStore => {
   const roomIdToRoom = new Map<RoomId, Room>();
 
   return {
-    get: (roomId: RoomId) => roomIdToRoom.get(roomId),
-    set: (roomId: RoomId, room: Room) => roomIdToRoom.set(roomId, room),
-    /** disband drops everything, nothing about the room is retained */
-    delete: (roomId: RoomId) => roomIdToRoom.delete(roomId),
-    has: (roomId: RoomId) => roomIdToRoom.has(roomId),
+    get: (roomId) => roomIdToRoom.get(roomId),
+    set: (roomId, room) => {
+      roomIdToRoom.set(roomId, room);
+    },
+    delete: (roomId) => {
+      roomIdToRoom.delete(roomId);
+    },
+    has: (roomId) => roomIdToRoom.has(roomId),
   };
 };
-
-export type RoomStore = ReturnType<typeof createRoomStore>;

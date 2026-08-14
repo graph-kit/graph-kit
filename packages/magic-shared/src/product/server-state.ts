@@ -1,18 +1,10 @@
 import { ServerState } from '@multiplayer/protocol/server-state';
 
 /**
- * The server's copy of a graph product: what the room holds for this product, which the
- * local graph is a mirror of. Every graph product encodes into this shape, and every
- * inbound resync decodes back out of it.
- *
- * Deliberately not transit's shape. Transit stores four parallel arrays keyed by plugin,
- * which would force index based patch paths like /core/nodePositions/3, and those indices
- * come from map insertion order and drift between clients. Merging everything about a
- * node under its own id makes every path stable no matter what order relays land in.
- *
- *   /nodes/abc123/position   stable
- *   /nodes/abc123/label      stable
- *   /edges/xyz789/weight     stable
+ * The server's copy of a graph product, which the local graph mirrors. Deliberately not
+ * transit's shape: transit's parallel arrays would force index based paths like
+ * /core/nodePositions/3, and those indices drift between clients. Keying everything
+ * about a node under its own id keeps /nodes/abc123/position valid regardless of order.
  */
 export type GraphServerState = {
   nodes: Record<string, ServerNode>;
@@ -47,7 +39,10 @@ type CorePayload = {
   nodes: { id: string }[];
   edges: { id: string; source: string; target: string }[];
   edgeWeights: { id: string; weight: string }[];
-  nodePositions: { id: string; position: { x: number; y: number; z: number } }[];
+  nodePositions: {
+    id: string;
+    position: { x: number; y: number; z: number };
+  }[];
 };
 
 type NodeLabelPayload = { nodeId: string; label: string }[];
@@ -56,7 +51,9 @@ const DEFAULT_POSITION = { x: 0, y: 0, z: 0 };
 const DEFAULT_LABEL = '?';
 const DEFAULT_WEIGHT = '1';
 
-export const serverStateFromTransit = (payload: TransitPayload): GraphServerState => {
+export const serverStateFromTransit = (
+  payload: TransitPayload,
+): GraphServerState => {
   const core = payload.core as CorePayload;
   const labels = (payload.nodeLabel ?? []) as NodeLabelPayload;
 
@@ -141,12 +138,7 @@ export const transitFromServerState = <Payload extends TransitPayload>(
   return payload as Payload;
 };
 
-/**
- * Whether this server state is a graph's. Reports only, and deliberately does not
- * throw: a false here is an invariant violation, but the multiplayer layer is what
- * knows the productId, version and room it arrived under, so it owns the reporting
- * and the recovery.
- */
+/** reports only: the multiplayer layer owns what a false means, and the recovery */
 export const isGraphServerState = (
   state: ServerState,
 ): state is GraphServerState =>

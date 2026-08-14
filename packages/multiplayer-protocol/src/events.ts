@@ -1,16 +1,10 @@
-import {
-  PresenceEntry,
-  ProductId,
-  RoomData,
-  RoomId,
-  UserId,
-} from './room.ts';
+import { PresenceEntry, ProductId, RoomData, RoomId, UserId } from './room.ts';
 import {
   PatchOp,
   PayloadId,
+  ServerState,
   ServerStatePatchRelay,
   ServerStateReplaceRelay,
-  ServerState,
 } from './server-state.ts';
 import { AssignableTier } from './tiers.ts';
 
@@ -26,7 +20,11 @@ export type JoinResult =
       userId: UserId;
       data: RoomData;
       /** absent when nobody has opened this product in the room yet */
-      serverState: { state: ServerState; version: number; stateHash: string } | null;
+      serverState: {
+        state: ServerState;
+        version: number;
+        stateHash: string;
+      } | null;
     };
 
 export type ClientToServerEvents = {
@@ -49,10 +47,8 @@ export type ClientToServerEvents = {
   ) => void;
 
   /**
-   * reports that this user navigated, which the server cannot derive on its own. server state
-   * traffic is routed off the roster from here, so there is no subscription to manage.
-   * kept separate from requestServerState because entering is a roster change every client
-   * should hear about, while a resync is private to the one client that drifted.
+   * Reports that this user navigated, which the server cannot derive. Separate from
+   * requestServerState because entering is a roster change everyone hears about.
    */
   enterProduct: (
     options: { productId: ProductId },
@@ -77,6 +73,13 @@ export type ClientToServerEvents = {
     options: { productId: ProductId },
     callback: (result: JoinResult) => void,
   ) => void;
+
+  /**
+   * renaming yourself, at any point. ungated: a display name is a local convenience
+   * value tied to no account, so there is nothing to authorize. being able to fix it
+   * mid session is what removes the need to gate room creation on setting one first
+   */
+  setDisplayName: (options: { displayName: string }) => void;
 
   setTier: (options: { userId: UserId; tier: AssignableTier }) => void;
   kickUser: (options: { userId: UserId }) => void;

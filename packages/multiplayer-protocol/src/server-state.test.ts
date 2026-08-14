@@ -12,7 +12,9 @@ describe('hashServerState', () => {
     insertedAnother.edges = {};
     insertedAnother.nodes = { b: { x: 2 }, a: { x: 1 } };
 
-    expect(hashServerState(insertedOneWay)).toBe(hashServerState(insertedAnother));
+    expect(hashServerState(insertedOneWay)).toBe(
+      hashServerState(insertedAnother),
+    );
   });
 
   it('ignores key order at every depth', () => {
@@ -24,7 +26,9 @@ describe('hashServerState', () => {
 
   // arrays are ordered data, unlike object keys, so reordering one is a real change
   it('respects array order', () => {
-    expect(hashServerState({ path: [1, 2] })).not.toBe(hashServerState({ path: [2, 1] }));
+    expect(hashServerState({ path: [1, 2] })).not.toBe(
+      hashServerState({ path: [2, 1] }),
+    );
   });
 
   it('changes when a value changes', () => {
@@ -35,6 +39,8 @@ describe('hashServerState', () => {
   });
 
   it('distinguishes a missing key from a null one', () => {
-    expect(hashServerState({ nodes: {} })).not.toBe(hashServerState({ nodes: null }));
+    expect(hashServerState({ nodes: {} })).not.toBe(
+      hashServerState({ nodes: null }),
+    );
   });
 });

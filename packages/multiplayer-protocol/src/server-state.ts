@@ -10,15 +10,9 @@ export type PatchOp =
   | { op: 'replace'; path: string; value: unknown };
 
 /**
- * The server's copy of one product's state: what the room holds for `traversals`, for
- * `basic-trees`, and so on. Authoritative, and the thing a client's local state is a
- * mirror of rather than the other way around.
- *
- * Opaque here on purpose. The server stores and relays it without ever knowing what a
- * node or an edge is, so the shape is decided entirely by the product that owns it (see
- * GraphServerState in the harness). The one constraint the shape must honour is being
- * id-keyed rather than array-based, so every patch path stays valid no matter what
- * order concurrent relays land in.
+ * The server's copy of one product's state, which local state mirrors rather than the
+ * other way around. Opaque here: the shape belongs to the product that owns it, and
+ * must be id-keyed so patch paths survive relays landing out of order.
  */
 export type ServerState = Record<string, unknown>;
 
@@ -65,7 +59,11 @@ const canonicalize = (value: unknown): unknown => {
 };
 
 /** FNV-1a, sized to catch accidental drift rather than tampering */
-export const hashServerState = (state: ServerState) => {
+/**
+ * Canonical over key order, so a server object built by applyPatch and a client one
+ * built fresh hash the same. Returns a short hex digest; not a tamper check.
+ */
+export const hashServerState = (state: ServerState): string => {
   const canonical = JSON.stringify(canonicalize(state));
   let hash = 2166136261;
   for (let i = 0; i < canonical.length; i++) {

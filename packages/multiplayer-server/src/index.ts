@@ -2,7 +2,9 @@ import { createServer } from 'node:http';
 
 import { createSocketServer } from './sockets.ts';
 
-const PORT = Number(process.env.PORT ?? 3001);
+// deliberately clear of 3000-300x: nuxt dev auto-increments into that range whenever a
+// port is taken, so a second client would silently claim the room server's
+const PORT = Number(process.env.PORT ?? 4000);
 
 // comma separated allowlist, since dev, deploy previews and prod all differ
 const corsOrigins = (process.env.CORS_ORIGINS ?? '*')

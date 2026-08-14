@@ -61,7 +61,12 @@ describe('applyOpsToGraph', () => {
     const [payload] = calls.addElements.mock.calls[0];
     expect(payload.nodes).toHaveLength(2);
     expect(payload.edges).toHaveLength(1);
-    expect(payload.nodes[0]).toMatchObject({ id: 'n1', label: 'N1', x: 5, y: 6 });
+    expect(payload.nodes[0]).toMatchObject({
+      id: 'n1',
+      label: 'N1',
+      x: 5,
+      y: 6,
+    });
   });
 
   it('reconstructs edge weight as a fraction, not a string', () => {
@@ -109,7 +114,11 @@ describe('applyOpsToGraph', () => {
     const { graph, calls } = recordingGraph();
 
     applyOpsToGraph(graph, [
-      { op: 'replace', path: '/nodes/n1/position', value: { x: 9, y: 4, z: 0 } },
+      {
+        op: 'replace',
+        path: '/nodes/n1/position',
+        value: { x: 9, y: 4, z: 0 },
+      },
     ]);
 
     expect(calls.setPositions).toHaveBeenCalledWith([
@@ -204,7 +213,11 @@ describe('encoders', () => {
     ]);
 
     expect(ops).toEqual([
-      { op: 'replace', path: '/nodes/n1/position', value: { x: 1, y: 2, z: 0 } },
+      {
+        op: 'replace',
+        path: '/nodes/n1/position',
+        value: { x: 1, y: 2, z: 0 },
+      },
     ]);
   });
 

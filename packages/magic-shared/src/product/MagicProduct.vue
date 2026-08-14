@@ -31,7 +31,9 @@
     whole point: the slots claim them individually
   -->
   <div
-    v-if="!magic.componentSlots.visibility.isHidden.value && !magic.restoring.value"
+    v-if="
+      !magic.componentSlots.visibility.isHidden.value && !magic.restoring.value
+    "
     class="fixed inset-0 overflow-hidden pointer-events-none"
   >
     <ComponentSlots
@@ -52,7 +54,10 @@
     state this product actually settled on rather than local content a room is about
     to replace
   -->
-  <div v-show="magic.restoring.value" class="fixed inset-0 z-50 bg-gray-100 dark:bg-gray-900" />
+  <div
+    v-show="magic.restoring.value"
+    class="fixed inset-0 z-50 bg-gray-100 dark:bg-gray-900"
+  />
 
   <CanvasSurface v-bind="{ ...magic.surface.ref, $attrs }" />
 </template>

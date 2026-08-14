@@ -1,11 +1,12 @@
 // @vitest-environment node
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
+
 import {
   ClientToServerEvents,
   JoinResult,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
-import { AddressInfo } from 'node:net';
-import { createServer } from 'node:http';
 import { Socket, io as connect } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -33,18 +34,16 @@ const nextEvent = <Event extends keyof ServerToClientEvents>(
   event: Event,
   timeoutMs = 500,
 ) =>
-  new Promise<Parameters<ServerToClientEvents[Event]>[0]>(
-    (resolve, reject) => {
-      const timer = setTimeout(
-        () => reject(new Error(`timed out waiting for ${String(event)}`)),
-        timeoutMs,
-      );
-      socket.once(event as any, (payload: any) => {
-        clearTimeout(timer);
-        resolve(payload);
-      });
-    },
-  );
+  new Promise<Parameters<ServerToClientEvents[Event]>[0]>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`timed out waiting for ${String(event)}`)),
+      timeoutMs,
+    );
+    socket.once(event as any, (payload: any) => {
+      clearTimeout(timer);
+      resolve(payload);
+    });
+  });
 
 /** asserts an event does NOT arrive, which is how privilege denials are observed */
 const expectNoEvent = async <Event extends keyof ServerToClientEvents>(
@@ -108,7 +107,9 @@ describe('room lifecycle', () => {
 
     expect(result.joined).toBe(true);
     if (!result.joined) return;
-    expect(result.serverState?.state).toEqual({ core: { nodes: { a: { x: 0 } } } });
+    expect(result.serverState?.state).toEqual({
+      core: { nodes: { a: { x: 0 } } },
+    });
     expect(result.serverState?.version).toBe(1);
     expect(result.serverState?.stateHash).toEqual(expect.any(String));
   });
@@ -181,6 +182,66 @@ describe('product layer privilege', () => {
     expect(relay.payloadId).toBe('payload-2');
     expect(relay.version).toBe(2);
     expect(relay.ops).toHaveLength(1);
+  });
+});
+
+describe('renaming', () => {
+  // being able to fix a name mid session is what removes the need to gate room
+  // creation on setting one first
+  it('updates the roster and tells everyone', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+
+    const joinRoster = nextEvent(host, 'rosterChanged');
+    const joined = await joinRoom(student, roomId);
+    if (!joined.joined) throw new Error('expected join to succeed');
+    await joinRoster;
+
+    const renamed = nextEvent(host, 'rosterChanged');
+    student.emit('setDisplayName', { displayName: 'Ada' });
+
+    const roster = await renamed;
+    expect(roster.roster[joined.userId]?.displayName).toBe('Ada');
+  });
+
+  // renaming authorizes nothing, so read tier can do it like anyone else
+  it('is not gated by tier', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+
+    const joinRoster = nextEvent(host, 'rosterChanged');
+    const joined = await joinRoom(student, roomId);
+    if (!joined.joined) throw new Error('expected join to succeed');
+    await joinRoster;
+    expect(joined.data.roster[joined.userId]?.tier).toBe('read');
+
+    const renamed = nextEvent(host, 'rosterChanged');
+    student.emit('setDisplayName', { displayName: 'Grace' });
+
+    const roster = await renamed;
+    expect(roster.roster[joined.userId]?.displayName).toBe('Grace');
+  });
+
+  it('leaves other members untouched', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+
+    const joinRoster = nextEvent(host, 'rosterChanged');
+    const joined = await joinRoom(student, roomId);
+    if (!joined.joined) throw new Error('expected join to succeed');
+    await joinRoster;
+
+    const renamed = nextEvent(host, 'rosterChanged');
+    student.emit('setDisplayName', { displayName: 'Ada' });
+    const roster = await renamed;
+
+    const hostEntry = Object.values(roster.roster).find(
+      (entry) => entry.tier === 'host',
+    );
+    expect(hostEntry?.displayName).toBe('Professor');
   });
 });
 
@@ -294,6 +355,8 @@ describe('wholesale override', () => {
 
     expect(entered.joined).toBe(true);
     if (!entered.joined) return;
-    expect(entered.serverState?.state).toEqual({ core: { nodes: { seeded: {} } } });
+    expect(entered.serverState?.state).toEqual({
+      core: { nodes: { seeded: {} } },
+    });
   });
 });

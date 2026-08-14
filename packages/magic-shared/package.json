@@ -88,6 +88,10 @@
       "types": "./dist/types/graph/index.d.ts",
       "default": "./src/graph/index.ts"
     },
+    "./graph-product": {
+      "types": "./dist/types/graph-product/index.d.ts",
+      "default": "./src/graph-product/index.ts"
+    },
     "./lens": {
       "types": "./dist/types/lens/index.d.ts",
       "default": "./src/lens/index.ts"

@@ -6,8 +6,8 @@ import {
   encodeElementsAdded,
   encodeElementsRemoved,
   encodePositionsCommitted,
-} from '../product/server-state-ops.ts';
-import { GraphServerState } from '../product/server-state.ts';
+} from './server-state-ops.ts';
+import { GraphServerState } from './server-state.ts';
 
 /**
  * The property the whole design rests on: ops are id-keyed, so two peers applying the

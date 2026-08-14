@@ -8,8 +8,8 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import TextInput from '../../components/text-input/TextInput.vue';
+  import { serverStateFromTransit } from '../../graph-product/server-state.ts';
   import { useProvidedMagic } from '../../product/context.ts';
-  import { serverStateFromTransit } from '../../product/server-state.ts';
 
   const magic = useProvidedMagic();
   const { multiplayer } = magic;

@@ -1,8 +1,8 @@
 import { onUnmounted } from 'vue';
 
 import { Graph } from '../graph/types.ts';
+import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
 import { ProductId } from '../product/manifests/index.ts';
-import { MultiplayerControls } from './createMultiplayer.ts';
 
 /** cursor motion is continuous, so it is throttled rather than debounced */
 const PRESENCE_INTERVAL = 50;

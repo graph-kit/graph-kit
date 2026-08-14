@@ -6,7 +6,7 @@
 
   import Button from '../components/button/Button.vue';
   import Tooltip from '../components/tooltip/Tooltip.vue';
-  import { useProvidedMagicGraph } from '../product/context.ts';
+  import { useProvidedMagicGraph } from '../graph-product/context.ts';
   import { explainerSegments } from './explainerSegments.ts';
   import { Explainer, ExplainerHighlight } from './types.ts';
 

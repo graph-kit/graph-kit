@@ -4,15 +4,15 @@ import { PatchOp, hashServerState } from '@multiplayer/protocol/server-state';
 import { onUnmounted } from 'vue';
 
 import { Graph } from '../graph/types.ts';
+import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
 import { ProductId } from '../product/manifests/index.ts';
 import {
   encodeElementsAdded,
   encodeElementsRemoved,
   encodePositionsCommitted,
   encodeWeightsChanged,
-} from '../product/server-state-ops.ts';
-import { serverStateFromTransit } from '../product/server-state.ts';
-import { MultiplayerControls } from './createMultiplayer.ts';
+} from './server-state-ops.ts';
+import { serverStateFromTransit } from './server-state.ts';
 
 export type GraphOutboundSync = {
   /** behind undo and suspend-exit, neither of which can be expressed as an op */

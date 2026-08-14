@@ -1,6 +1,11 @@
 import { GNode } from '@magic/shared/graph';
 
-import { KruskalsFrame, KruskalsFunction, KruskalsHighlights, KruskalsStep } from './frame.ts';
+import {
+  KruskalsFrame,
+  KruskalsFunction,
+  KruskalsHighlights,
+  KruskalsStep,
+} from './frame.ts';
 
 export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
   const nodeIds = graph.nodes.value.map((node) => node.id);

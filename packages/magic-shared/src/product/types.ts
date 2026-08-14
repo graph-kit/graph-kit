@@ -6,7 +6,6 @@ import { ComputedRef } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../graph/types.ts';
-import { UseGraphOptions } from '../graph/useGraph.ts';
 import { LensControls } from '../lens/useLensState.ts';
 import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
@@ -15,6 +14,7 @@ import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { UIControls, UIOptions } from '../ui/useProductUI.ts';
+import { LocalStorageControls } from './internals/useLocalStorageSync.ts';
 import { ProductId } from './manifests/index.ts';
 import { MagicProductManifest } from './manifests/types.ts';
 
@@ -28,20 +28,6 @@ export type HistoryField = {
   canUndo: ComputedRef<boolean>;
   undo: () => void;
   redo: () => void;
-};
-
-export type LocalStorageField = {
-  /**
-   * Reports that the hosted product's state changed, persisting it on a
-   * debounce. A no-op when local storage was not opted into.
-   */
-  invalidate: () => void;
-  /**
-   * Restores whatever was persisted. Called by the harness rather than on mount,
-   * because a room's state has to win over it and only the harness knows whether
-   * one answered.
-   */
-  sync: () => void;
 };
 
 /**
@@ -109,26 +95,12 @@ export type Magic = {
   history?: HistoryField;
   annotations?: AnnotationsControls;
   lensChips?: LensChipDefinition[];
-  localStorage: LocalStorageField;
+  localStorage: LocalStorageControls;
   /**
-   * The room connection, or undefined when this product has not opted into
-   * multiplayer, when no server is configured, or during prerender.
+   * The room connection, or undefined if
+   * 1. product has opted-out of multiplayer in its manifest or
+   * 2. no server is configured or
+   * 3. during prerender
    */
   multiplayer?: MultiplayerControls;
-};
-
-export type GraphLensChipOption = (
-  graph: Graph,
-) => LensChipDefinition[] | undefined;
-
-export type GraphProductOptions = UseGraphOptions & {
-  productId: ProductId;
-  localStorage?: boolean;
-  annotations?: boolean;
-  lensChips?: GraphLensChipOption;
-  ui?: UIOptions;
-};
-
-export type MagicGraph = Graph & {
-  magic: Magic;
 };

@@ -1,14 +1,15 @@
 import { useGraph } from '../graph/useGraph.ts';
-import { useGraphOutboundSync } from '../multiplayer/useGraphOutboundSync.ts';
-import { usePresenceBroadcast } from '../multiplayer/usePresenceBroadcast.ts';
 import { useSimulationSuspension } from '../multiplayer/useSimulationSuspension.ts';
-import { useGraphProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
+import { MagicProductHost } from '../product/types.ts';
+import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { provideGraph } from './context.ts';
 import { applyOpsToGraph } from './server-state-ops.ts';
 import { isGraphServerState, transitFromServerState } from './server-state.ts';
-import { GraphProductOptions, MagicGraph, MagicProductHost } from './types.ts';
-import { useMagicProduct } from './useMagicProduct.ts';
+import { useGraphProductShortcuts } from './shortcuts.ts';
+import { GraphProductOptions, MagicGraph } from './types.ts';
+import { useGraphOutboundSync } from './useGraphOutboundSync.ts';
+import { usePresenceBroadcast } from './usePresenceBroadcast.ts';
 
 /** adapts a graph to the harness host interface, see {@link useMagicProduct} */
 export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {

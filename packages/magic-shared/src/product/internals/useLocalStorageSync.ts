@@ -1,13 +1,25 @@
 import { debounce } from '@core/utils/debounce';
 
-import { LocalStorageField, TransitField } from '../types.ts';
+import { TransitField } from '../types.ts';
 
 const localStorageKey = (id: string) => 'product-data-' + id;
+
+export type LocalStorageControls = {
+  /**
+   * Reports that the hosted product's state changed, persisting it on a
+   * debounce.
+   */
+  invalidate: () => void;
+  /**
+   * Restores whatever was persisted.
+   */
+  sync: () => void;
+};
 
 export const useLocalStorageSync = (
   productId: string,
   transit: TransitField,
-): LocalStorageField => {
+): LocalStorageControls => {
   const key = localStorageKey(productId);
 
   const invalidate = debounce(() => {

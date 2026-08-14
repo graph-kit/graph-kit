@@ -1,8 +1,8 @@
 <script setup lang="ts">
   import { StyleValue, computed, onUnmounted } from 'vue';
 
+  import { useProvidedGraph } from '../../graph-product/context.ts';
   import { GNode } from '../../graph/types.ts';
-  import { useProvidedGraph } from '../../product/context.ts';
   import { useNodeStyles } from '../../theme/index.ts';
 
   const props = withDefaults(

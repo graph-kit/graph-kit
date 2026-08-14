@@ -46,19 +46,15 @@ export const createMultiplayer = (options: {
 }): MultiplayerControls => {
   const { onMovedToProduct } = options;
 
-  // read up front rather than discovered on mount, so a product that is about to be
-  // handed room state never paints local content first
   const awaitingServerState = ref(roomIdUrl.read() !== null);
 
-  // one object rather than loose ids, so a room without a user, or a user without a
-  // room, is a state this cannot get into
   const membership = ref<RoomMembership | null>(null);
   const presence = ref<Record<UserId, PresenceEntry>>({});
 
-  // the product currently mounted and the document mirroring it. shallow because a
-  // document holds its own listeners and must never be made reactive
-  const activeProductId = ref<ProductId | null>(null);
-  const activeDoc = shallowRef<Y.Doc | null>(null);
+  const mountedProduct = shallowRef<{
+    productId: ProductId;
+    doc: Y.Doc;
+  } | null>(null);
 
   let socket: MultiplayerSocket | null = null;
 
@@ -68,9 +64,8 @@ export const createMultiplayer = (options: {
   const requireSocket = () =>
     nullThrows(socket, 'multiplayer: acted on a room with no socket');
 
-  /** the mounted product's document, which exists for as long as a product is mounted */
-  const requireDoc = () =>
-    nullThrows(activeDoc.value, 'multiplayer: no product mounted');
+  const requireMountedProduct = () =>
+    nullThrows(mountedProduct.value, 'multiplayer: no product mounted');
 
   // built once rather than per recompute, so the identity a consumer holds onto stays
   // stable across every roster and presence change
@@ -117,13 +112,10 @@ export const createMultiplayer = (options: {
     presence.value = {};
   };
 
-  /**
-   * Opens the document for a mounting product. Local changes flow out from here on, and
-   * remote ones land through {@link REMOTE_ORIGIN}.
-   */
-  const openDoc = (productId: ProductId) => {
+  /** local changes flow out from here on, and remote ones land through {@link REMOTE_ORIGIN} */
+  const mountProduct = (productId: ProductId) => {
     const doc = new Y.Doc();
-    activeDoc.value = doc;
+    mountedProduct.value = { productId, doc };
 
     doc.on('update', (update: DocUpdate, origin: unknown) => {
       // outside a room the document still tracks the graph, so that opening one can
@@ -133,11 +125,6 @@ export const createMultiplayer = (options: {
     });
 
     return doc;
-  };
-
-  const closeDoc = () => {
-    activeDoc.value?.destroy();
-    activeDoc.value = null;
   };
 
   /** applies what a join handed back, before the host binds and sees the result */
@@ -163,16 +150,17 @@ export const createMultiplayer = (options: {
     activeSocket.on('docUpdated', ({ productId, update }) => {
       // arriving for a product that is not on screen is normal during navigation, and
       // entering re-fetches, so there is nothing to do and nothing to report
-      if (activeProductId.value !== productId) return;
-      Y.applyUpdate(requireDoc(), toDocUpdate(update), REMOTE_ORIGIN);
+      const mounted = mountedProduct.value;
+      if (mounted?.productId !== productId) return;
+      Y.applyUpdate(mounted.doc, toDocUpdate(update), REMOTE_ORIGIN);
     });
 
     // a reconnect can have missed updates entirely, so it asks for the difference
     // between what the room holds and what this document already has
     activeSocket.on('connect', () => {
-      const productId = activeProductId.value;
-      if (productId === null || !inRoom.value) return;
-      const doc = requireDoc();
+      const mounted = mountedProduct.value;
+      if (mounted === null || !inRoom.value) return;
+      const { productId, doc } = mounted;
       activeSocket.emit(
         'syncDoc',
         { productId, stateVector: Y.encodeStateVector(doc) },
@@ -214,7 +202,7 @@ export const createMultiplayer = (options: {
       const activeSocket = ensureSocket();
       // the mounted product's document is already tracking the graph, so the room opens
       // on exactly what is on screen
-      const doc = Y.encodeStateAsUpdate(requireDoc());
+      const doc = Y.encodeStateAsUpdate(requireMountedProduct().doc);
       const started = await new Promise<RoomMembership>((resolve) => {
         activeSocket.emit(
           'startRoom',
@@ -243,7 +231,7 @@ export const createMultiplayer = (options: {
         );
       });
 
-      adoptJoinResult(requireDoc(), result);
+      adoptJoinResult(requireMountedProduct().doc, result);
       return result;
     },
 
@@ -257,8 +245,7 @@ export const createMultiplayer = (options: {
   const productActions: ProductActions = {
     // one call covers the roster update, the traffic routing and the initial state
     enter: async (productId, host) => {
-      activeProductId.value = productId;
-      const doc = openDoc(productId);
+      const doc = mountProduct(productId);
 
       // resolution happens once for the life of the connection rather than per mount,
       // so navigating between products never re-reads the url or re-joins
@@ -316,9 +303,10 @@ export const createMultiplayer = (options: {
 
     /** on unmount. the connection, the room and the roster all outlive this */
     leave: (productId) => {
-      if (activeProductId.value !== productId) return;
-      activeProductId.value = null;
-      closeDoc();
+      const mounted = mountedProduct.value;
+      if (mounted?.productId !== productId) return;
+      mounted.doc.destroy();
+      mountedProduct.value = null;
     },
   };
 

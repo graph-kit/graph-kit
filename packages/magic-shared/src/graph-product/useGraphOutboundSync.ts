@@ -4,7 +4,7 @@ import { PatchOp } from '@multiplayer/protocol/server-state';
 import { onUnmounted } from 'vue';
 
 import { Graph } from '../graph/types.ts';
-import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
+import { MultiplayerControls } from '../multiplayer/types.ts';
 import { ProductId } from '../product/manifests/index.ts';
 import {
   encodeElementsAdded,

@@ -4,7 +4,7 @@ import { onUnmounted } from 'vue';
 // string: the server routes by an id it need not enumerate, the client enumerates it
 import { ProductId, manifests } from '../product/manifests/index.ts';
 import { useProvidedMultiplayer } from './context.ts';
-import { MultiplayerControls } from './createMultiplayer.ts';
+import { MultiplayerControls } from './types.ts';
 
 /**
  * Hands a mounting product the root connection and releases it on unmount. Does not

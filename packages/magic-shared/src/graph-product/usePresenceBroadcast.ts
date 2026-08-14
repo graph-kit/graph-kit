@@ -1,7 +1,7 @@
 import { onUnmounted } from 'vue';
 
 import { Graph } from '../graph/types.ts';
-import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
+import { MultiplayerControls } from '../multiplayer/types.ts';
 import { ProductId } from '../product/manifests/index.ts';
 
 /** cursor motion is continuous, so it is throttled rather than debounced */
@@ -19,6 +19,10 @@ export const usePresenceBroadcast = (
   let lastSentAt = 0;
 
   const send = () => {
+    const room = multiplayer.room.value;
+    // where someone is looking means nothing outside a room, so this never queues
+    if (!room.connected) return;
+
     const now = Date.now();
     if (now - lastSentAt < PRESENCE_INTERVAL) return;
     lastSentAt = now;
@@ -28,7 +32,7 @@ export const usePresenceBroadcast = (
     // place the cursor against the same graph
     const cursor = graph.canvas.graphUnderCursor.coords;
 
-    multiplayer.updatePresence({
+    room.controls.updatePresence({
       productId,
       cursorPosition: { x: cursor.x, y: cursor.y },
       cameraState: {

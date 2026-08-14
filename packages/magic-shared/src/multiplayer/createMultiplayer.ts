@@ -7,7 +7,6 @@ import {
   UserId,
 } from '@multiplayer/protocol/room';
 import {
-  PatchOp,
   ServerState,
   hashServerState,
 } from '@multiplayer/protocol/server-state';
@@ -17,6 +16,8 @@ import { io as connect } from 'socket.io-client';
 import { computed, ref, shallowRef } from 'vue';
 
 import { MultiplayerHostField } from '../product/types.ts';
+import { UNNAMED_DISPLAY_NAME } from './constants.ts';
+import { createPayloadSenders } from './sendPayload.ts';
 import { createSyncTracker } from './sync-tracker.ts';
 import {
   MultiplayerControls,
@@ -27,11 +28,6 @@ import {
   RoomState,
 } from './types.ts';
 import { roomIdUrl } from './url.ts';
-
-const generatePayloadId = () => crypto.randomUUID();
-
-/** what a url driven join sends until the panel that owns the name mounts and renames */
-const UNNAMED_DISPLAY_NAME = '[Unknown]';
 
 /**
  * The room connection, owned once at the application root. Every product is its own
@@ -81,6 +77,12 @@ export const createMultiplayer = (options: {
       activeHost.value,
       'multiplayer: encoded state with no product mounted',
     ).encode();
+
+  const payloadSenders = createPayloadSenders({
+    requireSocket,
+    canSend: () => inRoom.value && !sync.isApplyingRemote,
+    encodeActiveState,
+  });
 
   // built once rather than per recompute, so the identity a consumer holds onto stays
   // stable across every roster and presence change
@@ -369,29 +371,7 @@ export const createMultiplayer = (options: {
 
     awaitingServerState,
 
-    sendOps: (productId: ProductId, ops: PatchOp[]) => {
-      if (!socket || !inRoom.value) return;
-      if (sync.isApplyingRemote()) return;
-      if (ops.length === 0) return;
-
-      socket.emit('patchServerState', {
-        payloadId: generatePayloadId(),
-        productId,
-        ops,
-      });
-    },
-
-    /** wholesale override, behind seeding, force push and undo */
-    sendReplacement: (productId: ProductId) => {
-      if (!socket || !inRoom.value) return;
-      if (sync.isApplyingRemote()) return;
-
-      socket.emit('replaceServerState', {
-        payloadId: generatePayloadId(),
-        productId,
-        state: encodeActiveState(),
-      });
-    },
+    ...payloadSenders,
 
     isApplyingRemote: sync.isApplyingRemote,
 

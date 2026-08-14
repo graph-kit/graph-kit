@@ -7,7 +7,7 @@ import { ComputedRef } from 'vue';
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../graph/types.ts';
 import { LensControls } from '../lens/useLensState.ts';
-import { MultiplayerControls } from '../multiplayer/createMultiplayer.ts';
+import { MultiplayerControls } from '../multiplayer/types.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';

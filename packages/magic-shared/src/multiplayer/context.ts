@@ -1,6 +1,6 @@
 import { App, inject } from 'vue';
 
-import { MultiplayerControls } from './createMultiplayer.ts';
+import { MultiplayerControls } from './types.ts';
 
 const MULTIPLAYER_KEY = 'MAGIC_MULTIPLAYER';
 

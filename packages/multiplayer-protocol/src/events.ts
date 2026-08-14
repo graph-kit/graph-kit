@@ -1,4 +1,11 @@
-import { PresenceEntry, ProductId, RoomData, RoomId, UserId } from './room.ts';
+import {
+  PresenceEntry,
+  ProductId,
+  RoomData,
+  RoomId,
+  RoomMembership,
+  UserId,
+} from './room.ts';
 import {
   PatchOp,
   PayloadId,
@@ -14,35 +21,30 @@ import { AssignableTier } from './tiers.ts';
  */
 export type JoinResult =
   | { joined: false }
-  | {
+  | (RoomMembership & {
       joined: true;
-      roomId: RoomId;
-      userId: UserId;
-      data: RoomData;
       /** absent when nobody has opened this product in the room yet */
       serverState: {
         state: ServerState;
         version: number;
         stateHash: string;
       } | null;
-    };
+    });
+
+/** what both ways into a room carry: the product it opens on, and who is arriving */
+export type RoomEntryOptions = {
+  productId: ProductId;
+  displayName: string;
+};
 
 export type ClientToServerEvents = {
   startRoom: (
-    options: {
-      displayName: string;
-      productId: ProductId;
-      state: ServerState;
-    },
-    callback: (roomId: RoomId, userId: UserId, data: RoomData) => void,
+    options: RoomEntryOptions & { state: ServerState },
+    callback: (membership: RoomMembership) => void,
   ) => void;
 
   joinRoom: (
-    options: {
-      roomId: RoomId;
-      displayName: string;
-      productId: ProductId;
-    },
+    options: RoomEntryOptions & { roomId: RoomId },
     callback: (result: JoinResult) => void,
   ) => void;
 

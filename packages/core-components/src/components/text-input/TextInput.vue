@@ -8,17 +8,8 @@
 
   defineOptions({ inheritAttrs: false });
 
-  interface Props extends PrimitiveProps {
-    /**
-     * whether the model updates on every keystroke or once the field settles. lazy
-     * suits a value with a cost per write, eager suits one that only lives locally
-     */
-    updateOn?: 'input' | 'change';
-  }
-
-  const props = withDefaults(defineProps<Props>(), {
+  withDefaults(defineProps<PrimitiveProps>(), {
     as: 'input',
-    updateOn: 'input',
   });
 
   const model = defineModel<string>({ default: '' });
@@ -32,18 +23,8 @@
 
   const classes = computed(() => cn(base, attrClass.value));
 
-  const write = (event: Event) => {
-    model.value = (event.target as HTMLInputElement).value;
-  };
-
   const onInput = (event: Event) => {
-    if (props.updateOn !== 'input') return;
-    write(event);
-  };
-
-  const onChange = (event: Event) => {
-    if (props.updateOn !== 'change') return;
-    write(event);
+    model.value = (event.target as HTMLInputElement).value;
   };
 </script>
 
@@ -55,6 +36,5 @@
     :class="classes"
     :value="model"
     @input="onInput"
-    @change="onChange"
   />
 </template>

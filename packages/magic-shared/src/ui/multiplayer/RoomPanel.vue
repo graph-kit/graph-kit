@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { useMounted } from '@vueuse/core';
+  import { useLocalStorage, useMounted } from '@vueuse/core';
 
   import { computed, ref } from 'vue';
 
@@ -27,12 +27,16 @@
 
   let linkCopiedResetTimer: NodeJS.Timeout;
 
-  // committed on change rather than on input: pushing every keystroke to the room
-  // would be a roster rebroadcast per character
-  const displayName = computed({
-    get: () => multiplayer?.displayName.value ?? '',
-    set: (name) => multiplayer?.setDisplayName(name),
-  });
+  const room = computed(
+    () => multiplayer?.room.value ?? { connected: false as const },
+  );
+
+  const userIdToRosterEntry = computed(() =>
+    room.value.connected ? room.value.userIdToRosterEntry : {},
+  );
+
+  const displayName = useLocalStorage('multiplayer-display-name', '');
+  const hasDisplayName = computed(() => displayName.value.trim().length > 0);
 
   const startRoom = async () => {
     if (!multiplayer) return;
@@ -41,13 +45,19 @@
     try {
       // the host's current view becomes the seed, so the first frame after starting
       // matches the last frame before it
-      await multiplayer.startRoom(
-        magic.manifest.id as never,
-        serverStateFromTransit(magic.transit.encode()),
-      );
+      await multiplayer.actions.room.start({
+        productId: magic.manifest.id as never,
+        state: serverStateFromTransit(magic.transit.encode()),
+        displayName: displayName.value.trim(),
+      });
     } finally {
       isStartingRoom.value = false;
     }
+  };
+
+  const changeDisplayName = () => {
+    if (!room.value.connected) return;
+    room.value.controls.setDisplayName(displayName.value.trim());
   };
 
   const copyRoomLinkToClipboard = async () => {
@@ -70,29 +80,28 @@
 
 <template>
   <Well v-if="isMounted && multiplayer">
-    <VStack
-      :gap="2"
-      class="w-64"
-    >
-      <!--
-        always editable, in a room or out of one. renaming mid session is what makes an
-        unnamed join recoverable, which is why nothing gates on having set a name first
-      -->
+    <VStack class="w-64">
       <TextInput
         v-model="displayName"
-        update-on="change"
         placeholder="Your display name"
       />
 
       <Button
-        v-if="!multiplayer.inRoom.value"
-        :disabled="isStartingRoom"
+        v-if="!room.connected"
+        :disabled="isStartingRoom || !hasDisplayName"
         @click="startRoom"
       >
         {{ isStartingRoom ? 'Starting…' : 'Start room' }}
       </Button>
 
       <template v-else>
+        <Button
+          :disabled="!hasDisplayName"
+          @click="changeDisplayName"
+        >
+          Change display name
+        </Button>
+
         <HStack
           :gap="2"
           class="items-center justify-between"
@@ -103,13 +112,10 @@
           </Button>
         </HStack>
 
-        <VStack
-          :gap="1"
-          as="ul"
-        >
+        <VStack as="ul">
           <HStack
-            v-for="member in multiplayer.roster.value"
-            :key="member.userId"
+            v-for="(member, userId) in userIdToRosterEntry"
+            :key="userId"
             as="li"
             :gap="2"
             class="items-center justify-between text-sm"

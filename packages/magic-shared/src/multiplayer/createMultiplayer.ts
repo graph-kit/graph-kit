@@ -1,13 +1,15 @@
+import { nullThrows } from '@core/utils/assert';
 import {
   ClientToServerEvents,
   JoinResult,
+  RoomEntryOptions,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
 import {
   PresenceEntry,
   ProductId,
-  RoomData,
   RoomId,
+  RoomMembership,
   RosterEntry,
   UserId,
 } from '@multiplayer/protocol/room';
@@ -16,8 +18,11 @@ import {
   ServerState,
   hashServerState,
 } from '@multiplayer/protocol/server-state';
-import { AssignableTier, Tier } from '@multiplayer/protocol/tiers';
-import { useLocalStorage } from '@vueuse/core';
+import {
+  AssignableTier,
+  DEFAULT_TIER,
+  Tier,
+} from '@multiplayer/protocol/tiers';
 import { Socket, io as connect } from 'socket.io-client';
 
 import { ComputedRef, Ref, computed, ref, shallowRef } from 'vue';
@@ -29,18 +34,20 @@ type MultiplayerSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const generatePayloadId = () => crypto.randomUUID();
 
-const emptyRoomData = (): RoomData => ({ hostId: '', roster: {} });
+/** what a url driven join sends until the panel that owns the name mounts and renames */
+const UNNAMED_DISPLAY_NAME = '[Unknown]';
 
 const ROOM_QUERY_PARAM = 'room';
 
 const readRoomIdFromUrl = () =>
   new URL(window.location.href).searchParams.get(ROOM_QUERY_PARAM);
 
-/**
- * only on the way out. unlike the link share payload, a live room id is meant to
- * survive a refresh and stay copyable, so it is stripped when the room is gone rather
- * than when it is consumed
- */
+const writeRoomIdToUrl = (id: RoomId) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set(ROOM_QUERY_PARAM, id);
+  window.history.replaceState({}, '', url);
+};
+
 const stripRoomIdFromUrl = () => {
   const url = new URL(window.location.href);
   if (!url.searchParams.has(ROOM_QUERY_PARAM)) return;
@@ -54,41 +61,59 @@ const stripRoomIdFromUrl = () => {
  */
 export type ProductStateSource = 'room' | 'local';
 
-/** refs rather than signals: this is where the harness hands reactivity to products */
-export type MultiplayerControls = {
-  connected: Ref<boolean>;
-  inRoom: ComputedRef<boolean>;
-  roomId: Ref<RoomId | null>;
-  /** fresh every connection, so a refresh is indistinguishable from a first join */
-  userId: Ref<UserId | null>;
-  roster: ComputedRef<RosterEntry[]>;
-  /** higher frequency and lower stakes than the roster; nothing renders it yet */
-  presence: Ref<Record<UserId, PresenceEntry>>;
-  tier: ComputedRef<Tier | null>;
-  isHost: ComputedRef<boolean>;
-  /**
-   * True while the server is about to say what this product should show, so UI can
-   * hold the first frame rather than paint local state a moment before replacing it.
-   * Known before the first frame, since a pending join is visible in the url.
-   */
-  awaitingServerState: Ref<boolean>;
+export type RoomActions = {
+  /** the display name is supplied per call: the room is not where it is stored */
+  start: (
+    options: RoomEntryOptions & { state: ServerState },
+  ) => Promise<RoomId>;
+  join: (options: RoomEntryOptions & { roomId: RoomId }) => Promise<JoinResult>;
+  leave: () => void;
+};
 
-  /** reports the source so the caller knows whether to skip its local restore */
-  enterProduct: (
+export type ProductActions = {
+  enter: (
     productId: ProductId,
     host: MultiplayerHostField<any>,
   ) => Promise<ProductStateSource>;
-  /** on unmount; the connection and the room outlive it */
-  leaveProduct: (productId: ProductId) => void;
+  leave: (productId: ProductId) => void;
+};
 
-  /** seeds the room with the caller's current state */
-  startRoom: (productId: ProductId, state: ServerState) => Promise<RoomId>;
-  joinRoom: (roomId: RoomId, productId: ProductId) => Promise<JoinResult>;
+export type Me = {
+  id: UserId;
+  tier: Tier;
+  isHost: boolean;
+};
 
-  /** a local convenience value, tied to no account */
-  displayName: Ref<string>;
-  /** empty coerces back to the placeholder so the roster never shows a blank row */
-  setDisplayName: (name: string) => void;
+export type RoomControls = {
+  setTier: (targetId: UserId, nextTier: AssignableTier) => void;
+  kickUser: (targetId: UserId) => void;
+  /** sends a productId; the client turns it into a navigation */
+  moveUser: (targetId: UserId, productId: ProductId) => void;
+  /** renaming mid session, which is what makes an unnamed join recoverable */
+  setDisplayName: (displayName: string) => void;
+};
+
+export type RoomState =
+  | { connected: false }
+  | {
+      connected: true;
+      id: RoomId;
+      userIdToRosterEntry: Record<UserId, RosterEntry>;
+      userIdToPresence: Record<UserId, PresenceEntry>;
+      me: Me;
+      controls: RoomControls;
+    };
+
+export type MultiplayerControls = {
+  actions: {
+    room: RoomActions;
+    product: ProductActions;
+  };
+
+  room: ComputedRef<RoomState>;
+
+  /** true while the server is about to say what this product should show */
+  awaitingServerState: Ref<boolean>;
 
   /** a no-op when suspended, or when the change came from the room itself */
   sendOps: (productId: ProductId, ops: PatchOp[]) => void;
@@ -103,14 +128,8 @@ export type MultiplayerControls = {
   /** resyncs on mismatch, catching what the version counter cannot */
   reportLocalHash: (productId: ProductId, localHash: string) => void;
 
-  setTier: (targetId: UserId, nextTier: AssignableTier) => void;
-  kickUser: (targetId: UserId) => void;
-  /** sends a productId; the client turns it into a navigation */
-  moveUser: (targetId: UserId, productId: ProductId) => void;
   /** ungated by tier and unaffected by suspension, unlike everything above */
   updatePresence: (entry: PresenceEntry) => void;
-
-  disconnect: () => void;
 };
 
 /**
@@ -129,21 +148,13 @@ export const createMultiplayer = (options: {
   const { onMovedToProduct } = options;
   const sync = createSyncTracker();
 
-  // defaults to a placeholder rather than empty because renaming is always allowed,
-  // so an unnamed join is fixable rather than something to gate room creation on
-  const FALLBACK_DISPLAY_NAME = '[Unknown]';
-  const displayName = useLocalStorage(
-    'multiplayer-display-name',
-    FALLBACK_DISPLAY_NAME,
-  );
-
-  const connected = ref(false);
   // read up front rather than discovered on mount, so a product that is about to be
   // handed room state never paints local content first
   const awaitingServerState = ref(readRoomIdFromUrl() !== null);
-  const roomId = ref<RoomId | null>(null);
-  const userId = ref<UserId | null>(null);
-  const roomData = ref<RoomData>(emptyRoomData());
+
+  // one object rather than loose ids, so a room without a user, or a user without a
+  // room, is a state this cannot get into
+  const membership = ref<RoomMembership | null>(null);
   const presence = ref<Record<UserId, PresenceEntry>>({});
 
   // the product currently mounted, and the seam it exposes to us. shallow because the
@@ -157,27 +168,53 @@ export const createMultiplayer = (options: {
 
   let socket: MultiplayerSocket | null = null;
 
-  const roster = computed<RosterEntry[]>(() =>
-    Object.values(roomData.value.roster),
-  );
+  const inRoom = computed(() => membership.value !== null);
 
-  const inRoom = computed(() => roomId.value !== null);
+  /** for the paths a room already gates, where a missing socket is a broken invariant */
+  const requireSocket = () =>
+    nullThrows(socket, 'multiplayer: acted on a room with no socket');
 
-  const tier = computed<Tier | null>(() => {
-    const id = userId.value;
-    if (id === null) return null;
-    return roomData.value.roster[id]?.tier ?? null;
+  // built once rather than per recompute, so the identity a consumer holds onto stays
+  // stable across every roster and presence change
+  const roomControls: RoomControls = {
+    setTier: (targetId, nextTier) =>
+      requireSocket().emit('setTier', { userId: targetId, tier: nextTier }),
+    kickUser: (targetId) =>
+      requireSocket().emit('kickUser', { userId: targetId }),
+    moveUser: (targetId, productId) =>
+      requireSocket().emit('moveUser', { userId: targetId, productId }),
+    setDisplayName: (displayName) =>
+      requireSocket().emit('setDisplayName', { displayName }),
+  };
+
+  const room = computed<RoomState>(() => {
+    if (membership.value === null) return { connected: false };
+    const { roomId, userId, data } = membership.value;
+
+    return {
+      connected: true,
+      id: roomId,
+      userIdToRosterEntry: data.roster,
+      userIdToPresence: presence.value,
+      me: {
+        id: userId,
+        // the roster is what grants a tier, so an entry that has not landed yet is
+        // the least privileged one rather than a special case
+        tier: data.roster[userId]?.tier ?? DEFAULT_TIER,
+        isHost: data.hostId === userId,
+      },
+      controls: roomControls,
+    };
   });
 
-  const isHost = computed(
-    () => userId.value !== null && roomData.value.hostId === userId.value,
-  );
+  /** the one way room state is taken on, whether the room was opened or joined */
+  const adoptMembership = (next: RoomMembership) => {
+    membership.value = next;
+  };
 
   const reset = () => {
     awaitingServerState.value = false;
-    roomId.value = null;
-    userId.value = null;
-    roomData.value = emptyRoomData();
+    membership.value = null;
     presence.value = {};
     resyncInFlight.clear();
     sync.clear();
@@ -187,12 +224,13 @@ export const createMultiplayer = (options: {
    * Adopts authoritative state for a product. Returns whether it landed, so callers can
    * tell a refused payload from an applied one without inspecting state themselves.
    */
-  const adoptServerState = (
-    productId: ProductId,
-    state: ServerState,
-    version: number,
-    stateHash: string,
-  ) => {
+  const adoptServerState = (options: {
+    productId: ProductId;
+    state: ServerState;
+    version: number;
+    stateHash: string;
+  }) => {
+    const { productId, state, version, stateHash } = options;
     const host = activeHost.value;
     // arriving for a product that is not on screen is normal during navigation, and
     // entering re-fetches, so there is nothing to do and nothing to report
@@ -217,9 +255,7 @@ export const createMultiplayer = (options: {
   const adoptJoinResult = (productId: ProductId, result: JoinResult) => {
     if (!result.joined) return;
 
-    roomId.value = result.roomId;
-    userId.value = result.userId;
-    roomData.value = result.data;
+    adoptMembership(result);
 
     // absent when nobody has opened this product in the room yet, which is not a
     // failure: the first write from here creates it
@@ -228,12 +264,7 @@ export const createMultiplayer = (options: {
       return;
     }
 
-    adoptServerState(
-      productId,
-      result.serverState.state,
-      result.serverState.version,
-      result.serverState.stateHash,
-    );
+    adoptServerState({ productId, ...result.serverState });
   };
 
   const requestResync = (productId: ProductId) => {
@@ -245,20 +276,17 @@ export const createMultiplayer = (options: {
       if (!result.joined || !result.serverState) return;
       // a refusal here is terminal on purpose. re-requesting would fetch the same
       // payload and refuse it again, so the console error is the end of the line
-      adoptServerState(
-        productId,
-        result.serverState.state,
-        result.serverState.version,
-        result.serverState.stateHash,
-      );
+      adoptServerState({ productId, ...result.serverState });
     });
   };
 
   const attachHandlers = (activeSocket: MultiplayerSocket) => {
-    activeSocket.on('connect', () => (connected.value = true));
-    activeSocket.on('disconnect', () => (connected.value = false));
-
-    activeSocket.on('rosterChanged', (data) => (roomData.value = data));
+    activeSocket.on('rosterChanged', (data) => {
+      // a roster can land in the gap between a kick or a disband and this socket
+      // hearing about it, and there is no room left for it to describe
+      if (!membership.value) return;
+      membership.value = { ...membership.value, data };
+    });
 
     activeSocket.on('presenceChanged', ({ userId: peerId, entry }) => {
       presence.value = { ...presence.value, [peerId]: entry };
@@ -280,12 +308,7 @@ export const createMultiplayer = (options: {
 
     activeSocket.on('serverStateReplaced', (relay) => {
       // authoritative by definition, so it never consults the counter
-      adoptServerState(
-        relay.productId,
-        relay.state,
-        relay.version,
-        relay.stateHash,
-      );
+      adoptServerState(relay);
     });
 
     // the room is gone, so the id in the url is dead. strip it and carry on locally,
@@ -316,43 +339,52 @@ export const createMultiplayer = (options: {
   // once for the life of the connection, not per mount
   let roomResolutionAttempted = false;
 
-  const joinRoomInternal = async (
-    targetRoomId: RoomId,
-    productId: ProductId,
-  ) => {
-    const activeSocket = ensureSocket();
-    const result = await new Promise<JoinResult>((resolve) => {
-      activeSocket.emit(
-        'joinRoom',
-        {
-          roomId: targetRoomId,
-          displayName: displayName.value,
-          productId,
-        },
-        resolve,
-      );
-    });
+  const roomActions: RoomActions = {
+    start: async ({ productId, state, displayName }) => {
+      const activeSocket = ensureSocket();
+      const started = await new Promise<RoomMembership>((resolve) => {
+        activeSocket.emit(
+          'startRoom',
+          { displayName, productId, state },
+          resolve,
+        );
+      });
 
-    adoptJoinResult(productId, result);
-    return result;
+      adoptMembership(started);
+      sync.reset(productId, 1, hashServerState(state));
+
+      // the id becomes shareable the moment the room exists, and survives a refresh
+      writeRoomIdToUrl(started.roomId);
+
+      // nothing to resolve later: this connection is already in its room
+      roomResolutionAttempted = true;
+      return started.roomId;
+    },
+
+    join: async ({ roomId, productId, displayName }) => {
+      const activeSocket = ensureSocket();
+      const result = await new Promise<JoinResult>((resolve) => {
+        activeSocket.emit(
+          'joinRoom',
+          { roomId, displayName, productId },
+          resolve,
+        );
+      });
+
+      adoptJoinResult(productId, result);
+      return result;
+    },
+
+    leave: () => {
+      socket?.disconnect();
+      socket = null;
+      reset();
+    },
   };
 
-  return {
-    connected,
-    inRoom,
-    roomId,
-    userId,
-    roster,
-    presence,
-    tier,
-    isHost,
-    awaitingServerState,
-
+  const productActions: ProductActions = {
     // one call covers the roster update, the traffic routing and the initial state
-    enterProduct: async (
-      productId: ProductId,
-      host: MultiplayerHostField<any>,
-    ): Promise<ProductStateSource> => {
+    enter: async (productId, host) => {
       activeProductId.value = productId;
       activeHost.value = host;
 
@@ -364,7 +396,13 @@ export const createMultiplayer = (options: {
 
         if (targetRoomId) {
           try {
-            const result = await joinRoomInternal(targetRoomId, productId);
+            // no name to hand over yet: the panel that owns it has not mounted, so the
+            // room holds the placeholder until it renames through room.controls
+            const result = await roomActions.join({
+              roomId: targetRoomId,
+              productId,
+              displayName: UNNAMED_DISPLAY_NAME,
+            });
             if (result.joined) return 'room';
 
             // a dead room id is a non event: strip it and carry on exactly as if the
@@ -379,8 +417,13 @@ export const createMultiplayer = (options: {
         awaitingServerState.value = false;
       }
 
-      const activeSocket = socket;
-      if (!activeSocket || !inRoom.value) return 'local';
+      // the ordinary outcome for every page load outside a room, and the answer the
+      // harness needs before it restores anything local
+      if (!inRoom.value) return 'local';
+
+      // being in a room without a socket is a broken invariant rather than a reason
+      // to quietly fall back to local
+      const activeSocket = requireSocket();
 
       // navigating inside a room waits too: the new product mounts empty and the
       // server is what fills it
@@ -397,53 +440,23 @@ export const createMultiplayer = (options: {
     },
 
     /** on unmount. the connection, the room and the roster all outlive this */
-    leaveProduct: (productId: ProductId) => {
+    leave: (productId) => {
       if (activeProductId.value !== productId) return;
       activeProductId.value = null;
       activeHost.value = null;
     },
+  };
 
-    startRoom: async (productId: ProductId, state: ServerState) => {
-      const activeSocket = ensureSocket();
-      const started = await new Promise<{
-        roomId: RoomId;
-        userId: UserId;
-        data: RoomData;
-      }>((resolve) => {
-        activeSocket.emit(
-          'startRoom',
-          { displayName: displayName.value, productId, state },
-          (id, user, data) => resolve({ roomId: id, userId: user, data }),
-        );
-      });
-
-      roomId.value = started.roomId;
-      userId.value = started.userId;
-      roomData.value = started.data;
-      sync.reset(productId, 1, hashServerState(state));
-
-      // the id becomes shareable the moment the room exists, and survives a refresh
-      const url = new URL(window.location.href);
-      url.searchParams.set(ROOM_QUERY_PARAM, started.roomId);
-      window.history.replaceState({}, '', url);
-
-      // nothing to resolve later: this connection is already in its room
-      roomResolutionAttempted = true;
-      return started.roomId;
+  return {
+    actions: {
+      room: roomActions,
+      product: productActions,
     },
 
-    joinRoom: joinRoomInternal,
+    room,
 
-    displayName,
+    awaitingServerState,
 
-    // local first, so the field stays responsive whether or not a room is open
-    setDisplayName: (name: string) => {
-      displayName.value = name.trim() || FALLBACK_DISPLAY_NAME;
-      if (!inRoom.value) return;
-      socket?.emit('setDisplayName', { displayName: displayName.value });
-    },
-
-    /** outbound. no-op when suspended or when this change came from the room itself */
     sendOps: (productId: ProductId, ops: PatchOp[]) => {
       if (!socket || !inRoom.value) return;
       if (sync.isApplyingRemote() || sync.isSuspended(productId)) return;
@@ -483,19 +496,9 @@ export const createMultiplayer = (options: {
       requestResync(productId);
     },
 
-    setTier: (targetId: UserId, nextTier: AssignableTier) =>
-      socket?.emit('setTier', { userId: targetId, tier: nextTier }),
-    kickUser: (targetId: UserId) =>
-      socket?.emit('kickUser', { userId: targetId }),
-    moveUser: (targetId: UserId, productId: ProductId) =>
-      socket?.emit('moveUser', { userId: targetId, productId }),
+    // optional chained where the room controls are not: presence is broadcast off the
+    // command path, by a product that may never have opened a socket at all
     updatePresence: (entry: PresenceEntry) =>
       socket?.emit('updatePresence', entry),
-
-    disconnect: () => {
-      socket?.disconnect();
-      socket = null;
-      reset();
-    },
   };
 };

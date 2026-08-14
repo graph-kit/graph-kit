@@ -41,3 +41,14 @@ export type RoomData = {
   hostId: UserId;
   roster: Record<UserId, RosterEntry>;
 };
+
+/**
+ * who you are and which room you are in, identical whether you opened the room or
+ * joined one. named because every path that puts a client in a room hands back exactly
+ * this, and a client holding one of the three without the others is a broken state
+ */
+export type RoomMembership = {
+  roomId: RoomId;
+  userId: UserId;
+  data: RoomData;
+};

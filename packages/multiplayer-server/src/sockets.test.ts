@@ -7,6 +7,7 @@ import {
   JoinResult,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
+import { RoomMembership } from '@multiplayer/protocol/room';
 import { Socket, io as connect } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -60,7 +61,7 @@ const expectNoEvent = async <Event extends keyof ServerToClientEvents>(
 };
 
 const startRoom = (socket: ClientSocket) =>
-  new Promise<{ roomId: string; userId: string }>((resolve) => {
+  new Promise<RoomMembership>((resolve) => {
     socket.emit(
       'startRoom',
       {
@@ -68,7 +69,7 @@ const startRoom = (socket: ClientSocket) =>
         productId: 'traversals',
         state: { core: { nodes: { a: { x: 0 } } } },
       },
-      (roomId, userId) => resolve({ roomId, userId }),
+      resolve,
     );
   });
 

@@ -62,28 +62,23 @@ export const useMagicProduct = (
   };
 
   // ORDER MATTERS!
-  // a room wins over everything: it is authoritative, and painting local content first
-  // would flash content that is about to be replaced.
-  // then local storage before link share, otherwise local storage content loads on top
-  // of a shared link.
+  // multiplayer wins, then local storage and link share load
   const restoreLocal = () => {
     magic.localStorage.sync();
+    // replace what was in local storage with what was in link
     if (magic.ui.linkSharing) loadFromLinkPayload(magic);
   };
 
   onMounted(async () => {
     // the only async step in startup. a product not in a room, or one with
     // multiplayer switched off, resolves immediately to 'local'
-    const source = await magic.multiplayer?.enterProduct(
+    const source = await magic.multiplayer?.actions.product.enter(
       options.productId,
       host.multiplayer,
     );
     if (source !== 'room') restoreLocal();
   });
 
-  // the manifest flag rather than magic.multiplayer: the connection is client only, so
-  // gating on it would add this slot on the client and not the server, and the two
-  // slot lists would not hydrate against each other
   if (magic.manifest.multiplayer) {
     magic.componentSlots.add({
       id: 'product/room-panel',

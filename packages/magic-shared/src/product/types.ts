@@ -45,9 +45,7 @@ export type LocalStorageField = {
 };
 
 /**
- * everything the harness needs from whatever it is hosting. a graph satisfies
- * this, but so does anything else that can paint to a canvas and describe its
- * own state, which is what lets non graph products run in the same shell
+ * everything the magic product harness needs in order to function
  */
 export type MagicProductHost = {
   transit: TransitField;
@@ -62,38 +60,23 @@ export type MagicProductHost = {
 };
 
 /**
- * What the harness needs from a host to keep it in sync with the room. Mirrors the
- * split {@link TransitControls} already makes: the host says whether state is its own,
- * and separately how to take it on. It never decides what a failed check *means*, since
- * only the multiplayer layer knows the productId, version and room it arrived under.
+ * What a host provides to stay in sync with the room. Mirrors the split
+ * {@link TransitControls} already makes: the host says whether state is its own and how
+ * to take it on, never what a failed check means, since only the multiplayer layer knows
+ * the productId, version and room it arrived under.
+ *
+ * Separate from {@link TransitField} because the room's shape is not transit's, and
+ * adopting state can mean more than writing it (stopping a simulation, dropping a lens).
+ *
+ * Methods rather than function properties on purpose: validate gates every call, so
+ * narrowing State is sound by construction and worth the bivariance.
  */
 export type MultiplayerHostField<State extends ServerState = ServerState> = {
-  /**
-   * Whether this server state belongs to this product. A false is an invariant
-   * violation rather than a recoverable case, reachable only through state routed
-   * under the wrong productId or a product encoding a shape it does not own, and the
-   * multiplayer layer is what reports and recovers from it.
-   */
+  /** false is an invariant violation, not a case to handle */
   validate: (state: ServerState) => state is State;
-  /**
-   * Adopt authoritative state wholesale, discarding whatever is on screen. The single
-   * inbound path for a room join, a product handoff and a drift resync alike, since all
-   * three mean the same thing. Only ever called with state that passed {@link validate}.
-   *
-   * Not expressed as {@link TransitField.decode} because the room's shape is not
-   * transit's, so denormalizing it is the host's job, and because adopting state may
-   * mean more than writing it (stopping a simulation, dropping a lens) which a raw
-   * decode gives nowhere to do.
-   *
-   * Declared method style on purpose: validate gates every call, so narrowing State
-   * here is sound by construction and worth the bivariance.
-   */
+  /** adopt wholesale, for a join, a product handoff and a drift resync alike */
   onForceResync(state: State): void;
-  /**
-   * Apply an incoming change from a peer, by making the same mutation the local action
-   * would have made. Throwing is a legitimate outcome: the version only advances once
-   * this returns, so a failure leaves a gap the next relay turns into a resync.
-   */
+  /** throwing leaves a version gap the next relay turns into a resync */
   applyOps(ops: PatchOp[]): void;
 };
 

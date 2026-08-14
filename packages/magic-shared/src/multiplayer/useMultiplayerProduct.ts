@@ -8,7 +8,8 @@ import { MultiplayerControls } from './createMultiplayer.ts';
 
 /**
  * Hands a mounting product the root connection and releases it on unmount. Does not
- * register: the harness calls enterProduct itself, since it owns the restore ordering.
+ * register: the harness calls actions.product.enter itself, since it owns the restore
+ * ordering.
  */
 export const useMultiplayerProduct = (
   productId: ProductId,
@@ -23,7 +24,7 @@ export const useMultiplayerProduct = (
   if (!multiplayer) return undefined;
   if (!host) return undefined;
 
-  onUnmounted(() => multiplayer.leaveProduct(productId));
+  onUnmounted(() => multiplayer.actions.product.leave(productId));
 
   return multiplayer;
 };

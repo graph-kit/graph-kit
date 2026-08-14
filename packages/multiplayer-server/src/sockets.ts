@@ -124,7 +124,7 @@ export const createSocketServer = (
       socket.join(roomId);
       enterProductChannel(productId);
 
-      callback(roomId, userId, room.data);
+      callback({ roomId, userId, data: room.data });
     });
 
     socket.on('joinRoom', ({ roomId, displayName, productId }, callback) => {

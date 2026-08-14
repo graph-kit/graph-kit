@@ -1,16 +1,9 @@
 import { nullThrows } from '@core/utils/assert';
-import {
-  ClientToServerEvents,
-  JoinResult,
-  RoomEntryOptions,
-  ServerToClientEvents,
-} from '@multiplayer/protocol/events';
+import { JoinResult } from '@multiplayer/protocol/events';
 import {
   PresenceEntry,
   ProductId,
-  RoomId,
   RoomMembership,
-  RosterEntry,
   UserId,
 } from '@multiplayer/protocol/room';
 import {
@@ -18,114 +11,27 @@ import {
   ServerState,
   hashServerState,
 } from '@multiplayer/protocol/server-state';
-import {
-  AssignableTier,
-  DEFAULT_TIER,
-  Tier,
-} from '@multiplayer/protocol/tiers';
-import { Socket, io as connect } from 'socket.io-client';
+import { DEFAULT_TIER } from '@multiplayer/protocol/tiers';
+import { io as connect } from 'socket.io-client';
 
-import { ComputedRef, Ref, computed, ref, shallowRef } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 
 import { MultiplayerHostField } from '../product/types.ts';
 import { createSyncTracker } from './sync-tracker.ts';
-
-type MultiplayerSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+import {
+  MultiplayerControls,
+  MultiplayerSocket,
+  ProductActions,
+  RoomActions,
+  RoomControls,
+  RoomState,
+} from './types.ts';
+import { roomIdUrl } from './url.ts';
 
 const generatePayloadId = () => crypto.randomUUID();
 
 /** what a url driven join sends until the panel that owns the name mounts and renames */
 const UNNAMED_DISPLAY_NAME = '[Unknown]';
-
-const ROOM_QUERY_PARAM = 'room';
-
-const readRoomIdFromUrl = () =>
-  new URL(window.location.href).searchParams.get(ROOM_QUERY_PARAM);
-
-const writeRoomIdToUrl = (id: RoomId) => {
-  const url = new URL(window.location.href);
-  url.searchParams.set(ROOM_QUERY_PARAM, id);
-  window.history.replaceState({}, '', url);
-};
-
-const stripRoomIdFromUrl = () => {
-  const url = new URL(window.location.href);
-  if (!url.searchParams.has(ROOM_QUERY_PARAM)) return;
-  url.searchParams.delete(ROOM_QUERY_PARAM);
-  window.history.replaceState({}, '', url);
-};
-
-/**
- * where a mounting product's state came from. 'room' means authoritative state was
- * applied and local restore must not run on top of it.
- */
-export type ProductStateSource = 'room' | 'local';
-
-export type RoomActions = {
-  /** the display name is supplied per call: the room is not where it is stored */
-  start: (options: RoomEntryOptions) => Promise<RoomId>;
-  join: (options: RoomEntryOptions & { roomId: RoomId }) => Promise<JoinResult>;
-  leave: () => void;
-};
-
-export type ProductActions = {
-  enter: (
-    productId: ProductId,
-    host: MultiplayerHostField<any>,
-  ) => Promise<ProductStateSource>;
-  leave: (productId: ProductId) => void;
-};
-
-export type Me = {
-  id: UserId;
-  tier: Tier;
-  isHost: boolean;
-};
-
-export type RoomControls = {
-  setTier: (targetId: UserId, nextTier: AssignableTier) => void;
-  kickUser: (targetId: UserId) => void;
-  /** sends a productId; the client turns it into a navigation */
-  moveUser: (targetId: UserId, productId: ProductId) => void;
-  /** renaming mid session, which is what makes an unnamed join recoverable */
-  setDisplayName: (displayName: string) => void;
-};
-
-export type RoomState =
-  | { connected: false }
-  | {
-      connected: true;
-      id: RoomId;
-      userIdToRosterEntry: Record<UserId, RosterEntry>;
-      userIdToPresence: Record<UserId, PresenceEntry>;
-      me: Me;
-      controls: RoomControls;
-    };
-
-export type MultiplayerControls = {
-  actions: {
-    room: RoomActions;
-    product: ProductActions;
-  };
-
-  room: ComputedRef<RoomState>;
-
-  /** true while the server is about to say what this product should show */
-  awaitingServerState: Ref<boolean>;
-
-  /** a no-op when the change came from the room itself */
-  sendOps: (productId: ProductId, ops: PatchOp[]) => void;
-  /** overwrites this product's server state with the host's, for changes no op describes */
-  sendReplacement: (productId: ProductId) => void;
-
-  isApplyingRemote: () => boolean;
-
-  /** pulls this product's server state back down when local has silently diverged */
-  resyncIfDrifted: (productId: ProductId) => void;
-
-  /** ungated by tier, unlike everything above */
-  updatePresence: (entry: PresenceEntry) => void;
-};
 
 /**
  * The room connection, owned once at the application root. Every product is its own
@@ -145,7 +51,7 @@ export const createMultiplayer = (options: {
 
   // read up front rather than discovered on mount, so a product that is about to be
   // handed room state never paints local content first
-  const awaitingServerState = ref(readRoomIdFromUrl() !== null);
+  const awaitingServerState = ref(roomIdUrl.read() !== null);
 
   // one object rather than loose ids, so a room without a user, or a user without a
   // room, is a state this cannot get into
@@ -187,6 +93,7 @@ export const createMultiplayer = (options: {
       requireSocket().emit('moveUser', { userId: targetId, productId }),
     setDisplayName: (displayName) =>
       requireSocket().emit('setDisplayName', { displayName }),
+    updatePresence: (entry) => requireSocket().emit('updatePresence', entry),
   };
 
   const room = computed<RoomState>(() => {
@@ -316,11 +223,11 @@ export const createMultiplayer = (options: {
     // the room is gone, so the id in the url is dead. strip it and carry on locally,
     // with no error state: the same quiet fallback a bad id gets on the way in
     activeSocket.on('roomDisbanded', () => {
-      stripRoomIdFromUrl();
+      roomIdUrl.strip();
       reset();
     });
     activeSocket.on('kicked', () => {
-      stripRoomIdFromUrl();
+      roomIdUrl.strip();
       reset();
     });
 
@@ -359,7 +266,7 @@ export const createMultiplayer = (options: {
       sync.reset(productId, 1, hashServerState(state));
 
       // the id becomes shareable the moment the room exists, and survives a refresh
-      writeRoomIdToUrl(started.roomId);
+      roomIdUrl.write(started.roomId);
 
       // nothing to resolve later: this connection is already in its room
       roomResolutionAttempted = true;
@@ -397,7 +304,7 @@ export const createMultiplayer = (options: {
       // so navigating between products never re-reads the url or re-joins
       if (!roomResolutionAttempted) {
         roomResolutionAttempted = true;
-        const targetRoomId = readRoomIdFromUrl();
+        const targetRoomId = roomIdUrl.read();
 
         if (targetRoomId) {
           try {
@@ -412,7 +319,7 @@ export const createMultiplayer = (options: {
 
             // a dead room id is a non event: strip it and carry on exactly as if the
             // param had never been there, with no error surfaced
-            stripRoomIdFromUrl();
+            roomIdUrl.strip();
             return 'local';
           } finally {
             awaitingServerState.value = false;
@@ -498,10 +405,5 @@ export const createMultiplayer = (options: {
       );
       requestResync(productId);
     },
-
-    // optional chained where the room controls are not: presence is broadcast off the
-    // command path, by a product that may never have opened a socket at all
-    updatePresence: (entry: PresenceEntry) =>
-      socket?.emit('updatePresence', entry),
   };
 };

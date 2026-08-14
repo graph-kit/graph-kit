@@ -28,6 +28,8 @@ export type HistoryField = {
   canUndo: ComputedRef<boolean>;
   undo: () => void;
   redo: () => void;
+  /** makes whatever the graph holds right now the state undo bottoms out at */
+  clear: () => void;
 };
 
 /**

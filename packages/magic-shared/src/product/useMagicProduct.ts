@@ -88,6 +88,9 @@ export const useMagicProduct = (
       host.multiplayer,
     );
     if (source !== 'room') restoreLocal();
+
+    // whatever was restored is the starting point, not the state setup began with
+    magic.history?.clear();
   });
 
   if (magic.manifest.multiplayer) {

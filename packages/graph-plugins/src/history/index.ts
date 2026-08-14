@@ -111,11 +111,8 @@ export const history: HistoryPlugin = ({ finalTransit }) => {
   };
 
   const clear = () => {
-    const current = snapshots.at(cursor);
     snapshots.length = 0;
-    // the current state stays behind as the new starting point, otherwise the next
-    // captureSnapshot has nothing to undo back to
-    if (current !== undefined) snapshots.push(current);
+    snapshots.push(encodeCurrentState());
     cursor = snapshots.length - 1;
     historyEventHub.emit('onHistoryChanged');
   };

@@ -1,6 +1,11 @@
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { computed, ref } from 'vue';
 
+  import Button from '../../components/button/Button.vue';
+  import HStack from '../../components/layout/HStack.vue';
+  import VStack from '../../components/layout/VStack.vue';
+  import Well from '../../components/layout/Well.vue';
+  import TextInput from '../../components/text-input/TextInput.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import { serverStateFromTransit } from '../../product/server-state.ts';
 
@@ -15,11 +20,12 @@
 
   let linkCopiedResetTimer: NodeJS.Timeout;
 
-  // on change rather than on input: a name is committed when the user finishes
-  // typing, and pushing every keystroke to the room would be a message per character
-  const commitDisplayName = (event: Event) => {
-    multiplayer?.setDisplayName((event.target as HTMLInputElement).value);
-  };
+  // committed on change rather than on input: pushing every keystroke to the room
+  // would be a roster rebroadcast per character
+  const displayName = computed({
+    get: () => multiplayer?.displayName.value ?? '',
+    set: (name) => multiplayer?.setDisplayName(name),
+  });
 
   const startRoom = async () => {
     if (!multiplayer) return;
@@ -56,54 +62,56 @@
 </script>
 
 <template>
-  <div
-    v-if="multiplayer"
-    class="rounded-lg bg-gray-200 dark:bg-gray-800 dark:text-white p-3 w-64 flex flex-col gap-2"
-  >
-    <!--
-      always editable, in a room or out of one. renaming mid session is what makes an
-      unnamed join recoverable, which is why nothing gates on having set a name first
-    -->
-    <label class="text-xs font-bold opacity-70">Your name</label>
-    <input
-      :value="multiplayer.displayName.value"
-      placeholder="Your display name"
-      class="rounded-md px-2 py-1 bg-gray-100 dark:bg-gray-900 text-sm"
-      @change="commitDisplayName"
-    />
-
-    <button
-      v-if="!multiplayer.inRoom.value"
-      :disabled="isStartingRoom"
-      class="rounded-md px-2 py-1 text-sm font-bold bg-gray-300 dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      @click="startRoom"
+  <Well v-if="multiplayer">
+    <VStack
+      :gap="2"
+      class="w-64"
     >
-      {{ isStartingRoom ? 'Starting…' : 'Start room' }}
-    </button>
+      <!--
+        always editable, in a room or out of one. renaming mid session is what makes an
+        unnamed join recoverable, which is why nothing gates on having set a name first
+      -->
+      <TextInput
+        v-model="displayName"
+        update-on="change"
+        placeholder="Your display name"
+      />
 
-    <template v-else>
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-bold">In room</span>
-        <button
-          class="text-xs underline"
-          @click="copyRoomLinkToClipboard"
-        >
-          {{ roomLinkCopiedToClipboard ? 'Link copied' : 'Copy link' }}
-        </button>
-      </div>
+      <Button
+        v-if="!multiplayer.inRoom.value"
+        :disabled="isStartingRoom"
+        @click="startRoom"
+      >
+        {{ isStartingRoom ? 'Starting…' : 'Start room' }}
+      </Button>
 
-      <ul class="flex flex-col gap-1">
-        <li
-          v-for="member in multiplayer.roster.value"
-          :key="member.userId"
-          class="flex items-center justify-between text-sm"
+      <template v-else>
+        <HStack
+          :gap="2"
+          class="items-center justify-between"
         >
-          <span class="truncate">{{ member.displayName }}</span>
-          <span class="text-xs opacity-70 ml-2 shrink-0">{{
-            member.tier
-          }}</span>
-        </li>
-      </ul>
-    </template>
-  </div>
+          <span class="text-sm font-bold">In room</span>
+          <Button @click="copyRoomLinkToClipboard">
+            {{ roomLinkCopiedToClipboard ? 'Link copied' : 'Copy link' }}
+          </Button>
+        </HStack>
+
+        <VStack
+          :gap="1"
+          as="ul"
+        >
+          <HStack
+            v-for="member in multiplayer.roster.value"
+            :key="member.userId"
+            as="li"
+            :gap="2"
+            class="items-center justify-between text-sm"
+          >
+            <span class="truncate">{{ member.displayName }}</span>
+            <span class="text-xs opacity-70 shrink-0">{{ member.tier }}</span>
+          </HStack>
+        </VStack>
+      </template>
+    </VStack>
+  </Well>
 </template>

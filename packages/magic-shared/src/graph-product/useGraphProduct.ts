@@ -1,5 +1,4 @@
 import { useGraph } from '../graph/useGraph.ts';
-import { useSimulationSuspension } from '../multiplayer/useSimulationSuspension.ts';
 import { MagicProductHost } from '../product/types.ts';
 import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
@@ -59,17 +58,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   );
 
   if (magic.multiplayer) {
-    const { pushWholeState } = useGraphOutboundSync(
-      graph,
-      options.productId,
-      magic.multiplayer,
-    );
-    useSimulationSuspension(
-      magic.simulation,
-      options.productId,
-      magic.multiplayer,
-      pushWholeState,
-    );
+    useGraphOutboundSync(graph, options.productId, magic.multiplayer);
     usePresenceBroadcast(graph, options.productId, magic.multiplayer);
   }
 

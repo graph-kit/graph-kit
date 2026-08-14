@@ -13,11 +13,6 @@ import {
   encodeWeightsChanged,
 } from './server-state-ops.ts';
 
-export type GraphOutboundSync = {
-  /** overwrites this product's server state with the graph's for stuff like undo/redo etc */
-  pushWholeState: () => void;
-};
-
 /** long enough that a burst of edits verifies once, short enough to catch drift fast */
 const DRIFT_CHECK_DELAY_MS = 1000;
 
@@ -26,7 +21,7 @@ export const useGraphOutboundSync = (
   graph: Graph,
   productId: ProductId,
   multiplayer: MultiplayerControls,
-): GraphOutboundSync => {
+): void => {
   const verifyNoDrift = debounce(() => {
     multiplayer.resyncIfDrifted(productId);
   }, DRIFT_CHECK_DELAY_MS);
@@ -55,18 +50,12 @@ export const useGraphOutboundSync = (
     send(encodeWeightsChanged(weights));
   });
 
-  const pushWholeState = () => {
-    multiplayer.sendReplacement(productId);
-  };
-
   // an undo, a link load or our own resync; provenance keeps the last from bouncing back
   graph.events.transit.subscribe('onDecoded', () => {
-    pushWholeState();
+    multiplayer.sendReplacement(productId);
     verifyNoDrift();
   });
 
   // a pending check would otherwise encode a graph that is being torn down
   onUnmounted(verifyNoDrift.cancel);
-
-  return { pushWholeState };
 };

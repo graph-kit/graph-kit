@@ -75,25 +75,6 @@ describe('relay verdicts', () => {
     expect(sync.verdictFor('traversals', 3)).toBe('ignore');
   });
 
-  it('ignores everything while suspended', () => {
-    const sync = createSyncTracker();
-    sync.recordApplied('traversals', 4, 'hash-4');
-    sync.suspend('traversals');
-
-    expect(sync.verdictFor('traversals', 5)).toBe('ignore');
-
-    sync.resume('traversals');
-    expect(sync.verdictFor('traversals', 5)).toBe('apply');
-  });
-
-  it('tracks suspension per product, not per room', () => {
-    const sync = createSyncTracker();
-    sync.suspend('basic-trees');
-
-    expect(sync.isSuspended('basic-trees')).toBe(true);
-    expect(sync.isSuspended('traversals')).toBe(false);
-  });
-
   // this is the case a receipt based counter misses entirely
   it('leaves a gap when an apply fails, so the next relay resyncs', () => {
     const sync = createSyncTracker();

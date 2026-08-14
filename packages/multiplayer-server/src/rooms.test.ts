@@ -39,7 +39,7 @@ describe('createRoom', () => {
 });
 
 describe('membership', () => {
-  it('admits new joiners at read', () => {
+  it('admits new joiners at write', () => {
     const room = seedRoom();
     const entry = addMember(room, {
       userId: 'user-2',
@@ -47,8 +47,8 @@ describe('membership', () => {
       productId: 'traversals',
     });
 
-    expect(entry.tier).toBe('read');
-    expect(canWriteProduct(room, 'user-2')).toBe(false);
+    expect(entry.tier).toBe('write');
+    expect(canWriteProduct(room, 'user-2')).toBe(true);
     expect(canRunRoomCommand(room, 'user-2')).toBe(false);
   });
 
@@ -83,25 +83,25 @@ describe('setTier', () => {
     return room;
   };
 
-  it('lets the host promote to write', () => {
+  it('lets the host promote to admin', () => {
     const room = roomWithStudent();
 
-    expect(setTier(room, 'host-1', 'user-2', 'write')).toBe(true);
-    expect(canWriteProduct(room, 'user-2')).toBe(true);
+    expect(setTier(room, 'host-1', 'user-2', 'admin')).toBe(true);
+    expect(canRunRoomCommand(room, 'user-2')).toBe(true);
   });
 
-  it('refuses a read user trying to promote themselves', () => {
+  it('refuses a write user trying to promote themselves', () => {
     const room = roomWithStudent();
 
     expect(setTier(room, 'user-2', 'user-2', 'admin')).toBe(false);
-    expect(room.data.roster['user-2']?.tier).toBe('read');
+    expect(room.data.roster['user-2']?.tier).toBe('write');
   });
 
   it('refuses demoting the host', () => {
     const room = roomWithStudent();
     setTier(room, 'host-1', 'user-2', 'admin');
 
-    expect(setTier(room, 'user-2', 'host-1', 'read')).toBe(false);
+    expect(setTier(room, 'user-2', 'host-1', 'write')).toBe(false);
     expect(room.data.roster['host-1']?.tier).toBe('host');
   });
 });

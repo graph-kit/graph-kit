@@ -8,9 +8,8 @@ import { ProductId } from '../product/manifests/index.ts';
 const PRESENCE_INTERVAL = 50;
 
 /**
- * Off the command path: every tier broadcasts, and suspension does not apply, since it
- * gates product state rather than where someone is looking. Nothing renders this yet;
- * it is populated so cursors and spectate mode are additive later.
+ * Off the command path, since every tier broadcasts where it is looking. Nothing renders
+ * this yet; it is populated so cursors and spectate mode are additive later.
  */
 export const usePresenceBroadcast = (
   graph: Graph,

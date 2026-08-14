@@ -48,7 +48,9 @@ export const manifests = {
   },
   'avl-trees': {
     id: 'avl-trees',
-    multiplayer: true,
+    // false until we implement pausing inbound socket packets. basically we must pause listening and
+    // sending events on the client when the simulation is activated and resume with a force push of the post-sim state
+    multiplayer: false,
     name: 'Magic AVL Trees',
     navigation: {
       slug: 'trees',

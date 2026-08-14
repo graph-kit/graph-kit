@@ -1,14 +1,10 @@
 import { ProductId } from '@multiplayer/protocol/room';
 
-/**
- * what the harness knows about one product's server state: how far it has caught up,
- * and whether it is currently ignoring the room entirely
- */
+/** what the harness knows about one product's server state: how far it has caught up */
 type ProductSync = {
   /** the last version this client successfully applied, not merely received */
   version: number;
   stateHash: string;
-  suspended: boolean;
 };
 
 /** what a client should do with an inbound relay */
@@ -22,10 +18,6 @@ export type SyncTracker = {
   /** marks an inbound apply so outbound encoders can skip the echo it would cause */
   applyRemote: <Result>(apply: () => Result) => Result;
   isApplyingRemote: () => boolean;
-  /** client side only: the server keeps broadcasting either way */
-  suspend: (productId: ProductId) => void;
-  resume: (productId: ProductId) => void;
-  isSuspended: (productId: ProductId) => boolean;
   /** after a successful apply, never on receipt, so a failed apply leaves a gap */
   recordApplied: (
     productId: ProductId,
@@ -45,7 +37,6 @@ export type SyncTracker = {
 const emptySync = (): ProductSync => ({
   version: 0,
   stateHash: '',
-  suspended: false,
 });
 
 export const createSyncTracker = (): SyncTracker => {
@@ -79,16 +70,6 @@ export const createSyncTracker = (): SyncTracker => {
 
     isApplyingRemote: () => applyDepth > 0,
 
-    suspend: (productId) => {
-      syncFor(productId).suspended = true;
-    },
-
-    resume: (productId) => {
-      syncFor(productId).suspended = false;
-    },
-
-    isSuspended: (productId) => syncFor(productId).suspended,
-
     recordApplied: (productId, version, stateHash) => {
       const sync = syncFor(productId);
       sync.version = version;
@@ -97,7 +78,6 @@ export const createSyncTracker = (): SyncTracker => {
 
     verdictFor: (productId, version) => {
       const sync = syncFor(productId);
-      if (sync.suspended) return 'ignore';
       // a replay of something already applied, which dedupe on the server should
       // prevent but which must never be applied twice regardless
       if (version <= sync.version) return 'ignore';

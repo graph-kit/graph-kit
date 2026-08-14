@@ -146,31 +146,12 @@ describe('room lifecycle', () => {
 });
 
 describe('product layer privilege', () => {
-  it('drops patches from a read tier joiner', async () => {
-    const host = await connectClient();
-    const { roomId } = await startRoom(host);
-    const student = await connectClient();
-    await joinRoom(student, roomId);
-
-    const noRelay = expectNoEvent(host, 'serverStatePatched');
-    student.emit('patchServerState', {
-      payloadId: 'payload-1',
-      productId: 'traversals',
-      ops: [{ op: 'add', path: '/core/nodes/b', value: { x: 9 } }],
-    });
-    await noRelay;
-  });
-
-  it('relays patches once the joiner is promoted to write', async () => {
+  it('relays patches from a joiner, who arrives able to write', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
     const student = await connectClient();
     const joined = await joinRoom(student, roomId);
     if (!joined.joined) throw new Error('expected join to succeed');
-
-    const rosterUpdated = nextEvent(student, 'rosterChanged');
-    host.emit('setTier', { userId: joined.userId, tier: 'write' });
-    await rosterUpdated;
 
     const relayed = nextEvent(host, 'serverStatePatched');
     student.emit('patchServerState', {
@@ -183,6 +164,20 @@ describe('product layer privilege', () => {
     expect(relay.payloadId).toBe('payload-2');
     expect(relay.version).toBe(2);
     expect(relay.ops).toHaveLength(1);
+  });
+
+  it('drops patches from a socket that never joined the room', async () => {
+    const host = await connectClient();
+    await startRoom(host);
+    const stranger = await connectClient();
+
+    const noRelay = expectNoEvent(host, 'serverStatePatched');
+    stranger.emit('patchServerState', {
+      payloadId: 'payload-1',
+      productId: 'traversals',
+      ops: [{ op: 'add', path: '/core/nodes/b', value: { x: 9 } }],
+    });
+    await noRelay;
   });
 });
 
@@ -206,7 +201,7 @@ describe('renaming', () => {
     expect(roster.roster[joined.userId]?.displayName).toBe('Ada');
   });
 
-  // renaming authorizes nothing, so read tier can do it like anyone else
+  // renaming authorizes nothing, so the lowest tier can do it like anyone else
   it('is not gated by tier', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
@@ -216,7 +211,7 @@ describe('renaming', () => {
     const joined = await joinRoom(student, roomId);
     if (!joined.joined) throw new Error('expected join to succeed');
     await joinRoster;
-    expect(joined.data.roster[joined.userId]?.tier).toBe('read');
+    expect(joined.data.roster[joined.userId]?.tier).toBe('write');
 
     const renamed = nextEvent(host, 'rosterChanged');
     student.emit('setDisplayName', { displayName: 'Grace' });

@@ -113,20 +113,17 @@ export type MultiplayerControls = {
   /** true while the server is about to say what this product should show */
   awaitingServerState: Ref<boolean>;
 
-  /** a no-op when suspended, or when the change came from the room itself */
+  /** a no-op when the change came from the room itself */
   sendOps: (productId: ProductId, ops: PatchOp[]) => void;
   /** overwrites this product's server state with the host's, for changes no op describes */
   sendReplacement: (productId: ProductId) => void;
 
-  suspend: (productId: ProductId) => void;
-  resume: (productId: ProductId) => void;
-  isSuspended: (productId: ProductId) => boolean;
   isApplyingRemote: () => boolean;
 
   /** pulls this product's server state back down when local has silently diverged */
   resyncIfDrifted: (productId: ProductId) => void;
 
-  /** ungated by tier and unaffected by suspension, unlike everything above */
+  /** ungated by tier, unlike everything above */
   updatePresence: (entry: PresenceEntry) => void;
 };
 
@@ -467,7 +464,7 @@ export const createMultiplayer = (options: {
 
     sendOps: (productId: ProductId, ops: PatchOp[]) => {
       if (!socket || !inRoom.value) return;
-      if (sync.isApplyingRemote() || sync.isSuspended(productId)) return;
+      if (sync.isApplyingRemote()) return;
       if (ops.length === 0) return;
 
       socket.emit('patchServerState', {
@@ -489,13 +486,10 @@ export const createMultiplayer = (options: {
       });
     },
 
-    suspend: sync.suspend,
-    resume: sync.resume,
-    isSuspended: sync.isSuspended,
     isApplyingRemote: sync.isApplyingRemote,
 
     resyncIfDrifted: (productId: ProductId) => {
-      if (!inRoom.value || sync.isSuspended(productId)) return;
+      if (!inRoom.value) return;
       if (!sync.hasDrifted(productId, hashServerState(encodeActiveState())))
         return;
 

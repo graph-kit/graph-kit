@@ -1,5 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
-import { DocUpdate } from '@multiplayer/protocol/doc';
+import { DocUpdate, toDocUpdate } from '@multiplayer/protocol/doc';
 import { JoinResult } from '@multiplayer/protocol/events';
 import {
   PresenceEntry,
@@ -146,7 +146,7 @@ export const createMultiplayer = (options: {
     adoptMembership(result);
     // absent when nobody has opened this product in the room yet, which leaves the
     // document empty and makes the host seed it instead
-    if (result.doc) Y.applyUpdate(doc, result.doc, REMOTE_ORIGIN);
+    if (result.doc) Y.applyUpdate(doc, toDocUpdate(result.doc), REMOTE_ORIGIN);
   };
 
   const attachHandlers = (activeSocket: MultiplayerSocket) => {
@@ -164,7 +164,7 @@ export const createMultiplayer = (options: {
       // arriving for a product that is not on screen is normal during navigation, and
       // entering re-fetches, so there is nothing to do and nothing to report
       if (activeProductId.value !== productId) return;
-      Y.applyUpdate(requireDoc(), update, REMOTE_ORIGIN);
+      Y.applyUpdate(requireDoc(), toDocUpdate(update), REMOTE_ORIGIN);
     });
 
     // a reconnect can have missed updates entirely, so it asks for the difference
@@ -178,7 +178,7 @@ export const createMultiplayer = (options: {
         { productId, stateVector: Y.encodeStateVector(doc) },
         (update) => {
           if (!update) return;
-          Y.applyUpdate(doc, update, REMOTE_ORIGIN);
+          Y.applyUpdate(doc, toDocUpdate(update), REMOTE_ORIGIN);
         },
       );
     });

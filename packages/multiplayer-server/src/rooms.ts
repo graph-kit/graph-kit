@@ -1,4 +1,8 @@
-import { DocStateVector, DocUpdate } from '@multiplayer/protocol/doc';
+import {
+  DocStateVector,
+  DocUpdate,
+  toDocUpdate,
+} from '@multiplayer/protocol/doc';
 import {
   ProductId,
   RoomData,
@@ -49,7 +53,7 @@ export const createRoom = (options: {
 
 const docFromUpdate = (update: DocUpdate): Y.Doc => {
   const doc = new Y.Doc();
-  Y.applyUpdate(doc, update);
+  Y.applyUpdate(doc, toDocUpdate(update));
   return doc;
 };
 
@@ -109,7 +113,7 @@ export const encodeProductDocDiff = (
 ): DocUpdate | null => {
   const doc = room.products[productId];
   if (!doc) return null;
-  return Y.encodeStateAsUpdate(doc, stateVector);
+  return Y.encodeStateAsUpdate(doc, toDocUpdate(stateVector));
 };
 
 /**
@@ -123,7 +127,7 @@ export const applyProductDocUpdate = (
   update: DocUpdate,
 ): void => {
   const doc = (room.products[productId] ??= new Y.Doc());
-  Y.applyUpdate(doc, update);
+  Y.applyUpdate(doc, toDocUpdate(update));
 };
 
 /** ungated: a display name authorizes nothing */

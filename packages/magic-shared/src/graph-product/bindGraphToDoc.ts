@@ -108,8 +108,7 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
         nodes: [...nodes.entries()].map(([id, node]) => ({
           id,
           label: node.label,
-          x: node.x,
-          y: node.y,
+          position: { x: node.x, y: node.y },
         })),
         edges: [...edges.entries()].map(([id, edge]) => ({
           id,
@@ -140,7 +139,11 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
 
       const addedNodes = [...nodes.entries()]
         .filter(([id]) => !graphNodeIds.has(id))
-        .map(([id, node]) => ({ id, label: node.label, x: node.x, y: node.y }));
+        .map(([id, node]) => ({
+          id,
+          label: node.label,
+          position: { x: node.x, y: node.y },
+        }));
       const addedEdges = [...edges.entries()]
         .filter(([id]) => !graphEdgeIds.has(id))
         .map(([id, edge]) => ({
@@ -193,22 +196,29 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
     edges.observe(onChange);
   };
 
+  // rawEvents rather than graph.events, whose subscribe registers an onUnmounted per
+  // call: binding happens after the join resolves, so there is no component instance
+  // left to attach to. these live as long as the graph does, which is the intent anyway.
+  //
   // subscription driven rather than watcher driven: the suppression flag only holds
   // because graph events emit synchronously
   const subscribeGraph = () => {
-    graph.events.subscribe('onElementsAdded', ({ addedNodes, addedEdges }) => {
-      intoDoc(() => {
-        for (const node of addedNodes) {
-          nodes.set(node.id, nodeFromGraph(graph, node.id));
-        }
-        for (const added of addedEdges) {
-          const edge = edgeFromGraph(graph, added.id);
-          if (edge) edges.set(added.id, edge);
-        }
-      });
-    });
+    graph.rawEvents.subscribe(
+      'onElementsAdded',
+      ({ addedNodes, addedEdges }) => {
+        intoDoc(() => {
+          for (const node of addedNodes) {
+            nodes.set(node.id, nodeFromGraph(graph, node.id));
+          }
+          for (const added of addedEdges) {
+            const edge = edgeFromGraph(graph, added.id);
+            if (edge) edges.set(added.id, edge);
+          }
+        });
+      },
+    );
 
-    graph.events.subscribe(
+    graph.rawEvents.subscribe(
       'onElementsRemoved',
       ({ removedNodeIds, removedEdgeIds }) => {
         intoDoc(() => {
@@ -220,7 +230,7 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
     );
 
     // the settled move rather than onNodeMoveStream, which would send one message per frame
-    graph.events.subscribe('onNodePositionsCommitted', (positions) => {
+    graph.rawEvents.subscribe('onNodePositionsCommitted', (positions) => {
       intoDoc(() => {
         for (const { nodeId } of positions) {
           if (!nodes.has(nodeId)) continue;
@@ -229,7 +239,7 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
       });
     });
 
-    graph.events.subscribe('onEdgeWeightsChanged', (weights) => {
+    graph.rawEvents.subscribe('onEdgeWeightsChanged', (weights) => {
       intoDoc(() => {
         for (const { edgeId } of weights) {
           const edge = edgeFromGraph(graph, edgeId);
@@ -240,7 +250,7 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
 
     // an undo or a link load replaces the whole graph at once, and there is no per
     // element event describing what changed
-    graph.events.transit.subscribe('onDecoded', writeWholeGraph);
+    graph.rawEvents.transit.subscribe('onDecoded', writeWholeGraph);
   };
 
   if (nodes.size === 0 && edges.size === 0) {

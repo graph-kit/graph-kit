@@ -13,3 +13,15 @@ export type DocUpdate = Uint8Array;
  * `Y.encodeStateVector`, consumed by `Y.encodeStateAsUpdate`.
  */
 export type DocStateVector = Uint8Array;
+
+/**
+ * Normalises what socket.io hands back, which is a Buffer under node but an ArrayBuffer
+ * in a browser. Yjs reads a Uint8Array and nothing else: an ArrayBuffer throws
+ * "Unexpected end of array" rather than decoding to nothing, so every update coming off
+ * the wire passes through here.
+ *
+ * A Buffer already is a Uint8Array, which is why a node client never sees the problem
+ * and why no test running one can catch it.
+ */
+export const toDocUpdate = (data: DocUpdate | ArrayBufferLike): DocUpdate =>
+  data instanceof Uint8Array ? data : new Uint8Array(data);

@@ -7,6 +7,9 @@
   import { useEdgeFrequency } from './chips/edgeFrequency.ts';
 
   const graph = useProvidedGraph();
+  const isGraphConnected = computed(
+    () => graph.characteristics.connected.value.isConnected,
+  );
 
   const { totalMsts, frequencyOf } = useEdgeFrequency(graph);
 
@@ -20,7 +23,7 @@
 
   const displayString = computed(
     () => `In ${frequencyOf(edgeId.value)} of ${totalMsts.value} Minimum Spanning
-    Trees`,
+    ${isGraphConnected.value ? 'Trees' : 'Forests'}`,
   );
 </script>
 

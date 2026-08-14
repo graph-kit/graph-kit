@@ -1,5 +1,5 @@
 import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
-import { Graph } from '@magic/shared/graph';
+import { Graph, useGraph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
 import { KruskalsFrame, PrimsFrame } from './frame.ts';
@@ -71,6 +71,10 @@ const highlights = {
 const kruskalsHighlights = {
   ...sharedHighlights,
   ...considerAndExcludeHighlights(kruskalsSlotIds),
+  forest: {
+    tooltipLabel:
+      'The edges already in the minimum spanning forest. A forest consists of multiple minimum spanning trees since the graph is disconnected',
+  },
 };
 
 export const primsExplainer =
@@ -148,7 +152,7 @@ export const primsExplainer =
       const count = frame.nodes.length;
       const plural = count > 1;
       return {
-        content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the [Tree]: the graph is disconnected`,
+        content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the [Tree] because the graph is disconnected`,
         highlights: [highlights.tree],
       };
     }
@@ -169,9 +173,12 @@ export const kruskalsExplainer =
       const cost = frame.treeEdgeIds
         .map((id) => graph.getEdge(id).weight)
         .reduce((sum, weight) => sum.add(weight), new Fraction(0));
+      const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `Done! The [Tree] is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of ${cost}`,
-        highlights: [kruskalsHighlights.tree],
+        content: `Done! The ${isConnected ? '[Tree]' : '[Forest]'} is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of ${cost}`,
+        highlights: isConnected
+          ? [kruskalsHighlights.tree]
+          : [kruskalsHighlights.forest],
       };
     }
 
@@ -183,17 +190,23 @@ export const kruskalsExplainer =
     }
 
     if (frame.type === 'accept-edge') {
+      const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `${describeEdge(graph, frame.edge)} connects two parts of the graph that were still separate, so it's [Added] to the [Tree]`,
-        highlights: [kruskalsHighlights.added, kruskalsHighlights.tree],
+        content: `${describeEdge(graph, frame.edge)} connects two parts of the graph that were still separate, so it's [Added] to the ${isConnected ? '[Tree]' : '[Forest]'}`,
+        highlights: isConnected
+          ? [kruskalsHighlights.added, kruskalsHighlights.tree]
+          : [kruskalsHighlights.added, kruskalsHighlights.forest],
       };
     }
 
     if (frame.type === 'reject-edge') {
       const excluded = describeEdge(graph, frame.edge);
+      const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `Edge ${excluded} is [Excluded] because both ends are already in the [Tree], therefore it would cause a loop`,
-        highlights: [highlights.excluded, highlights.tree],
+        content: `Edge ${excluded} is [Excluded] because both ends are already in the ${isConnected ? '[Tree]' : '[Forest]'}, therefore it would cause a loop`,
+        highlights: isConnected
+          ? [kruskalsHighlights.excluded, kruskalsHighlights.tree]
+          : [kruskalsHighlights.excluded, kruskalsHighlights.forest],
       };
     }
 
@@ -209,9 +222,12 @@ export const kruskalsExplainer =
     if (frame.type === 'unreachable') {
       const count = frame.nodes.length;
       const plural = count > 1;
+      const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the [Tree]: the graph is disconnected`,
-        highlights: [kruskalsHighlights.tree],
+        content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the ${isConnected ? '[Tree]' : '[Forest]'} because it has no edges attached to it.`,
+        highlights: isConnected
+          ? [kruskalsHighlights.tree]
+          : [kruskalsHighlights.forest],
       };
     }
   };

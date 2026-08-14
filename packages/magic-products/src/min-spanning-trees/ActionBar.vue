@@ -5,6 +5,8 @@
   import { useProvidedMagicGraph } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities';
 
+  import { computed } from 'vue';
+
   import {
     useKruskalsSimulation,
     usePrimsSimulation,
@@ -28,11 +30,25 @@
     graph.magic.simulation.start(prims.prims);
     graph.focus.clear();
   };
+  const isGraphConnected = computed(
+    () => graph.characteristics.connected.value.isConnected,
+  );
+
+  const kruskalsButtonLabel = computed(
+    () =>
+      `Generates a minimum spanning ${isGraphConnected.value ? 'tree' : 'forest'}`,
+  );
 </script>
 
 <template>
   <HStackVue v-if="!graph.magic.simulation.current.value">
-    <Tooltip :label="focusedNode ? undefined : 'Select a node to start'">
+    <Tooltip
+      :label="
+        focusedNode
+          ? 'Generates a minimum spanning tree'
+          : 'Select a node to start'
+      "
+    >
       <template #trigger>
         <span class="inline-block">
           <Button
@@ -45,11 +61,15 @@
         </span>
       </template>
     </Tooltip>
-    <Button
-      @click="startKruskals"
-      class="text-lg"
-    >
-      Run Kruskal's
-    </Button>
+    <Tooltip :label="kruskalsButtonLabel">
+      <template #trigger>
+        <Button
+          @click="startKruskals"
+          class="text-lg"
+        >
+          Run Kruskal's
+        </Button>
+      </template>
+    </Tooltip>
   </HStackVue>
 </template>

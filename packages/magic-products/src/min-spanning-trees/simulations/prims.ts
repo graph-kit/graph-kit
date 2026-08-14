@@ -7,15 +7,6 @@ import {
   PrimsStep,
 } from './frame.ts';
 
-const shuffleEdges = (edges: GEdge[]) => {
-  const shuffledEdges = [...edges];
-  for (let i = shuffledEdges.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledEdges[i], shuffledEdges[j]] = [shuffledEdges[j], shuffledEdges[i]];
-  }
-  return shuffledEdges;
-};
-
 export const prims: PrimsFunction =
   (graph, startNodeId) => (frameCollector) => {
     const nodeIds = graph.nodes.value.map((node) => node.id);

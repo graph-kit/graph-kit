@@ -1,4 +1,4 @@
-import { GNode } from '@magic/shared/graph';
+import { GEdge, GNode } from '@magic/shared/graph';
 
 import {
   KruskalsFrame,
@@ -6,6 +6,15 @@ import {
   KruskalsHighlights,
   KruskalsStep,
 } from './frame.ts';
+
+const shuffleEdges = (edges: GEdge[]) => {
+  const shuffledEdges = [...edges];
+  for (let i = shuffledEdges.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledEdges[i], shuffledEdges[j]] = [shuffledEdges[j], shuffledEdges[i]];
+  }
+  return shuffledEdges;
+};
 
 export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
   const nodeIds = graph.nodes.value.map((node) => node.id);
@@ -44,19 +53,9 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
     return true;
   };
 
-  /*
-    stable-sorting a pre-shuffled array randomizes which edge wins a weight
-    tie, the same way prims picks randomly among tied frontier candidates.
-    without this, ties would always resolve in edge-creation order, and a
-    graph with many equally-valid MSTs would produce the same "arbitrary"
-    tree almost every run
-  */
-  const shuffled = [...graph.edges.value];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  const sortedEdges = shuffled.toSorted((a, b) => a.weight.compare(b.weight));
+  const sortedEdges = [...graph.edges.value].toSorted((a, b) =>
+    a.weight.compare(b.weight),
+  );
   const sortedEdgeIds = sortedEdges.map((edge) => edge.id);
 
   const treeNodes = new Set<GNode['id']>();

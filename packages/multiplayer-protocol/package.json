@@ -15,6 +15,7 @@
   "scripts": {
     "build:types": "vue-tsc -b tsconfig.json"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "yjs": "^13.6.32"
+  }
 }

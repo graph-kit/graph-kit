@@ -10,6 +10,7 @@ import {
 import { RoomMembership } from '@multiplayer/protocol/room';
 import { Socket, io as connect } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import * as Y from 'yjs';
 
 import { createSocketServer } from './sockets.ts';
 
@@ -60,6 +61,26 @@ const expectNoEvent = async <Event extends keyof ServerToClientEvents>(
   expect(seen).toBe(false);
 };
 
+/** a document holding one node, in the shape a graph product would write */
+const seedDoc = () => {
+  const doc = new Y.Doc();
+  doc.getMap('nodes').set('a', { x: 0 });
+  return doc;
+};
+
+const readNodes = (update: Uint8Array) => {
+  const doc = new Y.Doc();
+  Y.applyUpdate(doc, update);
+  return doc.getMap('nodes').toJSON();
+};
+
+/** one node added on top of the seed, as a peer's update would arrive */
+const addNodeUpdate = (id: string) => {
+  const doc = new Y.Doc();
+  doc.getMap('nodes').set(id, { x: 9 });
+  return Y.encodeStateAsUpdate(doc);
+};
+
 const startRoom = (socket: ClientSocket) =>
   new Promise<RoomMembership>((resolve) => {
     socket.emit(
@@ -67,7 +88,7 @@ const startRoom = (socket: ClientSocket) =>
       {
         displayName: 'Professor',
         productId: 'traversals',
-        state: { core: { nodes: { a: { x: 0 } } } },
+        doc: Y.encodeStateAsUpdate(seedDoc()),
       },
       resolve,
     );
@@ -99,7 +120,7 @@ afterEach(async () => {
 });
 
 describe('room lifecycle', () => {
-  it('hands a joiner the host seeded server state', async () => {
+  it('hands a joiner the host seeded document', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
 
@@ -108,11 +129,7 @@ describe('room lifecycle', () => {
 
     expect(result.joined).toBe(true);
     if (!result.joined) return;
-    expect(result.serverState?.state).toEqual({
-      core: { nodes: { a: { x: 0 } } },
-    });
-    expect(result.serverState?.version).toBe(1);
-    expect(result.serverState?.stateHash).toEqual(expect.any(String));
+    expect(readNodes(result.doc!)).toEqual({ a: { x: 0 } });
   });
 
   it('treats a dead room id as a non event rather than an error', async () => {
@@ -146,38 +163,66 @@ describe('room lifecycle', () => {
 });
 
 describe('product layer privilege', () => {
-  it('relays patches from a joiner, who arrives able to write', async () => {
+  it('relays updates from a joiner, who arrives able to write', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
     const student = await connectClient();
     const joined = await joinRoom(student, roomId);
     if (!joined.joined) throw new Error('expected join to succeed');
 
-    const relayed = nextEvent(host, 'serverStatePatched');
-    student.emit('patchServerState', {
-      payloadId: 'payload-2',
+    const relayed = nextEvent(host, 'docUpdated');
+    student.emit('docUpdate', {
       productId: 'traversals',
-      ops: [{ op: 'add', path: '/core/nodes/b', value: { x: 9 } }],
+      update: addNodeUpdate('b'),
     });
 
     const relay = await relayed;
-    expect(relay.payloadId).toBe('payload-2');
-    expect(relay.version).toBe(2);
-    expect(relay.ops).toHaveLength(1);
+    expect(relay.productId).toBe('traversals');
+    expect(readNodes(relay.update)).toEqual({ b: { x: 9 } });
   });
 
-  it('drops patches from a socket that never joined the room', async () => {
+  it('drops updates from a socket that never joined the room', async () => {
     const host = await connectClient();
     await startRoom(host);
     const stranger = await connectClient();
 
-    const noRelay = expectNoEvent(host, 'serverStatePatched');
-    stranger.emit('patchServerState', {
-      payloadId: 'payload-1',
+    const noRelay = expectNoEvent(host, 'docUpdated');
+    stranger.emit('docUpdate', {
       productId: 'traversals',
-      ops: [{ op: 'add', path: '/core/nodes/b', value: { x: 9 } }],
+      update: addNodeUpdate('b'),
     });
     await noRelay;
+  });
+
+  // the author never hears its own relay, so a reconnect asks for what it is missing
+  it('answers a state vector with only the missing updates', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoom(student, roomId);
+    if (!joined.joined) throw new Error('expected join to succeed');
+
+    const caughtUp = new Y.Doc();
+    Y.applyUpdate(caughtUp, joined.doc!);
+
+    host.emit('docUpdate', {
+      productId: 'traversals',
+      update: addNodeUpdate('b'),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const missing = await new Promise<Uint8Array | null>((resolve) => {
+      student.emit(
+        'syncDoc',
+        {
+          productId: 'traversals',
+          stateVector: Y.encodeStateVector(caughtUp),
+        },
+        resolve,
+      );
+    });
+
+    expect(readNodes(missing!)).toEqual({ b: { x: 9 } });
   });
 });
 
@@ -241,7 +286,7 @@ describe('renaming', () => {
   });
 });
 
-describe('server state routing', () => {
+describe('document routing', () => {
   const enterProduct = (socket: ClientSocket, productId: string) =>
     new Promise<JoinResult>((resolve) => {
       socket.emit('enterProduct', { productId }, resolve);
@@ -249,24 +294,19 @@ describe('server state routing', () => {
 
   // the server routes off the roster it already maintains, so nobody pays for
   // traffic on a product they are not looking at
-  it('does not relay a patch to someone on a different product', async () => {
+  it('does not relay an update to someone on a different product', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
     const student = await connectClient();
     const joined = await joinRoom(student, roomId);
     if (!joined.joined) throw new Error('expected join to succeed');
 
-    const rosterUpdated = nextEvent(student, 'rosterChanged');
-    host.emit('setTier', { userId: joined.userId, tier: 'write' });
-    await rosterUpdated;
-
     await enterProduct(student, 'basic-trees');
 
-    const noRelay = expectNoEvent(student, 'serverStatePatched');
-    host.emit('patchServerState', {
-      payloadId: 'payload-4',
+    const noRelay = expectNoEvent(student, 'docUpdated');
+    host.emit('docUpdate', {
       productId: 'traversals',
-      ops: [{ op: 'add', path: '/core/nodes/b', value: { x: 1 } }],
+      update: addNodeUpdate('b'),
     });
     await noRelay;
   });
@@ -280,14 +320,13 @@ describe('server state routing', () => {
     await enterProduct(student, 'basic-trees');
     await enterProduct(student, 'traversals');
 
-    const relayed = nextEvent(student, 'serverStatePatched');
-    host.emit('patchServerState', {
-      payloadId: 'payload-5',
+    const relayed = nextEvent(student, 'docUpdated');
+    host.emit('docUpdate', {
       productId: 'traversals',
-      ops: [{ op: 'add', path: '/core/nodes/b', value: { x: 1 } }],
+      update: addNodeUpdate('b'),
     });
 
-    expect((await relayed).payloadId).toBe('payload-5');
+    expect(readNodes((await relayed).update)).toEqual({ b: { x: 9 } });
   });
 
   it('reports the move on the roster so peers can see where someone went', async () => {
@@ -310,36 +349,15 @@ describe('server state routing', () => {
   });
 });
 
-describe('wholesale override', () => {
-  // replaceServerState always comes from the client showing that product, so the emitter is
-  // in the product channel and peers on that product hear it
-  it('creates server state lazily and relays the replacement', async () => {
-    const host = await connectClient();
-    const { roomId } = await startRoom(host);
-    const student = await connectClient();
-    await joinRoom(student, roomId);
-
-    const relayed = nextEvent(student, 'serverStateReplaced');
-    host.emit('replaceServerState', {
-      payloadId: 'payload-3',
-      productId: 'traversals',
-      state: { core: { nodes: {} } },
-    });
-
-    const relay = await relayed;
-    expect(relay.productId).toBe('traversals');
-    expect(relay.version).toBe(2);
-    expect(relay.state).toEqual({ core: { nodes: {} } });
-  });
-
+describe('lazy document creation', () => {
+  // no product needs a declarable empty state, so the first update is what creates it
   it('seeds a product nobody is on yet, reaching whoever enters next', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
 
-    host.emit('replaceServerState', {
-      payloadId: 'payload-6',
+    host.emit('docUpdate', {
       productId: 'basic-trees',
-      state: { core: { nodes: { seeded: {} } } },
+      update: addNodeUpdate('seeded'),
     });
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -351,8 +369,6 @@ describe('wholesale override', () => {
 
     expect(entered.joined).toBe(true);
     if (!entered.joined) return;
-    expect(entered.serverState?.state).toEqual({
-      core: { nodes: { seeded: {} } },
-    });
+    expect(readNodes(entered.doc!)).toEqual({ seeded: { x: 9 } });
   });
 });

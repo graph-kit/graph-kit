@@ -1,4 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
+import { DocUpdate } from '@multiplayer/protocol/doc';
 import { JoinResult } from '@multiplayer/protocol/events';
 import {
   PresenceEntry,
@@ -6,19 +7,13 @@ import {
   RoomMembership,
   UserId,
 } from '@multiplayer/protocol/room';
-import {
-  ServerState,
-  hashServerState,
-} from '@multiplayer/protocol/server-state';
 import { DEFAULT_TIER } from '@multiplayer/protocol/tiers';
 import { io as connect } from 'socket.io-client';
+import * as Y from 'yjs';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { MultiplayerHostField } from '../product/types.ts';
 import { UNNAMED_DISPLAY_NAME } from './constants.ts';
-import { createPayloadSenders } from './sendPayload.ts';
-import { createSyncTracker } from './sync-tracker.ts';
 import {
   MultiplayerControls,
   MultiplayerSocket,
@@ -28,6 +23,13 @@ import {
   RoomState,
 } from './types.ts';
 import { roomIdUrl } from './url.ts';
+
+/**
+ * Marks a transaction as coming from the room, so the outbound handler can skip the echo
+ * it would otherwise send straight back. Replaces the re-entrancy flag the op based sync
+ * needed, and unlike that flag it survives anything asynchronous a host does on adopt.
+ */
+const REMOTE_ORIGIN = Symbol('multiplayer/remote');
 
 /**
  * The room connection, owned once at the application root. Every product is its own
@@ -43,7 +45,6 @@ export const createMultiplayer = (options: {
   onMovedToProduct?: (productId: ProductId) => void;
 }): MultiplayerControls => {
   const { onMovedToProduct } = options;
-  const sync = createSyncTracker();
 
   // read up front rather than discovered on mount, so a product that is about to be
   // handed room state never paints local content first
@@ -54,14 +55,10 @@ export const createMultiplayer = (options: {
   const membership = ref<RoomMembership | null>(null);
   const presence = ref<Record<UserId, PresenceEntry>>({});
 
-  // the product currently mounted, and the seam it exposes to us. shallow because the
-  // host holds functions and a graph, none of which should be made reactive
+  // the product currently mounted and the document mirroring it. shallow because a
+  // document holds its own listeners and must never be made reactive
   const activeProductId = ref<ProductId | null>(null);
-  const activeHost = shallowRef<MultiplayerHostField<any> | null>(null);
-
-  // guards the resync path against re-entering itself, which matters most when a
-  // resync fails validation: nothing re-arms, so a bad payload cannot loop
-  const resyncInFlight = new Set<ProductId>();
+  const activeDoc = shallowRef<Y.Doc | null>(null);
 
   let socket: MultiplayerSocket | null = null;
 
@@ -71,18 +68,9 @@ export const createMultiplayer = (options: {
   const requireSocket = () =>
     nullThrows(socket, 'multiplayer: acted on a room with no socket');
 
-  /** the mounted product's own state, in the only shape the room knows */
-  const encodeActiveState = () =>
-    nullThrows(
-      activeHost.value,
-      'multiplayer: encoded state with no product mounted',
-    ).encode();
-
-  const payloadSenders = createPayloadSenders({
-    requireSocket,
-    canSend: () => inRoom.value && !sync.isApplyingRemote(),
-    encodeActiveState,
-  });
+  /** the mounted product's document, which exists for as long as a product is mounted */
+  const requireDoc = () =>
+    nullThrows(activeDoc.value, 'multiplayer: no product mounted');
 
   // built once rather than per recompute, so the identity a consumer holds onto stays
   // stable across every roster and presence change
@@ -127,68 +115,38 @@ export const createMultiplayer = (options: {
     awaitingServerState.value = false;
     membership.value = null;
     presence.value = {};
-    resyncInFlight.clear();
-    sync.clear();
   };
 
   /**
-   * Adopts authoritative state for a product. Returns whether it landed, so callers can
-   * tell a refused payload from an applied one without inspecting state themselves.
+   * Opens the document for a mounting product. Local changes flow out from here on, and
+   * remote ones land through {@link REMOTE_ORIGIN}.
    */
-  const adoptServerState = (options: {
-    productId: ProductId;
-    state: ServerState;
-    version: number;
-    stateHash: string;
-  }) => {
-    const { productId, state, version, stateHash } = options;
-    const host = activeHost.value;
-    // arriving for a product that is not on screen is normal during navigation, and
-    // entering re-fetches, so there is nothing to do and nothing to report
-    if (!host || activeProductId.value !== productId) return false;
+  const openDoc = (productId: ProductId) => {
+    const doc = new Y.Doc();
+    activeDoc.value = doc;
 
-    if (!host.validate(state)) {
-      // an invariant violation, not a network condition: state routed under the wrong
-      // productId, or a product encoding a shape it does not own. reported here rather
-      // than thrown by the host, since this is the layer that knows the room it came in
-      // under, and the layer that must not retry it
-      console.error(
-        `[multiplayer] refused server state for "${productId}": failed the product's own validation. keys: ${Object.keys(state).join(', ') || '(none)'}`,
-      );
-      return false;
-    }
-
-    sync.applyRemote(() => host.onForceResync(state));
-    sync.reset(productId, version, stateHash);
-    return true;
-  };
-
-  const adoptJoinResult = (productId: ProductId, result: JoinResult) => {
-    if (!result.joined) return;
-
-    adoptMembership(result);
-
-    // absent when nobody has opened this product in the room yet, which is not a
-    // failure: the first write from here creates it
-    if (!result.serverState) {
-      sync.forget(productId);
-      return;
-    }
-
-    adoptServerState({ productId, ...result.serverState });
-  };
-
-  const requestResync = (productId: ProductId) => {
-    if (!socket || resyncInFlight.has(productId)) return;
-
-    resyncInFlight.add(productId);
-    socket.emit('requestServerState', { productId }, (result) => {
-      resyncInFlight.delete(productId);
-      if (!result.joined || !result.serverState) return;
-      // a refusal here is terminal on purpose. re-requesting would fetch the same
-      // payload and refuse it again, so the console error is the end of the line
-      adoptServerState({ productId, ...result.serverState });
+    doc.on('update', (update: DocUpdate, origin: unknown) => {
+      // outside a room the document still tracks the graph, so that opening one can
+      // publish it without asking the host for anything
+      if (origin === REMOTE_ORIGIN || !inRoom.value) return;
+      requireSocket().emit('docUpdate', { productId, update });
     });
+
+    return doc;
+  };
+
+  const closeDoc = () => {
+    activeDoc.value?.destroy();
+    activeDoc.value = null;
+  };
+
+  /** applies what a join handed back, before the host binds and sees the result */
+  const adoptJoinResult = (doc: Y.Doc, result: JoinResult) => {
+    if (!result.joined) return;
+    adoptMembership(result);
+    // absent when nobody has opened this product in the room yet, which leaves the
+    // document empty and makes the host seed it instead
+    if (result.doc) Y.applyUpdate(doc, result.doc, REMOTE_ORIGIN);
   };
 
   const attachHandlers = (activeSocket: MultiplayerSocket) => {
@@ -202,25 +160,27 @@ export const createMultiplayer = (options: {
       presence.value[peerId] = entry;
     });
 
-    activeSocket.on('serverStatePatched', (relay) => {
-      const verdict = sync.verdictFor(relay.productId, relay.version);
-      if (verdict === 'ignore') return;
-      if (verdict === 'resync') return requestResync(relay.productId);
-
-      const host = activeHost.value;
-      if (!host || activeProductId.value !== relay.productId) return;
-
-      console.log('patching server state');
-
-      // ops are applied by whatever the product registered; the version only advances
-      // once that succeeds, so a throwing applier leaves a gap the next relay catches
-      sync.applyRemote(() => host.applyOps(relay.ops));
-      sync.recordApplied(relay.productId, relay.version, relay.stateHash);
+    activeSocket.on('docUpdated', ({ productId, update }) => {
+      // arriving for a product that is not on screen is normal during navigation, and
+      // entering re-fetches, so there is nothing to do and nothing to report
+      if (activeProductId.value !== productId) return;
+      Y.applyUpdate(requireDoc(), update, REMOTE_ORIGIN);
     });
 
-    activeSocket.on('serverStateReplaced', (relay) => {
-      console.log('replacing server state');
-      adoptServerState(relay);
+    // a reconnect can have missed updates entirely, so it asks for the difference
+    // between what the room holds and what this document already has
+    activeSocket.on('connect', () => {
+      const productId = activeProductId.value;
+      if (productId === null || !inRoom.value) return;
+      const doc = requireDoc();
+      activeSocket.emit(
+        'syncDoc',
+        { productId, stateVector: Y.encodeStateVector(doc) },
+        (update) => {
+          if (!update) return;
+          Y.applyUpdate(doc, update, REMOTE_ORIGIN);
+        },
+      );
     });
 
     // the room is gone, so the id in the url is dead. strip it and carry on locally,
@@ -235,8 +195,6 @@ export const createMultiplayer = (options: {
     });
 
     activeSocket.on('movedToProduct', ({ productId }) => {
-      // productId only, never a route: turning it into one is a client concern, and
-      // the mounting product then registers for its own state as on any navigation
       onMovedToProduct?.(productId);
     });
   };
@@ -254,19 +212,18 @@ export const createMultiplayer = (options: {
   const roomActions: RoomActions = {
     start: async ({ productId, displayName }) => {
       const activeSocket = ensureSocket();
-      // the host's current view becomes the seed, so the first frame after starting
-      // matches the last frame before it
-      const state = encodeActiveState();
+      // the mounted product's document is already tracking the graph, so the room opens
+      // on exactly what is on screen
+      const doc = Y.encodeStateAsUpdate(requireDoc());
       const started = await new Promise<RoomMembership>((resolve) => {
         activeSocket.emit(
           'startRoom',
-          { displayName, productId, state },
+          { displayName, productId, doc },
           resolve,
         );
       });
 
       adoptMembership(started);
-      sync.reset(productId, 1, hashServerState(state));
 
       // the id becomes shareable the moment the room exists, and survives a refresh
       roomIdUrl.write(started.roomId);
@@ -286,7 +243,7 @@ export const createMultiplayer = (options: {
         );
       });
 
-      adoptJoinResult(productId, result);
+      adoptJoinResult(requireDoc(), result);
       return result;
     },
 
@@ -301,7 +258,7 @@ export const createMultiplayer = (options: {
     // one call covers the roster update, the traffic routing and the initial state
     enter: async (productId, host) => {
       activeProductId.value = productId;
-      activeHost.value = host;
+      const doc = openDoc(productId);
 
       // resolution happens once for the life of the connection rather than per mount,
       // so navigating between products never re-reads the url or re-joins
@@ -318,6 +275,9 @@ export const createMultiplayer = (options: {
               productId,
               displayName: UNNAMED_DISPLAY_NAME,
             });
+            // bound after the document is populated, so the host adopts the room rather
+            // than seeding it with whatever was on screen
+            host.bind(doc);
             if (result.joined) return 'room';
 
             // a dead room id is a non event: strip it and carry on exactly as if the
@@ -334,20 +294,20 @@ export const createMultiplayer = (options: {
 
       // the ordinary outcome for every page load outside a room, and the answer the
       // harness needs before it restores anything local
-      if (!inRoom.value) return 'local';
-
-      // being in a room without a socket is a broken invariant rather than a reason
-      // to quietly fall back to local
-      const activeSocket = requireSocket();
+      if (!inRoom.value) {
+        host.bind(doc);
+        return 'local';
+      }
 
       // navigating inside a room waits too: the new product mounts empty and the
       // server is what fills it
       awaitingServerState.value = true;
       try {
         const result = await new Promise<JoinResult>((resolve) => {
-          activeSocket.emit('enterProduct', { productId }, resolve);
+          requireSocket().emit('enterProduct', { productId }, resolve);
         });
-        adoptJoinResult(productId, result);
+        adoptJoinResult(doc, result);
+        host.bind(doc);
         return 'room';
       } finally {
         awaitingServerState.value = false;
@@ -358,7 +318,7 @@ export const createMultiplayer = (options: {
     leave: (productId) => {
       if (activeProductId.value !== productId) return;
       activeProductId.value = null;
-      activeHost.value = null;
+      closeDoc();
     },
   };
 
@@ -371,20 +331,5 @@ export const createMultiplayer = (options: {
     room,
 
     awaitingServerState,
-
-    ...payloadSenders,
-
-    isApplyingRemote: sync.isApplyingRemote,
-
-    resyncIfDrifted: (productId: ProductId) => {
-      if (!inRoom.value) return;
-      if (!sync.hasDrifted(productId, hashServerState(encodeActiveState())))
-        return;
-
-      console.warn(
-        `[multiplayer] local state for "${productId}" diverged from the room despite an unbroken version sequence, resyncing`,
-      );
-      requestResync(productId);
-    },
   };
 };

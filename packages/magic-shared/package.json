@@ -148,6 +148,7 @@
     "@canvas/primitives": "workspace:*",
     "@canvas/surface": "workspace:*",
     "@core/components": "workspace:*",
+    "@core/themes": "workspace:*",
     "@core/utils": "workspace:*",
     "@graph/core": "workspace:*",
     "@graph/create-graph": "workspace:*",
@@ -156,18 +157,17 @@
     "@graph/primitives": "workspace:*",
     "@graph/render-functions": "workspace:*",
     "@graph/theme-presets": "workspace:*",
-    "@core/themes": "workspace:*",
     "@graph/vue": "workspace:*",
     "@mdi/js": "^7.4.47",
     "@multiplayer/protocol": "workspace:*",
     "@vueuse/core": "catalog:",
     "ctrl-keys": "^1.0.6",
-    "fast-json-patch": "^3.1.1",
     "fraction.js": "^5.3.4",
     "katex": "^0.18.1",
     "lz-string": "^1.5.0",
     "mathlive": "^0.110.0",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "yjs": "^13.6.32"
   },
   "devDependencies": {
     "nuxt": "^4.1.2",

@@ -2,16 +2,10 @@ import { useGraph } from '../graph/useGraph.ts';
 import { MagicProductHost } from '../product/types.ts';
 import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
+import { bindGraphToDoc } from './bindGraphToDoc.ts';
 import { provideGraph } from './context.ts';
-import { applyOpsToGraph } from './server-state-ops.ts';
-import {
-  isGraphServerState,
-  serverStateFromTransit,
-  transitFromServerState,
-} from './server-state.ts';
 import { useGraphProductShortcuts } from './shortcuts.ts';
 import { GraphProductOptions, MagicGraph } from './types.ts';
-import { useGraphOutboundSync } from './useGraphOutboundSync.ts';
 
 /** adapts a graph to the harness host interface, see {@link useMagicProduct} */
 export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
@@ -26,16 +20,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {
-      encode: () => serverStateFromTransit(graph.transit.encode()),
-      validate: isGraphServerState,
-      applyOps: (ops) => applyOpsToGraph(graph, ops),
-      onForceResync: (state) => {
-        // the local payload supplies the sections the room deliberately omits, so
-        // adopting authoritative state never disturbs the camera this user has set
-        graph.transit.decode(
-          transitFromServerState(state, graph.transit.encode()),
-        );
-      },
+      bind: (doc) => bindGraphToDoc(graph, doc),
     },
   };
 
@@ -55,10 +40,6 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     'onNodePositionsCommitted',
     magic.localStorage.invalidate,
   );
-
-  if (magic.multiplayer) {
-    useGraphOutboundSync(graph, options.productId, magic.multiplayer);
-  }
 
   if (magic.lensChips) {
     magic.componentSlots.add({

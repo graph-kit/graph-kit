@@ -1,3 +1,4 @@
+import { DocStateVector, DocUpdate } from './doc.ts';
 import {
   PresenceEntry,
   ProductId,
@@ -6,13 +7,6 @@ import {
   RoomMembership,
   UserId,
 } from './room.ts';
-import {
-  PatchOp,
-  PayloadId,
-  ServerState,
-  ServerStatePatchRelay,
-  ServerStateReplaceRelay,
-} from './server-state.ts';
 import { AssignableTier } from './tiers.ts';
 
 /**
@@ -24,11 +18,7 @@ export type JoinResult =
   | (RoomMembership & {
       joined: true;
       /** absent when nobody has opened this product in the room yet */
-      serverState: {
-        state: ServerState;
-        version: number;
-        stateHash: string;
-      } | null;
+      doc: DocUpdate | null;
     });
 
 /** what both ways into a room carry: the product it opens on, and who is arriving */
@@ -39,7 +29,7 @@ export type RoomEntryOptions = {
 
 export type ClientToServerEvents = {
   startRoom: (
-    options: RoomEntryOptions & { state: ServerState },
+    options: RoomEntryOptions & { doc: DocUpdate },
     callback: (membership: RoomMembership) => void,
   ) => void;
 
@@ -50,30 +40,26 @@ export type ClientToServerEvents = {
 
   /**
    * Reports that this user navigated, which the server cannot derive. Separate from
-   * requestServerState because entering is a roster change everyone hears about.
+   * syncDoc because entering is a roster change everyone hears about.
    */
   enterProduct: (
     options: { productId: ProductId },
     callback: (result: JoinResult) => void,
   ) => void;
 
-  patchServerState: (options: {
-    payloadId: PayloadId;
-    productId: ProductId;
-    ops: PatchOp[];
-  }) => void;
+  /**
+   * One product's local changes. Merged into the server's copy and relayed, with no
+   * ordering or acknowledgement, since applying these twice or out of order is a no-op.
+   */
+  docUpdate: (options: { productId: ProductId; update: DocUpdate }) => void;
 
-  /** wholesale override behind room seeding, lazy creation, force push and undo */
-  replaceServerState: (options: {
-    payloadId: PayloadId;
-    productId: ProductId;
-    state: ServerState;
-  }) => void;
-
-  /** drift resync, answered with the same payload shape a join gets */
-  requestServerState: (
-    options: { productId: ProductId },
-    callback: (result: JoinResult) => void,
+  /**
+   * Asks for everything this client is missing. Answered with a single update rather
+   * than whole state, so reconnecting costs the diff instead of the document.
+   */
+  syncDoc: (
+    options: { productId: ProductId; stateVector: DocStateVector },
+    callback: (update: DocUpdate | null) => void,
   ) => void;
 
   /**
@@ -92,8 +78,8 @@ export type ClientToServerEvents = {
 };
 
 export type ServerToClientEvents = {
-  serverStatePatched: (relay: ServerStatePatchRelay) => void;
-  serverStateReplaced: (relay: ServerStateReplaceRelay) => void;
+  /** a peer's changes, or the server's answer to a reconnect */
+  docUpdated: (options: { productId: ProductId; update: DocUpdate }) => void;
 
   rosterChanged: (data: RoomData) => void;
   presenceChanged: (options: { userId: UserId; entry: PresenceEntry }) => void;

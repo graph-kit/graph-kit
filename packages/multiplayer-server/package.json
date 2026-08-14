@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@multiplayer/protocol": "workspace:*",
-    "fast-json-patch": "^3.1.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "yjs": "^13.6.32"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

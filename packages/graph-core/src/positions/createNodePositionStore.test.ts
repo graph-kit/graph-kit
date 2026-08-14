@@ -225,6 +225,19 @@ describe(createNodePositionStore, () => {
         expect(committed[0][1][0].nodeId).toBe('a');
       });
 
+      // a press that never moves opens and closes a stream, and a commit of nothing
+      // would make every subscriber guard against an empty list
+      it('does not emit onNodePositionsCommitted when nothing was touched', () => {
+        const { store, hub } = makeStore();
+        store._internal.add([{ id: 'a' }]);
+        const stream = store.createStream();
+        stream.stop();
+        expect(hub.emit).not.toHaveBeenCalledWith(
+          'onNodePositionsCommitted',
+          expect.anything(),
+        );
+      });
+
       it('emits onNodeMoveStreamEnd', () => {
         const { store, hub } = makeStore();
         store._internal.add([{ id: 'a' }]);

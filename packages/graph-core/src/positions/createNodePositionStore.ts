@@ -76,7 +76,9 @@ export const createNodePositionStore = (
           nodeId,
           position: { ...getNodePosition(nodeId) },
         }));
-        events.emit('onNodePositionsCommitted', committed);
+        if (committed.length > 0) {
+          events.emit('onNodePositionsCommitted', committed);
+        }
         events.emit('onNodeMoveStreamEnd');
         return committed;
       },

@@ -1,6 +1,6 @@
 import { CanvasProps } from '@canvas/surface/types';
-import { PatchOp, ServerState } from '@multiplayer/protocol/server-state';
 import { BasicColorMode } from '@vueuse/core';
+import * as Y from 'yjs';
 
 import { ComputedRef } from 'vue';
 
@@ -37,34 +37,28 @@ export type MagicProductHost = {
   transit: TransitField;
   surface: CanvasProps;
   onAppearanceChanged: (color: BasicColorMode) => void;
-  // `any` so a host can narrow State at its definition site: pinning this to
-  // ServerState makes the contextual type for onForceResync's parameter ServerState
-  // too, and the narrowing validate exists to provide is lost. provisional until the
-  // singleton settles what shape this field actually needs.
-  multiplayer: MultiplayerHostField<any>;
+  multiplayer: MultiplayerHostField;
   history?: HistoryField;
 };
 
 /**
- * The mapping between what a host holds and what the room stores, in both directions,
- * plus how the host takes a change on. The only thing that knows either shape, which is
- * what keeps the room shape out of the harness and the harness out of the product.
+ * The mapping between what a host holds and the room's document, in both directions. The
+ * only thing that knows either shape, which is what keeps the document out of the harness
+ * and the room out of the product.
  *
- * Separate from {@link TransitField} because the room's shape is not transit's, and
- * adopting state can mean more than writing it (stopping a simulation, dropping a lens).
- *
- * Methods rather than function properties on purpose: validate gates every call, so
- * narrowing State is sound by construction and worth the bivariance.
+ * Separate from {@link TransitField} because the document's shape is not transit's, and
+ * adopting one can mean more than writing it (stopping a simulation, dropping a lens).
  */
-export type MultiplayerHostField<State extends ServerState = ServerState> = {
-  /** current local state as the room stores it, for seeding, force pushes and drift checks */
-  encode: () => State;
-  /** false is an invariant violation, not a case to handle */
-  validate: (state: ServerState) => state is State;
-  /** adopt wholesale, for a join, a product handoff and a drift resync alike */
-  onForceResync(state: State): void;
-  /** throwing leaves a version gap the next relay turns into a resync */
-  applyOps(ops: PatchOp[]): void;
+export type MultiplayerHostField = {
+  /**
+   * Ties the host to the room's document for as long as the product is mounted, mirroring
+   * changes both ways from then on.
+   *
+   * An empty document means nobody has opened this product in the room yet, so the host
+   * seeds it from what it already holds. Otherwise the document is authoritative and the
+   * host adopts it, discarding local state.
+   */
+  bind: (doc: Y.Doc) => void;
 };
 
 export type MagicProductOptions = {

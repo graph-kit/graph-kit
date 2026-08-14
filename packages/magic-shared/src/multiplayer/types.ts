@@ -11,7 +11,6 @@ import {
   RosterEntry,
   UserId,
 } from '@multiplayer/protocol/room';
-import { PatchOp } from '@multiplayer/protocol/server-state';
 import { AssignableTier, Tier } from '@multiplayer/protocol/tiers';
 import { Socket } from 'socket.io-client';
 
@@ -40,7 +39,7 @@ export type RoomActions = {
 export type ProductActions = {
   enter: (
     productId: ProductId,
-    host: MultiplayerHostField<any>,
+    host: MultiplayerHostField,
   ) => Promise<ProductStateSource>;
   leave: (productId: ProductId) => void;
 };
@@ -82,14 +81,4 @@ export type MultiplayerControls = {
 
   /** true while the server is about to say what this product should show */
   awaitingServerState: Ref<boolean>;
-
-  /** a no-op when the change came from the room itself */
-  sendOps: (productId: ProductId, ops: PatchOp[]) => void;
-  /** overwrites this product's server state with the host's, for changes no op describes */
-  sendReplacement: (productId: ProductId) => void;
-
-  isApplyingRemote: () => boolean;
-
-  /** pulls this product's server state back down when local has silently diverged */
-  resyncIfDrifted: (productId: ProductId) => void;
 };

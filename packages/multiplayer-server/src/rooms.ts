@@ -1,3 +1,4 @@
+import { DocStateVector, DocUpdate } from '@multiplayer/protocol/doc';
 import {
   ProductId,
   RoomData,
@@ -5,12 +6,6 @@ import {
   RosterEntry,
   UserId,
 } from '@multiplayer/protocol/room';
-import {
-  PatchOp,
-  ProductRecord,
-  ServerState,
-  hashServerState,
-} from '@multiplayer/protocol/server-state';
 import {
   AssignableTier,
   DEFAULT_TIER,
@@ -20,34 +15,19 @@ import {
   canSetTier,
   meetsFloor,
 } from '@multiplayer/protocol/tiers';
-// default import then destructure: fast-json-patch is CJS with no exports map, so Node
-// cannot statically resolve a named import from it. the esbuild bundle papers over this
-// with interop, which is why it only surfaces under tsx in dev
-import fastJsonPatch from 'fast-json-patch';
-
-const { applyPatch } = fastJsonPatch;
+import * as Y from 'yjs';
 
 export type Room = {
   data: RoomData;
-  products: Record<ProductId, ProductRecord>;
+  /** one document per product, so a room can hold several without them interfering */
+  products: Record<ProductId, Y.Doc>;
 };
-
-/** what every accepted write reports back, and what gets relayed to peers */
-export type WriteReceipt = {
-  version: number;
-  stateHash: string;
-};
-
-const writeReceipt = (record: ProductRecord): WriteReceipt => ({
-  version: record.version,
-  stateHash: hashServerState(record.state),
-});
 
 export const createRoom = (options: {
   hostId: UserId;
   displayName: string;
   productId: ProductId;
-  state: ServerState;
+  doc: DocUpdate;
 }): Room => ({
   data: {
     hostId: options.hostId,
@@ -60,12 +40,18 @@ export const createRoom = (options: {
       },
     },
   },
-  // only the product the host was looking at is seeded, every other product's server state is created
-  // lazily on first push so no product needs a declarable empty state
+  // only the product the host was looking at is seeded, every other product's document is
+  // created lazily on its first update so no product needs a declarable empty state
   products: {
-    [options.productId]: { state: options.state, version: 1 },
+    [options.productId]: docFromUpdate(options.doc),
   },
 });
+
+const docFromUpdate = (update: DocUpdate): Y.Doc => {
+  const doc = new Y.Doc();
+  Y.applyUpdate(doc, update);
+  return doc;
+};
 
 export const addMember = (
   room: Room,
@@ -105,56 +91,39 @@ export const canRunRoomCommand = (room: Room, userId: UserId): boolean => {
   return tier !== undefined && meetsFloor(tier, ROOM_COMMAND_FLOOR);
 };
 
-export const getServerState = (
+/** the whole document, for a joiner who has nothing yet. null before anyone seeds it */
+export const encodeProductDoc = (
   room: Room,
   productId: ProductId,
-): (ProductRecord & { stateHash: string }) | null => {
-  const record = room.products[productId];
-  if (!record) return null;
-  return { ...record, stateHash: hashServerState(record.state) };
+): DocUpdate | null => {
+  const doc = room.products[productId];
+  if (!doc) return null;
+  return Y.encodeStateAsUpdate(doc);
+};
+
+/** only what the client is missing, which is what makes a reconnect cheap */
+export const encodeProductDocDiff = (
+  room: Room,
+  productId: ProductId,
+  stateVector: DocStateVector,
+): DocUpdate | null => {
+  const doc = room.products[productId];
+  if (!doc) return null;
+  return Y.encodeStateAsUpdate(doc, stateVector);
 };
 
 /**
- * applied blindly: the server never inspects paths or values, which is the whole reason
- * it can stay graph agnostic while still holding authoritative state
+ * Merged blindly: the server never inspects what an update contains, which is what keeps
+ * it agnostic to what any product stores. Creates the document on first write, so a
+ * product nobody has opened yet costs nothing.
  */
-export const patchServerState = (
+export const applyProductDocUpdate = (
   room: Room,
   productId: ProductId,
-  ops: PatchOp[],
-): WriteReceipt | null => {
-  const record = room.products[productId];
-  if (!record) return null;
-
-  const { newDocument } = applyPatch(
-    record.state,
-    ops as Parameters<typeof applyPatch>[1],
-    // validate ops, but do not mutate in place, so a failed patch leaves state untouched
-    true,
-    false,
-  );
-
-  record.state = newDocument as ServerState;
-  record.version += 1;
-  return writeReceipt(record);
-};
-
-/**
- * create-or-overwrite. authoritative by definition, so it sets the version rather than
- * checking one, which also makes every force push an implicit drift reset.
- */
-export const replaceServerState = (
-  room: Room,
-  productId: ProductId,
-  state: ServerState,
-): WriteReceipt => {
-  const existing = room.products[productId];
-  const record: ProductRecord = {
-    state,
-    version: existing ? existing.version + 1 : 1,
-  };
-  room.products[productId] = record;
-  return writeReceipt(record);
+  update: DocUpdate,
+): void => {
+  const doc = (room.products[productId] ??= new Y.Doc());
+  Y.applyUpdate(doc, update);
 };
 
 /** ungated: a display name authorizes nothing */

@@ -12,15 +12,15 @@ import { Server } from 'socket.io';
 import {
   Room,
   addMember,
+  applyProductDocUpdate,
   canRunRoomCommand,
   canWriteProduct,
   createRoom,
   createRoomStore,
-  getServerState,
+  encodeProductDoc,
+  encodeProductDocDiff,
   isHost,
-  patchServerState,
   removeMember,
-  replaceServerState,
   setMemberDisplayName,
   setMemberProduct,
   setTier,
@@ -30,7 +30,7 @@ const generateRoomId = (): RoomId =>
   randomUUID().replaceAll('-', '').slice(0, 10);
 
 /**
- * server state traffic is routed to the people actually looking at that product rather than
+ * document traffic is routed to the people actually looking at that product rather than
  * to the whole room, so nobody pays for products they are not on. derived from the
  * roster the server already maintains, which is why clients never manage a subscription.
  */
@@ -47,7 +47,7 @@ const joinResultFor = (
   roomId,
   userId,
   data: room.data,
-  serverState: getServerState(room, productId),
+  doc: encodeProductDoc(room, productId),
 });
 
 /** the io instance is returned only so a caller can close it */
@@ -110,13 +110,13 @@ export const createSocketServer = (
       io.to(currentRoomId).emit('rosterChanged', room.data);
     };
 
-    socket.on('startRoom', ({ displayName, productId, state }, callback) => {
+    socket.on('startRoom', ({ displayName, productId, doc }, callback) => {
       const roomId = generateRoomId();
       const room = createRoom({
         hostId: userId,
         displayName,
         productId,
-        state,
+        doc,
       });
 
       rooms.set(roomId, room);
@@ -151,39 +151,20 @@ export const createSocketServer = (
       broadcastRoster(room);
     });
 
-    socket.on('requestServerState', ({ productId }, callback) => {
-      const room = currentRoom();
-      if (!room || currentRoomId === null) return callback({ joined: false });
-      callback(joinResultFor(room, currentRoomId, userId, productId));
-    });
-
-    socket.on('patchServerState', ({ payloadId, productId, ops }) => {
+    // no ordering, no acknowledgement and nothing to refuse on grounds of staleness:
+    // merging an update twice or out of order lands on the same document either way
+    socket.on('docUpdate', ({ productId, update }) => {
       const room = currentRoom();
       if (!room || !canWriteProduct(room, userId)) return;
 
-      const receipt = patchServerState(room, productId, ops);
-      // no server state yet means nobody has seeded this product, so there is nothing to patch
-      if (!receipt) return;
-
-      relayToProduct(productId, 'serverStatePatched', {
-        payloadId,
-        productId,
-        ops,
-        ...receipt,
-      });
+      applyProductDocUpdate(room, productId, update);
+      relayToProduct(productId, 'docUpdated', { productId, update });
     });
 
-    socket.on('replaceServerState', ({ payloadId, productId, state }) => {
+    socket.on('syncDoc', ({ productId, stateVector }, callback) => {
       const room = currentRoom();
-      if (!room || !canWriteProduct(room, userId)) return;
-
-      const receipt = replaceServerState(room, productId, state);
-      relayToProduct(productId, 'serverStateReplaced', {
-        payloadId,
-        productId,
-        state,
-        ...receipt,
-      });
+      if (!room) return callback(null);
+      callback(encodeProductDocDiff(room, productId, stateVector));
     });
 
     // ungated: renaming yourself authorizes nothing, and being able to do it mid

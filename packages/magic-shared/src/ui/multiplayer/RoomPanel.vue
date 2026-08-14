@@ -8,7 +8,6 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import TextInput from '../../components/text-input/TextInput.vue';
-  import { serverStateFromTransit } from '../../graph-product/server-state.ts';
   import { useProvidedMagic } from '../../product/context.ts';
 
   const magic = useProvidedMagic();
@@ -41,11 +40,8 @@
 
     isStartingRoom.value = true;
     try {
-      // the host's current view becomes the seed, so the first frame after starting
-      // matches the last frame before it
       await multiplayer.actions.room.start({
         productId: magic.manifest.id as never,
-        state: serverStateFromTransit(magic.transit.encode()),
         displayName: displayName.value,
       });
     } finally {

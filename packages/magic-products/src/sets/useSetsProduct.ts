@@ -68,6 +68,7 @@ export const useSetsProduct = () => {
     // is nothing to adopt. it is not flagged multiplayer, and giving it real transit
     // is what would unblock both.
     multiplayer: {
+      encode: () => ({}),
       validate: (state): state is never => false,
       applyOps: () => {},
       onForceResync: () => {},

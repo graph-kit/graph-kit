@@ -46,10 +46,9 @@ export type MagicProductHost = {
 };
 
 /**
- * What a host provides to stay in sync with the room. Mirrors the split
- * {@link TransitControls} already makes: the host says whether state is its own and how
- * to take it on, never what a failed check means, since only the multiplayer layer knows
- * the productId, version and room it arrived under.
+ * The mapping between what a host holds and what the room stores, in both directions,
+ * plus how the host takes a change on. The only thing that knows either shape, which is
+ * what keeps the room shape out of the harness and the harness out of the product.
  *
  * Separate from {@link TransitField} because the room's shape is not transit's, and
  * adopting state can mean more than writing it (stopping a simulation, dropping a lens).
@@ -58,6 +57,8 @@ export type MagicProductHost = {
  * narrowing State is sound by construction and worth the bivariance.
  */
 export type MultiplayerHostField<State extends ServerState = ServerState> = {
+  /** current local state as the room stores it, for seeding, force pushes and drift checks */
+  encode: () => State;
   /** false is an invariant violation, not a case to handle */
   validate: (state: ServerState) => state is State;
   /** adopt wholesale, for a join, a product handoff and a drift resync alike */

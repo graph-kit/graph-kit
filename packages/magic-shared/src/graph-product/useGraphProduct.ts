@@ -5,7 +5,11 @@ import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { provideGraph } from './context.ts';
 import { applyOpsToGraph } from './server-state-ops.ts';
-import { isGraphServerState, transitFromServerState } from './server-state.ts';
+import {
+  isGraphServerState,
+  serverStateFromTransit,
+  transitFromServerState,
+} from './server-state.ts';
 import { useGraphProductShortcuts } from './shortcuts.ts';
 import { GraphProductOptions, MagicGraph } from './types.ts';
 import { useGraphOutboundSync } from './useGraphOutboundSync.ts';
@@ -24,6 +28,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {
+      encode: () => serverStateFromTransit(graph.transit.encode()),
       validate: isGraphServerState,
       applyOps: (ops) => applyOpsToGraph(graph, ops),
       onForceResync: (state) => {

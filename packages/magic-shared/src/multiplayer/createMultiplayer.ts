@@ -63,9 +63,7 @@ export type ProductStateSource = 'room' | 'local';
 
 export type RoomActions = {
   /** the display name is supplied per call: the room is not where it is stored */
-  start: (
-    options: RoomEntryOptions & { state: ServerState },
-  ) => Promise<RoomId>;
+  start: (options: RoomEntryOptions) => Promise<RoomId>;
   join: (options: RoomEntryOptions & { roomId: RoomId }) => Promise<JoinResult>;
   leave: () => void;
 };
@@ -117,16 +115,16 @@ export type MultiplayerControls = {
 
   /** a no-op when suspended, or when the change came from the room itself */
   sendOps: (productId: ProductId, ops: PatchOp[]) => void;
-  /** behind seeding, suspend-exit force push and undo */
-  sendReplacement: (productId: ProductId, state: ServerState) => void;
+  /** overwrites this product's server state with the host's, for changes no op describes */
+  sendReplacement: (productId: ProductId) => void;
 
   suspend: (productId: ProductId) => void;
   resume: (productId: ProductId) => void;
   isSuspended: (productId: ProductId) => boolean;
   isApplyingRemote: () => boolean;
 
-  /** resyncs on mismatch, catching what the version counter cannot */
-  reportLocalHash: (productId: ProductId, localHash: string) => void;
+  /** pulls this product's server state back down when local has silently diverged */
+  resyncIfDrifted: (productId: ProductId) => void;
 
   /** ungated by tier and unaffected by suspension, unlike everything above */
   updatePresence: (entry: PresenceEntry) => void;
@@ -173,6 +171,13 @@ export const createMultiplayer = (options: {
   /** for the paths a room already gates, where a missing socket is a broken invariant */
   const requireSocket = () =>
     nullThrows(socket, 'multiplayer: acted on a room with no socket');
+
+  /** the mounted product's own state, in the only shape the room knows */
+  const encodeActiveState = () =>
+    nullThrows(
+      activeHost.value,
+      'multiplayer: encoded state with no product mounted',
+    ).encode();
 
   // built once rather than per recompute, so the identity a consumer holds onto stays
   // stable across every roster and presence change
@@ -340,8 +345,11 @@ export const createMultiplayer = (options: {
   let roomResolutionAttempted = false;
 
   const roomActions: RoomActions = {
-    start: async ({ productId, state, displayName }) => {
+    start: async ({ productId, displayName }) => {
       const activeSocket = ensureSocket();
+      // the host's current view becomes the seed, so the first frame after starting
+      // matches the last frame before it
+      const state = encodeActiveState();
       const started = await new Promise<RoomMembership>((resolve) => {
         activeSocket.emit(
           'startRoom',
@@ -470,14 +478,14 @@ export const createMultiplayer = (options: {
     },
 
     /** wholesale override, behind seeding, force push and undo */
-    sendReplacement: (productId: ProductId, state: ServerState) => {
+    sendReplacement: (productId: ProductId) => {
       if (!socket || !inRoom.value) return;
       if (sync.isApplyingRemote()) return;
 
       socket.emit('replaceServerState', {
         payloadId: generatePayloadId(),
         productId,
-        state,
+        state: encodeActiveState(),
       });
     },
 
@@ -486,9 +494,10 @@ export const createMultiplayer = (options: {
     isSuspended: sync.isSuspended,
     isApplyingRemote: sync.isApplyingRemote,
 
-    reportLocalHash: (productId: ProductId, localHash: string) => {
+    resyncIfDrifted: (productId: ProductId) => {
       if (!inRoom.value || sync.isSuspended(productId)) return;
-      if (!sync.hasDrifted(productId, localHash)) return;
+      if (!sync.hasDrifted(productId, hashServerState(encodeActiveState())))
+        return;
 
       console.warn(
         `[multiplayer] local state for "${productId}" diverged from the room despite an unbroken version sequence, resyncing`,

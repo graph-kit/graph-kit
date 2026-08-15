@@ -12,7 +12,7 @@ export const usePresenceBroadcast = (options: {
 }) => {
   const { surface, productId, multiplayer, host } = options;
 
-  surface.domEvents.subscribe('onMouseMove', (ev) => {
+  const broadcast = (ev: MouseEvent) => {
     const room = multiplayer.room.state.value;
     if (!room.connected) return;
 
@@ -28,5 +28,10 @@ export const usePresenceBroadcast = (options: {
       },
       draggedElements: host.draggedElements?.() ?? [],
     });
-  });
+  };
+
+  surface.domEvents.subscribe('onMouseMove', broadcast);
+  // a drop that ends without the cursor moving again still has to tell the room the
+  // drag is over, since an empty list is the only thing that ends one
+  surface.domEvents.subscribe('onMouseUp', broadcast);
 };

@@ -1,5 +1,5 @@
 import { CanvasProps } from '@canvas/surface/types';
-import { DraggedElement } from '@multiplayer/protocol/room';
+import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { BasicColorMode } from '@vueuse/core';
 import * as Y from 'yjs';
 
@@ -37,6 +37,12 @@ export type HostBinding = {
   history: HistoryField;
   /** stops mirroring, leaving the host's own state exactly as the document left it */
   unbind: () => void;
+  /**
+   * Every peer's in flight move, whole rather than incremental: a peer missing from the
+   * record has stopped moving things, whether they dropped, left or were never dragging.
+   * Nothing here is written to the document, which the authoring peer commits itself.
+   */
+  applyPeerDrags: (dragsByPeer: Record<UserId, DraggedElement[]>) => void;
 };
 
 /**

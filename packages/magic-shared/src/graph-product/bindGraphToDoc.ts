@@ -1,4 +1,6 @@
+import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { ConsumerEventMap } from '@graph/create-graph/consumer-events';
+import { UserId } from '@multiplayer/protocol/room';
 import Fraction from 'fraction.js';
 import * as Y from 'yjs';
 
@@ -100,7 +102,11 @@ const createDocHistory = (doc: Y.Doc): HistoryField => {
  * Hands back undo over the document, which the harness uses in place of the graph's own
  * whole state history for as long as the graph is shared.
  */
-export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): HostBinding => {
+export const bindGraphToDoc = (
+  graph: Graph,
+  doc: Y.Doc,
+  isDraggedLocally: (nodeId: string) => boolean,
+): HostBinding => {
   const nodes = readNodes(doc);
   const edges = readEdges(doc);
 
@@ -311,7 +317,40 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): HostBinding => {
     graph.rawEvents.transit.subscribe('onDecoded', writeWholeGraph);
   };
 
+  // one per peer, since two people dragging at once are two continuous moves and
+  // neither belongs in the other's commit
+  const peerStreams = new Map<UserId, NodePositionStreamControls>();
+
+  const stopPeerStream = (peerId: UserId) => {
+    const stream = peerStreams.get(peerId);
+    if (!stream) return;
+    peerStreams.delete(peerId);
+    // stopping commits what the stream touched, and the authoring peer is already
+    // sending that same move through the document
+    intoGraph(() => stream.stop());
+  };
+
+  const applyPeerDrags: HostBinding['applyPeerDrags'] = (dragsByPeer) => {
+    for (const peerId of [...peerStreams.keys()]) {
+      if ((dragsByPeer[peerId]?.length ?? 0) === 0) stopPeerStream(peerId);
+    }
+
+    for (const [peerId, elements] of Object.entries(dragsByPeer)) {
+      const moves = elements
+        // a node the local user has hold of stays where they are putting it, and one
+        // that is not on this graph yet arrives with the move that adds it
+        .filter(({ id }) => !isDraggedLocally(id) && graph.getNode(id))
+        .map(({ id, position }) => ({ nodeId: id, update: position }));
+      if (moves.length === 0) continue;
+
+      const stream = peerStreams.get(peerId) ?? graph.positions.createStream();
+      peerStreams.set(peerId, stream);
+      stream.setMany(moves);
+    }
+  };
+
   const unbind = () => {
+    for (const peerId of [...peerStreams.keys()]) stopPeerStream(peerId);
     nodes.unobserve(onDocChanged);
     edges.unobserve(onDocChanged);
     graph.rawEvents.unsubscribe('onElementsAdded', onElementsAdded);
@@ -336,5 +375,6 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): HostBinding => {
     // after the seed, so undoing on a freshly opened product cannot empty the document
     history: createDocHistory(doc),
     unbind,
+    applyPeerDrags,
   };
 };

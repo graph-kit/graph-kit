@@ -14,6 +14,8 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const lensChips = options.lensChips?.(graph);
 
+  const draggedNodes = trackDraggedNodes(graph);
+
   const host: MagicProductHost = {
     surface: graph.canvas.surface,
     transit: graph.transit,
@@ -21,8 +23,8 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {
-      bind: (doc) => bindGraphToDoc(graph, doc),
-      draggedElements: trackDraggedNodes(graph),
+      bind: (doc) => bindGraphToDoc(graph, doc, draggedNodes.isDragging),
+      draggedElements: draggedNodes.elements,
     },
   };
 

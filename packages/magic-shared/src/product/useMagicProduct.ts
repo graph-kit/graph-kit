@@ -14,7 +14,9 @@ import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import RoomPanel from '../ui/multiplayer/RoomPanel.vue';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
+import { useHostBinding } from './internals/useHostBinding.ts';
 import { useLocalStorageSync } from './internals/useLocalStorageSync.ts';
+import { usePeerDrags } from './internals/usePeerDrags.ts';
 import { useProductHistory } from './internals/useProductHistory.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
@@ -42,10 +44,13 @@ export const useMagicProduct = (
     ? useLocalStorageSync(manifest.id, host.transit)
     : { invalidate: () => {}, sync: () => {} };
 
+  const { binding, multiplayerHost } = useHostBinding(host);
+
   let multiplayer: ProductMultiplayer | undefined;
 
-  const { history, multiplayerHost } = useProductHistory({
+  const history = useProductHistory({
     host,
+    binding,
     inRoom: () => multiplayer?.room.state.value.connected === true,
   });
 
@@ -53,6 +58,8 @@ export const useMagicProduct = (
     productId: options.productId,
     host: multiplayerHost,
   });
+
+  usePeerDrags({ binding, multiplayer });
 
   // the surface is all presence needs, so every host broadcasts it rather than only
   // the ones backed by a graph

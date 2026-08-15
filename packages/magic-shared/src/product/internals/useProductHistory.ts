@@ -1,24 +1,16 @@
-import { computed, shallowRef, watch } from 'vue';
+import { computed, watch } from 'vue';
 
-import {
-  HistoryField,
-  MagicProductHost,
-  MultiplayerHostField,
-} from '../types.ts';
+import { HistoryField, MagicProductHost } from '../types.ts';
+import { ProductHostBinding } from './useHostBinding.ts';
 
 export type ProductHistoryOptions = {
   host: MagicProductHost;
+  binding: ProductHostBinding['binding'];
   /**
    * read lazily rather than passed as state: the room this answers for is reached
-   * through the host wrapper below, so it does not exist yet at construction
+   * through the binding above, so it does not exist yet at construction
    */
   inRoom: () => boolean;
-};
-
-export type ProductHistory = {
-  history: HistoryField | undefined;
-  /** the host to register with, wrapping bind so the session's undo is picked up */
-  multiplayerHost: MultiplayerHostField;
 };
 
 /**
@@ -28,32 +20,24 @@ export type ProductHistory = {
  */
 export const useProductHistory = ({
   host,
+  binding,
   inRoom,
-}: ProductHistoryOptions): ProductHistory => {
+}: ProductHistoryOptions): HistoryField | undefined => {
   const sharing = computed(inRoom);
 
-  const roomHistory = shallowRef<HistoryField>();
-  const multiplayerHost: MultiplayerHostField = {
-    bind: (doc) => {
-      const binding = host.multiplayer.bind(doc);
-      roomHistory.value = binding?.history;
-      return binding;
-    },
-  };
-
-  const active = () => (sharing.value ? roomHistory.value : host.history);
+  const active = () => (sharing.value ? binding.value?.history : host.history);
 
   // joining and leaving each make what is on screen a new starting point, the same way
   // a restore does
   watch(sharing, () => host.history?.clear());
 
-  const history: HistoryField | undefined = host.history && {
-    canUndo: computed(() => active()?.canUndo.value === true),
-    canRedo: computed(() => active()?.canRedo.value === true),
-    undo: () => active()?.undo(),
-    redo: () => active()?.redo(),
-    clear: () => active()?.clear(),
-  };
-
-  return { history, multiplayerHost };
+  return (
+    host.history && {
+      canUndo: computed(() => active()?.canUndo.value === true),
+      canRedo: computed(() => active()?.canRedo.value === true),
+      undo: () => active()?.undo(),
+      redo: () => active()?.redo(),
+      clear: () => active()?.clear(),
+    }
+  );
 };

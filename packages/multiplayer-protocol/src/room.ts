@@ -47,9 +47,10 @@ export type PresenceEntry = {
   cameraState: CameraState | null;
   /**
    * in flight and deliberately not in the document: a drag settles into one committed
-   * move, and replaying every frame of it would be a write per frame
+   * move, and replaying every frame of it would be a write per frame. plural because one
+   * gesture can carry a whole selection, and empty whenever nothing is being moved
    */
-  draggedElement: DraggedElement | null;
+  draggedElements: DraggedElement[];
 };
 
 export type RoomData = {

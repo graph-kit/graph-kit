@@ -77,7 +77,7 @@ export type MultiplayerHostField = {
    * whatever the host is moving this instant, read as presence goes out rather than
    * pushed, since a drag only travels alongside the cursor that is causing it
    */
-  draggedElement?: () => DraggedElement | null;
+  draggedElements?: () => DraggedElement[];
 };
 
 export type MagicProductOptions = {

@@ -5,7 +5,7 @@ import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { bindGraphToDoc } from './bindGraphToDoc.ts';
 import { provideGraph } from './context.ts';
 import { useGraphProductShortcuts } from './shortcuts.ts';
-import { trackDraggedNode } from './trackDraggedNode.ts';
+import { trackDraggedNodes } from './trackDraggedNodes.ts';
 import { GraphProductOptions, MagicGraph } from './types.ts';
 
 /** adapts a graph to the harness host interface, see {@link useMagicProduct} */
@@ -22,7 +22,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
       (graph.theme.activePresetName.value = color),
     multiplayer: {
       bind: (doc) => bindGraphToDoc(graph, doc),
-      draggedElement: trackDraggedNode(graph),
+      draggedElements: trackDraggedNodes(graph),
     },
   };
 

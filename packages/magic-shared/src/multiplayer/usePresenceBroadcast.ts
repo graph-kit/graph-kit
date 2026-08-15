@@ -26,7 +26,7 @@ export const usePresenceBroadcast = (options: {
         panY: camera.panY.value,
         zoom: camera.zoom.value,
       },
-      draggedElement: host.draggedElement?.() ?? null,
+      draggedElements: host.draggedElements?.() ?? [],
     });
   });
 };

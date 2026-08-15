@@ -36,22 +36,14 @@ export const createNodePositionStore = (
     });
   };
 
-  let activeStream = false;
-
   const devStreamRegistry = new FinalizationRegistry<void>(() => {
     console.warn(
       'A node position stream was garbage collected without stop() being called. Make sure to call stop() when the stream is done.',
     );
-    activeStream = false;
   });
 
   const createStream: NodePositionStoreControls['createStream'] = () => {
-    if (activeStream) {
-      throw new Error(
-        'A node position stream is already active. Call stop() before creating a new stream.',
-      );
-    }
-    activeStream = true;
+    let stopped = false;
     events.emit('onNodeMoveStreamStart');
     const touchedNodeIds = new Set<string>();
     const unregisterToken = {};
@@ -69,8 +61,8 @@ export const createNodePositionStore = (
         return entries;
       },
       stop: () => {
-        if (!activeStream) return [];
-        activeStream = false;
+        if (stopped) return [];
+        stopped = true;
         devStreamRegistry?.unregister(unregisterToken);
         const committed = [...touchedNodeIds].map((nodeId) => ({
           nodeId,
@@ -87,24 +79,14 @@ export const createNodePositionStore = (
     return stream;
   };
 
-  const assertNoActiveStream = () => {
-    if (activeStream) {
-      throw new Error(
-        'Cannot write to the position store while a stream is active. Call stop() on the active stream first.',
-      );
-    }
-  };
-
   return {
     get: getNodePosition,
     set: (position) => {
-      assertNoActiveStream();
       const [entry] = setNodePositions([position]);
       events.emit('onNodePositionsCommitted', [entry]);
       return entry;
     },
     setMany: (positions) => {
-      assertNoActiveStream();
       const entries = setNodePositions(positions);
       events.emit('onNodePositionsCommitted', entries);
       return entries;

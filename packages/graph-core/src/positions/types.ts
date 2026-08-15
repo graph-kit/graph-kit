@@ -26,9 +26,9 @@ export type NodePositionStreamControls = {
   /** Updates multiple nodes' positions within this stream. */
   setMany: (positions: NodePositionUpdate[]) => NodePositionEntry[];
   /**
-   * Closes the stream, signaling that all updates have been dispatched. Returns the
-   * de-duplicated final position of every node the stream touched, so a caller wrapping
-   * the store can report the commit without re-deriving it. Empty if already stopped.
+   * Closes this stream, signaling that all of its updates have been dispatched. Returns
+   * the de-duplicated final position of every node it touched, so a caller wrapping the
+   * store can report the commit without re-deriving it. Empty if already stopped.
    */
   stop: () => NodePositionEntry[];
 };
@@ -45,6 +45,9 @@ export type NodePositionStoreControls = {
    * continuously (e.g. dragging). Intermediate positions are batched inside the stream and
    * {@link NodePositionStoreEventMap.onNodePositionsCommitted onNodePositionsCommitted} only triggers once on {@link NodePositionStreamControls.stop stop},
    * so subscribers (e.g. plugins/history) see a single discrete move rather than every intermediate update.
+   *
+   * Streams may overlap, each committing only the nodes it touched. Direct writes stay
+   * open while one is running, so the last write to a node wins.
    */
   createStream: () => NodePositionStreamControls;
   /** @internal */

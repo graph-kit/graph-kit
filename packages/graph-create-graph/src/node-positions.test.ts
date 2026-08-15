@@ -63,6 +63,31 @@ describe('onNodePositionsCommitted', () => {
     expect(observed.committed[0]?.[0]?.position).toMatchObject({ x: 3, y: 3 });
   });
 
+  // a position written from elsewhere while a drag is in flight, which is what a
+  // consumer applying state it did not author does
+  it('reports a direct write landing during a stream separately from it', () => {
+    const folded = build();
+    const dragged = folded.actions.addNode({});
+    const elsewhere = folded.actions.addNode({});
+    const observed = observe(folded);
+
+    const stream = folded.controls.positions.createStream();
+    stream.set({ nodeId: dragged.id, update: { x: 1, y: 1 } });
+
+    folded.controls.positions.setMany([
+      { nodeId: elsewhere.id, update: { x: 50, y: 50 } },
+    ]);
+
+    expect(observed.committed).toHaveLength(1);
+    expect(observed.committed[0]?.[0]?.nodeId).toBe(elsewhere.id);
+
+    stream.stop();
+
+    expect(observed.committed).toHaveLength(2);
+    expect(observed.committed[1]).toHaveLength(1);
+    expect(observed.committed[1]?.[0]?.nodeId).toBe(dragged.id);
+  });
+
   it('de-duplicates a node touched repeatedly within one stream', () => {
     const folded = build();
     const first = folded.actions.addNode({});

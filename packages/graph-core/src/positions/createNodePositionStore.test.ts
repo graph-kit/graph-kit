@@ -57,32 +57,6 @@ describe(createNodePositionStore, () => {
     });
   });
 
-  describe('active stream guard', () => {
-    it('throws when set() is called while a stream is active', () => {
-      const { store } = makeStore();
-      store._internal.add([{ id: 'a' }]);
-      store.createStream();
-      expect(() => store.set({ nodeId: 'a', update: { x: 1 } })).toThrow();
-    });
-
-    it('throws when setMany() is called while a stream is active', () => {
-      const { store } = makeStore();
-      store._internal.add([{ id: 'a' }]);
-      store.createStream();
-      expect(() =>
-        store.setMany([{ nodeId: 'a', update: { x: 1 } }]),
-      ).toThrow();
-    });
-
-    it('allows set() again after the stream is stopped', () => {
-      const { store } = makeStore();
-      store._internal.add([{ id: 'a' }]);
-      const stream = store.createStream();
-      stream.stop();
-      expect(() => store.set({ nodeId: 'a', update: { x: 1 } })).not.toThrow();
-    });
-  });
-
   describe('set', () => {
     it('updates the position of a node', () => {
       const { store } = makeStore();
@@ -161,19 +135,76 @@ describe(createNodePositionStore, () => {
       expect(hub.emit).toHaveBeenCalledWith('onNodeMoveStreamStart');
     });
 
-    it('throws when a second stream is created before stop()', () => {
-      const { store } = makeStore();
-      store._internal.add([{ id: 'a' }]);
-      store.createStream();
-      expect(() => store.createStream()).toThrow();
-    });
-
     it('allows creating a new stream after stop()', () => {
       const { store } = makeStore();
       store._internal.add([{ id: 'a' }]);
       const stream = store.createStream();
       stream.stop();
       expect(() => store.createStream()).not.toThrow();
+    });
+
+    describe('overlapping streams', () => {
+      it('opens a second stream while the first is still running', () => {
+        const { store } = makeStore();
+        store._internal.add([{ id: 'a' }]);
+        store.createStream();
+        expect(() => store.createStream()).not.toThrow();
+      });
+
+      it('commits only the nodes its own stream touched', () => {
+        const { store, hub } = makeStore();
+        store._internal.add([{ id: 'a' }, { id: 'b' }]);
+
+        const first = store.createStream();
+        const second = store.createStream();
+        first.set({ nodeId: 'a', update: { x: 1 } });
+        second.set({ nodeId: 'b', update: { x: 2 } });
+
+        expect(first.stop()).toEqual([
+          { nodeId: 'a', position: expect.objectContaining({ x: 1 }) },
+        ]);
+        expect(second.stop()).toEqual([
+          { nodeId: 'b', position: expect.objectContaining({ x: 2 }) },
+        ]);
+
+        const committed = hub.emit.mock.calls.filter(
+          (args: unknown[]) => args[0] === 'onNodePositionsCommitted',
+        );
+        expect(committed).toHaveLength(2);
+      });
+
+      it('leaves the other stream usable after one stops', () => {
+        const { store } = makeStore();
+        store._internal.add([{ id: 'a' }]);
+
+        const first = store.createStream();
+        const second = store.createStream();
+        first.stop();
+
+        second.set({ nodeId: 'a', update: { x: 7 } });
+        expect(store.get('a').x).toBe(7);
+        expect(second.stop()).toHaveLength(1);
+      });
+
+      // a position arriving from elsewhere is a legitimate concurrent write, not a
+      // caller mistake, so it lands rather than throwing
+      it('accepts a direct write while a stream is running', () => {
+        const { store } = makeStore();
+        store._internal.add([{ id: 'a' }, { id: 'b' }]);
+
+        const stream = store.createStream();
+        stream.set({ nodeId: 'a', update: { x: 1 } });
+
+        expect(() =>
+          store.setMany([{ nodeId: 'b', update: { x: 9 } }]),
+        ).not.toThrow();
+        expect(store.get('b').x).toBe(9);
+
+        // the direct write was never part of this stream, so it stays out of the commit
+        expect(stream.stop()).toEqual([
+          { nodeId: 'a', position: expect.objectContaining({ x: 1 }) },
+        ]);
+      });
     });
 
     describe('stream.set', () => {

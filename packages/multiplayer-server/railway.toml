@@ -1,0 +1,15 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "pnpm --filter @multiplayer/server build"
+# the client is the bulk of the repo and none of it reaches this service, so a client
+# only commit should not cost a redeploy
+watchPatterns = [
+  "packages/multiplayer-server/**",
+  "packages/multiplayer-protocol/**",
+  "pnpm-lock.yaml",
+]
+
+[deploy]
+startCommand = "node packages/multiplayer-server/dist/index.js"
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"

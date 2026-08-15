@@ -45,7 +45,7 @@ export const createSetExpressionParser = (
   const difference = (set1: Section[], set2: Section[]) =>
     exclusion(union(set1, set2), intersection(set1, set2));
 
-  const complement = (set: Section[]) =>
+  const negation = (set: Section[]) =>
     partition.filter((section) =>
       set.every((element) => !isEqual(section, element)),
     );
@@ -79,8 +79,8 @@ export const createSetExpressionParser = (
         return args.map(parseHelper).reduce(intersection);
       case LATEX_SET_SYMBOLS.SYMMETRIC_DIFFERENCE:
         return difference(parseHelper(args[0]), parseHelper(args[1]));
-      case LATEX_SET_SYMBOLS.COMPLEMENT:
-        return complement(parseHelper(args[0]));
+      case LATEX_SET_SYMBOLS.NEGATION:
+        return negation(parseHelper(args[0]));
       case LATEX_SET_SYMBOLS.SET_MINUS:
         return exclusion(parseHelper(args[0]), parseHelper(args[1]));
       default:

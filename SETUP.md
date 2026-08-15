@@ -21,7 +21,18 @@ This installs dependencies for every package in `packages/*`.
 pnpm dev
 ```
 
-This runs `@magic/client`'s dev server (Nuxt), which includes hot module replacement.
+This runs two processes in parallel:
+
+- `@magic/client`'s dev server (Nuxt) on **:3000**, with hot module replacement.
+- `@multiplayer/server`, the room server, on **:4000**, with restart-on-change via `tsx watch`.
+
+The client points at `http://localhost:4000` automatically in dev, so multiplayer works locally with no extra setup: open a product, press **Start room**, and paste the URL into a second window to join it.
+
+Run them separately with `pnpm dev:client` and `pnpm dev:server` if you only need one.
+
+**Ports.** The room server sits on 4000 rather than 3001 because Nuxt auto-increments into 3001, 3002 and so on whenever a port is taken, so a second client would otherwise claim it. Override with `PORT` on the server and `MULTIPLAYER_SERVER_URL` on the client.
+
+**Turning multiplayer off.** `MULTIPLAYER_SERVER_URL=` (empty) runs the app with multiplayer disabled entirely. That is also the default for any non-dev build, so a deployment without a room server is a normal configuration rather than a broken one.
 
 ## Build the client
 
@@ -30,6 +41,14 @@ pnpm build
 ```
 
 Runs `nuxt generate` for `@magic/client`, producing a static site in `packages/magic-client/.output/public` — deployable to any static host (e.g. Netlify) with no server process required.
+
+## Build the room server
+
+```sh
+pnpm --filter @multiplayer/server build
+```
+
+Bundles to `packages/multiplayer-server/dist/index.js` with esbuild, then runs with `node`. It bundles rather than emitting plain `tsc` output because workspace packages are published as raw `.ts` through their `exports` maps, which Node cannot load directly. `railway.toml` in that package carries the deploy config.
 
 ## Other useful scripts
 
@@ -48,3 +67,5 @@ Runs `nuxt generate` for `@magic/client`, producing a static site in `packages/m
 - `packages/graph-*` — the framework-agnostic graph engine (Graph Kit) and its plugins/primitives.
 - `packages/canvas-*` - Infinite Canvas engine.
 - `packages/magic-products` — Magic Graphs product experiences.
+- `packages/multiplayer-protocol` — the client/server wire contract: room state shape, patch ops, privilege tiers. Zero dependencies, shared by both sides.
+- `packages/multiplayer-server` — the room server (socket.io). Graph-agnostic: it holds opaque per-product state, applies patches to it and enforces privileges, without knowing what a node or an edge is.

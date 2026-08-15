@@ -29,7 +29,7 @@
 
 <template>
   <Button
-    class="px-2 bg-transparent w-full justify-start"
+    class="px-2 bg-transparent dark:bg-transparent dark:hover:bg-transparent w-full justify-start"
     @click="fullscreen.toggle"
     :disabled="!fullscreen.isSupported.value"
   >

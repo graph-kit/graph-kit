@@ -2,8 +2,8 @@ import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { CoreEdge } from '@graph/primitives/types';
 import { GNode } from '@magic/shared/graph';
+import { MagicGraph } from '@magic/shared/graph-product';
 import { Lens } from '@magic/shared/lens';
-import { MagicGraph } from '@magic/shared/product';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import type {
   SimulationDefinition,

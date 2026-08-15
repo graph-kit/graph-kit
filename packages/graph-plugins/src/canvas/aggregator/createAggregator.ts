@@ -62,7 +62,7 @@ export const createAggregator = (
    * Returns all canvas elements at given coordinate
    *
    * @param coords Point in canvas space to test against {@link CanvasElement.shape | element} hitboxes
-   * @returns All canvas elements whose hitbox contains coords, ordered back-to-front by z-priority
+   * @returns All canvas elements whose hitbox contains coords, ordered back-to-front by paint priority
    * @example const els = getCanvasElementsAtCoordinate({ x: 200, y: 550 })
    * console.log(els) // [node, nodeAnchor] meaning nodeAnchor is above the node
    */

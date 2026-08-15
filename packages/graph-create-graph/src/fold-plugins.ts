@@ -15,6 +15,7 @@ import {
   createFinalActionsProxy,
   createTransitEventHub,
   wrapActionsWithConsumerEvents,
+  wrapPositionsControlsWithConsumerEvents,
   wrapWeightsControlsWithConsumerEvents,
 } from './consumer-events.ts';
 import { createFinalRenderFunctionsProxy } from './final-render-functions.ts';
@@ -74,6 +75,10 @@ export const foldPlugins = (
       coreGraph.controls.weights,
       consumerEvents,
     ),
+    positions: wrapPositionsControlsWithConsumerEvents(
+      coreGraph.controls.positions,
+      consumerEvents,
+    ),
   };
 
   // consumer events are the primary surface — spread directly onto the top-level
@@ -83,7 +88,7 @@ export const foldPlugins = (
     ...consumerEvents,
     transit: transitEvents,
     _internal: {
-      coreEvents: coreGraph.events,
+      core: coreGraph.events,
     },
   };
   let actions = coreGraph.actions;

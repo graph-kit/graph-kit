@@ -35,4 +35,13 @@ export type MagicProductManifest = {
   name: string;
   navigation: MagicProductNavigation;
   meta: MagicProductMeta;
+  /**
+   * whether this product can take part in a room. required rather than defaulted so
+   * every product declares it, since silently opting in is how a product ends up
+   * syncing state it was never built to hand over.
+   *
+   * false means invisible to the multiplayer system entirely: no server state, not
+   * movable to, never seeded, and no "start room" action.
+   */
+  multiplayer: boolean;
 };

@@ -1,18 +1,15 @@
 <script setup lang="ts">
   import ToggleButton from '@core/components/ToggleButton';
 
-  import { useThemeToClasses } from '../../useThemeToClasses.ts';
   import { toggleButton } from './classes.ts';
 
   const pressed = defineModel<boolean>();
-
-  const classes = useThemeToClasses(toggleButton);
 </script>
 
 <template>
   <ToggleButton
     v-model="pressed"
-    :class="classes"
+    :class="toggleButton"
   >
     <slot />
   </ToggleButton>

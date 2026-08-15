@@ -1,116 +1,89 @@
 <script setup lang="ts">
-  import { nullThrows } from '@core/utils/assert';
-  import colors from '@core/utils/colors';
   import Button from '@magic/shared/Button';
   import HStack from '@magic/shared/HStack';
-  import Tooltip from '@magic/shared/Tooltip';
-  import { LatexInput, type LatexInputInstance } from '@magic/shared/latex';
+  import Icon from '@magic/shared/Icon';
+  import TooltipVue from '@magic/shared/Tooltip';
+  import { LatexInputWithPreview } from '@magic/shared/latex';
+  import { mdiClose } from '@mdi/js';
 
-  import { computed, onUnmounted, ref } from 'vue';
+  import { computed, ref } from 'vue';
 
-  import type { HighlightQueryId } from '../../types.ts';
+  import { QueryId } from '../../types.ts';
   import { useProvidedSetsProductState } from '../../useSetsProduct.ts';
-  import { useSetsLatexField } from '../composables/useSetsLatexField.ts';
+  import { useQueryEditor } from '../composables/useQueryEditor.ts';
+  import QueryInputModifiers from './QueryInputModifiers.vue';
+  import QueryToggleHidden from './QueryToggleHidden.vue';
 
   const props = defineProps<{
-    queryId: HighlightQueryId;
+    queryId: QueryId;
   }>();
 
-  const emit = defineEmits<{
-    focus: [];
-  }>();
+  const { queries, queryAnalysis } = useProvidedSetsProductState();
 
-  const latexInputRef = ref<LatexInputInstance | null>(null);
+  const query = queries.getQuery(props.queryId);
 
-  const { highlights, queryAnalysis } = useProvidedSetsProductState();
+  const hasError = computed(() => queryAnalysis.queryErrors.value[query.id]);
 
-  const latexQueryString = computed({
-    get: () => highlights.getQuery(props.queryId).latexQueryString,
-    set: (latexString) =>
-      highlights.setLatexQueryString(props.queryId, latexString),
+  const editor = useQueryEditor(query);
+
+  const previewValue = ref<string>();
+
+  const removeButtonSizePx = 26;
+
+  const showRemoveButton = computed(() => {
+    return queries.queries.value.length > 1;
   });
 
-  const isHidden = computed(() => highlights.getQuery(props.queryId).isHidden);
-
-  const color = computed(() => highlights.getQuery(props.queryId).color);
-
-  const toggleHidden = () =>
-    highlights.setHidden(props.queryId, !isHidden.value);
-
-  // TODO disambiguation and simplifications shouldn't even populate
-  // in query error condition.
-  const hasError = computed(
-    () => queryAnalysis.queryErrors.value[props.queryId],
-  );
-
-  const simplified = computed(
-    () => queryAnalysis.simplifiedQueries.value[props.queryId],
-  );
-
-  const disambiguated = computed(
-    () => queryAnalysis.disambiguatedQueries.value[props.queryId],
-  );
-
-  onUnmounted(
-    highlights.registerQueryEditor(props.queryId, {
-      insert: (latexString) =>
-        latexInputRef.value?.insertIntoLatexString(latexString),
-      replace: (latexString) =>
-        latexInputRef.value?.replaceLatexString(latexString),
-    }),
-  );
-
-  // trigger example: $$ A\cup A $$
-  const applySimplification = () =>
-    highlights.replaceQuery(
-      props.queryId,
-      nullThrows(simplified.value, 'simplified query is null'),
-    );
-
-  // trigger example: $$ A\cap B\cup C $$
-  const applyDisambiguation = () =>
-    highlights.replaceQuery(
-      props.queryId,
-      nullThrows(disambiguated.value, 'disambiguated query is null'),
-    );
+  const latexInputWidthPx = computed(() => {
+    const defaultInputWidthPx = 400;
+    const hStackGapWidthPx = 8; // tailwind gap-2 = 8px
+    let widthPx = defaultInputWidthPx;
+    if (!showRemoveButton.value) {
+      widthPx += removeButtonSizePx + hStackGapWidthPx;
+    }
+    return widthPx;
+  });
 </script>
 
 <template>
-  <HStack class="relative h-10">
-    <LatexInput
-      ref="latexInputRef"
-      v-model="latexQueryString"
-      :error="hasError"
-      @ready="useSetsLatexField"
-      @focus="emit('focus')"
-    />
-    <Tooltip
-      v-if="disambiguated"
-      :label="`Ambiguous order of operations. Click to write it as: ${disambiguated}`"
-    >
-      <template #trigger>
-        <!-- TODO replace with a proper icon button -->
-        <Button @click="applyDisambiguation">&#9432;</Button>
-      </template>
-    </Tooltip>
+  <HStack class="h-10">
+    <QueryToggleHidden :query="query" />
 
-    <Tooltip
-      v-if="simplified"
-      :label="`Simplify expression to: ${simplified}`"
-    >
-      <template #trigger>
-        <Button @click="applySimplification">Simplify</Button>
-      </template>
-    </Tooltip>
+    <HStack class="relative">
+      <!-- not a v-model, since the query's latex is read only and moves through replace -->
+      <LatexInputWithPreview
+        :model-value="query.latexQueryString"
+        @update:model-value="query.editor.replace"
+        :error="hasError"
+        :preview-value="previewValue"
+        placeholder="\text{e.g. } A \cup B"
+        @mounted="editor.onMounted"
+        @unmounted="editor.onUnmounted"
+        :width="latexInputWidthPx"
+        :data-query-focus="query.id"
+      />
+      <QueryInputModifiers
+        v-model="previewValue"
+        :query="query"
+      />
+    </HStack>
 
-    <Tooltip :label="isHidden ? 'Show highlight' : 'Hide highlight'">
+    <TooltipVue
+      v-if="showRemoveButton"
+      label="Remove"
+      side="right"
+    >
       <template #trigger>
         <Button
-          :style="{ backgroundColor: isHidden ? colors.GRAY_500 : color }"
-          class="h-full"
-          @click="toggleHidden"
-        />
+          @click="queries.removeQuery(query.id)"
+          class="hover:text-red-500 bg-transparent dark:bg-transparent dark:hover:bg-transparent p-0"
+        >
+          <Icon
+            :path="mdiClose"
+            :size="removeButtonSizePx"
+          />
+        </Button>
       </template>
-    </Tooltip>
+    </TooltipVue>
   </HStack>
 </template>

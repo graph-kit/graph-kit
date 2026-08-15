@@ -336,7 +336,7 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
       clearAnchorStateIfParentRemoved,
       ANCHOR_PLUGIN_ID,
     );
-    events._internal.coreEvents.handle(
+    events._internal.core.handle(
       'onNodeMoveStreamStart',
       clearAnchorState,
       ANCHOR_PLUGIN_ID,
@@ -398,10 +398,7 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
 
   const disable = () => {
     events.unhandle('onNodesRemoved', clearAnchorStateIfParentRemoved);
-    events._internal.coreEvents.unhandle(
-      'onNodeMoveStreamStart',
-      clearAnchorState,
-    );
+    events._internal.core.unhandle('onNodeMoveStreamStart', clearAnchorState);
     controls.canvas.events.unhandle('onMouseUp', checkForParentNodeUpdate);
     controls.canvas.events.unhandle(
       'onGraphUnderCursorChange',

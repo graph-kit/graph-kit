@@ -7,7 +7,7 @@
     DropdownMenuTrigger,
   } from 'reka-ui';
 
-  import { computed, useAttrs } from 'vue';
+  import { computed, onUnmounted, ref, useAttrs } from 'vue';
 
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
@@ -17,12 +17,56 @@
   interface Props {
     side?: DropdownMenuContentProps['side'];
     align?: DropdownMenuContentProps['align'];
+    /** hover adds pointer intent on top of the click and keyboard paths rather than replacing them */
+    openOn?: 'click' | 'hover';
   }
 
-  withDefaults(defineProps<Props>(), {
+  const props = withDefaults(defineProps<Props>(), {
     side: 'bottom',
     align: 'start',
+    openOn: 'click',
   });
+
+  /** long enough to cross the gap between the trigger and the menu, short enough to read as a dismissal */
+  const HOVER_CLOSE_DELAY_MS = 150;
+
+  const open = ref(false);
+
+  /** a hover carries no focus intent, so reka's focus handoffs sit out until a click or a key opens the menu */
+  const openedByHover = ref(false);
+
+  let closeTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  const cancelPendingClose = () => clearTimeout(closeTimeout);
+
+  onUnmounted(cancelPendingClose);
+
+  // touch reports a pointerenter on tap, which would race reka's own click handling
+  const isHoverIntent = (event: PointerEvent) =>
+    props.openOn === 'hover' && event.pointerType !== 'touch';
+
+  const openOnHover = (event: PointerEvent) => {
+    if (!isHoverIntent(event)) return;
+    cancelPendingClose();
+    openedByHover.value = true;
+    open.value = true;
+  };
+
+  const closeOnHover = (event: PointerEvent) => {
+    if (!isHoverIntent(event)) return;
+    cancelPendingClose();
+    closeTimeout = setTimeout(() => (open.value = false), HOVER_CLOSE_DELAY_MS);
+  };
+
+  // reka drives this from clicks, keys and dismissals, each of which owns where focus lands
+  const onOpenChange = (isOpen: boolean) => {
+    openedByHover.value = false;
+    open.value = isOpen;
+  };
+
+  const keepFocusPut = (event: Event) => {
+    if (openedByHover.value) event.preventDefault();
+  };
 
   const attrs = useAttrs();
 
@@ -48,17 +92,30 @@
     outside-dismissal path, which skips the focus handoff. escape still returns
     focus to the trigger, since there is nowhere else sensible to land.
   -->
-  <DropdownMenuRoot :modal="false">
-    <DropdownMenuTrigger as-child>
+  <DropdownMenuRoot
+    :modal="false"
+    :open="open"
+    @update:open="onOpenChange"
+  >
+    <DropdownMenuTrigger
+      as-child
+      @pointerenter="openOnHover"
+      @pointerleave="closeOnHover"
+    >
       <slot name="trigger" />
     </DropdownMenuTrigger>
     <DropdownMenuPortal>
+      <!-- the menu is part of the hover target, so crossing into it has to call off the pending close -->
       <DropdownMenuContent
         :side="side"
         :align="align"
         :side-offset="6"
         v-bind="{ ...attrs, class: undefined }"
         :class="classes"
+        @pointerenter="cancelPendingClose"
+        @pointerleave="closeOnHover"
+        @open-auto-focus="keepFocusPut"
+        @close-auto-focus="keepFocusPut"
       >
         <slot />
       </DropdownMenuContent>

@@ -1,13 +1,10 @@
 <script setup lang="ts">
-  import { cn } from '@core/components/cn';
-
   import { computed } from 'vue';
 
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import { MagicProductCard } from '../../product/manifests/types.ts';
-  import { useThemeToClasses } from '../../useThemeToClasses.ts';
 
   const props = defineProps<{ card: MagicProductCard }>();
 
@@ -16,11 +13,6 @@
   const thumbnail = computed(
     () => props.card.thumbnail[magic.appearance.state.value],
   );
-
-  const descriptionClasses = useThemeToClasses({
-    dark: 'text-gray-300',
-    light: 'text-gray-800',
-  });
 </script>
 
 <template>
@@ -35,7 +27,7 @@
     />
     <VStack class="gap-1 text-left">
       <h1 class="text-lg font-bold">{{ card.name }}</h1>
-      <p :class="cn('text-sm font-light', descriptionClasses)">
+      <p class="text-sm font-light text-gray-800 dark:text-gray-300">
         {{ card.description }}
       </p>
     </VStack>

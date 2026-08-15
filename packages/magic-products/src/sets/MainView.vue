@@ -11,22 +11,22 @@
   import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
-  import { HighlightQueryId, Section } from './types.ts';
+  import { QueryId, Section } from './types.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
     magic,
-    setsProductState: { sets, sections, queryAnalysis, theme, highlights },
+    setsProductState: { sets, sections, queryAnalysis, theme, queries },
   } = useSetsProduct();
 
   const { queryIdToSections } = queryAnalysis;
 
   // the eye-toggle in Query hides a query's paint without touching whether it resolves
   const visibleQueryIdToSections = computed(() => {
-    const sectionsByQueryId = new Map<HighlightQueryId, Section[]>();
+    const sectionsByQueryId = new Map<QueryId, Section[]>();
 
     for (const [queryId, sections] of queryIdToSections.value) {
-      if (highlights.getQuery(queryId).isHidden) continue;
+      if (queries.getQuery(queryId).hidden) continue;
       sectionsByQueryId.set(queryId, sections);
     }
 
@@ -53,7 +53,7 @@
     const map = new Map<SectionKey, Color[]>();
 
     for (const [queryId, sections] of visibleQueryIdToSections.value) {
-      const { color } = highlights.getQuery(queryId);
+      const { color } = queries.getQuery(queryId);
       for (const section of sections) {
         const key = getSectionKey(section);
         const existing = map.get(key) ?? [];

@@ -4,312 +4,312 @@
 export type Color = string;
 
 /**
- * all tailwind gray colors
+ * all tailwind v4 gray colors
  */
 export const GRAY_50 = '#f9fafb';
 export const GRAY_100 = '#f3f4f6';
 export const GRAY_200 = '#e5e7eb';
-export const GRAY_300 = '#d1d5db';
-export const GRAY_400 = '#9ca3af';
-export const GRAY_500 = '#6b7280';
-export const GRAY_600 = '#4b5563';
-export const GRAY_700 = '#374151';
-export const GRAY_800 = '#1f2937';
-export const GRAY_900 = '#111827';
+export const GRAY_300 = '#d1d5dc';
+export const GRAY_400 = '#99a1af';
+export const GRAY_500 = '#6a7282';
+export const GRAY_600 = '#4a5565';
+export const GRAY_700 = '#364153';
+export const GRAY_800 = '#1e2939';
+export const GRAY_900 = '#101828';
 
 /**
- * all tailwind red colors
+ * all tailwind v4 red colors
  */
 export const RED_50 = '#fef2f2';
-export const RED_100 = '#fee2e2';
-export const RED_200 = '#fecaca';
-export const RED_300 = '#fca5a5';
-export const RED_400 = '#f87171';
-export const RED_500 = '#ef4444';
-export const RED_600 = '#dc2626';
-export const RED_700 = '#b91c1c';
-export const RED_800 = '#991b1b';
-export const RED_900 = '#7f1d1d';
+export const RED_100 = '#ffe2e2';
+export const RED_200 = '#ffc9c9';
+export const RED_300 = '#ffa2a2';
+export const RED_400 = '#ff6467';
+export const RED_500 = '#fb2c36';
+export const RED_600 = '#e7000b';
+export const RED_700 = '#c10007';
+export const RED_800 = '#9f0712';
+export const RED_900 = '#82181a';
 
 /**
- * all tailwind orange colors
+ * all tailwind v4 orange colors
  */
 export const ORANGE_50 = '#fff7ed';
-export const ORANGE_100 = '#ffedd5';
-export const ORANGE_200 = '#fed7aa';
-export const ORANGE_300 = '#fdba74';
-export const ORANGE_400 = '#fb923c';
-export const ORANGE_500 = '#f97316';
-export const ORANGE_600 = '#ea580c';
-export const ORANGE_700 = '#c2410c';
-export const ORANGE_800 = '#9a3412';
-export const ORANGE_900 = '#7c2d12';
+export const ORANGE_100 = '#ffedd4';
+export const ORANGE_200 = '#ffd6a7';
+export const ORANGE_300 = '#ffb86a';
+export const ORANGE_400 = '#ff8904';
+export const ORANGE_500 = '#ff6900';
+export const ORANGE_600 = '#f54900';
+export const ORANGE_700 = '#ca3500';
+export const ORANGE_800 = '#9f2d00';
+export const ORANGE_900 = '#7e2a0c';
 
 /**
- * all tailwind amber colors
+ * all tailwind v4 amber colors
  */
 export const AMBER_50 = '#fffbeb';
-export const AMBER_100 = '#fef3c7';
-export const AMBER_200 = '#fde68a';
-export const AMBER_300 = '#fcd34d';
-export const AMBER_400 = '#fbbf24';
-export const AMBER_500 = '#f59e0b';
-export const AMBER_600 = '#d97706';
-export const AMBER_700 = '#b45309';
-export const AMBER_800 = '#92400e';
-export const AMBER_900 = '#78350f';
+export const AMBER_100 = '#fef3c6';
+export const AMBER_200 = '#fee685';
+export const AMBER_300 = '#ffd230';
+export const AMBER_400 = '#ffb900';
+export const AMBER_500 = '#fe9a00';
+export const AMBER_600 = '#e17100';
+export const AMBER_700 = '#bb4d00';
+export const AMBER_800 = '#973c00';
+export const AMBER_900 = '#7b3306';
 
 /**
- * all tailwind yellow colors
+ * all tailwind v4 yellow colors
  */
 export const YELLOW_50 = '#fefce8';
-export const YELLOW_100 = '#fef9c3';
-export const YELLOW_200 = '#fef08a';
-export const YELLOW_300 = '#fde047';
-export const YELLOW_400 = '#facc15';
-export const YELLOW_500 = '#eab308';
-export const YELLOW_600 = '#ca8a04';
-export const YELLOW_700 = '#a16207';
-export const YELLOW_800 = '#854d0e';
-export const YELLOW_900 = '#713f12';
+export const YELLOW_100 = '#fef9c2';
+export const YELLOW_200 = '#fff085';
+export const YELLOW_300 = '#ffdf20';
+export const YELLOW_400 = '#fdc700';
+export const YELLOW_500 = '#f0b100';
+export const YELLOW_600 = '#d08700';
+export const YELLOW_700 = '#a65f00';
+export const YELLOW_800 = '#894b00';
+export const YELLOW_900 = '#733e0a';
 
 /**
- * all tailwind lime colors
+ * all tailwind v4 lime colors
  */
 export const LIME_50 = '#f7fee7';
-export const LIME_100 = '#ecfccb';
-export const LIME_200 = '#d9f99d';
-export const LIME_300 = '#bef264';
-export const LIME_400 = '#a3e635';
-export const LIME_500 = '#84cc16';
-export const LIME_600 = '#65a30d';
-export const LIME_700 = '#4d7c0f';
-export const LIME_800 = '#3f6212';
-export const LIME_900 = '#365314';
+export const LIME_100 = '#ecfcca';
+export const LIME_200 = '#d8f999';
+export const LIME_300 = '#bbf451';
+export const LIME_400 = '#9ae600';
+export const LIME_500 = '#7ccf00';
+export const LIME_600 = '#5ea500';
+export const LIME_700 = '#497d00';
+export const LIME_800 = '#3c6300';
+export const LIME_900 = '#35530e';
 
 /**
- * all tailwind green colors
+ * all tailwind v4 green colors
  */
 export const GREEN_50 = '#f0fdf4';
 export const GREEN_100 = '#dcfce7';
-export const GREEN_200 = '#bbf7d0';
-export const GREEN_300 = '#86efac';
-export const GREEN_400 = '#4ade80';
-export const GREEN_500 = '#22c55e';
-export const GREEN_600 = '#16a34a';
-export const GREEN_700 = '#15803d';
-export const GREEN_800 = '#166534';
-export const GREEN_900 = '#14532d';
+export const GREEN_200 = '#b9f8cf';
+export const GREEN_300 = '#7bf1a8';
+export const GREEN_400 = '#05df72';
+export const GREEN_500 = '#00c950';
+export const GREEN_600 = '#00a63e';
+export const GREEN_700 = '#008236';
+export const GREEN_800 = '#016630';
+export const GREEN_900 = '#0d542b';
 
 /**
- * all tailwind emerald colors
+ * all tailwind v4 emerald colors
  */
 export const EMERALD_50 = '#ecfdf5';
-export const EMERALD_100 = '#d1fae5';
-export const EMERALD_200 = '#a7f3d0';
-export const EMERALD_300 = '#6ee7b7';
-export const EMERALD_400 = '#34d399';
-export const EMERALD_500 = '#10b981';
-export const EMERALD_600 = '#059669';
-export const EMERALD_700 = '#047857';
-export const EMERALD_800 = '#065f46';
-export const EMERALD_900 = '#064e3b';
+export const EMERALD_100 = '#d0fae5';
+export const EMERALD_200 = '#a4f4cf';
+export const EMERALD_300 = '#5ee9b5';
+export const EMERALD_400 = '#00d492';
+export const EMERALD_500 = '#00bc7d';
+export const EMERALD_600 = '#009966';
+export const EMERALD_700 = '#007a55';
+export const EMERALD_800 = '#006045';
+export const EMERALD_900 = '#004f3b';
 
 /**
- * all tailwind teal colors
+ * all tailwind v4 teal colors
  */
 export const TEAL_50 = '#f0fdfa';
-export const TEAL_100 = '#ccfbf1';
-export const TEAL_200 = '#99f6e4';
-export const TEAL_300 = '#5eead4';
-export const TEAL_400 = '#2dd4bf';
-export const TEAL_500 = '#14b8a6';
-export const TEAL_600 = '#0d9488';
-export const TEAL_700 = '#0f766e';
-export const TEAL_800 = '#115e59';
-export const TEAL_900 = '#134e4a';
+export const TEAL_100 = '#cbfbf1';
+export const TEAL_200 = '#96f7e4';
+export const TEAL_300 = '#46ecd5';
+export const TEAL_400 = '#00d5be';
+export const TEAL_500 = '#00bba7';
+export const TEAL_600 = '#009689';
+export const TEAL_700 = '#00786f';
+export const TEAL_800 = '#005f5a';
+export const TEAL_900 = '#0b4f4a';
 
 /**
- * all tailwind cyan colors
+ * all tailwind v4 cyan colors
  */
 export const CYAN_50 = '#ecfeff';
-export const CYAN_100 = '#cffafe';
-export const CYAN_200 = '#a5f3fc';
-export const CYAN_300 = '#67e8f9';
-export const CYAN_400 = '#22d3ee';
-export const CYAN_500 = '#06b6d4';
-export const CYAN_600 = '#0891b2';
-export const CYAN_700 = '#0e7490';
-export const CYAN_800 = '#155e75';
-export const CYAN_900 = '#164e63';
+export const CYAN_100 = '#cefafe';
+export const CYAN_200 = '#a2f4fd';
+export const CYAN_300 = '#53eafd';
+export const CYAN_400 = '#00d3f2';
+export const CYAN_500 = '#00b8db';
+export const CYAN_600 = '#0092b8';
+export const CYAN_700 = '#007595';
+export const CYAN_800 = '#005f78';
+export const CYAN_900 = '#104e64';
 
 /**
- * all tailwind sky colors
+ * all tailwind v4 sky colors
  */
 export const SKY_50 = '#f0f9ff';
-export const SKY_100 = '#e0f2fe';
-export const SKY_200 = '#bae6fd';
-export const SKY_300 = '#7dd3fc';
-export const SKY_400 = '#38bdf8';
-export const SKY_500 = '#0ea5e9';
-export const SKY_600 = '#0284c7';
-export const SKY_700 = '#0369a1';
-export const SKY_800 = '#075985';
-export const SKY_900 = '#0c4a6e';
+export const SKY_100 = '#dff2fe';
+export const SKY_200 = '#b8e6fe';
+export const SKY_300 = '#74d4ff';
+export const SKY_400 = '#00bcff';
+export const SKY_500 = '#00a6f4';
+export const SKY_600 = '#0084d1';
+export const SKY_700 = '#0069a8';
+export const SKY_800 = '#00598a';
+export const SKY_900 = '#024a70';
 
 /**
- * all tailwind blue colors
+ * all tailwind v4 blue colors
  */
 export const BLUE_50 = '#eff6ff';
 export const BLUE_100 = '#dbeafe';
-export const BLUE_200 = '#bfdbfe';
-export const BLUE_300 = '#93c5fd';
-export const BLUE_400 = '#60a5fa';
-export const BLUE_500 = '#3b82f6';
-export const BLUE_600 = '#2563eb';
-export const BLUE_700 = '#1d4ed8';
-export const BLUE_800 = '#1e40af';
-export const BLUE_900 = '#1e3a8a';
+export const BLUE_200 = '#bedbff';
+export const BLUE_300 = '#8ec5ff';
+export const BLUE_400 = '#51a2ff';
+export const BLUE_500 = '#2b7fff';
+export const BLUE_600 = '#155dfc';
+export const BLUE_700 = '#1447e6';
+export const BLUE_800 = '#193cb8';
+export const BLUE_900 = '#1c398e';
 
 /**
- * all tailwind indigo colors
+ * all tailwind v4 indigo colors
  */
 export const INDIGO_50 = '#eef2ff';
 export const INDIGO_100 = '#e0e7ff';
-export const INDIGO_200 = '#c7d2fe';
-export const INDIGO_300 = '#a5b4fc';
-export const INDIGO_400 = '#818cf8';
-export const INDIGO_500 = '#6366f1';
-export const INDIGO_600 = '#4f46e5';
-export const INDIGO_700 = '#4338ca';
-export const INDIGO_800 = '#3730a3';
-export const INDIGO_900 = '#312e81';
+export const INDIGO_200 = '#c6d2ff';
+export const INDIGO_300 = '#a3b3ff';
+export const INDIGO_400 = '#7c86ff';
+export const INDIGO_500 = '#615fff';
+export const INDIGO_600 = '#4f39f6';
+export const INDIGO_700 = '#432dd7';
+export const INDIGO_800 = '#372aac';
+export const INDIGO_900 = '#312c85';
 
 /**
- * all tailwind violet colors,
+ * all tailwind v4 violet colors,
  */
 export const VIOLET_50 = '#f5f3ff';
 export const VIOLET_100 = '#ede9fe';
-export const VIOLET_200 = '#ddd6fe';
-export const VIOLET_300 = '#c4b5fd';
-export const VIOLET_400 = '#a78bfa';
-export const VIOLET_500 = '#8b5cf6';
-export const VIOLET_600 = '#7c3aed';
-export const VIOLET_700 = '#6d28d9';
-export const VIOLET_800 = '#5b21b6';
-export const VIOLET_900 = '#4c1d95';
+export const VIOLET_200 = '#ddd6ff';
+export const VIOLET_300 = '#c4b4ff';
+export const VIOLET_400 = '#a684ff';
+export const VIOLET_500 = '#8e51ff';
+export const VIOLET_600 = '#7f22fe';
+export const VIOLET_700 = '#7008e7';
+export const VIOLET_800 = '#5d0ec0';
+export const VIOLET_900 = '#4d179a';
 
 /**
- * all tailwind purple colors
+ * all tailwind v4 purple colors
  */
 export const PURPLE_50 = '#faf5ff';
 export const PURPLE_100 = '#f3e8ff';
-export const PURPLE_200 = '#e9d5ff';
-export const PURPLE_300 = '#d8b4fe';
-export const PURPLE_400 = '#c084fc';
-export const PURPLE_500 = '#a855f7';
-export const PURPLE_600 = '#9333ea';
-export const PURPLE_700 = '#7e22ce';
-export const PURPLE_800 = '#6b21a8';
-export const PURPLE_900 = '#581c87';
+export const PURPLE_200 = '#e9d4ff';
+export const PURPLE_300 = '#dab2ff';
+export const PURPLE_400 = '#c27aff';
+export const PURPLE_500 = '#ad46ff';
+export const PURPLE_600 = '#9810fa';
+export const PURPLE_700 = '#8200db';
+export const PURPLE_800 = '#6e11b0';
+export const PURPLE_900 = '#59168b';
 
 /**
- * all tailwind fuchsia colors
+ * all tailwind v4 fuchsia colors
  */
 export const FUCHSIA_50 = '#fdf4ff';
 export const FUCHSIA_100 = '#fae8ff';
-export const FUCHSIA_200 = '#f5d0fe';
-export const FUCHSIA_300 = '#f0abfc';
-export const FUCHSIA_400 = '#e879f9';
-export const FUCHSIA_500 = '#d946ef';
-export const FUCHSIA_600 = '#c026d3';
-export const FUCHSIA_700 = '#a21caf';
-export const FUCHSIA_800 = '#86198f';
-export const FUCHSIA_900 = '#701a75';
+export const FUCHSIA_200 = '#f6cfff';
+export const FUCHSIA_300 = '#f4a8ff';
+export const FUCHSIA_400 = '#ed6aff';
+export const FUCHSIA_500 = '#e12afb';
+export const FUCHSIA_600 = '#c800de';
+export const FUCHSIA_700 = '#a800b7';
+export const FUCHSIA_800 = '#8a0194';
+export const FUCHSIA_900 = '#721378';
 
 /**
- * all tailwind pink colors
+ * all tailwind v4 pink colors
  */
 export const PINK_50 = '#fdf2f8';
 export const PINK_100 = '#fce7f3';
-export const PINK_200 = '#fbcfe8';
-export const PINK_300 = '#f9a8d4';
-export const PINK_400 = '#f472b6';
-export const PINK_500 = '#ec4899';
-export const PINK_600 = '#db2777';
-export const PINK_700 = '#be185d';
-export const PINK_800 = '#9d174d';
-export const PINK_900 = '#831843';
+export const PINK_200 = '#fccee8';
+export const PINK_300 = '#fda5d5';
+export const PINK_400 = '#fb64b6';
+export const PINK_500 = '#f6339a';
+export const PINK_600 = '#e60076';
+export const PINK_700 = '#c6005c';
+export const PINK_800 = '#a3004c';
+export const PINK_900 = '#861043';
 
 /**
- * all tailwind rose colors
+ * all tailwind v4 rose colors
  */
 export const ROSE_50 = '#fff1f2';
 export const ROSE_100 = '#ffe4e6';
-export const ROSE_200 = '#fecdd3';
-export const ROSE_300 = '#fda4af';
-export const ROSE_400 = '#fb7185';
-export const ROSE_500 = '#f43f5e';
-export const ROSE_600 = '#e11d48';
-export const ROSE_700 = '#be123c';
-export const ROSE_800 = '#9f1239';
-export const ROSE_900 = '#881337';
+export const ROSE_200 = '#ffccd3';
+export const ROSE_300 = '#ffa1ad';
+export const ROSE_400 = '#ff637e';
+export const ROSE_500 = '#ff2056';
+export const ROSE_600 = '#ec003f';
+export const ROSE_700 = '#c70036';
+export const ROSE_800 = '#a50036';
+export const ROSE_900 = '#8b0836';
 
 /**
- * all tailwind stone colors
+ * all tailwind v4 stone colors
  */
-export const STONE_50 = '#f5f7fa';
-export const STONE_100 = '#e4e7eb';
-export const STONE_200 = '#cbd2d9';
-export const STONE_300 = '#9fa6b2';
-export const STONE_400 = '#6b7280';
-export const STONE_500 = '#4b5563';
-export const STONE_600 = '#374151';
-export const STONE_700 = '#252f3f';
-export const STONE_800 = '#161e2e';
-export const STONE_900 = '#0d131e';
+export const STONE_50 = '#fafaf9';
+export const STONE_100 = '#f5f5f4';
+export const STONE_200 = '#e7e5e4';
+export const STONE_300 = '#d6d3d1';
+export const STONE_400 = '#a6a09b';
+export const STONE_500 = '#79716b';
+export const STONE_600 = '#57534d';
+export const STONE_700 = '#44403b';
+export const STONE_800 = '#292524';
+export const STONE_900 = '#1c1917';
 
 /**
- * all tailwind neutral colors
+ * all tailwind v4 neutral colors
  */
-export const NEUTRAL_50 = '#f9fafb';
-export const NEUTRAL_100 = '#f4f5f7';
-export const NEUTRAL_200 = '#e5e7eb';
-export const NEUTRAL_300 = '#d2d6dc';
-export const NEUTRAL_400 = '#9fa6b2';
-export const NEUTRAL_500 = '#6b7280';
-export const NEUTRAL_600 = '#4b5563';
-export const NEUTRAL_700 = '#374151';
-export const NEUTRAL_800 = '#252f3f';
-export const NEUTRAL_900 = '#161e2e';
+export const NEUTRAL_50 = '#fafafa';
+export const NEUTRAL_100 = '#f5f5f5';
+export const NEUTRAL_200 = '#e5e5e5';
+export const NEUTRAL_300 = '#d4d4d4';
+export const NEUTRAL_400 = '#a1a1a1';
+export const NEUTRAL_500 = '#737373';
+export const NEUTRAL_600 = '#525252';
+export const NEUTRAL_700 = '#404040';
+export const NEUTRAL_800 = '#262626';
+export const NEUTRAL_900 = '#171717';
 
 /**
- * all tailwind zinc colors
+ * all tailwind v4 zinc colors
  */
-export const ZINC_50 = '#f9fafb';
-export const ZINC_100 = '#f4f5f7';
-export const ZINC_200 = '#e5e7eb';
-export const ZINC_300 = '#d2d6dc';
-export const ZINC_400 = '#9fa6b2';
-export const ZINC_500 = '#6b7280';
-export const ZINC_600 = '#4b5563';
-export const ZINC_700 = '#374151';
-export const ZINC_800 = '#252f3f';
-export const ZINC_900 = '#161e2e';
+export const ZINC_50 = '#fafafa';
+export const ZINC_100 = '#f4f4f5';
+export const ZINC_200 = '#e4e4e7';
+export const ZINC_300 = '#d4d4d8';
+export const ZINC_400 = '#9f9fa9';
+export const ZINC_500 = '#71717b';
+export const ZINC_600 = '#52525c';
+export const ZINC_700 = '#3f3f46';
+export const ZINC_800 = '#27272a';
+export const ZINC_900 = '#18181b';
 
 /**
- * all tailwind slate colors
+ * all tailwind v4 slate colors
  */
-export const SLATE_50 = '#f4f5f7';
-export const SLATE_100 = '#e5e7eb';
-export const SLATE_200 = '#d2d6dc';
-export const SLATE_300 = '#9fa6b2';
-export const SLATE_400 = '#6b7280';
-export const SLATE_500 = '#4b5563';
-export const SLATE_600 = '#374151';
-export const SLATE_700 = '#252f3f';
-export const SLATE_800 = '#161e2e';
-export const SLATE_900 = '#0d131e';
+export const SLATE_50 = '#f8fafc';
+export const SLATE_100 = '#f1f5f9';
+export const SLATE_200 = '#e2e8f0';
+export const SLATE_300 = '#cad5e2';
+export const SLATE_400 = '#90a1b9';
+export const SLATE_500 = '#62748e';
+export const SLATE_600 = '#45556c';
+export const SLATE_700 = '#314158';
+export const SLATE_800 = '#1d293d';
+export const SLATE_900 = '#0f172b';
 
 export const WHITE = '#ffffff';
 export const BLACK = '#000000';

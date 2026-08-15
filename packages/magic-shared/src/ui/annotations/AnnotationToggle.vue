@@ -23,7 +23,7 @@
 
   <Well class="p-0 rounded-full overflow-hidden">
     <ToggleIconButton
-      class="bg-transparent p-4"
+      class="bg-transparent dark:bg-transparent p-4"
       label="Annotations"
       :size="20"
       :path="mdiPencil"

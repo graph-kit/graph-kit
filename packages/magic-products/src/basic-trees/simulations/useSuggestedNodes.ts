@@ -2,7 +2,7 @@ import { generateId } from '@core/utils/id';
 import { getRandomInRange } from '@core/utils/random';
 import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
 import { CoreNode } from '@graph/primitives/types';
-import { MagicGraph } from '@magic/shared/product';
+import { MagicGraph } from '@magic/shared/graph-product';
 import { SimulationDefinition } from '@magic/shared/simulation';
 import tinycolor from 'tinycolor2';
 

@@ -184,10 +184,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       { before: [ANCHOR_PLUGIN_ID] },
     );
 
-    events._internal.coreEvents.subscribe(
-      'onNodeMoveStream',
-      updateSelectionBox,
-    );
+    events._internal.core.subscribe('onNodeMoveStream', updateSelectionBox);
   };
 
   const disable = () => {
@@ -198,10 +195,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     controls.canvas.events.unhandle('onContextMenu', disengageMarqueeBox);
     controls.canvas.events.unhandle('onMouseMove', setMarqueeBoxDimensions);
 
-    events._internal.coreEvents.unsubscribe(
-      'onNodeMoveStream',
-      updateSelectionBox,
-    );
+    events._internal.core.unsubscribe('onNodeMoveStream', updateSelectionBox);
 
     disengageMarqueeBox();
   };

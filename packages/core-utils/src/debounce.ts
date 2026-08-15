@@ -4,12 +4,17 @@
  *
  * @param fn target function
  * @param ms time in milliseconds
- * @returns a debounced function
+ * @returns a debounced function, with `cancel` to drop a pending call
  */
 export const debounce = <T extends () => void>(fn: T, ms: number) => {
   let timeout: NodeJS.Timeout;
-  return () => {
+
+  const debounced = () => {
     clearTimeout(timeout);
     timeout = setTimeout(fn, ms);
   };
+
+  debounced.cancel = () => clearTimeout(timeout);
+
+  return debounced;
 };

@@ -1,10 +1,7 @@
 <script setup lang="ts">
   import Button from '@core/components/Button';
 
-  import { useThemeToClasses } from '../../useThemeToClasses.ts';
   import { buttonClasses } from './classes.ts';
-
-  const classes = useThemeToClasses(buttonClasses);
 
   defineSlots<{
     default: () => unknown;
@@ -14,7 +11,7 @@
 </script>
 
 <template>
-  <Button :class="classes">
+  <Button :class="buttonClasses">
     <template #start><slot name="start" /></template>
     <slot />
     <template #end><slot name="end" /></template>

@@ -1,68 +1,87 @@
 import {
   BasicColorMode,
   BasicColorSchema,
-  useColorMode,
   useMounted,
+  usePreferredDark,
 } from '@vueuse/core';
+import { useCookie, useHead } from 'nuxt/app';
 
 import { computed, onMounted, watch } from 'vue';
 
-import { APPEARANCE_STORAGE_KEY, appearances } from './appearances.ts';
+import {
+  APPEARANCE_COOKIE_KEY,
+  APPEARANCE_COOKIE_OPTIONS,
+  APPEARANCE_PREPAINT_SCRIPT,
+  DEFAULT_APPEARANCE,
+  appearances,
+} from './appearances.ts';
 
-// values useColorMode resolves to on the server, where neither localStorage nor
-// prefers-color-scheme is readable
-const SSR_SCHEMA: BasicColorSchema = 'auto';
-const SSR_MODE: BasicColorMode = 'light';
+/** what prerendering bakes into the markup, since no cookie or media query reaches it */
+const PRERENDERED_APPEARANCE: BasicColorMode = 'light';
 
 const validAppearance = (appearance: unknown): appearance is BasicColorSchema =>
-  appearances.some((a) => a === appearance);
+  appearances.some((candidate) => candidate === appearance);
+
+const resolve = (schema: BasicColorSchema, system: BasicColorMode) =>
+  schema === 'auto' ? system : schema;
 
 export type AppearanceControls = ReturnType<typeof useProductAppearance>;
 
 export const useProductAppearance = (
   onAppearanceChanged: (color: BasicColorMode) => void,
 ) => {
-  const colorMode = useColorMode({
-    emitAuto: true,
-    storageKey: APPEARANCE_STORAGE_KEY,
+  const storedSchema = useCookie<BasicColorSchema>(APPEARANCE_COOKIE_KEY, {
+    ...APPEARANCE_COOKIE_OPTIONS,
+    default: () => DEFAULT_APPEARANCE,
   });
 
+  if (!validAppearance(storedSchema.value)) {
+    console.warn(
+      'Received unrecognized appearance value:',
+      storedSchema.value,
+      '\n\nVacating stored appearance value.',
+    );
+    storedSchema.value = DEFAULT_APPEARANCE;
+  }
+
+  const prefersDark = usePreferredDark();
+
+  const system = computed<BasicColorMode>(() =>
+    prefersDark.value ? 'dark' : 'light',
+  );
+
+  // resolved eagerly rather than on mount so it agrees with what the pre-paint script
+  // already stamped, which is what stops the class from bouncing back once vue takes over
+  const documentAppearance = computed(() =>
+    resolve(storedSchema.value, system.value),
+  );
+
+  useHead({
+    // themes the document itself, and every dark: variant keys off this class
+    htmlAttrs: { class: documentAppearance },
+    script: [{ innerHTML: APPEARANCE_PREPAINT_SCRIPT, tagPosition: 'head' }],
+  });
+
+  // css follows the html class, but anything resolved in js has to hydrate against the
+  // baked markup first or vue will keep the prerendered value in production builds
   const hydrated = useMounted();
 
-  // the stored appearance is invisible to the server, so render the server's answer
-  // until hydration finishes or the markup the client builds wont match what it got
-  const state = computed(() =>
-    hydrated.value ? colorMode.state.value : SSR_MODE,
+  const state = computed<BasicColorMode>(() =>
+    hydrated.value ? documentAppearance.value : PRERENDERED_APPEARANCE,
   );
 
   const schema = computed<BasicColorSchema>({
-    get: () => (hydrated.value ? colorMode.value : SSR_SCHEMA),
-    set: (value) => (colorMode.value = value),
+    get: () => (hydrated.value ? storedSchema.value : DEFAULT_APPEARANCE),
+    // the toggle group clears its value when the active option is clicked again
+    set: (value) => {
+      if (!validAppearance(value)) return;
+      storedSchema.value = value;
+    },
   });
 
-  const appearance = Object.assign(schema, {
-    store: colorMode.store,
-    system: colorMode.system,
-    state,
-  });
+  watch(state, onAppearanceChanged);
 
-  const setValue = () => {
-    const appearanceValue = colorMode.state.value;
-    if (!validAppearance(appearanceValue)) {
-      console.warn(
-        'Received unrecognized appearance value:',
-        appearanceValue,
-        '\n\nVacating stored appearance value.',
-      );
-      localStorage.removeItem(APPEARANCE_STORAGE_KEY);
-      return;
-    }
-    onAppearanceChanged(appearanceValue);
-  };
+  onMounted(() => onAppearanceChanged(state.value));
 
-  watch(colorMode.state, setValue);
-
-  onMounted(setValue);
-
-  return appearance;
+  return Object.assign(schema, { state });
 };

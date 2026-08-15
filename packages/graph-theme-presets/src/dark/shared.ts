@@ -1,5 +1,5 @@
-import { CURSOR } from '@core/utils/cursor';
 import colors from '@core/utils/colors';
+import { CURSOR } from '@core/utils/cursor';
 
 const sharedText = {
   content: '?',
@@ -24,7 +24,7 @@ export const shared = {
     radius: Math.ceil(Math.sqrt(35) * 2),
     cursor: CURSOR.GRAB,
     edgePreview: {
-      color: colors.STONE_900,
+      color: colors.GRAY_900,
       width: 10,
     },
   },

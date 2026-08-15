@@ -28,6 +28,6 @@ export const useGraphEvents = (
   ...withAutoUnsubscribe(events),
   transit: withAutoUnsubscribe(events.transit),
   _internal: {
-    coreEvents: withAutoUnsubscribe(events._internal.coreEvents),
+    core: withAutoUnsubscribe(events._internal.core),
   },
 });

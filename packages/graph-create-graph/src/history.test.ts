@@ -84,6 +84,7 @@ const setup = () => {
   return {
     actions: folded.actions,
     getNodes: folded.getNodes,
+    transit: transit as LooseGraphTransit,
     historyControls: folded.controls.history as {
       captureSnapshot: () => void;
       undo: () => void;
@@ -305,5 +306,22 @@ describe('history', () => {
     expect(graph.historyControls.canUndo()).toBe(false);
     expect(graph.historyControls.canRedo()).toBe(false);
     expect(graph.getNodes()).toHaveLength(1);
+  });
+
+  // local storage, a share link and a room all land after the baseline was recorded,
+  // and none of them capture a snapshot of their own
+  it('starts from state loaded after the baseline rather than the empty graph', async () => {
+    const source = setup();
+    source.actions.addNode({ id: 'loaded' });
+    graph.transit.decode(source.transit.encode());
+
+    graph.historyControls.clear();
+
+    graph.actions.addNode({ id: 'edited' });
+    graph.historyControls.captureSnapshot();
+    await settle();
+
+    graph.historyControls.undo();
+    expect(graph.getNodes().map((node) => node.id)).toEqual(['loaded']);
   });
 });

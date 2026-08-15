@@ -15,7 +15,7 @@ export const prims: PrimsFunction =
     const inTree = new Set<GNode['id']>([startNodeId]);
     const treeEdges: GEdge['id'][] = [];
 
-    // edges that will no longer be considered
+    // edges that will no longer be considered (creates loop for example)
     const excludedEdges: GEdge['id'][] = [];
 
     const farNode = (edge: Pick<GEdge, 'source' | 'target'>) =>

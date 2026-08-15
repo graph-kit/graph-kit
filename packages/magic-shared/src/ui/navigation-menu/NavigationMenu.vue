@@ -27,12 +27,14 @@
   <Dropdown>
     <template #trigger>
       <Well class="p-0">
-        <Button class="bg-transparent text-xl p-2 px-4 text-magic">
+        <Button
+          class="bg-transparent dark:bg-transparent text-xl p-2 px-4 text-magic dark:text-magic"
+        >
           {{ activeProduct.name }}
         </Button>
       </Well>
     </template>
-    <Well class="p-1 bg-transparent">
+    <Well class="p-1 bg-transparent dark:bg-transparent">
       <VStack>
         <template
           v-for="{ product, card } in displayedProducts"
@@ -40,7 +42,7 @@
         >
           <DropdownItem @click="navigateToProduct(product)">
             <Button
-              class="rounded-lg p-2 bg-transparent hover:bg-transparent active:bg-transparent"
+              class="rounded-lg p-2 bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent active:bg-transparent dark:active:bg-transparent"
             >
               <ProductCard :card="card" />
             </Button>

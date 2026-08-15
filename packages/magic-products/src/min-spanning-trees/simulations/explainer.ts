@@ -1,10 +1,11 @@
 import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
-import { Graph } from '@magic/shared/graph';
+import { Graph, useGraph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
 import { KruskalsFrame, PrimsFrame } from './frame.ts';
 
 export const primsSlotIds = {
+  unexplored: 'min-spanning-trees/prims/unexplored',
   considering: 'min-spanning-trees/prims/considering',
   excluded: 'min-spanning-trees/prims/excluded',
 } as const;

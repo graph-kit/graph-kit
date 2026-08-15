@@ -10,22 +10,6 @@ export const useGraphProductShortcuts = (magic: Magic, graph: Graph) => {
       key: 'meta+a',
       callback: graph.focus.setAll,
     },
-    {
-      id: 'product/undo',
-      key: 'meta+z',
-      callback: () => {
-        if (!graph.history.canUndo.value) return;
-        graph.history.undo();
-      },
-    },
-    {
-      id: 'product/redo',
-      key: 'meta+shift+z',
-      callback: () => {
-        if (!graph.history.canRedo.value) return;
-        graph.history.redo();
-      },
-    },
   ];
 
   for (const shortcut of shortcuts) {

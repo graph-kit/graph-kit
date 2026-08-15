@@ -151,6 +151,24 @@ describe('room lifecycle', () => {
     expect(result).toEqual({ joined: false });
   });
 
+  it('identifies a room by a short code that can be read out loud', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    expect(roomId).toMatch(/^[A-Z]{4}$/);
+  });
+
+  // the code is short enough to type by hand, and nobody types the case
+  it('joins a room whose code was typed in lower case', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    const result = await joinRoom(student, roomId.toLowerCase());
+
+    expect(result.joined).toBe(true);
+  });
+
   it('disbands the room when the host disconnects', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);

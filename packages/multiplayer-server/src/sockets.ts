@@ -9,6 +9,7 @@ import {
 import { ProductId, RoomId, UserId } from '@multiplayer/protocol/room';
 import { Server } from 'socket.io';
 
+import { generateRoomId, normalizeRoomId } from './room-id.ts';
 import {
   Room,
   addMember,
@@ -25,9 +26,6 @@ import {
   setMemberProduct,
   setTier,
 } from './rooms.ts';
-
-const generateRoomId = (): RoomId =>
-  randomUUID().replaceAll('-', '').slice(0, 10);
 
 /**
  * document traffic is routed to the people actually looking at that product rather than
@@ -106,7 +104,7 @@ export const createSocketServer = (
     };
 
     socket.on('startRoom', ({ displayName, productId, doc }, callback) => {
-      const roomId = generateRoomId();
+      const roomId = generateRoomId(rooms.has);
       const room = createRoom({
         hostId: userId,
         displayName,
@@ -125,14 +123,15 @@ export const createSocketServer = (
     // admission only: which product the member lands on is what enterProduct answers,
     // and every client sends one on its first mount
     socket.on('joinRoom', ({ roomId, displayName }, callback) => {
-      const room = rooms.get(roomId);
+      const targetRoomId = normalizeRoomId(roomId);
+      const room = rooms.get(targetRoomId);
       if (!room) return callback({ joined: false });
 
-      currentRoomId = roomId;
-      socket.join(roomId);
+      currentRoomId = targetRoomId;
+      socket.join(targetRoomId);
       addMember(room, { userId, displayName });
 
-      callback(joinResultFor(room, roomId, userId));
+      callback(joinResultFor(room, targetRoomId, userId));
       broadcastRoster(room);
     });
 

@@ -14,6 +14,7 @@ import RoomPanel from '../ui/multiplayer/RoomPanel.vue';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
 import { useLocalStorageSync } from './internals/useLocalStorageSync.ts';
+import { useProductHistory } from './internals/useProductHistory.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
 
@@ -45,6 +46,11 @@ export const useMagicProduct = (
     host.multiplayer,
   );
 
+  const { history, multiplayerHost } = useProductHistory({
+    host,
+    multiplayer,
+  });
+
   // the surface is all presence needs, so every host broadcasts it rather than only
   // the ones backed by a graph
   if (multiplayer) {
@@ -67,7 +73,7 @@ export const useMagicProduct = (
     lensChips: options.lensChips,
     surface: host.surface,
     transit: host.transit,
-    history: host.history,
+    history,
     localStorage,
     multiplayer,
   };
@@ -85,7 +91,7 @@ export const useMagicProduct = (
     // multiplayer switched off, resolves immediately to 'local'
     const source = await magic.multiplayer?.actions.product.enter(
       options.productId,
-      host.multiplayer,
+      multiplayerHost,
     );
     if (source !== 'room') restoreLocal();
 

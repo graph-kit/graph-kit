@@ -59,8 +59,11 @@ export type MultiplayerHostField = {
    * An empty document means nobody has opened this product in the room yet, so the host
    * seeds it from what it already holds. Otherwise the document is authoritative and the
    * host adopts it, discarding local state.
+   *
+   * Answers with undo over the document, which the harness swaps in whenever the host is
+   * sharing. A host with no undo of its own answers with nothing.
    */
-  bind: (doc: Y.Doc) => void;
+  bind: (doc: Y.Doc) => HistoryField | undefined;
 };
 
 export type MagicProductOptions = {

@@ -1,7 +1,10 @@
 import Fraction from 'fraction.js';
 import * as Y from 'yjs';
 
+import { computed, ref } from 'vue';
+
 import { Graph } from '../graph/types.ts';
+import { HistoryField } from '../product/types.ts';
 
 /**
  * The room's view of a node. Deliberately not the graph's: z is paint order driven by
@@ -46,12 +49,53 @@ const edgeFromGraph = (graph: Graph, edgeId: string): DocEdge | undefined => {
 };
 
 /**
+ * Undo over the shared types rather than over whole graph snapshots, which is what makes
+ * it safe with other people writing: it reverses the items this client wrote and merges
+ * with everything else, where restoring a snapshot would rewrite a peer's work too.
+ */
+const createDocHistory = (doc: Y.Doc): HistoryField => {
+  const undoManager = new Y.UndoManager([readNodes(doc), readEdges(doc)], {
+    // BINDING_ORIGIN is the only origin a local edit carries, so tracking it and nothing
+    // else is what scopes undo to this client
+    trackedOrigins: new Set([BINDING_ORIGIN]),
+  });
+
+  const refresh = ref(0);
+  const bump = () => refresh.value++;
+  undoManager.on('stack-item-added', bump);
+  undoManager.on('stack-item-popped', bump);
+  undoManager.on('stack-cleared', bump);
+
+  const history: HistoryField = {
+    canUndo: computed(() => {
+      refresh.value;
+      return undoManager.undoStack.length > 0;
+    }),
+    canRedo: computed(() => {
+      refresh.value;
+      return undoManager.redoStack.length > 0;
+    }),
+    undo: () => undoManager.undo(),
+    redo: () => undoManager.redo(),
+    clear: () => undoManager.clear(),
+  };
+
+  // the doc outlives no product, so the manager goes with it
+  doc.on('destroy', () => undoManager.destroy());
+
+  return history;
+};
+
+/**
  * Ties a graph to a room document, in both directions, for the life of the product.
  *
  * An empty document means nobody has opened this product in the room yet, so the graph
  * seeds it. Otherwise the document is authoritative and the graph is rebuilt from it.
+ *
+ * Hands back undo over the document, which the harness uses in place of the graph's own
+ * whole state history for as long as the graph is shared.
  */
-export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
+export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): HistoryField => {
   const nodes = readNodes(doc);
   const edges = readEdges(doc);
 
@@ -261,4 +305,7 @@ export const bindGraphToDoc = (graph: Graph, doc: Y.Doc): void => {
 
   observe();
   subscribeGraph();
+
+  // after the seed, so undoing on a freshly opened product cannot empty the document
+  return createDocHistory(doc);
 };

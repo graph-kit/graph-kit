@@ -1,9 +1,12 @@
 import { useGraph } from '../graph/useGraph.ts';
-import { useGraphProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
+import { MagicProductHost } from '../product/types.ts';
+import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
+import { bindGraphToDoc } from './bindGraphToDoc.ts';
 import { provideGraph } from './context.ts';
-import { GraphProductOptions, MagicGraph, MagicProductHost } from './types.ts';
-import { useMagicProduct } from './useMagicProduct.ts';
+import { useGraphProductShortcuts } from './shortcuts.ts';
+import { trackDraggedNodes } from './trackDraggedNodes.ts';
+import { GraphProductOptions, MagicGraph } from './types.ts';
 
 /** adapts a graph to the harness host interface, see {@link useMagicProduct} */
 export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
@@ -11,12 +14,18 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const lensChips = options.lensChips?.(graph);
 
+  const draggedNodes = trackDraggedNodes(graph);
+
   const host: MagicProductHost = {
     surface: graph.canvas.surface,
     transit: graph.transit,
     history: graph.history,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
+    multiplayer: {
+      bind: (doc) => bindGraphToDoc(graph, doc, draggedNodes.isDragging),
+      draggedElements: draggedNodes.elements,
+    },
   };
 
   const magic = useMagicProduct(host, {
@@ -30,9 +39,13 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
 
   graph.events.subscribe('onStructureChange', magic.localStorage.invalidate);
-  graph.nodeDrag.events.subscribe('onNodeDrop', magic.localStorage.invalidate);
+  // any settled move, not just a drag drop, so programmatic repositioning persists too
+  graph.events.subscribe(
+    'onNodePositionsCommitted',
+    magic.localStorage.invalidate,
+  );
 
-  if (lensChips) {
+  if (magic.lensChips) {
     magic.componentSlots.add({
       id: 'product/lens-chips',
       component: LensChipGroup,

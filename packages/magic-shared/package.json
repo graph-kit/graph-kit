@@ -8,6 +8,10 @@
       "types": "./dist/types/components/button/Button.vue.d.ts",
       "default": "./src/components/button/Button.vue"
     },
+    "./TextInput": {
+      "types": "./dist/types/components/text-input/TextInput.vue.d.ts",
+      "default": "./src/components/text-input/TextInput.vue"
+    },
     "./Node": {
       "types": "./dist/types/components/magic/Node.vue.d.ts",
       "default": "./src/components/magic/Node.vue"
@@ -84,6 +88,10 @@
       "types": "./dist/types/graph/index.d.ts",
       "default": "./src/graph/index.ts"
     },
+    "./graph-product": {
+      "types": "./dist/types/graph-product/index.d.ts",
+      "default": "./src/graph-product/index.ts"
+    },
     "./lens": {
       "types": "./dist/types/lens/index.d.ts",
       "default": "./src/lens/index.ts"
@@ -103,6 +111,14 @@
     "./product": {
       "types": "./dist/types/product/index.d.ts",
       "default": "./src/product/index.ts"
+    },
+    "./multiplayer": {
+      "types": "./dist/types/multiplayer/index.d.ts",
+      "default": "./src/multiplayer/index.ts"
+    },
+    "./ui": {
+      "types": "./dist/types/ui/index.d.ts",
+      "default": "./src/ui/index.ts"
     },
     "./simulation": {
       "types": "./dist/types/simulation/index.d.ts",
@@ -132,6 +148,7 @@
     "@canvas/primitives": "workspace:*",
     "@canvas/surface": "workspace:*",
     "@core/components": "workspace:*",
+    "@core/themes": "workspace:*",
     "@core/utils": "workspace:*",
     "@graph/core": "workspace:*",
     "@graph/create-graph": "workspace:*",
@@ -140,14 +157,17 @@
     "@graph/primitives": "workspace:*",
     "@graph/render-functions": "workspace:*",
     "@graph/theme-presets": "workspace:*",
-    "@core/themes": "workspace:*",
     "@graph/vue": "workspace:*",
     "@mdi/js": "^7.4.47",
+    "@multiplayer/protocol": "workspace:*",
     "@vueuse/core": "catalog:",
     "ctrl-keys": "^1.0.6",
+    "fraction.js": "^5.3.4",
     "katex": "^0.18.1",
     "lz-string": "^1.5.0",
-    "mathlive": "^0.110.0"
+    "mathlive": "^0.110.0",
+    "socket.io-client": "^4.8.1",
+    "yjs": "^13.6.32"
   },
   "devDependencies": {
     "nuxt": "^4.1.2",

@@ -2,15 +2,18 @@ import { onMounted } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
+import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
 import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
 import { useAnnotationsState } from '../ui/annotations/useAnnotationsState.ts';
 import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
+import RoomPanel from '../ui/multiplayer/RoomPanel.vue';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
 import { useLocalStorageSync } from './internals/useLocalStorageSync.ts';
+import { useProductHistory } from './internals/useProductHistory.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
 
@@ -33,11 +36,20 @@ export const useMagicProduct = (
 
   const manifest = manifests[options.productId];
 
-  // ORDER MATTERS!
-  // local storage before link share, otherwise local storage content loads on top of a shared link
   const localStorage = options.localStorage
     ? useLocalStorageSync(manifest.id, host.transit)
-    : { invalidate: () => {} };
+    : { invalidate: () => {}, sync: () => {} };
+
+  const { product: multiplayer, roomHistory } = useMultiplayer({
+    host,
+    productId: options.productId,
+  });
+
+  const history = useProductHistory({
+    local: host.history,
+    roomHistory,
+    inRoom: () => multiplayer?.room.state.value.connected === true,
+  });
 
   const magic: Magic = {
     manifest,
@@ -51,12 +63,26 @@ export const useMagicProduct = (
     lensChips: options.lensChips,
     surface: host.surface,
     transit: host.transit,
-    history: host.history,
+    history,
     localStorage,
+    multiplayer,
   };
 
-  if (magic.ui.linkSharing) {
-    onMounted(() => loadFromLinkPayload(magic));
+  onMounted(() => {
+    magic.localStorage.sync();
+    // replace what was in local storage with what was in link
+    if (magic.ui.linkSharing) loadFromLinkPayload(magic);
+
+    // whatever was restored is the starting point, not the state setup began with
+    magic.history?.clear();
+  });
+
+  if (magic.manifest.multiplayer) {
+    magic.componentSlots.add({
+      id: 'product/room-panel',
+      component: RoomPanel,
+      position: 'center-right',
+    });
   }
 
   useProductShortcuts(magic);

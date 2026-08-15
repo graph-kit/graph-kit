@@ -3,7 +3,7 @@
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
   import { GNode } from '@magic/shared/graph';
-  import { useProvidedGraph } from '@magic/shared/product';
+  import { useProvidedGraph } from '@magic/shared/graph-product';
   import { useCurrentFrame } from '@magic/shared/simulation';
   import { nodeRoleColors } from '@magic/shared/theme';
 

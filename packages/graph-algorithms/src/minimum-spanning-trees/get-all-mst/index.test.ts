@@ -43,10 +43,6 @@ describe(getAllMsts, () => {
     ];
 
     const result = getAllMsts(nodes, edges);
-    console.log(
-      result.msts.map((mst) => mst.map((e) => e.id)),
-      result.totalWeight.toFraction(),
-    );
 
     expect(result.msts).toHaveLength(1);
     expect(result.msts[0].map((e) => e.id).sort()).toEqual(['AB', 'BC', 'CD']);
@@ -72,7 +68,6 @@ describe(getAllMsts, () => {
         .sort()
         .join(','),
     );
-    console.log(sets);
 
     // Any 3 of the 4 cycle edges forms a spanning tree; all 4 combos of "drop one edge" are valid, count = 4
     expect(result.msts).toHaveLength(4);

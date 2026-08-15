@@ -1,4 +1,4 @@
-import { MagicGraph, useProvidedMagicGraph } from '@magic/shared/product';
+import { MagicGraph, useProvidedMagicGraph } from '@magic/shared/graph-product';
 
 import { ref } from 'vue';
 

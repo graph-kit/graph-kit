@@ -12,6 +12,7 @@ import { CANVAS_PLUGIN_ID } from './constants.ts';
 import { emitKeyboardEvents, emitMouseEvents } from './emitDOMEvents.ts';
 import { CanvasGraphMouseEvent, createCanvasEventRegistry } from './events.ts';
 import { createNodeCanvasElementPriorityGetter } from './nodeCanvasElementPriority.ts';
+import { createNodePaintOrder } from './nodePaintOrder.ts';
 import { setupCanvasCursor } from './setupCanvasCursor.ts';
 import { setupOnHoveredElementChangeEvent } from './setupHoveredElement.ts';
 import { createCanvasDetectors, createCanvasThemeOverrides } from './themes.ts';
@@ -81,26 +82,16 @@ export const canvas =
 
     setupOnHoveredElementChangeEvent(canvasEvents);
 
-    // went with max+1 instead of closed rotation for node hovers since rotation requires
-    // redistributing z values across all nodes, which breaks when new nodes arrive with a default z that
-    // collides with the existing distribution. max+1 gives permanent promotion
-    // without touching other nodes and works fine since node z-scored get normalized for rendering anyway.
-    const setHoveredNode = (nodeId: string) => {
-      const maxZ = controls
-        .nodes()
-        .reduce(
-          (max, n) => Math.max(max, controls.positions.get(n.id).z),
-          -Infinity,
-        );
-      controls.positions.set({ nodeId, update: { z: maxZ + 1 } });
-    };
+    // local to this client, and never a position: a hover decides what this user sees in
+    // front, not where the node is
+    const paintOrder = createNodePaintOrder();
 
     canvasEvents.handle(
       'onHoveredElementChange',
       (hoveredEl) => {
         if (!hoveredEl) return;
         const { id } = hoveredEl;
-        if (controls.isNode(id)) setHoveredNode(id);
+        if (controls.isNode(id)) paintOrder.promote(id);
       },
       CANVAS_PLUGIN_ID,
     );
@@ -155,12 +146,12 @@ export const canvas =
 
     let getNodePriority = createNodeCanvasElementPriorityGetter({
       nodes: controls.nodes,
-      positions: controls.positions,
+      paintOrder,
     });
     canvasEvents.subscribe('onBeforeDraw', () => {
       getNodePriority = createNodeCanvasElementPriorityGetter({
         nodes: controls.nodes,
-        positions: controls.positions,
+        paintOrder,
       });
     });
 

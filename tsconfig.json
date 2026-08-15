@@ -22,6 +22,7 @@
     { "path": "./packages/core-utils" },
     { "path": "./packages/core-components" },
     { "path": "./packages/core-themes" },
-    { "path": "./packages/magic-shared" }
+    { "path": "./packages/magic-shared" },
+    { "path": "./packages/multiplayer-protocol" }
   ]
 }

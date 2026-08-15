@@ -2,8 +2,8 @@ import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { CoreEdge } from '@graph/primitives/types';
 import { GNode } from '@magic/shared/graph';
+import { MagicGraph } from '@magic/shared/graph-product';
 import { Lens } from '@magic/shared/lens';
-import { MagicGraph } from '@magic/shared/product';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import type {
   SimulationDefinition,
@@ -20,11 +20,16 @@ import tinycolor from 'tinycolor2';
 import { Ref } from 'vue';
 
 import { kruskalsExplainer, primsExplainer } from './explainer.ts';
-import { KruskalsFrame, KruskalsFunction, PrimsFrame, PrimsFunction } from './frame.ts';
+import {
+  KruskalsFrame,
+  KruskalsFunction,
+  PrimsFrame,
+  PrimsFunction,
+} from './frame.ts';
 
-// exploring = the tree side node the current decision is anchored to 
+// exploring = the tree side node the current decision is anchored to
 // settled = already grown into the tree
-// frontier = the far side of a potential edge 
+// frontier = the far side of a potential edge
 // anchor = start node (user picked)
 type PrimsNodeConcept = 'exploring' | 'settled' | 'frontier' | 'anchor';
 
@@ -156,7 +161,8 @@ export const primsSimulationDefinition = (
         return { id: 'no-edges' };
       }
     })
-    .minNodes(2).build(),
+    .minNodes(2)
+    .build(),
   collectFrames: (collector) => {
     prims(
       options.graph,
@@ -231,11 +237,14 @@ export const kruskalsSimulationDefinition = (
   kruskals: KruskalsFunction,
   options: KruskalsSimulationOptions,
 ): SimulationDefinition<KruskalsFrame> => ({
-  guard: new SimulationGuardBuilder(options.graph).minNodes(2).custom(() => {
+  guard: new SimulationGuardBuilder(options.graph)
+    .minNodes(2)
+    .custom(() => {
       if (options.graph.edges.value.length < 1) {
         return { id: 'no-edges' };
       }
-    }).build(),
+    })
+    .build(),
   collectFrames: (collector) => {
     kruskals(options.graph)(collector);
   },

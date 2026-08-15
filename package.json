@@ -2,7 +2,9 @@
   "name": "magic-graphs",
   "version": "1.0.0",
   "scripts": {
-    "dev": "pnpm --filter client dev",
+    "dev": "pnpm --parallel --filter client --filter @multiplayer/server dev",
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter @multiplayer/server dev",
     "build": "pnpm --filter client build",
     "preview": "pnpm --filter client preview",
     "storybook": "pnpm --filter @canvas/primitives storybook",

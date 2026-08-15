@@ -11,6 +11,10 @@
       "types": "./dist/types/components/button/Button.vue.d.ts",
       "default": "./src/components/button/Button.vue"
     },
+    "./TextInput": {
+      "types": "./dist/types/components/text-input/TextInput.vue.d.ts",
+      "default": "./src/components/text-input/TextInput.vue"
+    },
     "./Tooltip": {
       "types": "./dist/types/components/tooltip/Tooltip.vue.d.ts",
       "default": "./src/components/tooltip/Tooltip.vue"

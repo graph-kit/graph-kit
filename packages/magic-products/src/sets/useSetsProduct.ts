@@ -64,6 +64,11 @@ export const useSetsProduct = () => {
       encode: () => {},
       decode: () => {},
     },
+    // sets has no serializable state yet, so there is nothing to mirror either way. it
+    // is not flagged multiplayer, and giving it real transit is what would unblock both.
+    multiplayer: {
+      bind: () => {},
+    },
   };
 
   const magic = useMagicProduct(host, {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { MagicProduct, useGraphProduct } from '@magic/shared/product';
+  import { useGraphProduct } from '@magic/shared/graph-product';
+  import { MagicProduct } from '@magic/shared/product';
 
   import ActionBar from './ActionBar.vue';
   import WelcomeBanner from './WelcomeBanner.vue';

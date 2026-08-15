@@ -1,18 +1,21 @@
 import { CanvasProps } from '@canvas/surface/types';
+import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { BasicColorMode } from '@vueuse/core';
+import * as Y from 'yjs';
 
 import { ComputedRef } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../graph/types.ts';
-import { UseGraphOptions } from '../graph/useGraph.ts';
 import { LensControls } from '../lens/useLensState.ts';
+import { ProductMultiplayer } from '../multiplayer/types.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { UIControls, UIOptions } from '../ui/useProductUI.ts';
+import { LocalStorageControls } from './internals/useLocalStorageSync.ts';
 import { ProductId } from './manifests/index.ts';
 import { MagicProductManifest } from './manifests/types.ts';
 
@@ -26,26 +29,61 @@ export type HistoryField = {
   canUndo: ComputedRef<boolean>;
   undo: () => void;
   redo: () => void;
+  /** makes whatever the graph holds right now the state undo bottoms out at */
+  clear: () => void;
 };
 
-export type LocalStorageField = {
+export type HostBinding = {
+  history: HistoryField;
+  /** stops mirroring, leaving the host's own state exactly as the document left it */
+  unbind: () => void;
   /**
-   * Reports that the hosted product's state changed, persisting it on a
-   * debounce. A no-op when local storage was not opted into.
+   * Every peer's in flight move, whole rather than incremental: a peer missing from the
+   * record has stopped moving things, whether they dropped, left or were never dragging.
+   * Nothing here is written to the document, which the authoring peer commits itself.
    */
-  invalidate: () => void;
+  applyPeerDrags: (dragsByPeer: Record<UserId, DraggedElement[]>) => void;
 };
 
 /**
- * everything the harness needs from whatever it is hosting. a graph satisfies
- * this, but so does anything else that can paint to a canvas and describe its
- * own state, which is what lets non graph products run in the same shell
+ * everything the magic product harness needs in order to function
  */
 export type MagicProductHost = {
   transit: TransitField;
   surface: CanvasProps;
   onAppearanceChanged: (color: BasicColorMode) => void;
+  multiplayer: MultiplayerHostField;
   history?: HistoryField;
+};
+
+/**
+ * The mapping between what a host holds and the room's document, in both directions. The
+ * only thing that knows either shape, which is what keeps the document out of the harness
+ * and the room out of the product.
+ *
+ * Separate from {@link TransitField} because the document's shape is not transit's, and
+ * adopting one can mean more than writing it (stopping a simulation, dropping a lens).
+ */
+export type MultiplayerHostField = {
+  /**
+   * Ties the host to the room's document for as long as the product is mounted, mirroring
+   * changes both ways from then on.
+   *
+   * An empty document means nobody has opened this product in the room yet, so the host
+   * seeds it from what it already holds. Otherwise the document is authoritative and the
+   * host adopts it, discarding local state.
+   *
+   * Answers with the binding it made: undo over the document, which the harness swaps in
+   * for as long as the room owns the product, and the teardown that lets a later join
+   * rebind onto a different document.
+   */
+  bind: (doc: Y.Doc) => HostBinding | undefined;
+
+  /**
+   * whatever the host is moving this instant, read as presence goes out rather than
+   * pushed, since a drag only travels alongside the cursor that is causing it
+   */
+  draggedElements?: () => DraggedElement[];
 };
 
 export type MagicProductOptions = {
@@ -77,21 +115,12 @@ export type Magic = {
   history?: HistoryField;
   annotations?: AnnotationsControls;
   lensChips?: LensChipDefinition[];
-  localStorage: LocalStorageField;
-};
-
-export type GraphLensChipOption = (
-  graph: Graph,
-) => LensChipDefinition[] | undefined;
-
-export type GraphProductOptions = UseGraphOptions & {
-  productId: ProductId;
-  localStorage?: boolean;
-  annotations?: boolean;
-  lensChips?: GraphLensChipOption;
-  ui?: UIOptions;
-};
-
-export type MagicGraph = Graph & {
-  magic: Magic;
+  localStorage: LocalStorageControls;
+  /**
+   * The room connection, or undefined if
+   * 1. product has opted-out of multiplayer in its manifest or
+   * 2. no server is configured or
+   * 3. during prerender
+   */
+  multiplayer?: ProductMultiplayer;
 };

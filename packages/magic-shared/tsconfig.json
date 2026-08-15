@@ -18,7 +18,8 @@
     { "path": "../graph-theme-presets" },
     { "path": "../canvas-surface" },
     { "path": "../canvas-primitives" },
-    { "path": "../graph-dev-tools" }
+    { "path": "../graph-dev-tools" },
+    { "path": "../multiplayer-protocol" }
   ],
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
 }

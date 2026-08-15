@@ -7,7 +7,7 @@ import { ComputedRef } from 'vue';
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../graph/types.ts';
 import { LensControls } from '../lens/useLensState.ts';
-import { MultiplayerControls } from '../multiplayer/types.ts';
+import { ProductMultiplayer } from '../multiplayer/types.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';
@@ -30,6 +30,12 @@ export type HistoryField = {
   redo: () => void;
   /** makes whatever the graph holds right now the state undo bottoms out at */
   clear: () => void;
+};
+
+export type HostBinding = {
+  history: HistoryField;
+  /** stops mirroring, leaving the host's own state exactly as the document left it */
+  unbind: () => void;
 };
 
 /**
@@ -60,10 +66,11 @@ export type MultiplayerHostField = {
    * seeds it from what it already holds. Otherwise the document is authoritative and the
    * host adopts it, discarding local state.
    *
-   * Answers with undo over the document, which the harness swaps in whenever the host is
-   * sharing. A host with no undo of its own answers with nothing.
+   * Answers with the binding it made: undo over the document, which the harness swaps in
+   * for as long as the room owns the product, and the teardown that lets a later join
+   * rebind onto a different document.
    */
-  bind: (doc: Y.Doc) => HistoryField | undefined;
+  bind: (doc: Y.Doc) => HostBinding | undefined;
 };
 
 export type MagicProductOptions = {
@@ -102,5 +109,5 @@ export type Magic = {
    * 2. no server is configured or
    * 3. during prerender
    */
-  multiplayer?: MultiplayerControls;
+  multiplayer?: ProductMultiplayer;
 };

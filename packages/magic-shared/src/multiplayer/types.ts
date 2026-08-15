@@ -18,32 +18,48 @@ import { ComputedRef, Ref } from 'vue';
 
 import { MultiplayerHostField } from '../product/types.ts';
 
-/**
- * where a mounting product's state came from. 'room' means authoritative state was
- * applied and local restore must not run on top of it.
- */
-export type ProductStateSource = 'room' | 'local';
-
 export type MultiplayerSocket = Socket<
   ServerToClientEvents,
   ClientToServerEvents
 >;
 
+/** what a room needs from the product it opens on, supplied by the harness */
+export type ProductBinding = {
+  productId: ProductId;
+  host: MultiplayerHostField;
+};
+
 export type RoomActions = {
   /** the display name is supplied per call: the room is not where it is stored */
-  start: (
-    options: RoomEntryOptions & { productId: ProductId },
-  ) => Promise<RoomId>;
-  join: (options: RoomEntryOptions & { roomId: RoomId }) => Promise<JoinResult>;
+  start: (options: RoomEntryOptions & ProductBinding) => Promise<RoomId>;
+  join: (
+    options: RoomEntryOptions & ProductBinding & { roomId: RoomId },
+  ) => Promise<JoinResult>;
   leave: () => void;
 };
 
 export type ProductActions = {
-  enter: (
-    productId: ProductId,
-    host: MultiplayerHostField,
-  ) => Promise<ProductStateSource>;
+  /** for a product mounting into a room this connection already belongs to */
+  enter: (options: ProductBinding) => Promise<void>;
   leave: (productId: ProductId) => void;
+};
+
+/**
+ * the product facing surface. the harness knows its own product and host, so a caller
+ * supplies nothing but who is arriving.
+ */
+export type ProductMultiplayer = {
+  room: {
+    state: ComputedRef<RoomState>;
+    start: (options: RoomEntryOptions) => Promise<RoomId>;
+    join: (
+      options: RoomEntryOptions & { roomId: RoomId },
+    ) => Promise<JoinResult>;
+    leave: () => void;
+  };
+
+  /** true while the server is about to say what this product should show */
+  awaitingServerState: Ref<boolean>;
 };
 
 export type Me = {

@@ -6,7 +6,7 @@ const neverTaken = () => false;
 
 describe('generateRoomId', () => {
   it('answers a four letter code', () => {
-    expect(generateRoomId(neverTaken)).toMatch(/^[A-Z]{4}$/);
+    expect(generateRoomId(neverTaken)).toMatch(/^[a-z]{4}$/);
   });
 
   // the same loop is what skips a blocked code, which cannot be forced from outside
@@ -23,7 +23,7 @@ describe('generateRoomId', () => {
 });
 
 describe('normalizeRoomId', () => {
-  it('resolves a code that was typed in lower case', () => {
-    expect(normalizeRoomId('jack')).toBe('JACK');
+  it('resolves a code that was typed in upper case', () => {
+    expect(normalizeRoomId('JACK')).toBe('jack');
   });
 });

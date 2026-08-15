@@ -1,6 +1,5 @@
 import { computed, shallowRef, watch } from 'vue';
 
-import { MultiplayerControls } from '../../multiplayer/types.ts';
 import {
   HistoryField,
   MagicProductHost,
@@ -9,7 +8,11 @@ import {
 
 export type ProductHistoryOptions = {
   host: MagicProductHost;
-  multiplayer: MultiplayerControls | undefined;
+  /**
+   * read lazily rather than passed as state: the room this answers for is reached
+   * through the host wrapper below, so it does not exist yet at construction
+   */
+  inRoom: () => boolean;
 };
 
 export type ProductHistory = {
@@ -25,22 +28,24 @@ export type ProductHistory = {
  */
 export const useProductHistory = ({
   host,
-  multiplayer,
+  inRoom,
 }: ProductHistoryOptions): ProductHistory => {
-  const inRoom = computed(() => multiplayer?.room.value.connected === true);
+  const sharing = computed(inRoom);
 
-  // handed over on bind, the only moment both the document and what the host keeps in
-  // it are known
   const roomHistory = shallowRef<HistoryField>();
   const multiplayerHost: MultiplayerHostField = {
-    bind: (doc) => (roomHistory.value = host.multiplayer.bind(doc)),
+    bind: (doc) => {
+      const binding = host.multiplayer.bind(doc);
+      roomHistory.value = binding?.history;
+      return binding;
+    },
   };
 
-  const active = () => (inRoom.value ? roomHistory.value : host.history);
+  const active = () => (sharing.value ? roomHistory.value : host.history);
 
   // joining and leaving each make what is on screen a new starting point, the same way
   // a restore does
-  watch(inRoom, () => host.history?.clear());
+  watch(sharing, () => host.history?.clear());
 
   const history: HistoryField | undefined = host.history && {
     canUndo: computed(() => active()?.canUndo.value === true),

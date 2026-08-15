@@ -155,16 +155,16 @@ describe('room lifecycle', () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
 
-    expect(roomId).toMatch(/^[A-Z]{4}$/);
+    expect(roomId).toMatch(/^[a-z]{4}$/);
   });
 
   // the code is short enough to type by hand, and nobody types the case
-  it('joins a room whose code was typed in lower case', async () => {
+  it('joins a room whose code was typed in upper case', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
 
     const student = await connectClient();
-    const result = await joinRoom(student, roomId.toLowerCase());
+    const result = await joinRoom(student, roomId.toUpperCase());
 
     expect(result.joined).toBe(true);
   });

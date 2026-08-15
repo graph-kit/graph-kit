@@ -2,6 +2,7 @@ import { onMounted } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
+import { ProductMultiplayer } from '../multiplayer/types.ts';
 import { useMultiplayerProduct } from '../multiplayer/useMultiplayerProduct.ts';
 import { usePresenceBroadcast } from '../multiplayer/usePresenceBroadcast.ts';
 import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
@@ -41,14 +42,16 @@ export const useMagicProduct = (
     ? useLocalStorageSync(manifest.id, host.transit)
     : { invalidate: () => {}, sync: () => {} };
 
-  const multiplayer = useMultiplayerProduct(
-    options.productId,
-    host.multiplayer,
-  );
+  let multiplayer: ProductMultiplayer | undefined;
 
   const { history, multiplayerHost } = useProductHistory({
     host,
-    multiplayer,
+    inRoom: () => multiplayer?.room.state.value.connected === true,
+  });
+
+  multiplayer = useMultiplayerProduct({
+    productId: options.productId,
+    host: multiplayerHost,
   });
 
   // the surface is all presence needs, so every host broadcasts it rather than only
@@ -78,22 +81,10 @@ export const useMagicProduct = (
     multiplayer,
   };
 
-  // ORDER MATTERS!
-  // multiplayer wins, then local storage and link share load
-  const restoreLocal = () => {
+  onMounted(() => {
     magic.localStorage.sync();
     // replace what was in local storage with what was in link
     if (magic.ui.linkSharing) loadFromLinkPayload(magic);
-  };
-
-  onMounted(async () => {
-    // the only async step in startup. a product not in a room, or one with
-    // multiplayer switched off, resolves immediately to 'local'
-    const source = await magic.multiplayer?.actions.product.enter(
-      options.productId,
-      multiplayerHost,
-    );
-    if (source !== 'room') restoreLocal();
 
     // whatever was restored is the starting point, not the state setup began with
     magic.history?.clear();

@@ -8,6 +8,7 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import TextInput from '../../components/text-input/TextInput.vue';
+  import { DISPLAY_NAME_LOCAL_KEY } from '../../multiplayer/constants.ts';
   import { useProvidedMagic } from '../../product/context.ts';
 
   const magic = useProvidedMagic();
@@ -25,14 +26,14 @@
   let linkCopiedResetTimer: NodeJS.Timeout;
 
   const room = computed(
-    () => multiplayer?.room.value ?? { connected: false as const },
+    () => multiplayer?.room.state.value ?? { connected: false as const },
   );
 
   const userIdToRosterEntry = computed(() =>
     room.value.connected ? room.value.userIdToRosterEntry : {},
   );
 
-  const displayName = useLocalStorage('multiplayer-display-name', '');
+  const displayName = useLocalStorage(DISPLAY_NAME_LOCAL_KEY, '');
   const hasDisplayName = computed(() => displayName.value.length > 0);
 
   const startRoom = async () => {
@@ -40,10 +41,7 @@
 
     isStartingRoom.value = true;
     try {
-      await multiplayer.actions.room.start({
-        productId: magic.manifest.id as never,
-        displayName: displayName.value,
-      });
+      await multiplayer.room.start({ displayName: displayName.value });
     } finally {
       isStartingRoom.value = false;
     }

@@ -1,38 +1,34 @@
-import { computed, watch } from 'vue';
+import { ComputedRef, computed, watch } from 'vue';
 
-import { HistoryField, MagicProductHost } from '../types.ts';
-import { ProductHostBinding } from './useHostBinding.ts';
+import { HistoryField } from '../types.ts';
 
 export type ProductHistoryOptions = {
-  host: MagicProductHost;
-  binding: ProductHostBinding['binding'];
-  /**
-   * read lazily rather than passed as state: the room this answers for is reached
-   * through the binding above, so it does not exist yet at construction
-   */
+  /** the host's own, which covers all of its state and none of anyone else's */
+  local: HistoryField | undefined;
+  roomHistory: ComputedRef<HistoryField | undefined>;
   inRoom: () => boolean;
 };
 
 /**
- * One history API for consumers. A multiplayer session swaps in the host's document
+ * One history API for consumers. A multiplayer session swaps in the room's document
  * scoped undo, since replaying whole local states over a session would take a peer's
  * work with it.
  */
 export const useProductHistory = ({
-  host,
-  binding,
+  local,
+  roomHistory,
   inRoom,
 }: ProductHistoryOptions): HistoryField | undefined => {
   const sharing = computed(inRoom);
 
-  const active = () => (sharing.value ? binding.value?.history : host.history);
+  const active = () => (sharing.value ? roomHistory.value : local);
 
   // joining and leaving each make what is on screen a new starting point, the same way
   // a restore does
-  watch(sharing, () => host.history?.clear());
+  watch(sharing, () => local?.clear());
 
   return (
-    host.history && {
+    local && {
       canUndo: computed(() => active()?.canUndo.value === true),
       canRedo: computed(() => active()?.canRedo.value === true),
       undo: () => active()?.undo(),

@@ -2,7 +2,7 @@ import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 
 import { watch } from 'vue';
 
-import { ProductMultiplayer } from '../../multiplayer/types.ts';
+import { ProductMultiplayer } from './types.ts';
 import { ProductHostBinding } from './useHostBinding.ts';
 
 type PeerDragOptions = {

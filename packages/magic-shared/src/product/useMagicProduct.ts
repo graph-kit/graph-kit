@@ -2,9 +2,7 @@ import { onMounted } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
-import { ProductMultiplayer } from '../multiplayer/types.ts';
-import { useMultiplayerProduct } from '../multiplayer/useMultiplayerProduct.ts';
-import { usePresenceBroadcast } from '../multiplayer/usePresenceBroadcast.ts';
+import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
 import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
@@ -14,9 +12,7 @@ import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import RoomPanel from '../ui/multiplayer/RoomPanel.vue';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
-import { useHostBinding } from './internals/useHostBinding.ts';
 import { useLocalStorageSync } from './internals/useLocalStorageSync.ts';
-import { usePeerDrags } from './internals/usePeerDrags.ts';
 import { useProductHistory } from './internals/useProductHistory.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
@@ -44,33 +40,16 @@ export const useMagicProduct = (
     ? useLocalStorageSync(manifest.id, host.transit)
     : { invalidate: () => {}, sync: () => {} };
 
-  const { binding, multiplayerHost } = useHostBinding(host);
-
-  let multiplayer: ProductMultiplayer | undefined;
+  const { product: multiplayer, roomHistory } = useMultiplayer({
+    host,
+    productId: options.productId,
+  });
 
   const history = useProductHistory({
-    host,
-    binding,
+    local: host.history,
+    roomHistory,
     inRoom: () => multiplayer?.room.state.value.connected === true,
   });
-
-  multiplayer = useMultiplayerProduct({
-    productId: options.productId,
-    host: multiplayerHost,
-  });
-
-  usePeerDrags({ binding, multiplayer });
-
-  // the surface is all presence needs, so every host broadcasts it rather than only
-  // the ones backed by a graph
-  if (multiplayer) {
-    usePresenceBroadcast({
-      surface: host.surface,
-      productId: options.productId,
-      multiplayer,
-      host: host.multiplayer,
-    });
-  }
 
   const magic: Magic = {
     manifest,

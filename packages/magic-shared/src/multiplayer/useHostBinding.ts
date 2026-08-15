@@ -4,7 +4,7 @@ import {
   HostBinding,
   MagicProductHost,
   MultiplayerHostField,
-} from '../types.ts';
+} from '../product/types.ts';
 
 export type ProductHostBinding = {
   /** the host to register with, wrapping bind so what it makes is kept */

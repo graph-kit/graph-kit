@@ -1,4 +1,5 @@
 import { CanvasProps } from '@canvas/surface/types';
+import { DraggedElement } from '@multiplayer/protocol/room';
 import { BasicColorMode } from '@vueuse/core';
 import * as Y from 'yjs';
 
@@ -71,6 +72,12 @@ export type MultiplayerHostField = {
    * rebind onto a different document.
    */
   bind: (doc: Y.Doc) => HostBinding | undefined;
+
+  /**
+   * whatever the host is moving this instant, read as presence goes out rather than
+   * pushed, since a drag only travels alongside the cursor that is causing it
+   */
+  draggedElement?: () => DraggedElement | null;
 };
 
 export type MagicProductOptions = {

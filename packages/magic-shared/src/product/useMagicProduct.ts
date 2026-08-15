@@ -61,6 +61,7 @@ export const useMagicProduct = (
       surface: host.surface,
       productId: options.productId,
       multiplayer,
+      host: host.multiplayer,
     });
   }
 

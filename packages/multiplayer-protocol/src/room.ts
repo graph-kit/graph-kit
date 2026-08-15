@@ -28,6 +28,15 @@ export type Point = { x: number; y: number };
 export type CameraState = { panX: number; panY: number; zoom: number };
 
 /**
+ * what a peer is moving right now, ahead of any document write. the id is whatever the
+ * product calls the thing being moved, which the room never has to understand.
+ */
+export type DraggedElement = {
+  id: string;
+  position: Point;
+};
+
+/**
  * higher frequency and lower stakes than the roster: productId is duplicated because
  * the roster answers "who is here" while presence answers "where exactly, right now".
  * cameraState and cursorPosition have no v1 consumer and are plumbing for later.
@@ -36,6 +45,11 @@ export type PresenceEntry = {
   productId: ProductId;
   cursorPosition: Point | null;
   cameraState: CameraState | null;
+  /**
+   * in flight and deliberately not in the document: a drag settles into one committed
+   * move, and replaying every frame of it would be a write per frame
+   */
+  draggedElement: DraggedElement | null;
 };
 
 export type RoomData = {

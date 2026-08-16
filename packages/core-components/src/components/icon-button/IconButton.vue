@@ -6,6 +6,7 @@
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
   import { preventFocusSteal } from '../../preventFocusSteal.ts';
+  import { disabledClasses, withoutHandlers } from '../button/disabled.ts';
   import { type ButtonVariant, buttonVariants } from '../button/variants.ts';
   import Icon from '../icon/Icon.vue';
   import Tooltip from '../tooltip/Tooltip.vue';
@@ -23,6 +24,12 @@
     label: string;
     variant?: ButtonVariant;
     size?: number;
+    /**
+     * why the button is unavailable, which takes over the tooltip, since why it's off
+     * is the more useful thing to read once it is. prefer the reason over a bare `true`,
+     * which disables the button with no explanation.
+     */
+    disabled?: boolean | string;
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -32,25 +39,38 @@
   });
 
   const base =
-    'inline-flex cursor-pointer items-center justify-center rounded-md p-2 transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100';
+    'inline-flex cursor-pointer items-center justify-center rounded-md p-2 transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
 
   const attrs = useAttrs();
 
   const attrClass = useAttrClass();
 
-  const classes = computed(() =>
-    cn(base, buttonVariants[props.variant], attrClass.value),
+  const isDisabled = computed(() => !!props.disabled);
+
+  const disabledReason = computed(() =>
+    typeof props.disabled === 'string' ? props.disabled : undefined,
   );
+
+  const classes = computed(() => {
+    const enabled = cn(base, buttonVariants[props.variant], attrClass.value);
+    return isDisabled.value ? disabledClasses(enabled) : enabled;
+  });
+
+  const forwardedAttrs = computed(() => ({
+    ...(isDisabled.value ? withoutHandlers(attrs) : attrs),
+    class: undefined,
+  }));
 </script>
 
 <template>
-  <Tooltip :label="label">
+  <Tooltip :label="disabledReason ?? label">
     <template #trigger>
       <Primitive
         :as="as"
         :as-child="asChild"
         :aria-label="label"
-        v-bind="{ ...attrs, class: undefined }"
+        :aria-disabled="isDisabled || undefined"
+        v-bind="forwardedAttrs"
         :class="classes"
         @mousedown="preventFocusSteal"
       >

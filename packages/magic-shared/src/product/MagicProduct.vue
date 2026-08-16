@@ -1,6 +1,5 @@
 <script setup lang="ts">
   import CanvasSurface from '@canvas/surface/CanvasSurface.vue';
-  import { useMounted } from '@vueuse/core';
 
   import { computed } from 'vue';
 
@@ -10,16 +9,6 @@
 
   const magic = useProvidedMagic();
   const pointerEvents = useDisablePointerEvents(magic);
-
-  // false until mounted, because the connection comes from a client only plugin: the
-  // prerendered page already shows an empty canvas, so the cover is raised after
-  // hydration rather than rendering differently on each side
-  const isMounted = useMounted();
-
-  const awaitingServerState = computed(
-    () =>
-      isMounted.value && Boolean(magic.multiplayer?.awaitingServerState.value),
-  );
 
   const slotSharedClasses = computed(
     () => `absolute flex flex-col gap-2 ${pointerEvents.value}`,
@@ -42,9 +31,7 @@
     whole point: the slots claim them individually
   -->
   <div
-    v-if="
-      !magic.componentSlots.visibility.isHidden.value && !awaitingServerState
-    "
+    v-if="!magic.componentSlots.visibility.isHidden.value"
     class="fixed inset-0 overflow-hidden pointer-events-none"
   >
     <ComponentSlots
@@ -58,11 +45,6 @@
       :bottom-right="`${slotSharedClasses} ${alignEnd} bottom-6 right-6`"
     />
   </div>
-
-  <div
-    v-show="awaitingServerState"
-    class="fixed inset-0 z-50 bg-gray-100 dark:bg-gray-900"
-  />
 
   <CanvasSurface v-bind="{ ...magic.surface.ref, $attrs }" />
 </template>

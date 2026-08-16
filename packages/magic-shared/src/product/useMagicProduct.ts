@@ -9,7 +9,6 @@ import { useSimulationState } from '../simulation/useSimulationState.ts';
 import { useAnnotationsState } from '../ui/annotations/useAnnotationsState.ts';
 import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
-import RoomPanel from '../ui/multiplayer/RoomPanel.vue';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
 import { useLocalStorageSync } from './internals/useLocalStorageSync.ts';
@@ -43,6 +42,7 @@ export const useMagicProduct = (
   const { product: multiplayer, roomHistory } = useMultiplayer({
     host,
     productId: options.productId,
+    componentSlots,
   });
 
   const history = useProductHistory({
@@ -76,14 +76,6 @@ export const useMagicProduct = (
     // whatever was restored is the starting point, not the state setup began with
     magic.history?.clear();
   });
-
-  if (magic.manifest.multiplayer) {
-    magic.componentSlots.add({
-      id: 'product/room-panel',
-      component: RoomPanel,
-      position: 'center-right',
-    });
-  }
 
   useProductShortcuts(magic);
   provideMagic(magic);

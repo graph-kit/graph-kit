@@ -4,6 +4,7 @@
   import { computed, ref } from 'vue';
 
   import Button from '../../components/button/Button.vue';
+  import { menuItemClasses } from '../../components/dropdown/classes.ts';
   import Icon from '../../components/icon/Icon.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import { getLink } from './linkPayload.ts';
@@ -40,7 +41,7 @@
           icon: mdiCheck,
         }
       : {
-          text: 'Copy Link',
+          text: 'Copy Share Link',
           icon: mdiLink,
         };
   });
@@ -48,8 +49,8 @@
 
 <template>
   <Button
-    class="px-2 bg-transparent dark:bg-transparent dark:hover:bg-transparent w-full justify-start"
     @click="copyLinkToClipboard"
+    :class="menuItemClasses"
   >
     <template #start>
       <Icon :path="display.icon" />

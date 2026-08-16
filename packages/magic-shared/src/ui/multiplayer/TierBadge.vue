@@ -35,7 +35,12 @@
   >
     <template #trigger>
       <div
-        :class="cn('px-2 rounded-md cursor-pointer', tierClasses[props.tier])"
+        :class="
+          cn(
+            'px-2 rounded-md cursor-pointer text-white',
+            tierClasses[props.tier],
+          )
+        "
       >
         {{ props.tier }}
       </div>

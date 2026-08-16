@@ -15,7 +15,7 @@
       <template #trigger>
         <Button
           @click="multiplayer.ui.rosterPanel.hide"
-          class="absolute top-2 right-2 hover:dark:bg-red-600 p-1"
+          class="absolute top-2 right-2 hover:dark:bg-red-600 hover:bg-red-600 hover:text-white p-1"
         >
           <Icon
             :path="mdiClose"

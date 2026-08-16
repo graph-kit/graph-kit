@@ -7,11 +7,12 @@
     DropdownMenuTrigger,
   } from 'reka-ui';
 
-  import { computed, onUnmounted, ref, useAttrs } from 'vue';
+  import { computed, onUnmounted, provide, ref, useAttrs } from 'vue';
 
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
   import { dropdownContentClasses } from './classes.ts';
+  import { menuUsingPointerKey } from './modality.ts';
 
   defineOptions({ inheritAttrs: false });
 
@@ -65,6 +66,8 @@
    * menu as keyboard focus. a key press is the one case where the handoff was wanted.
    */
   const usingPointer = ref(false);
+
+  provide(menuUsingPointerKey, usingPointer);
 
   // reka drives this from clicks, keys and dismissals, each of which owns where focus lands
   const onOpenChange = (isOpen: boolean) => {

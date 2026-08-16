@@ -42,7 +42,7 @@
       </VStack>
 
       <Button
-        class="dark:bg-red-500 bg-red-500 dark:hover:bg-red-600 text-white hover:bg-red-600 mt-3"
+        class="dark:bg-red-500 bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-white mt-6"
         @click="multiplayer.room.leave"
       >
         <template #start>

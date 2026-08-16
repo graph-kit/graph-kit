@@ -201,6 +201,12 @@ export const createMultiplayer = ({
     return socket;
   };
 
+  // a tab that goes without closing its socket is only noticed once the heartbeat times
+  // out, which leaves whoever left sitting in everyone else's roster until then. pagehide
+  // covers the close and the refresh alike, and unlike visibilitychange it does not fire
+  // for a tab switch, which is not a departure
+  window.addEventListener('pagehide', () => socket?.disconnect());
+
   /** the product's own state, which is what a room opens on */
   const seedFromProduct = (binding: ProductBinding) =>
     Y.encodeStateAsUpdate(openProduct(binding));

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { cn } from '@core/components/cn';
   import { nullThrows } from '@core/utils/assert';
   import {
     mdiAccountMultiplePlus,
@@ -86,7 +87,12 @@
 <template>
   <Button
     v-if="departure"
-    :class="menuItemClasses"
+    :class="
+      cn(
+        menuItemClasses,
+        'dark:bg-red-500 bg-red-500 dark:hover:bg-red-600 text-white hover:bg-red-600',
+      )
+    "
     @click="multiplayer.room.leave"
   >
     <template #start>

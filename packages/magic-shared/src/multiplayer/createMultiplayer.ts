@@ -176,9 +176,15 @@ export const createMultiplayer = ({
       roomIdUrl.strip();
       reset();
     });
-    activeSocket.on('kicked', () => {
+    // the same teardown a disband gets, except this one is worth announcing: the room
+    // carried on without them, so silence would read as the session having ended
+    activeSocket.on('kicked', ({ by }) => {
+      // TODO tell the user rather than the console, once there is a toast component
+      // https://github.com/graph-kit/graph-kit/issues/783
+      console.warn(`multiplayer: removed from the room by ${by.displayName}`);
       roomIdUrl.strip();
       reset();
+      events.emit('onKicked', by);
     });
 
     activeSocket.on('movedToProduct', ({ productId }) => {

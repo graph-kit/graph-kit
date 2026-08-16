@@ -2,6 +2,8 @@
   import { nullThrows } from '@core/utils/assert';
   import {
     mdiAccountMultiplePlus,
+    mdiCloseNetworkOutline,
+    mdiExitRun,
     mdiHumanGreetingProximity,
     mdiKeyboardOutline,
   } from '@mdi/js';
@@ -34,6 +36,10 @@
     joiningSession.value = true;
     try {
       await multiplayer.value.room.join({ roomId: roomCodeInput.value });
+    } catch (err) {
+      // TODO surface the unreachable room in a toast
+      // https://github.com/graph-kit/graph-kit/issues/783
+      console.warn('multiplayer: could not reach the room to join it', err);
     } finally {
       joiningSession.value = false;
     }
@@ -43,6 +49,13 @@
     startingSession.value = true;
     try {
       await multiplayer.value.room.start();
+    } catch (err) {
+      // TODO surface the unreachable room in a toast
+      // https://github.com/graph-kit/graph-kit/issues/783
+      console.warn(
+        'multiplayer: could not reach the server to start a room',
+        err,
+      );
     } finally {
       startingSession.value = false;
     }
@@ -59,10 +72,30 @@
     if (startingSession.value) return true;
     return joiningSession.value ? 'Joining a session' : undefined;
   });
+
+  const room = computed(() => multiplayer.value.room.state.value);
+
+  const departure = computed(() => {
+    if (!room.value.connected) return undefined;
+    return room.value.me.isHost
+      ? { text: 'Disband Session', icon: mdiCloseNetworkOutline }
+      : { text: 'Leave Session', icon: mdiExitRun };
+  });
 </script>
 
 <template>
-  <DropdownSubmenu>
+  <Button
+    v-if="departure"
+    :class="menuItemClasses"
+    @click="multiplayer.room.leave"
+  >
+    <template #start>
+      <Icon :path="departure.icon" />
+    </template>
+    {{ departure.text }}
+  </Button>
+
+  <DropdownSubmenu v-else>
     <template #trigger>
       <Icon :path="mdiHumanGreetingProximity" />
       Collaborate Live

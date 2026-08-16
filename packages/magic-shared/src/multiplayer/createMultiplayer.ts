@@ -32,6 +32,8 @@ type CreateMultiplayerOptions = {
   onMovedToProduct: (productId: ProductId) => void;
 };
 
+const ACK_TIMEOUT_MS = 10_000;
+
 export const createMultiplayer = ({
   serverUrl,
   onMovedToProduct,
@@ -184,6 +186,14 @@ export const createMultiplayer = ({
     });
   };
 
+  /** rejects rather than waiting forever when the answer never lands */
+  const requestFromServer = <Answer>(
+    send: (respond: (error: Error | null, answer: Answer) => void) => void,
+  ) =>
+    new Promise<Answer>((resolve, reject) => {
+      send((error, answer) => (error ? reject(error) : resolve(answer)));
+    });
+
   const ensureSocket = () => {
     if (socket) return socket;
     socket = connect(serverUrl, { transports: ['websocket'] });
@@ -199,9 +209,11 @@ export const createMultiplayer = ({
   const adoptRoomProduct = async ({ productId, host }: ProductBinding) => {
     events.emit('onPendingStarted');
     try {
-      const update = await new Promise<DocUpdate | null>((resolve) => {
-        requireSocket().emit('enterProduct', { productId }, resolve);
-      });
+      const update = await requestFromServer<DocUpdate | null>((respond) =>
+        requireSocket()
+          .timeout(ACK_TIMEOUT_MS)
+          .emit('enterProduct', { productId }, respond),
+      );
 
       openProduct({ productId, host }, (doc) => {
         // absent when nobody in the room has opened this product yet, which leaves the
@@ -217,13 +229,15 @@ export const createMultiplayer = ({
     start: async ({ productId, host }) => {
       const activeSocket = ensureSocket();
       const doc = seedFromProduct({ productId, host });
-      const started = await new Promise<RoomMembership>((resolve) => {
-        activeSocket.emit(
-          'startRoom',
-          { displayName: getDisplayName(), productId, doc },
-          resolve,
-        );
-      });
+      const started = await requestFromServer<RoomMembership>((respond) =>
+        activeSocket
+          .timeout(ACK_TIMEOUT_MS)
+          .emit(
+            'startRoom',
+            { displayName: getDisplayName(), productId, doc },
+            respond,
+          ),
+      );
 
       adoptMembership(started);
 
@@ -234,20 +248,19 @@ export const createMultiplayer = ({
     },
 
     join: async ({ roomId, productId, host }) => {
-      roomIdUrl.strip();
       const activeSocket = ensureSocket();
       events.emit('onPendingStarted');
-      const result = await new Promise<JoinResult>((resolve) => {
-        activeSocket.emit(
-          'joinRoom',
-          { roomId, displayName: getDisplayName() },
-          resolve,
-        );
-      }).finally(() => events.emit('onPendingEnded'));
+      const result = await requestFromServer<JoinResult>((respond) =>
+        activeSocket
+          .timeout(ACK_TIMEOUT_MS)
+          .emit('joinRoom', { roomId, displayName: getDisplayName() }, respond),
+      ).finally(() => events.emit('onPendingEnded'));
 
-      // the only refusal the server has is a room it cannot find
+      // the only refusal the server has is a room it cannot find, which makes the id
+      // dead rather than unlucky. a request that never came back leaves it in the url
       if (!result.joined) {
         console.warn(`multiplayer: no room to join under the id "${roomId}"`);
+        roomIdUrl.strip();
         return result;
       }
 

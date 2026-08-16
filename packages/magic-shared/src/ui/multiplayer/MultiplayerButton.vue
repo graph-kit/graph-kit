@@ -56,10 +56,15 @@
         <VStack>
           <TextInput
             v-model="roomCodeInput"
-            placeholder="Room Code"
             @vue:mounted="({ el }) => el?.focus()"
+            @keydown.enter=""
+            placeholder="Session Code"
           />
-          <Button :disabled="!roomCodeValid">Join Session</Button>
+          <Button
+            :disabled="roomCodeValid ? undefined : 'Enter a valid session code'"
+          >
+            Join Session
+          </Button>
         </VStack>
       </DropdownSubmenu>
       <Button :class="itemClasses">

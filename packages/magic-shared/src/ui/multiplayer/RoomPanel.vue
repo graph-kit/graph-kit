@@ -36,6 +36,13 @@
   const displayName = useLocalStorage(DISPLAY_NAME_LOCAL_KEY, '');
   const hasDisplayName = computed(() => displayName.value.length > 0);
 
+  const NEEDS_DISPLAY_NAME = 'Enter a display name first';
+
+  const startRoomBlockedBy = computed(() => {
+    if (isStartingRoom.value) return 'Already starting a room';
+    return hasDisplayName.value ? undefined : NEEDS_DISPLAY_NAME;
+  });
+
   const startRoom = async () => {
     if (!multiplayer) return;
 
@@ -80,7 +87,7 @@
 
       <Button
         v-if="!room.connected"
-        :disabled="isStartingRoom || !hasDisplayName"
+        :disabled="startRoomBlockedBy"
         @click="startRoom"
       >
         {{ isStartingRoom ? 'Starting…' : 'Start room' }}
@@ -88,7 +95,7 @@
 
       <template v-else>
         <Button
-          :disabled="!hasDisplayName"
+          :disabled="hasDisplayName ? undefined : NEEDS_DISPLAY_NAME"
           @click="changeDisplayName"
         >
           Change display name

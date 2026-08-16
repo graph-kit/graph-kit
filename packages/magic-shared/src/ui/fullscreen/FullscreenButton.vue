@@ -31,7 +31,11 @@
   <Button
     class="px-2 bg-transparent dark:bg-transparent w-full justify-start"
     @click="fullscreen.toggle"
-    :disabled="!fullscreen.isSupported.value"
+    :disabled="
+      fullscreen.isSupported.value
+        ? undefined
+        : 'This browser has no fullscreen mode'
+    "
   >
     <template #start>
       <Icon :path="content.icon" />

@@ -15,7 +15,7 @@
   const model = defineModel<string>({ default: '' });
 
   const base =
-    'w-full rounded-md px-2 py-1 text-md transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50';
+    'w-full rounded-md px-2 py-1 text-md transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 placeholder:font-bold';
 
   const attrs = useAttrs();
 

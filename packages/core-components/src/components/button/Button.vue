@@ -59,7 +59,9 @@
 
 <template>
   <!-- aria-disabled rather than the native attribute, which would suppress the very
-       pointer and focus events the explanation needs to surface -->
+       pointer and focus events the explanation needs to surface.
+       note the trigger owns `data-state` (the tooltip's own open/closed), so styling
+       an outer trigger's open state has to key off something else, e.g. aria-expanded -->
   <Tooltip :label="disabledReason">
     <template #trigger>
       <Primitive

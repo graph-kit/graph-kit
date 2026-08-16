@@ -23,15 +23,18 @@
 </script>
 
 <template>
-  <Well class="p-3">
+  <Well class="w-80 p-3">
     <VStack class="font-bold">
-      <div class="text-2xl text-center px-10">
+      <div class="text-2xl text-center">
         Collaborators ({{ roster.length }})
       </div>
 
       <RosterCloseButton />
 
-      <VStack class="text-lg">
+      <VStack
+        gap="0"
+        class="text-lg"
+      >
         <RosterCollaborator
           v-for="(member, userId) in roster"
           :key="userId"

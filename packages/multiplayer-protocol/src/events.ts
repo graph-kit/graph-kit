@@ -80,8 +80,12 @@ export type ServerToClientEvents = {
   rosterChanged: (data: RoomData) => void;
   presenceChanged: (options: { userId: UserId; entry: PresenceEntry }) => void;
 
-  /** carries productId only, never a route, which stays a client concern */
-  movedToProduct: (options: { productId: ProductId }) => void;
+  /**
+   * Sent to the one member being moved, never the room. Carries a productId and never a
+   * route, which stays a client concern, and the mover, since arriving somewhere you did
+   * not ask for is only sensible with a name attached to it.
+   */
+  movedToProduct: (options: { productId: ProductId; by: RosterEntry }) => void;
 
   /**
    * The last thing this connection hears from the room. Carries the kicker because the

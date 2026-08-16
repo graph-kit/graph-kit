@@ -40,6 +40,15 @@ import {
 const productChannel = (roomId: RoomId, productId: ProductId): string =>
   `${roomId}:${productId}`;
 
+/**
+ * what a room command aimed at one member needs from that member's own connection, whose
+ * room and product channels are known nowhere else. every socket registers one on connect
+ */
+type MemberConnection = {
+  evict: (by: RosterEntry) => void;
+  moveTo: (productId: ProductId, by: RosterEntry) => void;
+};
+
 const joinResultFor = (
   room: Room,
   roomId: RoomId,
@@ -69,9 +78,7 @@ export const createSocketServer = (
 
   const rooms = createRoomStore();
 
-  // a kick has to reach into the target's connection, whose room and product channels
-  // only that connection knows. every socket leaves its own way out here
-  const evictors = new Map<UserId, (by: RosterEntry) => void>();
+  const connections = new Map<UserId, MemberConnection>();
 
   io.on('connection', (socket) => {
     const userId: UserId = randomUUID();
@@ -135,7 +142,27 @@ export const createSocketServer = (
       socket.emit('kicked', { by });
     };
 
-    evictors.set(userId, evict);
+    /** the target alone, since a room command names one member and moves only them */
+    const moveTo = (productId: ProductId, by: RosterEntry) => {
+      socket.emit('movedToProduct', { productId, by });
+    };
+
+    connections.set(userId, { evict, moveTo });
+
+    /**
+     * The caller as the roster knows them, which is what a room command is attributed to.
+     * Absent is an invariant break rather than a case to handle: every command sits behind
+     * a tier, and a tier is something only a roster entry carries.
+     */
+    const commander = (room: Room): RosterEntry | undefined => {
+      const entry = room.data.roster[userId];
+      if (!entry) {
+        console.error(
+          `multiplayer: invariant broken, "${userId}" cleared a tier gate with no roster entry`,
+        );
+      }
+      return entry;
+    };
 
     socket.on('startRoom', ({ displayName, productId, doc }, callback) => {
       const roomId = generateRoomId(rooms.has);
@@ -216,8 +243,10 @@ export const createSocketServer = (
       if (!room || !canRunRoomCommand(room, userId)) return;
       if (!room.data.roster[targetId]) return;
 
-      // productId only, the client turns it into a route through its own helper
-      io.to(currentRoomId ?? '').emit('movedToProduct', { productId });
+      const by = commander(room);
+      if (!by) return;
+
+      connections.get(targetId)?.moveTo(productId, by);
     });
 
     socket.on('kickUser', ({ userId: targetId }) => {
@@ -225,19 +254,13 @@ export const createSocketServer = (
       if (!room || !canRunRoomCommand(room, userId)) return;
       if (isHost(room, targetId)) return;
 
-      const kicker = room.data.roster[userId];
-      if (!kicker) {
-        // unreachable: the command floor is a tier, and only a roster entry carries one
-        console.error(
-          `multiplayer: "${userId}" ran a room command with no roster entry`,
-        );
-        return;
-      }
+      const by = commander(room);
+      if (!by) return;
 
       removeMember(room, targetId);
       // ahead of the broadcast so the roster the target last saw is the one it was still
       // in, rather than a final update that quietly erases them with no explanation
-      evictors.get(targetId)?.(kicker);
+      connections.get(targetId)?.evict(by);
       broadcastRoster(room);
     });
 
@@ -246,7 +269,7 @@ export const createSocketServer = (
     });
 
     socket.on('disconnect', () => {
-      evictors.delete(userId);
+      connections.delete(userId);
 
       const room = currentRoom();
       if (!room || currentRoomId === null) return;

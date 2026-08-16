@@ -9,6 +9,7 @@ const ROOM_ID_LETTERS = 'abcdefghijklmnopqrstuvwxyz';
 // (CC BY 4.0), plus slurs and deliberate misspellings of that length it does not carry
 const BLOCKED_ROOM_IDS: ReadonlySet<RoomId> = new Set([
   'abbo',
+  'acab',
   'anal',
   'anus',
   'arse',

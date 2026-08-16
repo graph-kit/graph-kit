@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { cn } from '@core/components/cn';
   import { nullThrows } from '@core/utils/assert';
   import {
     mdiAccountMultiplePlus,
@@ -12,8 +11,9 @@
   import { computed, ref } from 'vue';
 
   import Button from '../../components/button/Button.vue';
+  import DropdownItem from '../../components/dropdown/DropdownItem.vue';
   import DropdownSubmenu from '../../components/dropdown/DropdownSubmenu.vue';
-  import { menuItemClasses } from '../../components/dropdown/classes.ts';
+  import MenuItem from '../../components/dropdown/MenuItem.vue';
   import Icon from '../../components/icon/Icon.vue';
   import VStack from '../../components/layout/VStack.vue';
   import TextInput from '../../components/text-input/TextInput.vue';
@@ -85,21 +85,14 @@
 </script>
 
 <template>
-  <Button
+  <MenuItem
     v-if="departure"
-    :class="
-      cn(
-        menuItemClasses,
-        'dark:bg-red-500 bg-red-500 dark:hover:bg-red-600 text-white hover:bg-red-600',
-      )
-    "
+    class="dark:bg-red-500 bg-red-500 dark:hover:bg-red-600 text-white hover:bg-red-600"
+    :icon="departure.icon"
     @click="multiplayer.room.leave"
   >
-    <template #start>
-      <Icon :path="departure.icon" />
-    </template>
     {{ departure.text }}
-  </Button>
+  </MenuItem>
 
   <DropdownSubmenu v-else>
     <template #trigger>
@@ -119,24 +112,24 @@
             @keydown.enter="joinSession"
             placeholder="Session Code"
           />
-          <Button
-            :disabled="joinBlockedBy"
-            @click="joinSession"
-          >
-            {{ joiningSession ? 'Joining…' : 'Join Session' }}
-          </Button>
+          <!-- the item carries no styling, so the button keeps its own look and still closes the menu -->
+          <DropdownItem>
+            <Button
+              :disabled="joinBlockedBy"
+              @click="joinSession"
+            >
+              {{ joiningSession ? 'Joining…' : 'Join Session' }}
+            </Button>
+          </DropdownItem>
         </VStack>
       </DropdownSubmenu>
-      <Button
-        :class="menuItemClasses"
+      <MenuItem
+        :icon="mdiAccountMultiplePlus"
         :disabled="startBlockedBy"
         @click="startSession"
       >
-        <template #start>
-          <Icon :path="mdiAccountMultiplePlus" />
-        </template>
         {{ startingSession ? 'Starting…' : 'Start A Session' }}
-      </Button>
+      </MenuItem>
     </VStack>
   </DropdownSubmenu>
 </template>

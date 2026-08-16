@@ -1,31 +1,22 @@
 <script setup lang="ts">
   import { DropdownMenuItem } from 'reka-ui';
 
-  import { computed, useAttrs } from 'vue';
-
-  import { cn } from '../../cn.ts';
-  import { useAttrClass } from '../../composables/useAttrClass.ts';
+  import { useAttrs } from 'vue';
 
   defineOptions({ inheritAttrs: false });
 
   const attrs = useAttrs();
-
-  const attrClass = useAttrClass();
-
-  const classes = computed(() =>
-    cn(
-      'block cursor-pointer rounded-sm outline-none transition-colors',
-      'focus-visible:bg-neutral-100 data-[highlighted]:bg-neutral-100',
-      attrClass.value,
-    ),
-  );
 </script>
 
 <template>
+  <!--
+    as-child makes the item and its child one element, so anything styled here would be
+    styling the consumer's element. behaviour only: role, keyboard nav, data-highlighted
+    and select-to-close. what a row looks like belongs to whatever is slotted in
+  -->
   <DropdownMenuItem
     as-child
-    v-bind="{ ...attrs, class: undefined }"
-    :class="classes"
+    v-bind="attrs"
   >
     <slot />
   </DropdownMenuItem>

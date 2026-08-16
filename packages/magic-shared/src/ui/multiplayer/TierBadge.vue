@@ -3,20 +3,13 @@
   import { mdiCrown, mdiPencil, mdiShieldAccount } from '@mdi/js';
   import { Tier } from '@multiplayer/protocol/tiers';
 
-  import { computed } from 'vue';
-
   import Icon from '../../components/icon/Icon.vue';
   import HStack from '../../components/layout/HStack.vue';
   import Tooltip from '../../components/tooltip/Tooltip.vue';
-  import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
 
   const props = defineProps<{
     tier: Tier;
   }>();
-
-  const { room } = useConnectedMultiplayer();
-
-  const isHost = computed(() => room.value.me.isHost);
 
   const tierClasses: Record<Tier, string> = {
     host: 'bg-blue-500 hover:bg-blue-600',

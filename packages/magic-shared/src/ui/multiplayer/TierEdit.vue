@@ -1,16 +1,20 @@
 <script setup lang="ts">
-  import { mdiAccountCog } from '@mdi/js';
+  import { mdiAccountCog, mdiInformationOutline } from '@mdi/js';
   import { RosterEntry } from '@multiplayer/protocol/room';
   import {
     ASSIGNABLE_TIERS,
     AssignableTier,
+    Tier,
   } from '@multiplayer/protocol/tiers';
 
   import DropdownSubmenu from '../../components/dropdown/DropdownSubmenu.vue';
   import MenuItem from '../../components/dropdown/MenuItem.vue';
   import Icon from '../../components/icon/Icon.vue';
+  import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
+  import Tooltip from '../../components/tooltip/Tooltip.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
+  import TierBadge from './TierBadge.vue';
 
   interface Props {
     member: RosterEntry;
@@ -22,6 +26,13 @@
 
   const setTier = (tier: AssignableTier) =>
     room.value.controls.setTier(props.member.userId, tier);
+
+  const tierInfo: Record<Tier, string> = {
+    host: 'Hosts opened the session. Can do anything, cannot be reassigned or removed, and ends the session for everyone on leaving.',
+    admin:
+      'Admins can edit, move anyone between experiences, and reassign or remove anyone ranked below them.',
+    write: 'Writers can edit, but cannot move, reassign or remove anyone.',
+  };
 </script>
 
 <template>
@@ -36,7 +47,20 @@
         :key="tier"
         @click="setTier(tier)"
       >
-        {{ tier }}
+        <HStack class="w-full justify-between">
+          <HStack>
+            <span>Assign</span>
+            <TierBadge :tier="tier" />
+          </HStack>
+          <Tooltip
+            :label="tierInfo[tier]"
+            side="left"
+          >
+            <template #trigger>
+              <Icon :path="mdiInformationOutline" />
+            </template>
+          </Tooltip>
+        </HStack>
       </MenuItem>
     </VStack>
   </DropdownSubmenu>

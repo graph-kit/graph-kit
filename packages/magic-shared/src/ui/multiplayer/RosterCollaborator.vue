@@ -29,7 +29,7 @@
   const menuItems = computed(() =>
     [
       { component: DisplayNameEdit, predicate: isMe.value },
-      { component: TierEdit, predicate: room.value.me.isHost && !isMe.value },
+      { component: TierEdit, predicate: room.value.me.isHost },
       {
         component: KickUser,
         predicate: rankOf(room.value.me.tier) > rankOf(props.member.tier),

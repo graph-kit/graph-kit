@@ -40,7 +40,9 @@
 <template>
   <Well class="p-3">
     <VStack class="font-bold">
-      <div class="text-2xl pr-12">Collaborators ({{ roster.length }})</div>
+      <div class="text-2xl text-center px-10">
+        Collaborators ({{ roster.length }})
+      </div>
 
       <RosterCloseButton />
 

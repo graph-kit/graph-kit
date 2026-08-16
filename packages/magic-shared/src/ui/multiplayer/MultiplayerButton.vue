@@ -2,8 +2,11 @@
   import { nullThrows } from '@core/utils/assert';
   import {
     mdiAccountMultiplePlus,
+    mdiBroadcast,
     mdiCloseNetworkOutline,
     mdiExitRun,
+    mdiEyeOffOutline,
+    mdiEyeOutline,
     mdiHumanGreetingProximity,
     mdiKeyboardOutline,
   } from '@mdi/js';
@@ -88,30 +91,67 @@
 
   const room = computed(() => multiplayer.value.room.state.value);
 
+  const rosterPanel = computed(() => multiplayer.value.ui.rosterPanel);
+
+  const rosterToggle = computed(() =>
+    rosterPanel.value.isShown.value
+      ? { text: 'Hide Collaborators', icon: mdiEyeOffOutline }
+      : { text: 'Show Collaborators', icon: mdiEyeOutline },
+  );
+
+  const toggleRoster = () => {
+    const panel = rosterPanel.value;
+    if (panel.isShown.value) return panel.hide();
+    panel.show();
+  };
+
   const departure = computed(() => {
     if (!room.value.connected) return undefined;
     return room.value.me.isHost
       ? { text: 'Disband Session', icon: mdiCloseNetworkOutline }
       : { text: 'Leave Session', icon: mdiExitRun };
   });
+
+  const display = computed(() => {
+    if (!room.value.connected)
+      return { text: 'Collaborate Live', icon: mdiHumanGreetingProximity };
+    return {
+      text: `Session ${room.value.id.toUpperCase()}`,
+      icon: mdiBroadcast,
+    };
+  });
 </script>
 
 <template>
-  <MenuItem
-    v-if="departure"
-    class="dark:bg-red-500 bg-red-500 dark:hover:bg-red-600 text-white hover:bg-red-600"
-    :icon="departure.icon"
-    @click="multiplayer.room.leave"
-  >
-    {{ departure.text }}
-  </MenuItem>
-
-  <DropdownSubmenu v-else>
+  <DropdownSubmenu>
     <template #trigger>
-      <Icon :path="mdiHumanGreetingProximity" />
-      Collaborate Live
+      <Icon :path="display.icon" />
+      {{ display.text }}
     </template>
-    <VStack gap="0">
+
+    <VStack
+      v-if="departure"
+      gap="0"
+    >
+      <MenuItem
+        :icon="rosterToggle.icon"
+        @click="toggleRoster"
+      >
+        {{ rosterToggle.text }}
+      </MenuItem>
+      <MenuItem
+        @click="multiplayer.room.leave"
+        class="hover:bg-red-500 dark:hover:bg-red-500 hover:text-white"
+        :icon="departure.icon"
+      >
+        {{ departure.text }}
+      </MenuItem>
+    </VStack>
+
+    <VStack
+      v-else
+      gap="0"
+    >
       <DropdownSubmenu side="left">
         <template #trigger>
           <Icon :path="mdiKeyboardOutline" />

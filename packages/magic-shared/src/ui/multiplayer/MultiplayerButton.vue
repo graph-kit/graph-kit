@@ -25,7 +25,19 @@
     nullThrows(magic.multiplayer, 'multiplayer undefined'),
   );
 
-  const roomCodeInput = ref('');
+  const enteredRoomCode = ref('');
+
+  const ROOM_ID_LENGTH = 4;
+
+  const roomCodeInput = computed<string>({
+    get: () => enteredRoomCode.value,
+    set: (next) => {
+      enteredRoomCode.value = next
+        .replace(/[^a-z]/gi, '')
+        .toLowerCase()
+        .slice(0, ROOM_ID_LENGTH);
+    },
+  });
 
   const roomCodeValid = computed(() => roomCodeInput.value.length === 4);
 

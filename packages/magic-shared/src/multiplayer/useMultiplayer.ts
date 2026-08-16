@@ -1,5 +1,6 @@
 import { ComputedRef, computed } from 'vue';
 
+import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { ProductId } from '../product/manifests/index.ts';
 import { HistoryField, MagicProductHost } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
@@ -11,6 +12,7 @@ import { usePresenceBroadcast } from './usePresenceBroadcast.ts';
 type MultiplayerOptions = {
   host: MagicProductHost;
   productId: ProductId;
+  componentSlots: ComponentSlotControls;
 };
 
 export type MultiplayerSetup = {
@@ -23,10 +25,15 @@ export type MultiplayerSetup = {
 export const useMultiplayer = ({
   host,
   productId,
+  componentSlots,
 }: MultiplayerOptions): MultiplayerSetup => {
   const { binding, multiplayerHost } = useHostBinding(host);
 
-  const product = useMultiplayerProduct({ productId, host: multiplayerHost });
+  const product = useMultiplayerProduct({
+    productId,
+    host: multiplayerHost,
+    componentSlots,
+  });
 
   usePeerDrags({ binding, multiplayer: product });
 

@@ -1,3 +1,4 @@
+import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 import {
   ClientToServerEvents,
   JoinResult,
@@ -17,6 +18,8 @@ import { Socket } from 'socket.io-client';
 import { ComputedRef, Ref } from 'vue';
 
 import { MultiplayerHostField } from '../product/types.ts';
+import { RosterPanelControls } from '../ui/multiplayer/useRosterPanel.ts';
+import { MultiplayerEventMap } from './events.ts';
 
 export type MultiplayerSocket = Socket<
   ServerToClientEvents,
@@ -60,6 +63,14 @@ export type ProductMultiplayer = {
 
   /** true while the server is about to say what this product should show */
   awaitingServerState: Ref<boolean>;
+
+  /** room lifecycle, for anything that should only exist while a room does */
+  events: ReadonlyEventHub<MultiplayerEventMap>;
+
+  /** the chrome a room brings with it, which lives and dies with the room */
+  ui: {
+    rosterPanel: RosterPanelControls;
+  };
 };
 
 export type Me = {
@@ -99,4 +110,6 @@ export type MultiplayerControls = {
 
   /** true while the server is about to say what this product should show */
   awaitingServerState: Ref<boolean>;
+
+  events: ReadonlyEventHub<MultiplayerEventMap>;
 };

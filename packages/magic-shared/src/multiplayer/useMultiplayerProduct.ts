@@ -2,8 +2,10 @@ import { onMounted, onUnmounted } from 'vue';
 
 // the harness ProductId, a literal union of manifest keys, not the protocol's plain
 // string: the server routes by an id it need not enumerate, the client enumerates it
+import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { ProductId, manifests } from '../product/manifests/index.ts';
 import { MultiplayerHostField } from '../product/types.ts';
+import { useRosterPanel } from '../ui/multiplayer/useRosterPanel.ts';
 import { getDisplayName } from './constants.ts';
 import { useProvidedMultiplayer } from './context.ts';
 import { ProductMultiplayer } from './types.ts';
@@ -12,6 +14,7 @@ import { roomIdUrl } from './url.ts';
 type MultiplayerProductOptions = {
   productId: ProductId;
   host: MultiplayerHostField;
+  componentSlots: ComponentSlotControls;
 };
 
 /**
@@ -22,6 +25,7 @@ type MultiplayerProductOptions = {
 export const useMultiplayerProduct = ({
   productId,
   host,
+  componentSlots,
 }: MultiplayerProductOptions): ProductMultiplayer | undefined => {
   const multiplayer = useProvidedMultiplayer();
 
@@ -30,7 +34,7 @@ export const useMultiplayerProduct = ({
   // were to try
   if (!manifests[productId].multiplayer || !multiplayer) return undefined;
 
-  const { actions, room, awaitingServerState } = multiplayer;
+  const { actions, room, awaitingServerState, events } = multiplayer;
   const binding = { productId, host };
 
   onMounted(async () => {
@@ -69,5 +73,9 @@ export const useMultiplayerProduct = ({
       leave: actions.room.leave,
     },
     awaitingServerState,
+    events,
+    ui: {
+      rosterPanel: useRosterPanel({ room, events, componentSlots }),
+    },
   };
 };

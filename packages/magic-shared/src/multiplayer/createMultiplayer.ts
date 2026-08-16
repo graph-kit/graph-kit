@@ -1,4 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
+import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { DocUpdate, toDocUpdate } from '@multiplayer/protocol/doc';
 import { JoinResult } from '@multiplayer/protocol/events';
 import {
@@ -14,6 +15,7 @@ import * as Y from 'yjs';
 import { computed, ref, shallowRef } from 'vue';
 
 import { REMOTE_ORIGIN } from './constants.ts';
+import { createMultiplayerEventRegistry } from './events.ts';
 import {
   MultiplayerControls,
   MultiplayerSocket,
@@ -35,6 +37,8 @@ export const createMultiplayer = ({
   onMovedToProduct,
 }: CreateMultiplayerOptions): MultiplayerControls => {
   const awaitingServerState = ref(roomIdUrl.read() !== null);
+
+  const events = createEventHub(createMultiplayerEventRegistry());
 
   const membership = ref<RoomMembership | null>(null);
   const presence = ref<Record<UserId, PresenceEntry>>({});
@@ -87,12 +91,16 @@ export const createMultiplayer = ({
   /** the one way room state is taken on, whether the room was opened or joined */
   const adoptMembership = (next: RoomMembership) => {
     membership.value = next;
+    events.emit('onRoomJoined');
   };
 
   const reset = () => {
+    const wasInRoom = inRoom.value;
     awaitingServerState.value = false;
     membership.value = null;
     presence.value = {};
+    // leaving a room this connection was never in is not a departure
+    if (wasInRoom) events.emit('onRoomLeft');
   };
 
   const releaseProduct = () => {
@@ -270,5 +278,7 @@ export const createMultiplayer = ({
     room,
 
     awaitingServerState,
+
+    events,
   };
 };

@@ -5,6 +5,7 @@
   import { computed } from 'vue';
 
   import Button from '../../components/button/Button.vue';
+  import { menuItemClasses } from '../../components/dropdown/classes.ts';
   import Icon from '../../components/icon/Icon.vue';
 
   const fullscreen = useFullscreen();
@@ -29,13 +30,13 @@
 
 <template>
   <Button
-    class="px-2 bg-transparent dark:bg-transparent w-full justify-start"
     @click="fullscreen.toggle"
     :disabled="
       fullscreen.isSupported.value
         ? undefined
         : 'This browser has no fullscreen mode'
     "
+    :class="menuItemClasses"
   >
     <template #start>
       <Icon :path="content.icon" />

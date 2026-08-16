@@ -8,6 +8,7 @@ import { useHostBinding } from './useHostBinding.ts';
 import { useMultiplayerProduct } from './useMultiplayerProduct.ts';
 import { usePeerDrags } from './usePeerDrags.ts';
 import { usePresenceBroadcast } from './usePresenceBroadcast.ts';
+import { useSuspendedContent } from './useSuspendedContent.ts';
 
 type MultiplayerOptions = {
   host: MagicProductHost;
@@ -46,6 +47,8 @@ export const useMultiplayer = ({
       multiplayer: product,
       host: host.multiplayer,
     });
+
+    useSuspendedContent({ surface: host.surface, events: product.events });
   }
 
   return {

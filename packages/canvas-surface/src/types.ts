@@ -15,6 +15,8 @@ export type DrawContent = (ctx: CanvasRenderingContext2D) => void;
 export type DrawFns = {
   content: Ref<DrawContent>;
   backgroundPattern: Ref<DrawPattern>;
+  /** holds the canvas on its background pattern alone, leaving content undrawn */
+  contentSuspended: Ref<boolean>;
 };
 
 export type CanvasRef = {

@@ -6,7 +6,6 @@ import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.
 import { ProductId, manifests } from '../product/manifests/index.ts';
 import { MultiplayerHostField } from '../product/types.ts';
 import { useRosterPanel } from '../ui/multiplayer/useRosterPanel.ts';
-import { getDisplayName } from './constants.ts';
 import { useProvidedMultiplayer } from './context.ts';
 import { ProductMultiplayer } from './types.ts';
 import { roomIdUrl } from './url.ts';
@@ -34,7 +33,7 @@ export const useMultiplayerProduct = ({
   // were to try
   if (!manifests[productId].multiplayer || !multiplayer) return undefined;
 
-  const { actions, room, awaitingServerState, events } = multiplayer;
+  const { actions, room, events } = multiplayer;
   const binding = { productId, host };
 
   onMounted(async () => {
@@ -48,12 +47,9 @@ export const useMultiplayerProduct = ({
     const targetRoomId = roomIdUrl.read();
     if (!targetRoomId) return;
 
-    // no name to hand over yet: the panel that owns it has not mounted, so the room
-    // holds the placeholder until it renames through room.controls
     const result = await actions.room.join({
       ...binding,
       roomId: targetRoomId,
-      displayName: getDisplayName(),
     });
 
     // a dead room id is a non event: strip it and carry on exactly as if the param had
@@ -66,13 +62,10 @@ export const useMultiplayerProduct = ({
   return {
     room: {
       state: room,
-      start: ({ displayName }) =>
-        actions.room.start({ ...binding, displayName }),
-      join: ({ roomId, displayName }) =>
-        actions.room.join({ ...binding, roomId, displayName }),
+      start: () => actions.room.start(binding),
+      join: ({ roomId }) => actions.room.join({ ...binding, roomId }),
       leave: actions.room.leave,
     },
-    awaitingServerState,
     events,
     ui: {
       rosterPanel: useRosterPanel({ room, events, componentSlots }),

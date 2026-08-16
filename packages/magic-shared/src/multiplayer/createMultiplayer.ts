@@ -14,7 +14,7 @@ import * as Y from 'yjs';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { REMOTE_ORIGIN } from './constants.ts';
+import { REMOTE_ORIGIN, getDisplayName } from './constants.ts';
 import { createMultiplayerEventRegistry } from './events.ts';
 import {
   MultiplayerControls,
@@ -36,8 +36,6 @@ export const createMultiplayer = ({
   serverUrl,
   onMovedToProduct,
 }: CreateMultiplayerOptions): MultiplayerControls => {
-  const awaitingServerState = ref(roomIdUrl.read() !== null);
-
   const events = createEventHub(createMultiplayerEventRegistry());
 
   const membership = ref<RoomMembership | null>(null);
@@ -96,7 +94,7 @@ export const createMultiplayer = ({
 
   const reset = () => {
     const wasInRoom = inRoom.value;
-    awaitingServerState.value = false;
+    events.emit('onPendingEnded');
     membership.value = null;
     presence.value = {};
     // leaving a room this connection was never in is not a departure
@@ -199,7 +197,7 @@ export const createMultiplayer = ({
 
   /** takes on the room's copy of a product, replacing whatever the product was showing */
   const adoptRoomProduct = async ({ productId, host }: ProductBinding) => {
-    awaitingServerState.value = true;
+    events.emit('onPendingStarted');
     try {
       const update = await new Promise<DocUpdate | null>((resolve) => {
         requireSocket().emit('enterProduct', { productId }, resolve);
@@ -211,18 +209,18 @@ export const createMultiplayer = ({
         if (update) Y.applyUpdate(doc, toDocUpdate(update), REMOTE_ORIGIN);
       });
     } finally {
-      awaitingServerState.value = false;
+      events.emit('onPendingEnded');
     }
   };
 
   const roomActions: RoomActions = {
-    start: async ({ productId, host, displayName }) => {
+    start: async ({ productId, host }) => {
       const activeSocket = ensureSocket();
       const doc = seedFromProduct({ productId, host });
       const started = await new Promise<RoomMembership>((resolve) => {
         activeSocket.emit(
           'startRoom',
-          { displayName, productId, doc },
+          { displayName: getDisplayName(), productId, doc },
           resolve,
         );
       });
@@ -235,14 +233,22 @@ export const createMultiplayer = ({
       return started.roomId;
     },
 
-    join: async ({ roomId, productId, host, displayName }) => {
+    join: async ({ roomId, productId, host }) => {
       const activeSocket = ensureSocket();
-      awaitingServerState.value = true;
+      events.emit('onPendingStarted');
       const result = await new Promise<JoinResult>((resolve) => {
-        activeSocket.emit('joinRoom', { roomId, displayName }, resolve);
-      }).finally(() => (awaitingServerState.value = false));
+        activeSocket.emit(
+          'joinRoom',
+          { roomId, displayName: getDisplayName() },
+          resolve,
+        );
+      }).finally(() => events.emit('onPendingEnded'));
 
-      if (!result.joined) return result;
+      // the only refusal the server has is a room it cannot find
+      if (!result.joined) {
+        console.warn(`multiplayer: no room to join under the id "${roomId}"`);
+        return result;
+      }
 
       adoptMembership(result);
       // the room now decides what this product shows, so it is re-opened on the room's
@@ -276,8 +282,6 @@ export const createMultiplayer = ({
     },
 
     room,
-
-    awaitingServerState,
 
     events,
   };

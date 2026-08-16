@@ -2,7 +2,6 @@ import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 import {
   ClientToServerEvents,
   JoinResult,
-  RoomEntryOptions,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
 import {
@@ -33,11 +32,8 @@ export type ProductBinding = {
 };
 
 export type RoomActions = {
-  /** the display name is supplied per call: the room is not where it is stored */
-  start: (options: RoomEntryOptions & ProductBinding) => Promise<RoomId>;
-  join: (
-    options: RoomEntryOptions & ProductBinding & { roomId: RoomId },
-  ) => Promise<JoinResult>;
+  start: (options: ProductBinding) => Promise<RoomId>;
+  join: (options: ProductBinding & { roomId: RoomId }) => Promise<JoinResult>;
   leave: () => void;
 };
 
@@ -54,15 +50,10 @@ export type ProductActions = {
 export type ProductMultiplayer = {
   room: {
     state: ComputedRef<RoomState>;
-    start: (options: RoomEntryOptions) => Promise<RoomId>;
-    join: (
-      options: RoomEntryOptions & { roomId: RoomId },
-    ) => Promise<JoinResult>;
+    start: () => Promise<RoomId>;
+    join: (options: { roomId: RoomId }) => Promise<JoinResult>;
     leave: () => void;
   };
-
-  /** true while the server is about to say what this product should show */
-  awaitingServerState: Ref<boolean>;
 
   /** room lifecycle, for anything that should only exist while a room does */
   events: ReadonlyEventHub<MultiplayerEventMap>;
@@ -107,9 +98,6 @@ export type MultiplayerControls = {
   };
 
   room: ComputedRef<RoomState>;
-
-  /** true while the server is about to say what this product should show */
-  awaitingServerState: Ref<boolean>;
 
   events: ReadonlyEventHub<MultiplayerEventMap>;
 };

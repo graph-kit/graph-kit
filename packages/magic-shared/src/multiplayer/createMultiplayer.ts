@@ -234,6 +234,7 @@ export const createMultiplayer = ({
     },
 
     join: async ({ roomId, productId, host }) => {
+      roomIdUrl.strip();
       const activeSocket = ensureSocket();
       events.emit('onPendingStarted');
       const result = await new Promise<JoinResult>((resolve) => {
@@ -250,9 +251,8 @@ export const createMultiplayer = ({
         return result;
       }
 
+      roomIdUrl.write(result.roomId);
       adoptMembership(result);
-      // the room now decides what this product shows, so it is re-opened on the room's
-      // copy rather than left on what was there a moment ago
       await adoptRoomProduct({ productId, host });
       return result;
     },

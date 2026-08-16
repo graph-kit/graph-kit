@@ -6,7 +6,12 @@ import {
   JoinResult,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
-import { ProductId, RoomId, UserId } from '@multiplayer/protocol/room';
+import {
+  ProductId,
+  RoomId,
+  RosterEntry,
+  UserId,
+} from '@multiplayer/protocol/room';
 import { Server } from 'socket.io';
 
 import { generateRoomId, normalizeRoomId } from './room-id.ts';
@@ -64,6 +69,10 @@ export const createSocketServer = (
 
   const rooms = createRoomStore();
 
+  // a kick has to reach into the target's connection, whose room and product channels
+  // only that connection knows. every socket leaves its own way out here
+  const evictors = new Map<UserId, (by: RosterEntry) => void>();
+
   io.on('connection', (socket) => {
     const userId: UserId = randomUUID();
     let currentRoomId: RoomId | null = null;
@@ -109,6 +118,24 @@ export const createSocketServer = (
       if (currentRoomId === null) return;
       io.to(currentRoomId).emit('rosterChanged', room.data);
     };
+
+    /**
+     * Puts this connection back to where it was before joining, so what is left is a live
+     * socket in no room. Every channel is left and the room is forgotten, or presence
+     * would keep broadcasting to a room this user is no longer part of.
+     */
+    const evict = (by: RosterEntry) => {
+      if (currentRoomId === null) return;
+      socket.leave(currentRoomId);
+      if (currentProductId !== null) {
+        socket.leave(productChannel(currentRoomId, currentProductId));
+      }
+      currentRoomId = null;
+      currentProductId = null;
+      socket.emit('kicked', { by });
+    };
+
+    evictors.set(userId, evict);
 
     socket.on('startRoom', ({ displayName, productId, doc }, callback) => {
       const roomId = generateRoomId(rooms.has);
@@ -198,7 +225,19 @@ export const createSocketServer = (
       if (!room || !canRunRoomCommand(room, userId)) return;
       if (isHost(room, targetId)) return;
 
+      const kicker = room.data.roster[userId];
+      if (!kicker) {
+        // unreachable: the command floor is a tier, and only a roster entry carries one
+        console.error(
+          `multiplayer: "${userId}" ran a room command with no roster entry`,
+        );
+        return;
+      }
+
       removeMember(room, targetId);
+      // ahead of the broadcast so the roster the target last saw is the one it was still
+      // in, rather than a final update that quietly erases them with no explanation
+      evictors.get(targetId)?.(kicker);
       broadcastRoster(room);
     });
 
@@ -207,6 +246,8 @@ export const createSocketServer = (
     });
 
     socket.on('disconnect', () => {
+      evictors.delete(userId);
+
       const room = currentRoom();
       if (!room || currentRoomId === null) return;
 

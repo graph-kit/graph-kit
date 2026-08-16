@@ -8,6 +8,7 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
+  import CopySessionCode from './CopySessionCode.vue';
   import RosterCloseButton from './RosterCloseButton.vue';
   import RosterCollaborator from './RosterCollaborator.vue';
 
@@ -23,15 +24,18 @@
 </script>
 
 <template>
-  <Well class="p-3">
+  <Well class="w-80 p-3">
     <VStack class="font-bold">
-      <div class="text-2xl text-center px-10">
+      <div class="text-2xl text-center">
         Collaborators ({{ roster.length }})
       </div>
 
       <RosterCloseButton />
 
-      <VStack class="text-lg">
+      <VStack
+        gap="0"
+        class="text-lg"
+      >
         <RosterCollaborator
           v-for="(member, userId) in roster"
           :key="userId"
@@ -40,6 +44,8 @@
       </VStack>
 
       <div class="w-full h-px bg-white/20"></div>
+
+      <CopySessionCode />
 
       <Button
         class="dark:bg-red-500 bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-white"

@@ -37,7 +37,7 @@
     set: (next) => {
       enteredRoomCode.value = next
         .replace(/[^a-z]/gi, '')
-        .toLowerCase()
+        .toUpperCase()
         .slice(0, ROOM_ID_LENGTH);
     },
   });

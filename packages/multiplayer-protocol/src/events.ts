@@ -5,6 +5,7 @@ import {
   RoomData,
   RoomId,
   RoomMembership,
+  RosterEntry,
   UserId,
 } from './room.ts';
 import { AssignableTier } from './tiers.ts';
@@ -82,6 +83,11 @@ export type ServerToClientEvents = {
   /** carries productId only, never a route, which stays a client concern */
   movedToProduct: (options: { productId: ProductId }) => void;
 
-  kicked: () => void;
+  /**
+   * The last thing this connection hears from the room. Carries the kicker because the
+   * target is already off the roster by the time it lands, so nothing on the client can
+   * still resolve a user id into a person.
+   */
+  kicked: (options: { by: RosterEntry }) => void;
   roomDisbanded: () => void;
 };

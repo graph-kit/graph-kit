@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import Dropdown from '@core/components/Dropdown';
+
+  import { menuPanelClasses } from './classes.ts';
 </script>
 
 <template>
-  <Dropdown
-    class="bg-gray-300 border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-  >
+  <Dropdown :class="menuPanelClasses">
     <template #trigger><slot name="trigger" /></template>
     <slot />
   </Dropdown>

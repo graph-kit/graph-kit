@@ -3,8 +3,7 @@
 
   import { computed, ref } from 'vue';
 
-  import Button from '../../components/button/Button.vue';
-  import Icon from '../../components/icon/Icon.vue';
+  import MenuItem from '../../components/dropdown/MenuItem.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import { getLink } from './linkPayload.ts';
 
@@ -47,13 +46,10 @@
 </script>
 
 <template>
-  <Button
-    class="px-2 bg-transparent dark:bg-transparent dark:hover:bg-transparent w-full justify-start"
+  <MenuItem
     @click="copyLinkToClipboard"
+    :icon="display.icon"
   >
-    <template #start>
-      <Icon :path="display.icon" />
-    </template>
     {{ display.text }}
-  </Button>
+  </MenuItem>
 </template>

@@ -49,6 +49,7 @@ export const useCanvas: UseCanvas = () => {
 
   const drawContent = ref<DrawContent>(() => {});
   const drawBackgroundPattern = ref<DrawPattern>(() => () => {});
+  const contentSuspended = ref(false);
 
   const lifecycleEvents = createEventHub(createCanvasLifecycleEventRegistry());
 
@@ -118,7 +119,7 @@ export const useCanvas: UseCanvas = () => {
     lifecycleEvents.emit('onBeforeRepaint');
     camera.transformAndClear(ctx);
     pattern.draw(ctx);
-    drawContent.value(ctx);
+    if (!contentSuspended.value) drawContent.value(ctx);
     lifecycleEvents.emit('onAfterRepaint');
   };
 
@@ -140,6 +141,7 @@ export const useCanvas: UseCanvas = () => {
     draw: {
       content: drawContent,
       backgroundPattern: drawBackgroundPattern,
+      contentSuspended,
     },
     lifecycleEvents,
     domEvents,

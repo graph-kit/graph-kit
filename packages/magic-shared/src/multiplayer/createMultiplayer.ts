@@ -1,4 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
+import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { DocUpdate, toDocUpdate } from '@multiplayer/protocol/doc';
 import { JoinResult } from '@multiplayer/protocol/events';
 import {
@@ -13,7 +14,8 @@ import * as Y from 'yjs';
 
 import { computed, ref, shallowRef } from 'vue';
 
-import { REMOTE_ORIGIN } from './constants.ts';
+import { REMOTE_ORIGIN, getDisplayName } from './constants.ts';
+import { createMultiplayerEventRegistry } from './events.ts';
 import {
   MultiplayerControls,
   MultiplayerSocket,
@@ -30,11 +32,13 @@ type CreateMultiplayerOptions = {
   onMovedToProduct: (productId: ProductId) => void;
 };
 
+const ACK_TIMEOUT_MS = 10_000;
+
 export const createMultiplayer = ({
   serverUrl,
   onMovedToProduct,
 }: CreateMultiplayerOptions): MultiplayerControls => {
-  const awaitingServerState = ref(roomIdUrl.read() !== null);
+  const events = createEventHub(createMultiplayerEventRegistry());
 
   const membership = ref<RoomMembership | null>(null);
   const presence = ref<Record<UserId, PresenceEntry>>({});
@@ -87,12 +91,16 @@ export const createMultiplayer = ({
   /** the one way room state is taken on, whether the room was opened or joined */
   const adoptMembership = (next: RoomMembership) => {
     membership.value = next;
+    events.emit('onRoomJoined');
   };
 
   const reset = () => {
-    awaitingServerState.value = false;
+    const wasInRoom = inRoom.value;
+    events.emit('onPendingEnded');
     membership.value = null;
     presence.value = {};
+    // leaving a room this connection was never in is not a departure
+    if (wasInRoom) events.emit('onRoomLeft');
   };
 
   const releaseProduct = () => {
@@ -178,6 +186,14 @@ export const createMultiplayer = ({
     });
   };
 
+  /** rejects rather than waiting forever when the answer never lands */
+  const requestFromServer = <Answer>(
+    send: (respond: (error: Error | null, answer: Answer) => void) => void,
+  ) =>
+    new Promise<Answer>((resolve, reject) => {
+      send((error, answer) => (error ? reject(error) : resolve(answer)));
+    });
+
   const ensureSocket = () => {
     if (socket) return socket;
     socket = connect(serverUrl, { transports: ['websocket'] });
@@ -185,17 +201,25 @@ export const createMultiplayer = ({
     return socket;
   };
 
+  // a tab that goes without closing its socket is only noticed once the heartbeat times
+  // out, which leaves whoever left sitting in everyone else's roster until then. pagehide
+  // covers the close and the refresh alike, and unlike visibilitychange it does not fire
+  // for a tab switch, which is not a departure
+  window.addEventListener('pagehide', () => socket?.disconnect());
+
   /** the product's own state, which is what a room opens on */
   const seedFromProduct = (binding: ProductBinding) =>
     Y.encodeStateAsUpdate(openProduct(binding));
 
   /** takes on the room's copy of a product, replacing whatever the product was showing */
   const adoptRoomProduct = async ({ productId, host }: ProductBinding) => {
-    awaitingServerState.value = true;
+    events.emit('onPendingStarted');
     try {
-      const update = await new Promise<DocUpdate | null>((resolve) => {
-        requireSocket().emit('enterProduct', { productId }, resolve);
-      });
+      const update = await requestFromServer<DocUpdate | null>((respond) =>
+        requireSocket()
+          .timeout(ACK_TIMEOUT_MS)
+          .emit('enterProduct', { productId }, respond),
+      );
 
       openProduct({ productId, host }, (doc) => {
         // absent when nobody in the room has opened this product yet, which leaves the
@@ -203,21 +227,23 @@ export const createMultiplayer = ({
         if (update) Y.applyUpdate(doc, toDocUpdate(update), REMOTE_ORIGIN);
       });
     } finally {
-      awaitingServerState.value = false;
+      events.emit('onPendingEnded');
     }
   };
 
   const roomActions: RoomActions = {
-    start: async ({ productId, host, displayName }) => {
+    start: async ({ productId, host }) => {
       const activeSocket = ensureSocket();
       const doc = seedFromProduct({ productId, host });
-      const started = await new Promise<RoomMembership>((resolve) => {
-        activeSocket.emit(
-          'startRoom',
-          { displayName, productId, doc },
-          resolve,
-        );
-      });
+      const started = await requestFromServer<RoomMembership>((respond) =>
+        activeSocket
+          .timeout(ACK_TIMEOUT_MS)
+          .emit(
+            'startRoom',
+            { displayName: getDisplayName(), productId, doc },
+            respond,
+          ),
+      );
 
       adoptMembership(started);
 
@@ -227,18 +253,25 @@ export const createMultiplayer = ({
       return started.roomId;
     },
 
-    join: async ({ roomId, productId, host, displayName }) => {
+    join: async ({ roomId, productId, host }) => {
       const activeSocket = ensureSocket();
-      awaitingServerState.value = true;
-      const result = await new Promise<JoinResult>((resolve) => {
-        activeSocket.emit('joinRoom', { roomId, displayName }, resolve);
-      }).finally(() => (awaitingServerState.value = false));
+      events.emit('onPendingStarted');
+      const result = await requestFromServer<JoinResult>((respond) =>
+        activeSocket
+          .timeout(ACK_TIMEOUT_MS)
+          .emit('joinRoom', { roomId, displayName: getDisplayName() }, respond),
+      ).finally(() => events.emit('onPendingEnded'));
 
-      if (!result.joined) return result;
+      // the only refusal the server has is a room it cannot find, which makes the id
+      // dead rather than unlucky. a request that never came back leaves it in the url
+      if (!result.joined) {
+        console.warn(`multiplayer: no room to join under the id "${roomId}"`);
+        roomIdUrl.strip();
+        return result;
+      }
 
+      roomIdUrl.write(result.roomId);
       adoptMembership(result);
-      // the room now decides what this product shows, so it is re-opened on the room's
-      // copy rather than left on what was there a moment ago
       await adoptRoomProduct({ productId, host });
       return result;
     },
@@ -269,6 +302,6 @@ export const createMultiplayer = ({
 
     room,
 
-    awaitingServerState,
+    events,
   };
 };

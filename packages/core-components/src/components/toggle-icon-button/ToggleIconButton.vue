@@ -6,6 +6,7 @@
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
   import { preventFocusSteal } from '../../preventFocusSteal.ts';
+  import { disabledClasses, withoutHandlers } from '../button/disabled.ts';
   import { type ButtonVariant, buttonVariants } from '../button/variants.ts';
   import Icon from '../icon/Icon.vue';
   import Tooltip from '../tooltip/Tooltip.vue';
@@ -23,7 +24,12 @@
     label: string;
     variant?: ButtonVariant;
     size?: number;
-    disabled?: boolean;
+    /**
+     * why the button is unavailable, which takes over the tooltip, since why it's off
+     * is the more useful thing to read once it is. prefer the reason over a bare `true`,
+     * which disables the button with no explanation.
+     */
+    disabled?: boolean | string;
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -36,26 +42,46 @@
   const pressed = defineModel<boolean>();
 
   const base =
-    'inline-flex cursor-pointer items-center justify-center rounded-md p-2 transition-colors active:scale-[0.98] focus-visible:outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100';
+    'inline-flex cursor-pointer items-center justify-center rounded-md p-2 transition-colors active:scale-[0.98] focus-visible:outline-none';
 
   const attrs = useAttrs();
 
   const attrClass = useAttrClass();
 
-  const classes = computed(() =>
-    cn(base, buttonVariants[props.variant], attrClass.value),
+  const isDisabled = computed(() => !!props.disabled);
+
+  const disabledReason = computed(() =>
+    typeof props.disabled === 'string' ? props.disabled : undefined,
   );
+
+  const classes = computed(() => {
+    const enabled = cn(base, buttonVariants[props.variant], attrClass.value);
+    return isDisabled.value ? disabledClasses(enabled) : enabled;
+  });
+
+  const forwardedAttrs = computed(() => ({
+    ...(isDisabled.value ? withoutHandlers(attrs) : attrs),
+    class: undefined,
+  }));
+
+  // Toggle's own `disabled` would take the native attribute route and cost the
+  // tooltip its events, so the press is refused here instead
+  const onPressedChange = (next: boolean) => {
+    if (isDisabled.value) return;
+    pressed.value = next;
+  };
 </script>
 
 <template>
-  <Tooltip :label="label">
+  <Tooltip :label="disabledReason ?? label">
     <template #trigger>
       <Toggle
-        v-model="pressed"
-        :disabled="disabled"
+        :model-value="pressed"
         :aria-label="label"
-        v-bind="{ ...attrs, class: undefined }"
+        :aria-disabled="isDisabled || undefined"
+        v-bind="forwardedAttrs"
         :class="classes"
+        @update:model-value="onPressedChange"
         @mousedown="preventFocusSteal"
       >
         <Icon

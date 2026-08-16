@@ -56,10 +56,13 @@
   <TooltipProvider :delay-duration="0">
     <!-- with no content there is no grace area to close on pointer exit, so leaving the trigger has to -->
     <!-- closing on trigger click would punch a hole in `open` while the pointer is still on the trigger -->
+    <!-- focus handed back by something closing, a menu returning it to its trigger or a
+         tab switch, is not someone asking what the control does. keyboard focus still is -->
     <TooltipRoot
       v-model:open="open"
       :disable-hoverable-content="!hasContent"
       disable-closing-trigger
+      ignore-non-keyboard-focus
     >
       <TooltipTrigger as-child>
         <slot name="trigger" />

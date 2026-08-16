@@ -1,14 +1,8 @@
 <script setup lang="ts">
-  import {
-    mdiMonitor,
-    mdiThemeLightDark,
-    mdiWeatherNight,
-    mdiWhiteBalanceSunny,
-  } from '@mdi/js';
+  import { mdiMonitor, mdiWeatherNight, mdiWhiteBalanceSunny } from '@mdi/js';
   import { type BasicColorSchema } from '@vueuse/core';
 
   import Icon from '../../components/icon/Icon.vue';
-  import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import ToggleButtonGroup from '../../components/toggle-button-group/ToggleButtonGroup.vue';
   import ToggleButtonGroupItem from '../../components/toggle-button-group/ToggleButtonGroupItem.vue';
@@ -33,11 +27,7 @@
 
 <template>
   <VStack class="py-2">
-    <HStack class="px-2 font-bold bg-transparent w-full justify-start">
-      <Icon :path="mdiThemeLightDark" />
-      Appearance
-    </HStack>
-    <div>
+    <div class="px-2">
       <ToggleButtonGroup v-model="magic.appearance.value">
         <template
           v-for="appearance in appearances"

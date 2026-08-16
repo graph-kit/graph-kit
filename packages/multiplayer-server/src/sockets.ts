@@ -52,7 +52,14 @@ export const createSocketServer = (
 ): Server<ClientToServerEvents, ServerToClientEvents> => {
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(
     httpServer,
-    { cors: { origin: options.corsOrigins } },
+    {
+      cors: { origin: options.corsOrigins },
+      // the backstop for a client that vanished without saying so, which the defaults
+      // leave sitting in the roster for 45 seconds. the floor is how long a slow network
+      // may swallow a pong before its owner is dropped, and dropping a host disbands
+      pingInterval: 10_000,
+      pingTimeout: 10_000,
+    },
   );
 
   const rooms = createRoomStore();

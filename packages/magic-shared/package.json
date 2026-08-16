@@ -52,6 +52,10 @@
       "types": "./dist/types/components/dropdown/Dropdown.vue.d.ts",
       "default": "./src/components/dropdown/Dropdown.vue"
     },
+    "./DropdownSubmenu": {
+      "types": "./dist/types/components/dropdown/DropdownSubmenu.vue.d.ts",
+      "default": "./src/components/dropdown/DropdownSubmenu.vue"
+    },
     "./DropdownItem": {
       "types": "./dist/types/components/dropdown/DropdownItem.vue.d.ts",
       "default": "./src/components/dropdown/DropdownItem.vue"

@@ -11,6 +11,7 @@
   import AppearanceToggle from '../appearance/AppearanceToggle.vue';
   import FullscreenButton from '../fullscreen/FullscreenButton.vue';
   import LinkSharingButton from '../link-sharing/LinkSharingButton.vue';
+  import MultiplayerButton from '../multiplayer/MultiplayerButton.vue';
   import HistoryButtons from '../undo-redo/HistoryButtons.vue';
 
   const magic = useProvidedMagic();
@@ -34,13 +35,10 @@
             :path="mdiCog"
           />
         </template>
-        <VStack class="gap-1 px-1">
+        <VStack gap="0">
+          <MultiplayerButton v-if="magic.multiplayer" />
           <LinkSharingButton v-if="magic.ui.linkSharing" />
           <FullscreenButton />
-          <div
-            class="w-full bg-white opacity-10"
-            :style="{ height: '1px' }"
-          ></div>
           <AppearanceToggle />
         </VStack>
       </Dropdown>

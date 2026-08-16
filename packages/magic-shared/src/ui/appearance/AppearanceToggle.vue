@@ -33,11 +33,11 @@
 
 <template>
   <VStack class="py-2">
-    <HStack class="px-2 font-bold bg-transparent w-full justify-start">
+    <!-- <HStack class="px-2 font-bold bg-transparent w-full justify-start">
       <Icon :path="mdiThemeLightDark" />
       Appearance
-    </HStack>
-    <div>
+    </HStack> -->
+    <div class="px-2">
       <ToggleButtonGroup v-model="magic.appearance.value">
         <template
           v-for="appearance in appearances"

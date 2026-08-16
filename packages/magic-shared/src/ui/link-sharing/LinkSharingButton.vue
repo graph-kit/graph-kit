@@ -40,7 +40,7 @@
           icon: mdiCheck,
         }
       : {
-          text: 'Copy Link',
+          text: 'Copy Share Link',
           icon: mdiLink,
         };
   });
@@ -48,7 +48,7 @@
 
 <template>
   <Button
-    class="px-2 bg-transparent dark:bg-transparent dark:hover:bg-transparent w-full justify-start"
+    class="px-2 bg-transparent dark:bg-transparent w-full justify-start"
     @click="copyLinkToClipboard"
   >
     <template #start>

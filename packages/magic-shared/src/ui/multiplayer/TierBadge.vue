@@ -1,9 +1,12 @@
 <script setup lang="ts">
   import { cn } from '@core/components/cn';
+  import { mdiCrown, mdiPencil, mdiShieldAccount } from '@mdi/js';
   import { Tier } from '@multiplayer/protocol/tiers';
 
   import { computed } from 'vue';
 
+  import Icon from '../../components/icon/Icon.vue';
+  import HStack from '../../components/layout/HStack.vue';
   import Tooltip from '../../components/tooltip/Tooltip.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
 
@@ -22,9 +25,15 @@
   };
 
   const tierTooltip: Record<Tier, string> = {
-    host: 'Host Permission: The owner of this session',
-    admin: 'Admin Permission: Has host privileges',
-    write: 'Write Permission: Can edit content',
+    host: 'Role: Host',
+    admin: 'Role: Admin',
+    write: 'Role: Write',
+  };
+
+  const tierIcon: Record<Tier, string> = {
+    host: mdiCrown,
+    admin: mdiShieldAccount,
+    write: mdiPencil,
   };
 </script>
 
@@ -34,16 +43,18 @@
     side="left"
   >
     <template #trigger>
-      <div
+      <HStack
+        gap="1"
         :class="
-          cn(
-            'px-2 rounded-md cursor-pointer text-white',
-            tierClasses[props.tier],
-          )
+          cn('px-2 text-sm rounded-sm text-white', tierClasses[props.tier])
         "
       >
+        <Icon
+          :path="tierIcon[props.tier]"
+          :size="16"
+        />
         {{ props.tier }}
-      </div>
+      </HStack>
     </template>
   </Tooltip>
 </template>

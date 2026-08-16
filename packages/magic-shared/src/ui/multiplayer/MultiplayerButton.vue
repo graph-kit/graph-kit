@@ -124,7 +124,6 @@
             @keydown.enter="joinSession"
             placeholder="Session Code"
           />
-          <!-- the item carries no styling, so the button keeps its own look and still closes the menu -->
           <DropdownItem>
             <Button
               :disabled="joinBlockedBy"

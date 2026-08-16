@@ -1,36 +1,55 @@
 <script setup lang="ts">
+  import { mdiCloseNetworkOutline, mdiExitRun } from '@mdi/js';
+
   import { computed } from 'vue';
 
-  import HStack from '../../components/layout/HStack.vue';
+  import Button from '../../components/button/Button.vue';
+  import Icon from '../../components/icon/Icon.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
+  import RosterCloseButton from './RosterCloseButton.vue';
+  import RosterCollaborator from './RosterCollaborator.vue';
 
-  const { multiplayer } = useProvidedMagic();
+  const { room, multiplayer } = useConnectedMultiplayer();
 
-  const roster = computed(() => {
-    const room = multiplayer?.room.state.value;
-    return room?.connected ? room.userIdToRosterEntry : undefined;
+  const roster = computed(() => Object.values(room.value.userIdToRosterEntry));
+
+  const departure = computed(() => {
+    return room.value.me.isHost
+      ? { text: 'Disband Session', icon: mdiCloseNetworkOutline }
+      : { text: 'Leave Session', icon: mdiExitRun };
   });
 </script>
 
 <template>
-  <Well v-if="roster">
-    <VStack class="w-64">
-      <span class="text-sm font-bold">In room</span>
+  <Well class="p-3">
+    <VStack class="font-bold">
+      <div class="text-2xl text-center px-10">
+        Collaborators ({{ roster.length }})
+      </div>
 
-      <VStack as="ul">
-        <HStack
+      <RosterCloseButton />
+
+      <VStack class="text-lg">
+        <RosterCollaborator
           v-for="(member, userId) in roster"
           :key="userId"
-          as="li"
-          :gap="2"
-          class="items-center justify-between text-sm"
-        >
-          <span class="truncate">{{ member.displayName }}</span>
-          <span class="text-xs opacity-70 shrink-0">{{ member.tier }}</span>
-        </HStack>
+          :member="member"
+        />
       </VStack>
+
+      <div class="w-full h-px bg-white/20"></div>
+
+      <Button
+        class="dark:bg-red-500 bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-white"
+        @click="multiplayer.room.leave"
+      >
+        <template #start>
+          <Icon :path="departure.icon" />
+        </template>
+        {{ departure.text }}
+      </Button>
     </VStack>
   </Well>
 </template>

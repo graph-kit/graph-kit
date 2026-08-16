@@ -47,14 +47,13 @@ export const useMultiplayerProduct = ({
     const targetRoomId = roomIdUrl.read();
     if (!targetRoomId) return;
 
-    const result = await actions.room.join({
-      ...binding,
-      roomId: targetRoomId,
-    });
-
-    // a dead room id is a non event: strip it and carry on exactly as if the param had
-    // never been there, with no error surfaced
-    if (!result.joined) roomIdUrl.strip();
+    // a dead room id is a non event, handled at the source by stripping it. never
+    // reaching the server is not: the id stays put so a refresh can try it again
+    try {
+      await actions.room.join({ ...binding, roomId: targetRoomId });
+    } catch (err) {
+      console.warn('multiplayer: could not reach the room to join it', err);
+    }
   });
 
   onUnmounted(() => actions.product.leave(productId));

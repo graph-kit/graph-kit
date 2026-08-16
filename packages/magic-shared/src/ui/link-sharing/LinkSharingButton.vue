@@ -3,9 +3,7 @@
 
   import { computed, ref } from 'vue';
 
-  import Button from '../../components/button/Button.vue';
-  import { menuItemClasses } from '../../components/dropdown/classes.ts';
-  import Icon from '../../components/icon/Icon.vue';
+  import MenuItem from '../../components/dropdown/MenuItem.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import { getLink } from './linkPayload.ts';
 
@@ -41,20 +39,17 @@
           icon: mdiCheck,
         }
       : {
-          text: 'Copy Share Link',
+          text: 'Copy Link',
           icon: mdiLink,
         };
   });
 </script>
 
 <template>
-  <Button
+  <MenuItem
     @click="copyLinkToClipboard"
-    :class="menuItemClasses"
+    :icon="display.icon"
   >
-    <template #start>
-      <Icon :path="display.icon" />
-    </template>
     {{ display.text }}
-  </Button>
+  </MenuItem>
 </template>

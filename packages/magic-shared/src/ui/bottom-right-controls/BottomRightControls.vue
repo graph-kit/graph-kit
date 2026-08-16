@@ -2,10 +2,10 @@
   import { mdiCog } from '@mdi/js';
 
   import Dropdown from '../../components/dropdown/Dropdown.vue';
+  import IconButton from '../../components/icon-button/IconButton.vue';
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import ToggleIconButton from '../../components/toggle-icon-button/ToggleIconButton.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import AnnotationToggle from '../annotations/AnnotationToggle.vue';
   import AppearanceToggle from '../appearance/AppearanceToggle.vue';
@@ -28,9 +28,11 @@
         align="end"
       >
         <template #trigger>
-          <ToggleIconButton
+          <!-- opening a menu is not a toggle, so the lit state follows aria-expanded,
+               which reka keeps honest, rather than a pressed state of its own -->
+          <IconButton
             label="Settings"
-            class="p-4 bg-transparent dark:bg-transparent"
+            class="p-4 bg-transparent dark:bg-transparent aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-700"
             :size="20"
             :path="mdiCog"
           />

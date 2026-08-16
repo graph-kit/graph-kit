@@ -7,11 +7,12 @@
     DropdownMenuTrigger,
   } from 'reka-ui';
 
-  import { computed, onUnmounted, ref, useAttrs } from 'vue';
+  import { computed, onUnmounted, provide, ref, useAttrs } from 'vue';
 
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
   import { dropdownContentClasses } from './classes.ts';
+  import { menuUsingPointerKey } from './modality.ts';
 
   defineOptions({ inheritAttrs: false });
 
@@ -59,14 +60,25 @@
     closeTimeout = setTimeout(() => (open.value = false), HOVER_CLOSE_DELAY_MS);
   };
 
+  /**
+   * closing hands focus back to the trigger, which for a pointer user lands a tooltip on
+   * it that nobody asked for, since the browser reads a scripted focus move out of the
+   * menu as keyboard focus. a key press is the one case where the handoff was wanted.
+   */
+  const usingPointer = ref(false);
+
+  provide(menuUsingPointerKey, usingPointer);
+
   // reka drives this from clicks, keys and dismissals, each of which owns where focus lands
   const onOpenChange = (isOpen: boolean) => {
     openedByHover.value = false;
+    // closing runs ahead of the focus handoff, so the modality only resets on the way in
+    if (isOpen) usingPointer.value = false;
     open.value = isOpen;
   };
 
   const keepFocusPut = (event: Event) => {
-    if (openedByHover.value) event.preventDefault();
+    if (openedByHover.value || usingPointer.value) event.preventDefault();
   };
 
   const attrs = useAttrs();
@@ -108,6 +120,8 @@
         :class="classes"
         @pointerenter="cancelPendingClose"
         @pointerleave="closeOnHover"
+        @pointerdown="usingPointer = true"
+        @keydown="usingPointer = false"
         @open-auto-focus="keepFocusPut"
         @close-auto-focus="keepFocusPut"
       >

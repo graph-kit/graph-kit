@@ -11,6 +11,7 @@ export type GraphLensChipOption = (
 
 export type GraphProductOptions = UseGraphOptions & {
   productId: ProductId;
+  history?: boolean;
   localStorage?: boolean;
   annotations?: boolean;
   lensChips?: GraphLensChipOption;

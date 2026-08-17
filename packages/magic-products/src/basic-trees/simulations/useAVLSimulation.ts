@@ -56,7 +56,6 @@ export const useAVLSimulationDefinition = (): Controls => {
     setup: (context) => {
       const { currentFrame, frames } = context;
       suggested.remove();
-      graph.history.lifecycle.disable();
       return {
         explainer,
         onSetupCompleted: () => sync(currentFrame.value),
@@ -64,8 +63,6 @@ export const useAVLSimulationDefinition = (): Controls => {
         onBeforeTeardown: () =>
           sync(nullThrows(frames.value.at(-1), 'last frame undefined')),
         onTeardownCompleted: () => {
-          graph.history.lifecycle.enable();
-          graph.history.captureSnapshot();
           suggested.add();
         },
       };
@@ -74,11 +71,7 @@ export const useAVLSimulationDefinition = (): Controls => {
   };
 
   const suggested = useSuggestedNodes(graph, definition, avlControls);
-
-  onMounted(() => {
-    graph.history.captureSnapshot();
-    suggested.add();
-  });
+  onMounted(suggested.add);
 
   graph.events.transit.subscribe('onDecoded', () => {
     tree.root = graphToTree(graph);

@@ -16,10 +16,13 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const draggedNodes = trackDraggedNodes(graph);
 
+  const historyDisabled = options.history === false;
+  if (historyDisabled) graph.history.lifecycle.disable();
+
   const host: MagicProductHost = {
     surface: graph.canvas.surface,
     transit: graph.transit,
-    history: graph.history,
+    history: historyDisabled ? undefined : graph.history,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {

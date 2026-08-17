@@ -8,6 +8,7 @@
 
   const graph = useGraphProduct({
     productId: 'welcome',
+    history: false,
     localStorage: false,
     core: {
       weighted: false,

@@ -11,14 +11,14 @@
 
   const props = defineProps<{
     title: string;
-    ids: readonly string[];
-    selectedId?: string;
+    edgeIds: readonly string[];
+    highlightId?: string;
   }>();
 
   const graph = useProvidedGraph();
 
-  const rows = computed(() =>
-    props.ids
+  const edges = computed(() =>
+    props.edgeIds
       .map((id) => graph.getEdge(id))
       .sort((a, b) => a.weight.compare(b.weight))
       .map((edge) => {
@@ -36,31 +36,31 @@
 </script>
 
 <template>
-  <Well v-if="rows.length > 0">
+  <Well v-if="edges.length > 0">
     <VStack class="gap-2">
       <span class="font-bold text-lg text-center">{{ title }}</span>
       <VStack class="gap-2 max-h-[38vh] overflow-y-auto p-1">
         <HStack
-          v-for="row in rows"
-          :key="row.id"
-          class="gap-2 items-center justify-between rounded-md transition-colors"
+          v-for="edge in edges"
+          :key="edge.id"
+          class="justify-between rounded-md transition-colors"
           :class="
-            row.id === selectedId
+            edge.id === highlightId
               ? 'bg-amber-500/15 ring-2 ring-amber-500 p-1'
               : 'm-1'
           "
         >
           <Node
-            :id="row.source"
+            :id="edge.source"
             :scale="0.75"
             class="z-1"
           />
           <Edge
-            :id="row.id"
+            :id="edge.id"
             class="w-18 -mx-4"
           />
           <Node
-            :id="row.target"
+            :id="edge.target"
             :scale="0.75"
             class="z-1"
           />

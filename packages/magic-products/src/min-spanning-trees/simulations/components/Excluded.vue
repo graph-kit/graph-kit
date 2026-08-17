@@ -13,6 +13,6 @@
 <template>
   <EdgeListPanel
     title="Excluded"
-    :ids="excluded"
+    :edgeIds="excluded"
   />
 </template>

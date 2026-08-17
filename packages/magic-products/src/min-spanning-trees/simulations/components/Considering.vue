@@ -14,7 +14,7 @@
 <template>
   <EdgeListPanel
     title="In Consideration"
-    :ids="considering"
-    :selected-id="selected"
+    :edgeIds="considering"
+    :highlightId="selected"
   />
 </template>

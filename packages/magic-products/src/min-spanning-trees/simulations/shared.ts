@@ -257,7 +257,7 @@ const kruskalsEffects = (
     tree.setIds(frame.treeEdgeIds);
     crossingEdge.setId(frame.activeEdgeId);
     excludingEdge.setId(frame.excludingEdgeId);
-    excludedEdge.setIds(frame.excludedEdgeIds);
+    excludedEdge.setIds(frame.dimmedEdgeIds);
   };
 
   const lens: Lens = {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import HStack from '@core/components/HStack';
   import { useProvidedGraph } from '@magic/shared/graph-product';
   import type { GEdge } from '@magic/shared/graph/types';
   import { useEdgeStyles } from '@magic/shared/theme';
@@ -31,9 +32,9 @@
 </script>
 
 <template>
-  <div
+  <HStack
     @click="graph.focus.set([id])"
-    class="flex items-center cursor-pointer"
+    class="cursor-pointer"
   >
     <div
       class="flex-1 h-full"
@@ -51,5 +52,5 @@
       class="flex-1 h-full"
       :style="edgeStyle"
     />
-  </div>
+  </HStack>
 </template>

@@ -129,6 +129,9 @@ type KruskalsState = {
   treeNodeIds: readonly GNode['id'][];
   treeEdgeIds: readonly GEdge['id'][];
   excludedEdgeIds: readonly GEdge['id'][];
+  // same as excludedEdgeIds, but a just-rejected edge is held back for one
+  // frame so its color change reads before it fades
+  dimmedEdgeIds: readonly GEdge['id'][];
   candidateEdges: readonly GEdge['id'][];
 };
 

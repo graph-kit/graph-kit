@@ -7,15 +7,6 @@ import {
   KruskalsStep,
 } from './frame.ts';
 
-const shuffleEdges = (edges: GEdge[]) => {
-  const shuffledEdges = [...edges];
-  for (let i = shuffledEdges.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledEdges[i], shuffledEdges[j]] = [shuffledEdges[j], shuffledEdges[i]];
-  }
-  return shuffledEdges;
-};
-
 export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
   const nodeIds = graph.nodes.value.map((node) => node.id);
 
@@ -53,21 +44,26 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
     return true;
   };
 
-  const sortedEdges = [...graph.edges.value].toSorted((a, b) =>
+  const edgesSortedByWeight = graph.edges.value.toSorted((a, b) =>
     a.weight.compare(b.weight),
   );
-  const sortedEdgeIds = sortedEdges.map((edge) => edge.id);
+  const sortedEdgeIds = edgesSortedByWeight.map((edge) => edge.id);
 
   const treeNodes = new Set<GNode['id']>();
   const treeEdges: string[] = [];
   const excludedEdges: string[] = [];
 
-  const frame = (fields: KruskalsStep & KruskalsHighlights): KruskalsFrame => {
+  const frame = (
+    fields: KruskalsStep &
+      KruskalsHighlights &
+      Partial<Pick<KruskalsFrame, 'dimmedEdgeIds'>>,
+  ): KruskalsFrame => {
     const decided = new Set([...treeEdges, ...excludedEdges]);
     return {
       treeNodeIds: [...treeNodes],
       treeEdgeIds: [...treeEdges],
       excludedEdgeIds: [...excludedEdges],
+      dimmedEdgeIds: [...excludedEdges],
       candidateEdges: sortedEdgeIds.filter((id) => !decided.has(id)),
       ...fields,
     };
@@ -75,8 +71,8 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
 
   frameCollector.add(frame({ type: 'start' }));
 
-  for (let i = 0; i < sortedEdges.length; i++) {
-    const edge = sortedEdges[i];
+  for (let i = 0; i < edgesSortedByWeight.length; i++) {
+    const edge = edgesSortedByWeight[i];
 
     frameCollector.add(
       frame({
@@ -107,7 +103,7 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
         // every remaining edge in sorted order never gets its own verdict,
         // but it still would only close a loop - fade it out along with the
         // edges that were actually rejected
-        const skipped = sortedEdges.slice(i + 1).map((e) => e.id);
+        const skipped = edgesSortedByWeight.slice(i + 1).map((e) => e.id);
         if (skipped.length > 0) {
           excludedEdges.push(...skipped);
           frameCollector.add(frame({ type: 'all-connected', edges: skipped }));
@@ -116,13 +112,15 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
       }
     } else {
       excludedEdges.push(edge.id);
-
+      // color the edge as rejected, but hold it back from the dimmed set for
+      // this one frame so the color change reads before it fades
       frameCollector.add(
         frame({
           type: 'reject-edge',
           edge: edge.id,
           excludingEdgeId: edge.id,
           activeNodeIds: [edge.source, edge.target],
+          dimmedEdgeIds: excludedEdges.slice(0, -1),
         }),
       );
     }

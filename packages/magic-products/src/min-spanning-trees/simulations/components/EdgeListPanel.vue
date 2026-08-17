@@ -7,6 +7,8 @@
 
   import { computed } from 'vue';
 
+  import Edge from './Edge.vue';
+
   const props = defineProps<{
     title: string;
     ids: readonly string[];
@@ -28,7 +30,6 @@
           id: edge.id,
           source,
           target,
-          weight: edge.weight.toFraction(),
         };
       }),
   );
@@ -46,17 +47,22 @@
           :class="
             row.id === selectedId
               ? 'bg-amber-500/15 ring-2 ring-amber-500 p-1'
-              : ''
+              : 'm-1'
           "
         >
           <Node
             :id="row.source"
             :scale="0.75"
+            class="z-1"
           />
-          <span class="font-bold tabular-nums text-xs">{{ row.weight }}</span>
+          <Edge
+            :id="row.id"
+            class="w-18 -mx-4"
+          />
           <Node
             :id="row.target"
             :scale="0.75"
+            class="z-1"
           />
         </HStack>
       </VStack>

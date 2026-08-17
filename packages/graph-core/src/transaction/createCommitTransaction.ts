@@ -2,15 +2,18 @@ import { CommitTransaction } from '@graph/primitives/transactions/types';
 
 import { createEmptyPayload } from './createEmptyPayload.ts';
 import type { TransactionOptions } from './types.ts';
+import { createValidateDraft } from './validateDraft.ts';
 
-// TODO 1. ❌ Validation https://github.com/graph-kit/graph-kit/issues/598
-// 2. ✅ Process Mutation State
-// 3. ✅ Commit Payload and Return Confirmation
 export function createCommitTransaction({
   graph,
+  inspectDraft,
   onTransactionSucceeded,
 }: TransactionOptions): CommitTransaction {
-  return (draft) => {
+  const validateDraft = createValidateDraft(inspectDraft);
+
+  return (unvalidatedDraft) => {
+    const draft = validateDraft(unvalidatedDraft);
+
     const edges = graph.edges();
     const nodes = graph.nodes();
     const payload = createEmptyPayload();

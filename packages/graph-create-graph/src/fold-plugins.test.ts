@@ -20,6 +20,7 @@ const createLabelingPlugin =
       ...actions,
       addNode: (options: any) => {
         const node = actions.addNode(options);
+        if (!node) return undefined;
         nodeIdToLabel.set(node.id, `label-${node.id}`);
         return node;
       },
@@ -66,6 +67,7 @@ const createLabelingGetterPlugin =
       ...actions,
       addNode: (options: any) => {
         const node = actions.addNode(options);
+        if (!node) return undefined;
         nodeIdToLabel.set(node.id, `label-${node.id}`);
         return node;
       },

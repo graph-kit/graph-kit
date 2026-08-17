@@ -2,8 +2,6 @@ import { CommitTransaction } from '@graph/primitives/transactions/types';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import { batch } from '@reactive/primitives/index';
 
-import { NodePositionStoreControls } from '../positions/types.ts';
-import type { EdgeWeightStoreControls } from '../weights/types.ts';
 import {
   createAddEdgeHandler,
   createAddElementsHandler,
@@ -15,11 +13,13 @@ import {
 
 export type CreateCoreActionOptions = {
   commitTransaction: CommitTransaction;
+  /**
+   * live state only: the position and weight stores belong to the transaction, so that an
+   * element the transaction rejects never reaches one
+   */
   graph: {
     nodes: () => CoreNode[];
     edges: () => CoreEdge[];
-    positions: NodePositionStoreControls;
-    weights: EdgeWeightStoreControls;
   };
 };
 

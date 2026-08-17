@@ -86,6 +86,7 @@ export const useSuggestedNodes = (
       label: suggestion.label,
       position: suggestion.position,
     });
+    if (!node) return;
 
     controls.mode.value = 'insert';
     controls.target.value = node.id;

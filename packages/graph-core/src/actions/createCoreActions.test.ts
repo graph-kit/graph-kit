@@ -1,3 +1,4 @@
+import { nullThrows } from '@core/utils/assert';
 import { effect } from '@reactive/primitives/index';
 import { describe, expect, it } from 'vitest';
 
@@ -79,7 +80,13 @@ describe(createCoreActions, () => {
     });
 
     const { observed, stop } = observeStructure(graph);
-    graph.actions.removeElements({ nodes: [node1, node2], edges: [] });
+    graph.actions.removeElements({
+      nodes: [
+        nullThrows(node1, 'node-1 was refused'),
+        nullThrows(node2, 'node-2 was refused'),
+      ],
+      edges: [],
+    });
     stop();
 
     expect(observed).toEqual([{ nodes: [], edges: [] }]);

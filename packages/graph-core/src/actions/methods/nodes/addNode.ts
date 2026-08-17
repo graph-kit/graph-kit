@@ -8,21 +8,11 @@ export const createAddNodeHandler: CreateCoreAction<'addNode'> =
   (node) => {
     const newNode = { id: generateId(), ...node };
 
-    // https://github.com/graph-kit/graph-kit/issues/685
-    // must be before commitTransaction because anything reading the new node resolves
-    // its schema, which requires a lookup to the node positioning system.
-    // I don't like putting this call before knowing if the transaction
-    // is successful because if the transaction fails, node
-    // positioning system will hold a reference to a node id that
-    // doesn't exist in the graph
-    graph.positions._internal.add([newNode]);
-
     const { addedNodes } = commitTransaction({ addNodes: [newNode] });
 
-    const telemetryNode = nullThrows(
-      addedNodes[0],
-      '[Graph Actions] Failed to append node. Transaction rejected.',
-    );
+    // a refusal is the transaction's to report and the caller's to handle
+    const telemetryNode = addedNodes[0];
+    if (!telemetryNode) return undefined;
 
     const liveNode = nullThrows(
       graph.nodes().find((n) => n.id === telemetryNode.id),

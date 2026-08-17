@@ -8,16 +8,14 @@ export const createAddEdgeHandler: CreateCoreAction<'addEdge'> =
   (edge) => {
     const newEdge = { id: generateId(), ...edge };
 
-    graph.weights._internal.add([newEdge]);
-
     const { addedEdges } = commitTransaction({
       addEdges: [newEdge],
     });
 
-    const telemetryEdge = nullThrows(
-      addedEdges[0],
-      'Failed to append edge. Transaction rejected.',
-    );
+    // a refusal is the transaction's to report and the caller's to handle, since what
+    // makes an edge unaddable is as often a collaborator as a mistake
+    const telemetryEdge = addedEdges[0];
+    if (!telemetryEdge) return undefined;
 
     return nullThrows(
       graph.edges().find((e) => e.id === telemetryEdge.id),

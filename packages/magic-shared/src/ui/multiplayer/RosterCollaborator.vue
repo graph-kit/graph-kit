@@ -1,7 +1,11 @@
 <script setup lang="ts">
   import { mdiDotsVertical } from '@mdi/js';
   import { RosterEntry } from '@multiplayer/protocol/room';
-  import { rankOf } from '@multiplayer/protocol/tiers';
+  import {
+    ROOM_COMMAND_FLOOR,
+    meetsFloor,
+    rankOf,
+  } from '@multiplayer/protocol/tiers';
 
   import { computed } from 'vue';
 
@@ -11,8 +15,10 @@
   import VStack from '../../components/layout/VStack.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
   import DisplayNameEdit from './DisplayNameEdit.vue';
+  import JumpToUser from './JumpToUser.vue';
   import KickUser from './KickUser.vue';
   import MeBadge from './MeBadge.vue';
+  import MoveUser from './MoveUser.vue';
   import TierBadge from './TierBadge.vue';
   import TierEdit from './TierEdit.vue';
 
@@ -29,7 +35,13 @@
   const menuItems = computed(() =>
     [
       { component: DisplayNameEdit, predicate: isMe.value },
+      { component: JumpToUser, predicate: !isMe.value },
       { component: TierEdit, predicate: room.value.me.isHost && !isMe.value },
+      {
+        component: MoveUser,
+        predicate:
+          meetsFloor(room.value.me.tier, ROOM_COMMAND_FLOOR) && !isMe.value,
+      },
       {
         component: KickUser,
         predicate: rankOf(room.value.me.tier) > rankOf(props.member.tier),

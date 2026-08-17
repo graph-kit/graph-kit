@@ -109,6 +109,16 @@ export const usePanAndZoom = (
         setZoom({ deltaY: -increment, ...getCanvasCenter() }),
       zoomOut: (decrement = 12.5) =>
         setZoom({ deltaY: decrement, ...getCanvasCenter() }),
+      /**
+       * The whole camera at once, for taking on a viewport that was arrived at elsewhere
+       * rather than steered toward here. Zoom is clamped because the range is this
+       * camera's to enforce no matter where the numbers came from.
+       */
+      moveTo: (state: { panX: number; panY: number; zoom: number }) => {
+        panX.value = state.panX;
+        panY.value = state.panY;
+        zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, state.zoom));
+      },
     },
     state: {
       panX,

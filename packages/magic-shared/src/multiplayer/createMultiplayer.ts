@@ -187,7 +187,10 @@ export const createMultiplayer = ({
       events.emit('onKicked', by);
     });
 
-    activeSocket.on('movedToProduct', ({ productId }) => {
+    activeSocket.on('movedToProduct', ({ productId, by }) => {
+      // TODO tell the user rather than the console, once there is a toast component
+      // https://github.com/graph-kit/graph-kit/issues/783
+      console.warn(`multiplayer: moved to "${productId}" by ${by.displayName}`);
       onMovedToProduct?.(productId);
     });
   };

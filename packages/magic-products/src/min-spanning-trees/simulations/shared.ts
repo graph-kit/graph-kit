@@ -19,7 +19,14 @@ import tinycolor from 'tinycolor2';
 
 import { Ref } from 'vue';
 
-import { kruskalsExplainer, primsExplainer } from './explainer.ts';
+import Considering from './components/Considering.vue';
+import Excluded from './components/Excluded.vue';
+import {
+  kruskalsExplainer,
+  kruskalsSlotIds,
+  primsExplainer,
+  primsSlotIds,
+} from './explainer.ts';
 import {
   KruskalsFrame,
   KruskalsFunction,
@@ -27,7 +34,9 @@ import {
   PrimsFunction,
 } from './frame.ts';
 
-// exploring = the tree side node the current decision is anchored to
+// exploring = the tree side node the current decision is anchored to, plus
+//   both endpoints of the edge just selected, so the edge and the node it's
+//   about to add to the tree read as one event
 // settled = already grown into the tree
 // frontier = the far side of a potential edge
 // anchor = start node (user picked)
@@ -98,6 +107,8 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
   const tree = createEdgeIdThemer(graph, edgeRoles.tree);
   const candidateEdge = createEdgeIdThemer(graph, edgeRoles.candidate);
   const crossingEdge = createEdgeIdThemer(graph, edgeRoles.crossing);
+  // colored solid before excludedEdgeIds picks them up and fades them
+  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
   const excludedEdge = createExcludedEdgeThemer(graph);
 
   const themers = [
@@ -108,25 +119,47 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     tree,
     candidateEdge,
     crossingEdge,
+    excludingEdge,
     excludedEdge,
   ];
 
   const syncToFrame = (frame: PrimsFrame) => {
-    exploring.setId(frame.activeNodeId);
+    const selectedEdgeEndpoints = frame.selectedEdge
+      ? [
+          graph.getEdge(frame.selectedEdge).source,
+          graph.getEdge(frame.selectedEdge).target,
+        ]
+      : [];
+
+    exploring.setIds(
+      frame.activeNodeId
+        ? [frame.activeNodeId, ...selectedEdgeEndpoints]
+        : selectedEdgeEndpoints,
+    );
     settled.setIds(frame.treeNodeIds);
     frontier.setIds(frame.pendingNodeIds ?? []);
     anchor.setId(frame.anchorNodeId);
     tree.setIds(frame.treeEdgeIds);
     candidateEdge.setIds(frame.candidateEdges ?? []);
-    crossingEdge.setIds([
-      ...(frame.currentComparison ?? []),
-      ...(frame.selectedEdge ? [frame.selectedEdge] : []),
-    ]);
+    crossingEdge.setIds(frame.selectedEdge ? [frame.selectedEdge] : []);
+    excludingEdge.setIds(frame.excludingEdges ?? []);
     excludedEdge.setIds(frame.excludedEdgeIds);
   };
 
   const lens: Lens = {
     id: 'min-spanning-trees/prims',
+    components: [
+      {
+        component: Excluded,
+        position: 'center-left',
+        id: primsSlotIds.excluded,
+      },
+      {
+        component: Considering,
+        position: 'center-right',
+        id: primsSlotIds.considering,
+      },
+    ],
     activate: () => {
       for (const { themer } of themers) themer.activate();
     },
@@ -202,20 +235,45 @@ const kruskalsEffects = (
 
   const tree = createEdgeIdThemer(graph, kruskalsEdgeRoles.tree);
   const crossingEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.crossing);
+  // colored solid before excludedEdgeIds picks it up and fades it
+  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
   const excludedEdge = createExcludedEdgeThemer(graph);
 
-  const themers = [active, settled, tree, crossingEdge, excludedEdge];
+  // activation order is paint order (later wins on overlapping ids), so
+  // active/crossing must activate after settled/tree to stay visible when a
+  // node or edge is both newly touched and already part of the tree
+  const themers = [
+    settled,
+    active,
+    tree,
+    crossingEdge,
+    excludingEdge,
+    excludedEdge,
+  ];
 
   const syncToFrame = (frame: KruskalsFrame) => {
     active.setIds(frame.activeNodeIds ?? []);
     settled.setIds(frame.treeNodeIds);
     tree.setIds(frame.treeEdgeIds);
     crossingEdge.setId(frame.activeEdgeId);
-    excludedEdge.setIds(frame.excludedEdgeIds);
+    excludingEdge.setId(frame.excludingEdgeId);
+    excludedEdge.setIds(frame.dimmedEdgeIds);
   };
 
   const lens: Lens = {
     id: 'min-spanning-trees/kruskals',
+    components: [
+      {
+        component: Excluded,
+        position: 'center-left',
+        id: kruskalsSlotIds.excluded,
+      },
+      {
+        component: Considering,
+        position: 'center-right',
+        id: kruskalsSlotIds.considering,
+      },
+    ],
     activate: () => {
       for (const { themer } of themers) themer.activate();
     },

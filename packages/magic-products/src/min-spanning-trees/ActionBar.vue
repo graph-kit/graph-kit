@@ -4,6 +4,8 @@
   import { useProvidedMagicGraph } from '@magic/shared/graph-product';
   import { useFocusedNode } from '@magic/shared/utilities';
 
+  import { computed } from 'vue';
+
   import {
     useKruskalsSimulation,
     usePrimsSimulation,
@@ -27,6 +29,14 @@
     graph.magic.simulation.start(prims.prims);
     graph.focus.clear();
   };
+  const isGraphConnected = computed(
+    () => graph.characteristics.connected.value.isConnected,
+  );
+
+  const kruskalsButtonLabel = computed(
+    () =>
+      `Generates a minimum spanning ${isGraphConnected.value ? 'tree' : 'forest'}`,
+  );
 </script>
 
 <template>

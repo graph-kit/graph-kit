@@ -39,11 +39,7 @@ export const prims: PrimsFunction =
           stillCandidates.push(edge);
           continue;
         }
-        // both ends are inside the tree now. the one that just connected them
-        // became a tree edge already, so anything else in this state would
-        // only close a cycle and can never be picked from here on
         if (edge.id !== treeEdges.at(-1)) {
-          excludedEdges.push(edge.id);
           newlyExcluded.push(edge.id);
         }
       }
@@ -100,18 +96,6 @@ export const prims: PrimsFunction =
       let cheapestSoFar = candidateEdges[0];
       for (let i = 1; i < candidateEdges.length; i++) {
         const challenger = candidateEdges[i];
-
-        frameCollector.add(
-          frame({
-            type: 'compare-edges',
-            left: cheapestSoFar.id,
-            right: challenger.id,
-            pendingNodeIds: candidateNodeIds,
-            candidateEdges: candidateEdgeIds,
-            currentComparison: [cheapestSoFar.id, challenger.id],
-          }),
-        );
-
         // lt = less than
         if (challenger.weight.lt(cheapestSoFar.weight))
           cheapestSoFar = challenger;
@@ -120,15 +104,7 @@ export const prims: PrimsFunction =
       const tied = candidateEdges.filter((edge) =>
         edge.weight.equals(cheapestSoFar.weight),
       );
-      /*
-      Picking tied[0] here would always favor whichever tied edge happens to
-      be earliest in the graph's edge array (creation order). The all
-      MST algorithm for the "total cost" chip breaks ties the exact same
-      way. A graph with many MST would usually end up with the same "arbitrary" tree almost 
-      every run, no matter the start node, even when lots of equally valid MSTs exist. 
-      Picking randomly among the tied edges keeps every valid MST reachable
-    */
-      const winner = tied[Math.floor(Math.random() * tied.length)];
+      const winner = tied[0];
       const winnerNode = farNode(winner);
       const winnerSource = treeNode(winner);
 
@@ -149,6 +125,16 @@ export const prims: PrimsFunction =
       const newlyExcluded = growTree(winnerNode);
 
       if (newlyExcluded.length > 0) {
+        frameCollector.add(
+          frame({
+            type: 'excluding-edges',
+            edges: newlyExcluded,
+            excludingEdges: newlyExcluded,
+          }),
+        );
+
+        excludedEdges.push(...newlyExcluded);
+
         frameCollector.add(
           frame({ type: 'exclude-edges', edges: newlyExcluded }),
         );

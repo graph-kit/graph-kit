@@ -17,8 +17,9 @@
 
   const { room } = useConnectedMultiplayer();
 
-  // a product that opted out of multiplayer has no room state to land in
-  const destinations = products.filter((product) => product.multiplayer);
+  const destinations = products.filter(
+    (product) => product.multiplayer && product.id !== props.member.productId,
+  );
 
   const moveUser = (productId: string) =>
     room.value.controls.moveUser(props.member.userId, productId);
@@ -28,16 +29,15 @@
   <DropdownSubmenu side="left">
     <template #trigger>
       <Icon :path="mdiTransitTransfer" />
-      Move To
+      Move {{ member.displayName }}
     </template>
     <VStack gap="0">
       <MenuItem
         v-for="destination in destinations"
         :key="destination.id"
         @click="moveUser(destination.id)"
-        :disabled="destination.id === member.productId ? 'Already here' : false"
       >
-        {{ destination.name }}
+        {{ destination.navigation.card?.name }}
       </MenuItem>
     </VStack>
   </DropdownSubmenu>

@@ -15,6 +15,7 @@
   import VStack from '../../components/layout/VStack.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
   import DisplayNameEdit from './DisplayNameEdit.vue';
+  import JumpToUser from './JumpToUser.vue';
   import KickUser from './KickUser.vue';
   import MeBadge from './MeBadge.vue';
   import MoveUser from './MoveUser.vue';
@@ -34,6 +35,7 @@
   const menuItems = computed(() =>
     [
       { component: DisplayNameEdit, predicate: isMe.value },
+      { component: JumpToUser, predicate: !isMe.value },
       { component: TierEdit, predicate: room.value.me.isHost && !isMe.value },
       {
         component: MoveUser,

@@ -20,7 +20,7 @@ import { validateNodeIds } from './validateNodeIds.ts';
 
 export const nodeDrag =
   (options: Partial<NodeDragOptions>): NodeDragPlugin =>
-  ({ controls, getters }) => {
+  ({ controls, events, getters }) => {
     const optionsWithDefaults = {
       ...DEFAULT_NODE_DRAG_OPTIONS,
       ...options,
@@ -61,23 +61,23 @@ export const nodeDrag =
         }
       }
 
-      if (nodeIdsToDrag.length === 0) return;
+      // a selection can name a node that has since left the graph, so what is carried is
+      // what is still here rather than whatever was selected
+      const liveNodeIdsToDrag = nodeIdsToDrag.filter((nodeId) =>
+        controls.isNode(nodeId),
+      );
+      if (liveNodeIdsToDrag.length === 0) return;
 
       consume();
 
-      const nodes = nodeIdsToDrag.map((nodeId) =>
-        nullThrows(
-          getters.getNode(nodeId),
-          'canvas element of graph type node not resolvable as node',
-        ),
-      );
+      const nodes = liveNodeIdsToDrag.map((nodeId) => getters.getNode(nodeId));
 
       if (nodePositionStream) {
         throw new Error(
           'beginDrag called while a node position stream is already active',
         );
       }
-      dragState.startDrag(coords, { nodeIds: nodeIdsToDrag });
+      dragState.startDrag(coords, { nodeIds: liveNodeIdsToDrag });
       nodePositionStream = controls.positions.createStream();
       nodeDragEventHub.emit('onNodeDragStart', nodes);
     };
@@ -93,17 +93,36 @@ export const nodeDrag =
       nodePositionStream = undefined;
       nodeDragEventHub.emit(
         'onNodeDrop',
-        data.nodeIds.map((nodeId) =>
-          nullThrows(getters.getNode(nodeId), 'dropped node not found'),
-        ),
+        data.nodeIds
+          .filter((nodeId) => controls.isNode(nodeId))
+          .map((nodeId) => getters.getNode(nodeId)),
       );
       captureHistorySnapshot();
+    };
+
+    /**
+     * A drag carries its whole selection or none of it. Losing one node of five to
+     * someone else's delete ends the gesture rather than quietly carrying on with four,
+     * so what the user lets go of is always what they picked up.
+     */
+    const abortDragOnTamper = () => {
+      const active = dragState.getDragState();
+      if (!active) return;
+      const intact = active.data.nodeIds.every((nodeId) =>
+        controls.isNode(nodeId),
+      );
+      if (intact) return;
+      drop();
     };
 
     const drag = (
       { coords }: DeepReadonly<GraphUnderCursor>,
       consume: () => void,
     ) => {
+      // the removal event has normally ended the drag before this runs, so this is the
+      // backstop for a removal that never announced itself
+      abortDragOnTamper();
+
       const dragData = dragState.applyMove(coords);
       if (!dragData) return;
 
@@ -116,9 +135,7 @@ export const nodeDrag =
 
       if (!dx && !dy) return;
 
-      const nodes = nodeIds.map((nodeId) =>
-        nullThrows(getters.getNode(nodeId), 'dragged node not found'),
-      );
+      const nodes = nodeIds.map((nodeId) => getters.getNode(nodeId));
 
       const stream = nullThrows(
         nodePositionStream,
@@ -155,6 +172,7 @@ export const nodeDrag =
           before: [ANCHOR_PLUGIN_ID],
         },
       );
+      events.subscribe('onElementsRemoved', abortDragOnTamper);
       cursorTheme.enable();
     };
 
@@ -162,6 +180,7 @@ export const nodeDrag =
       controls.canvas.events.unhandle('onMouseDown', beginDrag);
       controls.canvas.events.unhandle('onMouseUp', drop);
       controls.canvas.events.unhandle('onGraphUnderCursorChange', drag);
+      events.unsubscribe('onElementsRemoved', abortDragOnTamper);
       cursorTheme.disable();
       drop();
     };

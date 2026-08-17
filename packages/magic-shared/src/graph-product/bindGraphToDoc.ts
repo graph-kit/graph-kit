@@ -338,8 +338,9 @@ export const bindGraphToDoc = (
     for (const [peerId, elements] of Object.entries(dragsByPeer)) {
       const moves = elements
         // a node the local user has hold of stays where they are putting it, and one
-        // that is not on this graph yet arrives with the move that adds it
-        .filter(({ id }) => !isDraggedLocally(id) && graph.getNode(id))
+        // that is not on this graph yet arrives with the move that adds it. isNode
+        // rather than getNode, which throws on a node this client has already removed
+        .filter(({ id }) => !isDraggedLocally(id) && graph.isNode(id))
         .map(({ id, position }) => ({ nodeId: id, update: position }));
       if (moves.length === 0) continue;
 

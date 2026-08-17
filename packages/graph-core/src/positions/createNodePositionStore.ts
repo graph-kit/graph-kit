@@ -7,6 +7,7 @@ import { DEFAULT_POSITION } from './constants.ts';
 import {
   NodePositionStoreControls,
   NodePositionStreamControls,
+  NodePositionUpdate,
   Position,
 } from './types.ts';
 
@@ -22,6 +23,14 @@ export const createNodePositionStore = (
       nodeIdToNodePosition.get(nodeId),
       `could not resolve position from node with id ${nodeId}`,
     );
+
+  /**
+   * A bulk write covers whatever the caller has hold of, and a node can leave the graph
+   * while it is still being written to: a peer deletes it mid drag, or a batch outlives
+   * one of its subjects. Only a single targeted `set` treats a missing node as a fault.
+   */
+  const stillPositioned = (positions: NodePositionUpdate[]) =>
+    positions.filter(({ nodeId }) => nodeIdToNodePosition.has(nodeId));
 
   const setNodePositions: NodePositionStoreControls['setMany'] = (
     positions,
@@ -55,7 +64,7 @@ export const createNodePositionStore = (
         return entry;
       },
       setMany: (positions) => {
-        const entries = setNodePositions(positions);
+        const entries = setNodePositions(stillPositioned(positions));
         for (const { nodeId } of entries) touchedNodeIds.add(nodeId);
         events.emit('onNodeMoveStream', entries);
         return entries;
@@ -64,10 +73,14 @@ export const createNodePositionStore = (
         if (stopped) return [];
         stopped = true;
         devStreamRegistry?.unregister(unregisterToken);
-        const committed = [...touchedNodeIds].map((nodeId) => ({
-          nodeId,
-          position: { ...getNodePosition(nodeId) },
-        }));
+        // a stream outlives its subjects: what it touched on an earlier frame may have
+        // left the graph since, and only what is still here can be committed
+        const committed = [...touchedNodeIds]
+          .filter((nodeId) => nodeIdToNodePosition.has(nodeId))
+          .map((nodeId) => ({
+            nodeId,
+            position: { ...getNodePosition(nodeId) },
+          }));
         if (committed.length > 0) {
           events.emit('onNodePositionsCommitted', committed);
         }
@@ -87,7 +100,7 @@ export const createNodePositionStore = (
       return entry;
     },
     setMany: (positions) => {
-      const entries = setNodePositions(positions);
+      const entries = setNodePositions(stillPositioned(positions));
       events.emit('onNodePositionsCommitted', entries);
       return entries;
     },

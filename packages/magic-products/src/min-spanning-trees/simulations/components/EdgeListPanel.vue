@@ -4,6 +4,7 @@
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-product';
+  import type { GEdge } from '@magic/shared/graph/types';
 
   import { computed } from 'vue';
 
@@ -11,8 +12,8 @@
 
   const props = defineProps<{
     title: string;
-    edgeIds: readonly string[];
-    highlightId?: string;
+    edgeIds: readonly GEdge['id'][];
+    highlightId?: GEdge['id'];
   }>();
 
   const graph = useProvidedGraph();
@@ -33,6 +34,15 @@
         };
       }),
   );
+
+  const highlightClass = (edgeId: GEdge['id']) => {
+    return (
+      'justify-between rounded-md transition-colors ' +
+      (edgeId === props.highlightId
+        ? 'bg-amber-500/15 ring-2 ring-amber-500 p-1'
+        : 'm-1')
+    );
+  };
 </script>
 
 <template>
@@ -43,12 +53,7 @@
         <HStack
           v-for="edge in edges"
           :key="edge.id"
-          class="justify-between rounded-md transition-colors"
-          :class="
-            edge.id === highlightId
-              ? 'bg-amber-500/15 ring-2 ring-amber-500 p-1'
-              : 'm-1'
-          "
+          :class="highlightClass(edge.id)"
         >
           <Node
             :id="edge.source"

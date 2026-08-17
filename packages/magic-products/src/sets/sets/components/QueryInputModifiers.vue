@@ -61,7 +61,7 @@
         <IconButton
           label=""
           :path="mdiInformationOutline"
-          class="rounded-none rounded-r-md h-10"
+          class="rounded-none bg-transparent dark:bg-transparent rounded-r-md h-10"
         />
       </template>
       <Tooltip

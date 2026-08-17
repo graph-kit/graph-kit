@@ -61,10 +61,8 @@
 
   const classes = computed(() =>
     cn(
-      'text-box h-full w-full rounded-md outline-none transition-colors',
-      props.error
-        ? 'bg-red-300'
-        : 'bg-gray-100 hover:bg-white focus-within:bg-white',
+      'text-box h-full w-full rounded-md outline-none transition-colors dark:bg-gray-900 bg-gray-100 dark:text-white border-2',
+      props.error ? 'border-red-600' : 'border-transparent',
       attrClass.value,
     ),
   );

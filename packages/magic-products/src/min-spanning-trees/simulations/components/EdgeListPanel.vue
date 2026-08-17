@@ -37,24 +37,26 @@
 <template>
   <Well v-if="rows.length > 0">
     <VStack class="gap-2">
-      <span class="font-bold">{{ title }} ({{ rows.length }})</span>
+      <span class="font-bold text-lg text-center">{{ title }}</span>
       <VStack class="gap-2 max-h-[38vh] overflow-y-auto p-1">
         <HStack
           v-for="row in rows"
           :key="row.id"
           class="gap-2 items-center justify-between rounded-md transition-colors"
           :class="
-            row.id === selectedId ? 'bg-amber-500/15 ring-1 ring-amber-500' : ''
+            row.id === selectedId
+              ? 'bg-amber-500/15 ring-2 ring-amber-500 p-1'
+              : ''
           "
         >
           <Node
             :id="row.source"
-            :scale="0.5"
+            :scale="0.75"
           />
           <span class="font-bold tabular-nums text-xs">{{ row.weight }}</span>
           <Node
             :id="row.target"
-            :scale="0.5"
+            :scale="0.75"
           />
         </HStack>
       </VStack>

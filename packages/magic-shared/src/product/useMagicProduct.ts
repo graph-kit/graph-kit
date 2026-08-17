@@ -30,12 +30,12 @@ export const useMagicProduct = (
     ? useAnnotationsState(options.annotations, appearance)
     : undefined;
 
-  const ui = useProductUI(componentSlots, options.ui);
+  useProductUI(componentSlots, options.flags);
   const shortcuts = useShortcuts();
 
   const manifest = manifests[options.productId];
 
-  const localStorage = options.localStorage
+  const localStorage = options.flags.localStorage
     ? useLocalStorageSync(manifest.id, host.transit)
     : { invalidate: () => {}, sync: () => {} };
 
@@ -53,10 +53,10 @@ export const useMagicProduct = (
 
   const magic: Magic = {
     manifest,
+    flags: options.flags,
     lens,
     componentSlots,
     simulation,
-    ui,
     appearance,
     shortcuts,
     annotations,
@@ -71,7 +71,7 @@ export const useMagicProduct = (
   onMounted(() => {
     magic.localStorage.sync();
     // replace what was in local storage with what was in link
-    if (magic.ui.linkSharing) loadFromLinkPayload(magic);
+    if (magic.flags.linkSharing) loadFromLinkPayload(magic);
 
     // whatever was restored is the starting point, not the state setup began with
     magic.history?.clear();

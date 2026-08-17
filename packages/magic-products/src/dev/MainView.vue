@@ -6,16 +6,16 @@
 
   const graph = useGraphProduct({
     productId: 'dev',
-    /*
-      the perf harness measures this route, and a graph restored from the last load
-      would leave a run measuring that scene on top of the one it asked for
-    */
-    localStorage: false,
+    flags: {
+      /*
+        the perf harness measures this route, and a graph restored from the last load
+        would leave a run measuring that scene on top of the one it asked for
+      */
+      localStorage: false,
+      debug: true,
+    },
     core: {
       directed: true,
-    },
-    ui: {
-      debug: true,
     },
   });
 

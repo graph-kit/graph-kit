@@ -8,12 +8,14 @@
 
   const graph = useGraphProduct({
     productId: 'welcome',
-    history: false,
-    localStorage: false,
+    flags: {
+      history: false,
+      localStorage: false,
+      annotations: false,
+    },
     core: {
       weighted: false,
     },
-    annotations: false,
   });
 
   graph.anchors.lifecycle.disable();

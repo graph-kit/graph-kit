@@ -14,7 +14,7 @@ import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
-import { UIControls, UIOptions } from '../ui/useProductUI.ts';
+import { ProductFlags } from './flags.ts';
 import { LocalStorageControls } from './internals/useLocalStorageSync.ts';
 import { ProductId } from './manifests/index.ts';
 import { MagicProductManifest } from './manifests/types.ts';
@@ -88,26 +88,25 @@ export type MultiplayerHostField = {
 
 export type MagicProductOptions = {
   productId: ProductId;
+  /** resolved by the host, see {@link ProductFlags} */
+  flags: ProductFlags;
   /**
-   * the canvas annotations draw onto. a handle rather than a boolean because
-   * only the graph canvas carries the aggregator and cursor annotations need.
-   * moving the capability onto {@link MagicProductHost} is tracked in
-   * https://github.com/graph-kit/graph-kit/issues/846
+   * the canvas annotations draw onto, absent when the host has them flagged off. a
+   * handle rather than a boolean because only the graph canvas carries the aggregator
+   * and cursor annotations need. moving the capability onto {@link MagicProductHost}
+   * is tracked in https://github.com/graph-kit/graph-kit/issues/846
    */
   annotations?: Graph['canvas'];
   lensChips?: LensChipDefinition[];
-  ui?: UIOptions;
-  /** opt in to local storage, exposing {@link Magic.localStorage} for the host to drive */
-  localStorage?: boolean;
 };
 
 /** the harness itself: the chrome and controls wrapped around a hosted product */
 export type Magic = {
   manifest: MagicProductManifest;
+  flags: ProductFlags;
   lens: LensControls;
   componentSlots: ComponentSlotControls;
   simulation: SimulationControls;
-  ui: UIControls;
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
   surface: CanvasProps;

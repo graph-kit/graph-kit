@@ -14,8 +14,8 @@ import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
-import { ProductFlags } from './flags.ts';
-import { LocalStorageControls } from './internals/useLocalStorageSync.ts';
+import { ProductFlagOptions, ProductFlags } from './flags.ts';
+import { LocalStorageControls } from './internals/useProductLocalStorage.ts';
 import { ProductId } from './manifests/index.ts';
 import { MagicProductManifest } from './manifests/types.ts';
 
@@ -49,7 +49,11 @@ export type HostBinding = {
  * everything the magic product harness needs in order to function
  */
 export type MagicProductHost = {
-  transit: TransitField;
+  /**
+   * how the host's state is serialized. absent when it has none worth carrying, which
+   * is what local storage and link sharing are built on, see {@link ProductFlags}
+   */
+  transit?: TransitField;
   surface: CanvasProps;
   onAppearanceChanged: (color: BasicColorMode) => void;
   multiplayer: MultiplayerHostField;
@@ -88,8 +92,8 @@ export type MultiplayerHostField = {
 
 export type MagicProductOptions = {
   productId: ProductId;
-  /** resolved by the host, see {@link ProductFlags} */
-  flags: ProductFlags;
+  /** what the product asks for, see {@link ProductFlags} */
+  flags?: ProductFlagOptions;
   /**
    * the canvas annotations draw onto, absent when the host has them flagged off. a
    * handle rather than a boolean because only the graph canvas carries the aggregator
@@ -110,7 +114,7 @@ export type Magic = {
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
   surface: CanvasProps;
-  transit: TransitField;
+  transit?: TransitField;
   history?: HistoryField;
   annotations?: AnnotationsControls;
   lensChips?: LensChipDefinition[];

@@ -1,3 +1,5 @@
+import type { MagicProductHost } from './types.ts';
+
 /** every optional behavior a product can switch on or off */
 export type ProductFlags = {
   /**
@@ -38,10 +40,28 @@ const DEFAULTS: ProductFlags = {
 /** what a product author writes: only what differs from {@link ProductFlags} defaults */
 export type ProductFlagOptions = Partial<ProductFlags>;
 
+/** nothing to persist or put in a link without {@link MagicProductHost.transit} */
+const TRANSIT_BACKED = [
+  'localStorage',
+  'linkSharing',
+] as const satisfies readonly (keyof ProductFlags)[];
+
+/** what the product asked for, narrowed to what its host can actually support */
 export const resolveProductFlags = (
   flags: ProductFlagOptions = {},
+  host: Pick<MagicProductHost, 'transit'>,
 ): ProductFlags => {
   // an explicit undefined means no opinion, same as omitting the flag
   const set = Object.entries(flags).filter(([, value]) => value !== undefined);
-  return { ...DEFAULTS, ...Object.fromEntries(set) };
+  const resolved: ProductFlags = { ...DEFAULTS, ...Object.fromEntries(set) };
+
+  if (host.transit) return resolved;
+
+  for (const flag of TRANSIT_BACKED) {
+    if (flags[flag] && import.meta.env.DEV)
+      console.warn(`[magic] ${flag} needs host transit, ignoring`);
+    resolved[flag] = false;
+  }
+
+  return resolved;
 };

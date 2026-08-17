@@ -11,8 +11,9 @@ import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
-import { useLocalStorageSync } from './internals/useLocalStorageSync.ts';
+import { resolveProductFlags } from './flags.ts';
 import { useProductHistory } from './internals/useProductHistory.ts';
+import { useProductLocalStorage } from './internals/useProductLocalStorage.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
 
@@ -30,14 +31,14 @@ export const useMagicProduct = (
     ? useAnnotationsState(options.annotations, appearance)
     : undefined;
 
-  useProductUI(componentSlots, options.flags);
+  const flags = resolveProductFlags(options.flags, host);
+
+  useProductUI(componentSlots, flags);
   const shortcuts = useShortcuts();
 
   const manifest = manifests[options.productId];
 
-  const localStorage = options.flags.localStorage
-    ? useLocalStorageSync(manifest.id, host.transit)
-    : { invalidate: () => {}, sync: () => {} };
+  const localStorage = useProductLocalStorage(manifest.id, host, flags);
 
   const { product: multiplayer, roomHistory } = useMultiplayer({
     host,
@@ -53,7 +54,7 @@ export const useMagicProduct = (
 
   const magic: Magic = {
     manifest,
-    flags: options.flags,
+    flags,
     lens,
     componentSlots,
     simulation,

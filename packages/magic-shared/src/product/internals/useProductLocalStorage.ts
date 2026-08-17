@@ -1,6 +1,7 @@
 import { debounce } from '@core/utils/debounce';
 
-import { TransitField } from '../types.ts';
+import { ProductFlags } from '../flags.ts';
+import { MagicProductHost, TransitField } from '../types.ts';
 
 const localStorageKey = (id: string) => 'product-data-' + id;
 
@@ -16,7 +17,7 @@ export type LocalStorageControls = {
   sync: () => void;
 };
 
-export const useLocalStorageSync = (
+const useLocalStorageSync = (
   productId: string,
   transit: TransitField,
 ): LocalStorageControls => {
@@ -35,4 +36,20 @@ export const useLocalStorageSync = (
   };
 
   return { invalidate, sync };
+};
+
+/** stands in when nothing is persisted */
+const INERT: LocalStorageControls = {
+  invalidate: () => {},
+  sync: () => {},
+};
+
+export const useProductLocalStorage = (
+  productId: string,
+  host: Pick<MagicProductHost, 'transit'>,
+  flags: ProductFlags,
+): LocalStorageControls => {
+  // flags already force localStorage off without transit, this proves it to the checker
+  if (!flags.localStorage || !host.transit) return INERT;
+  return useLocalStorageSync(productId, host.transit);
 };

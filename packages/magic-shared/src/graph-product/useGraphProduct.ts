@@ -1,6 +1,6 @@
 import { useGraph } from '../graph/useGraph.ts';
-import { MagicProductHost } from '../product/types.ts';
 import { resolveProductFlags } from '../product/flags.ts';
+import { MagicProductHost } from '../product/types.ts';
 import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { bindGraphToDoc } from './bindGraphToDoc.ts';
@@ -17,7 +17,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const draggedNodes = trackDraggedNodes(graph);
 
-  const flags = resolveProductFlags(options.flags);
+  const flags = resolveProductFlags(options.flags, graph);
 
   if (!flags.history) graph.history.lifecycle.disable();
 
@@ -35,7 +35,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const magic = useMagicProduct(host, {
     productId: options.productId,
-    flags,
+    flags: options.flags,
     annotations: flags.annotations ? graph.canvas : undefined,
     lensChips,
   });

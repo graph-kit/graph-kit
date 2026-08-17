@@ -1,4 +1,5 @@
 import { useGraph } from '../graph/useGraph.ts';
+import { resolveProductFlags } from '../product/flags.ts';
 import { MagicProductHost } from '../product/types.ts';
 import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
@@ -16,10 +17,14 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const draggedNodes = trackDraggedNodes(graph);
 
+  const flags = resolveProductFlags(options.flags, graph);
+
+  if (!flags.history) graph.history.lifecycle.disable();
+
   const host: MagicProductHost = {
     surface: graph.canvas.surface,
     transit: graph.transit,
-    history: graph.history,
+    history: flags.history ? graph.history : undefined,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {
@@ -30,9 +35,8 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const magic = useMagicProduct(host, {
     productId: options.productId,
-    localStorage: options.localStorage !== false,
-    annotations: options.annotations === false ? undefined : graph.canvas,
-    ui: options.ui,
+    flags: options.flags,
+    annotations: flags.annotations ? graph.canvas : undefined,
     lensChips,
   });
 

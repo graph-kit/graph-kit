@@ -13,7 +13,6 @@ type DevToolsGraph = SceneGraph & {
 };
 
 export const useGraphDevTools = (graph: DevToolsGraph) => {
-  // @ts-expect-error add vite env to .d.ts
   if (!import.meta.env.DEV) return;
   const cleanups: (() => void)[] = [];
   onMounted(() => {

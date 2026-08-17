@@ -10,6 +10,8 @@ export type {
   TransitField,
 } from './types.ts';
 
+export type { ProductFlagOptions, ProductFlags } from './flags.ts';
+
 export { provideMagic, useProvidedMagic } from './context.ts';
 
 export { manifests, products } from './manifests/index.ts';

@@ -57,24 +57,18 @@ export const useProvidedSetsProductState = () => {
 export const useSetsProduct = () => {
   const surface = useCanvas();
 
+  // sets has no serializable state yet, so there is nothing to mirror either way. it
+  // is not flagged multiplayer, and giving it real transit is what would unblock both,
+  // along with the local storage and link sharing that transit gates.
   const host: MagicProductHost = {
     surface,
     onAppearanceChanged: () => {},
-    transit: {
-      encode: () => {},
-      decode: () => {},
-    },
-    // sets has no serializable state yet, so there is nothing to mirror either way. it
-    // is not flagged multiplayer, and giving it real transit is what would unblock both.
     multiplayer: {
       bind: () => {},
     },
   };
 
-  const magic = useMagicProduct(host, {
-    productId: 'sets',
-    ui: { linkSharing: false },
-  });
+  const magic = useMagicProduct(host, { productId: 'sets' });
 
   const setsProductState = useSetsProductState(magic);
   useCanvasTheme(magic, setsProductState);

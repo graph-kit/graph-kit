@@ -27,5 +27,4 @@ export type MinimumSpanningTreesControls = {
 export type MinimumSpanningTreesPlugin = GraphPlugin<{
   name: 'minimumSpanningTrees';
   controls: MinimumSpanningTreesControls;
-  dependsOn: [];
 }>;

@@ -1,3 +1,4 @@
+import { nullThrows } from '@core/utils/assert';
 import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
@@ -7,8 +8,12 @@ import { Magic } from '../../product/types.ts';
 
 const sharePayloadQueryParam = 'data';
 
+// both sides are unreachable without transit, which is what gates the linkSharing flag
+const transitOf = (magic: Magic) =>
+  nullThrows(magic.transit, 'link sharing requires host transit');
+
 const getLinkPayload = (magic: Magic) => {
-  const encoding = magic.transit.encode();
+  const encoding = transitOf(magic).encode();
   const stringEncoding = JSON.stringify(encoding);
   return compressToEncodedURIComponent(stringEncoding);
 };
@@ -35,5 +40,5 @@ export const loadFromLinkPayload = (magic: Magic) => {
   if (!stringEncoding) return;
 
   const parsedEncoding = JSON.parse(stringEncoding);
-  magic.transit.decode(parsedEncoding);
+  transitOf(magic).decode(parsedEncoding);
 };

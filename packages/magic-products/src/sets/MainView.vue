@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { nullThrows } from '@core/utils/assert';
   import { Color } from '@core/utils/colors';
   import { MagicProduct } from '@magic/shared/product';
 

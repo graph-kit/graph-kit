@@ -39,7 +39,7 @@
         </template>
         <VStack gap="0">
           <MultiplayerButton v-if="magic.multiplayer" />
-          <LinkSharingButton v-if="magic.ui.linkSharing" />
+          <LinkSharingButton v-if="magic.flags.linkSharing" />
           <FullscreenButton />
           <AppearanceToggle />
         </VStack>

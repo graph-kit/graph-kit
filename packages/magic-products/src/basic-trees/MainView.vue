@@ -6,12 +6,13 @@
 
   const graph = useGraphProduct({
     productId: 'avl-trees',
-    localStorage: false,
+    flags: {
+      history: false,
+      localStorage: false,
+      debug: true,
+    },
     core: {
       weighted: false,
-    },
-    ui: {
-      debug: true,
     },
   });
 

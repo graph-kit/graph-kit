@@ -100,9 +100,6 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
       treeNodes.add(edge.target);
 
       if (treeEdges.length === nodeIds.length - 1) {
-        // every remaining edge in sorted order never gets its own verdict,
-        // but it still would only close a loop - fade it out along with the
-        // edges that were actually rejected
         const skipped = edgesSortedByWeight.slice(i + 1).map((e) => e.id);
         if (skipped.length > 0) {
           excludedEdges.push(...skipped);
@@ -112,8 +109,6 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
       }
     } else {
       excludedEdges.push(edge.id);
-      // color the edge as rejected, but hold it back from the dimmed set for
-      // this one frame so the color change reads before it fades
       frameCollector.add(
         frame({
           type: 'reject-edge',
@@ -126,7 +121,6 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
     }
   }
 
-  // a lone node with no edges at all is trivially spanned, not disconnected
   const unreachable =
     nodeIds.length > 1 ? nodeIds.filter((id) => !treeNodes.has(id)) : [];
 

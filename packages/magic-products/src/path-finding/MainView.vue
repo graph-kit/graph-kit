@@ -3,6 +3,7 @@
   import { MagicProduct } from '@magic/shared/product';
 
   import ActionBar from './ActionBar.vue';
+  import { lensChips } from './lensChips.ts';
 
   const graph = useGraphProduct({
     productId: 'path-finding',
@@ -10,6 +11,7 @@
       allowSelfLoops: false,
       allowRepeatConnections: true,
     },
+    lensChips,
   });
 
   graph.magic.componentSlots.add({

@@ -44,7 +44,10 @@
   const inPreview = computed(() => props.previewValue !== undefined);
 
   const classes = computed(() =>
-    cn(inPreview.value && 'pointer-events-none bg-blue-200', attrClass.value),
+    cn(
+      inPreview.value && 'pointer-events-none dark:bg-blue-900 bg-blue-200',
+      attrClass.value,
+    ),
   );
 
   /**

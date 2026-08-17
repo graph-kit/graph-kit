@@ -6,7 +6,8 @@ import TransitionMatrix from '../TransitionMatrix.vue';
 export const transitionMatrixChip = (graph: Graph): LensChipDefinition => {
   return {
     title: () => 'Transition Matrix',
-    tooltipLabel: () => 'Transition Matrix',
+    tooltipLabel: () =>
+      'The weight of the edge from each row node to each column node, laid out as a grid.',
 
     lens: {
       id: 'transition-matrix',

@@ -18,7 +18,7 @@
 
   const attrClass = useAttrClass();
 
-  const classes = computed(() => cn('rounded-md p-4', attrClass.value));
+  const classes = computed(() => cn('rounded-md p-2', attrClass.value));
 </script>
 
 <template>

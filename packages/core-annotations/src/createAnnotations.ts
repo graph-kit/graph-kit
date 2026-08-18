@@ -257,12 +257,20 @@ export const createAnnotations = ({
     return elements;
   };
 
-  const activate = () => isActive(true);
+  // guarded so the events mark real transitions: `deactivate` in particular is called
+  // on paths that cannot know whether the tools were ever taken out of standby
+  const activate = () => {
+    if (isActive()) return;
+    isActive(true);
+    events.emit('onActivated');
+  };
 
   const deactivate = () => {
+    if (!isActive()) return;
     abortStroke();
     mode('drawing');
     isActive(false);
+    events.emit('onDeactivated');
   };
 
   const toggle = () => {

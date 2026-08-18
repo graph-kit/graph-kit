@@ -47,6 +47,7 @@ export const useMultiplayer = ({
       productId,
       multiplayer: product,
       host: host.multiplayer,
+      annotations: host.annotations,
     });
 
     useSuspendedContent({ surface: host.surface, events: product.events });

@@ -85,6 +85,22 @@ describe('annotations', () => {
     expect(annotations.annotations()).toEqual([kept, arriving]);
   });
 
+  it('triggers the activation events only on a real transition', () => {
+    const annotations = createAnnotations({ surface: stubSurface() });
+    const transitions: string[] = [];
+    annotations.events.subscribe('onActivated', () => transitions.push('on'));
+    annotations.events.subscribe('onDeactivated', () => transitions.push('off'));
+
+    // the second call of each pair is the no-op a caller cannot know it is making
+    annotations.deactivate();
+    annotations.activate();
+    annotations.activate();
+    annotations.toggle();
+    annotations.deactivate();
+
+    expect(transitions).toEqual(['on', 'off']);
+  });
+
   it('drops the stroke in flight when the tools are put away', () => {
     const { annotations, changes } = setup();
     annotations.setMode('erasing');

@@ -136,6 +136,10 @@
       "types": "./dist/types/utilities/index.d.ts",
       "default": "./src/utilities/index.ts"
     },
+    "./url": {
+      "types": "./dist/types/url/index.d.ts",
+      "default": "./src/url/index.ts"
+    },
     "./*": {
       "types": "./dist/types/*.d.ts",
       "default": "./src/*.ts"

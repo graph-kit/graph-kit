@@ -261,35 +261,25 @@ export const createMultiplayer = ({
     },
 
     join: async ({ roomId, productId, host }) => {
-      console.log('1');
       const activeSocket = ensureSocket();
-      console.log('2');
       events.emit('onPendingStarted');
-      console.log('3');
       const result = await requestFromServer<JoinResult>((respond) =>
         activeSocket
           .timeout(ACK_TIMEOUT_MS)
           .emit('joinRoom', { roomId, displayName: getDisplayName() }, respond),
       ).finally(() => events.emit('onPendingEnded'));
-      console.log('4');
-
+      
       // the only refusal the server has is a room it cannot find, which makes the id
       // dead rather than unlucky. a request that never came back leaves it in the url
       if (!result.joined) {
-        console.log('5');
         console.warn(`multiplayer: no room to join under the id "${roomId}"`);
         roomIdUrl.strip();
         return result;
       }
-
-      console.log('6');
-
       roomIdUrl.write(result.roomId);
       adoptMembership(result);
-      console.log('7');
 
       await adoptRoomProduct({ productId, host });
-      console.log('8');
 
       return result;
     },

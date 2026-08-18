@@ -38,17 +38,12 @@ export const useMultiplayerProduct = ({
 
   onMounted(async () => {
     if (room.value.connected) {
-      console.log('user connected already');
       await actions.product.enter(binding);
       return;
     }
 
     const targetRoomId = roomIdUrl.read();
-    console.log('read in room id', targetRoomId);
-
     if (!targetRoomId) return;
-
-    console.log('attempting join with ID and binding', targetRoomId, binding);
 
     try {
       await actions.room.join({ ...binding, roomId: targetRoomId });

@@ -1,4 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
+import { IS_DEV, devWarning } from '@core/utils/debugging';
 import { getValue } from '@core/utils/maybeGetter/index';
 import { EventHub } from '@graph/primitives/events/createEventHub';
 
@@ -14,8 +15,8 @@ import {
 export const createNodePositionStore = (
   events: EventHub<CoreEventMap>,
 ): NodePositionStoreControls => {
-  // plain Map is safe only while nothing derives from positions, since setMany mutates
-  // the stored Position in place and a reactiveMap would never see the write.
+  // setMany mutates the stored Position in place, so a reactiveMap would miss every
+  // move and nothing may derive from positions
   const nodeIdToNodePosition = new Map<string, Position>();
 
   const getNodePosition: NodePositionStoreControls['get'] = (nodeId) =>
@@ -25,9 +26,8 @@ export const createNodePositionStore = (
     );
 
   /**
-   * A bulk write covers whatever the caller has hold of, and a node can leave the graph
-   * while it is still being written to: a peer deletes it mid drag, or a batch outlives
-   * one of its subjects. Only a single targeted `set` treats a missing node as a fault.
+   * A node can leave the graph while a bulk write is in flight, so those writes skip
+   * whatever is already gone. Only a targeted `set` treats a missing node as a fault.
    */
   const stillPositioned = (positions: NodePositionUpdate[]) =>
     positions.filter(({ nodeId }) => nodeIdToNodePosition.has(nodeId));
@@ -45,11 +45,13 @@ export const createNodePositionStore = (
     });
   };
 
-  const devStreamRegistry = new FinalizationRegistry<void>(() => {
-    console.warn(
-      'A node position stream was garbage collected without stop() being called. Make sure to call stop() when the stream is done.',
-    );
-  });
+  const devStreamRegistry = IS_DEV
+    ? new FinalizationRegistry<void>(() => {
+        devWarning(
+          'A node position stream was garbage collected without stop() being called. Make sure to call stop() when the stream is done.',
+        );
+      })
+    : undefined;
 
   const createStream: NodePositionStoreControls['createStream'] = () => {
     let stopped = false;
@@ -73,8 +75,8 @@ export const createNodePositionStore = (
         if (stopped) return [];
         stopped = true;
         devStreamRegistry?.unregister(unregisterToken);
-        // a stream outlives its subjects: what it touched on an earlier frame may have
-        // left the graph since, and only what is still here can be committed
+        // nodes moved earlier in the stream may have been deleted since, so only the
+        // ones still in the graph get committed
         const committed = [...touchedNodeIds]
           .filter((nodeId) => nodeIdToNodePosition.has(nodeId))
           .map((nodeId) => ({

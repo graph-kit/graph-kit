@@ -1,3 +1,12 @@
+// @ts-expect-error add vite env to .d.ts
+export const IS_DEV: boolean = import.meta.env.DEV;
+
+/** the channel for warnings addressed to developers rather than users */
+export const devWarning = (...data: unknown[]) => {
+  if (!IS_DEV) return;
+  console.warn(...data);
+};
+
 export const useLogReport = <T = string>(
   frequencyMs = 1000,
   resetReportAfterLogging = true,

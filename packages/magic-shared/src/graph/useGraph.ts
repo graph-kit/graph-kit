@@ -5,6 +5,7 @@ import { createGraph } from '@graph/create-graph/index';
 import { adjacencyLists } from '@graph/plugins/adjacency-lists/index';
 import { anchors } from '@graph/plugins/anchors/index';
 import { animation } from '@graph/plugins/animation/index';
+import { annotations } from '@graph/plugins/annotations/index';
 import { canvas } from '@graph/plugins/canvas/index';
 import { characteristics } from '@graph/plugins/characteristics/index';
 import { focus } from '@graph/plugins/focus/index';
@@ -49,6 +50,7 @@ const graphPlugins = (
   focus,
   marquee,
   anchors,
+  annotations,
   nodeDrag(options.nodeDrag ?? {}),
   nodeLabel,
   adjacencyLists,

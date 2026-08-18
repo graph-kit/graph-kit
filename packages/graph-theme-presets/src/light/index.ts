@@ -3,6 +3,7 @@ import colors from '@core/utils/colors';
 import { CURSOR } from '@core/utils/cursor';
 import { PluginThemes } from '@graph/plugins-shared/plugins';
 import { AnchorsPlugin } from '@graph/plugins/anchors/types';
+import { AnnotationsPlugin } from '@graph/plugins/annotations/types';
 import { CanvasPlugin } from '@graph/plugins/canvas/types';
 import { FocusPlugin } from '@graph/plugins/focus/types';
 import { MarqueePlugin } from '@graph/plugins/marquee/types';
@@ -10,7 +11,7 @@ import { MarqueePlugin } from '@graph/plugins/marquee/types';
 import { shared } from './shared.ts';
 
 type LightPreset = PluginThemes<
-  [CanvasPlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin]
+  [CanvasPlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin, AnnotationsPlugin]
 >;
 
 export const light = {
@@ -73,6 +74,9 @@ export const light = {
     'node.focus.text.content': shared.node.text.content,
     'node.focus.text.fontWeight': shared.node.text.fontWeight,
     'node.focus.text.size': shared.node.text.size,
+  },
+  annotations: {
+    'annotations.eraser.outline.color': colors.GRAY_900,
   },
   marquee: {
     'marquee.drag.border.color': colors.BLUE_500,

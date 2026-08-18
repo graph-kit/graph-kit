@@ -1,12 +1,11 @@
 <script setup lang="ts">
+  import { ANNOTATION_MODES, AnnotationMode } from '@core/annotations/index';
   import { mdiEraser, mdiLaserPointer, mdiPencil, mdiTrashCan } from '@mdi/js';
 
   import IconButton from '../../components/icon-button/IconButton.vue';
   import HStack from '../../components/layout/HStack.vue';
   import Well from '../../components/layout/Well.vue';
   import ToggleIconButton from '../../components/toggle-icon-button/ToggleIconButton.vue';
-  import { ANNOTATION_MODES } from './constants.ts';
-  import { AnnotationMode } from './types.ts';
   import { useAnnotationControls } from './useAnnotationControls.ts';
 
   const controls = useAnnotationControls();
@@ -34,7 +33,7 @@
         <ToggleIconButton
           class="bg-transparent dark:bg-transparent"
           :path="modeToIcon[mode]"
-          :model-value="controls.mode() === mode"
+          :model-value="controls.mode.value === mode"
           @click="controls.setMode(mode)"
           :label="modeToLabel[mode]"
         />

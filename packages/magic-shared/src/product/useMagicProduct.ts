@@ -6,7 +6,7 @@ import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
 import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
-import { useAnnotationsState } from '../ui/annotations/useAnnotationsState.ts';
+import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
 import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
@@ -28,8 +28,8 @@ export const useMagicProduct = (
 
   const appearance = useProductAppearance(host.onAppearanceChanged);
 
-  const annotations = options.annotations
-    ? useAnnotationsState(options.annotations, appearance)
+  const annotations = host.annotations
+    ? useAnnotationsUI(host.annotations)
     : undefined;
 
   const flags = resolveProductFlags(options.flags, host);

@@ -31,7 +31,10 @@ export const useMultiplayerProduct = ({
   // opting in is per product and explicit. a product that has not declared itself
   // multiplayer never registers, so nothing can be routed to it even if the server
   // were to try
-  if (!manifests[productId].multiplayer || !multiplayer) return undefined;
+  if (!manifests[productId].multiplayer || !multiplayer) {
+    onMounted(roomIdUrl.strip);
+    return undefined;
+  }
 
   const { actions, room, events } = multiplayer;
   const binding = { productId, host };

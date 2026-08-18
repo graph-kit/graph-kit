@@ -149,8 +149,12 @@
   }
 
   /* mathlive's placeholder gray is pitched at a white field, which leaves it washed out on the unfocused one */
-  math-field::part(placeholder) {
+  :where(.light) math-field::part(placeholder) {
     color: rgb(107, 114, 128);
+  }
+
+  :where(.dark) math-field::part(placeholder) {
+    color: rgb(156, 163, 175);
   }
 
   /* mathlive sizes its container to the content and bottom aligns it, which leaves the math and the caret sitting low in the field */
@@ -161,8 +165,17 @@
   }
 
   math-field {
-    --contains-highlight-background-color: rgb(200, 200, 200);
-    --contains-highlight-color: rgb(45, 45, 45);
     cursor: text;
+  }
+
+  /* mathlive keys its own highlight colors off prefers-color-scheme, which loses to an explicit appearance */
+  :where(.light) math-field {
+    --contains-highlight-background-color: rgb(254, 215, 170);
+    --contains-highlight-color: rgb(194, 65, 12);
+  }
+
+  :where(.dark) math-field {
+    --contains-highlight-background-color: rgb(76, 45, 20);
+    --contains-highlight-color: rgb(253, 186, 116);
   }
 </style>

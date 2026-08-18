@@ -33,6 +33,11 @@ const createCanvasDOMEventRegistry = (): CanvasDOMEventRegistry => ({
   onWheel: new Set(),
 });
 
+type Binding = {
+  bind: (element: HTMLElement) => void;
+  unbind: (element: HTMLElement) => void;
+};
+
 /**
  * pairs a listener with the element methods that add and remove it, so the
  * event name is written once and the listener's argument stays typed after the
@@ -42,17 +47,30 @@ const createBinding = <EventName extends keyof HTMLElementEventMap>(
   event: EventName,
   listener: (ev: HTMLElementEventMap[EventName]) => void,
   options?: AddEventListenerOptions,
-) => ({
+): Binding => ({
   bind: (element: HTMLElement) =>
     element.addEventListener(event, listener, options),
   unbind: (element: HTMLElement) =>
     element.removeEventListener(event, listener),
 });
 
-const createBindings = (emit: EventHub<CanvasDOMEvents>['emit']) => [
+/**
+ * for events that finish what another event started, since the cursor is free to leave
+ * the canvas mid gesture and the element never hears the end of one it began
+ */
+const createDocumentBinding = <EventName extends keyof DocumentEventMap>(
+  event: EventName,
+  listener: (ev: DocumentEventMap[EventName]) => void,
+  options?: AddEventListenerOptions,
+): Binding => ({
+  bind: () => document.addEventListener(event, listener, options),
+  unbind: () => document.removeEventListener(event, listener),
+});
+
+const createBindings = (emit: EventHub<CanvasDOMEvents>['emit']): Binding[] => [
   createBinding('click', (ev) => emit('onClick', ev)),
   createBinding('mousedown', (ev) => emit('onMouseDown', ev)),
-  createBinding('mouseup', (ev) => emit('onMouseUp', ev)),
+  createDocumentBinding('mouseup', (ev) => emit('onMouseUp', ev)),
   createBinding('mousemove', (ev) => emit('onMouseMove', ev)),
   createBinding('dblclick', (ev) => emit('onDblClick', ev)),
   createBinding('contextmenu', (ev) => emit('onContextMenu', ev)),

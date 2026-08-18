@@ -7,6 +7,12 @@ export const devWarning = (...data: unknown[]) => {
   console.warn(...data);
 };
 
+/** `assert` for expectations the caller can carry on from, so nothing is thrown */
+export const devAssert = (condition: unknown, message: string) => {
+  if (condition) return;
+  devWarning(message);
+};
+
 export const useLogReport = <T = string>(
   frequencyMs = 1000,
   resetReportAfterLogging = true,

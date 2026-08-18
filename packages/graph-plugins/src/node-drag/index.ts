@@ -1,4 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
+import { devAssert, devWarning } from '@core/utils/debugging';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { createDragState } from '@graph/plugins-shared/drag';
@@ -55,7 +56,7 @@ export const nodeDrag =
       const nodeIds = topElement.data?.[NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD];
       if (nodeIds !== undefined) {
         if (!validateNodeIds(nodeIds)) {
-          console.warn('node drag expected array of node ids: got', nodeIds);
+          devWarning('node drag expected array of node ids: got', nodeIds);
         } else {
           nodeIdsToDrag.push(...nodeIds);
         }
@@ -72,11 +73,12 @@ export const nodeDrag =
 
       const nodes = liveNodeIdsToDrag.map((nodeId) => getters.getNode(nodeId));
 
-      if (nodePositionStream) {
-        throw new Error(
-          'beginDrag called while a node position stream is already active',
-        );
-      }
+      devAssert(
+        !nodePositionStream,
+        'node drag started while the previous drag still had an open position stream, meaning its mouse release was missed',
+      );
+      nodePositionStream?.stop();
+
       dragState.startDrag(coords, { nodeIds: liveNodeIdsToDrag });
       nodePositionStream = controls.positions.createStream();
       nodeDragEventHub.emit('onNodeDragStart', nodes);
@@ -101,9 +103,8 @@ export const nodeDrag =
     };
 
     /**
-     * A drag carries its whole selection or none of it. Losing one node of five to
-     * someone else's delete ends the gesture rather than quietly carrying on with four,
-     * so what the user lets go of is always what they picked up.
+     * A drag ends as soon as any of its nodes is deleted, since finishing with the
+     * survivors would drop a different selection than the user picked up.
      */
     const abortDragOnTamper = () => {
       const active = dragState.getDragState();
@@ -119,8 +120,7 @@ export const nodeDrag =
       { coords }: DeepReadonly<GraphUnderCursor>,
       consume: () => void,
     ) => {
-      // the removal event has normally ended the drag before this runs, so this is the
-      // backstop for a removal that never announced itself
+      // just in case a removal happened that never triggered onElementsRemoved
       abortDragOnTamper();
 
       const dragData = dragState.applyMove(coords);

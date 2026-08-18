@@ -37,18 +37,19 @@ export const useMultiplayerProduct = ({
   const binding = { productId, host };
 
   onMounted(async () => {
-    // ahead of the url, which still names the room this connection is already in:
-    // mounting inside one is a navigation, and rejoining would arrive as a new member
     if (room.value.connected) {
+      console.log('user connected already');
       await actions.product.enter(binding);
       return;
     }
 
     const targetRoomId = roomIdUrl.read();
+    console.log('read in room id', targetRoomId);
+
     if (!targetRoomId) return;
 
-    // a dead room id is a non event, handled at the source by stripping it. never
-    // reaching the server is not: the id stays put so a refresh can try it again
+    console.log('attempting join with ID and binding', targetRoomId, binding);
+
     try {
       await actions.room.join({ ...binding, roomId: targetRoomId });
     } catch (err) {

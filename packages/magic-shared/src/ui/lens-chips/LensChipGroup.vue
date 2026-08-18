@@ -51,7 +51,7 @@
 
 <template>
   <Well v-if="chips.length > 0">
-    <HStack>
+    <HStack class="flex-wrap">
       <template v-for="chip of chips">
         <LensChip
           v-bind="chip"

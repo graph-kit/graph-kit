@@ -3,7 +3,7 @@
 
   import Button from '../../components/button/Button.vue';
   import Dropdown from '../../components/dropdown/Dropdown.vue';
-  import DropdownItem from '../../components/dropdown/DropdownItem.vue';
+  import MenuItem from '../../components/dropdown/MenuItem.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import { useProvidedMagic } from '../../product/context.ts';
@@ -34,21 +34,15 @@
         </Button>
       </Well>
     </template>
-    <Well class="p-1 bg-transparent dark:bg-transparent">
-      <VStack>
-        <template
-          v-for="{ product, card } in displayedProducts"
-          :key="product.id"
-        >
-          <DropdownItem @click="navigateToProduct(product)">
-            <Button
-              class="rounded-lg p-2 bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent active:bg-transparent dark:active:bg-transparent"
-            >
-              <ProductCard :card="card" />
-            </Button>
-          </DropdownItem>
-        </template>
-      </VStack>
-    </Well>
+    <VStack gap="0">
+      <MenuItem
+        v-for="{ product, card } in displayedProducts"
+        :key="product.id"
+        @click="navigateToProduct(product)"
+        class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
+      >
+        <ProductCard :card="card" />
+      </MenuItem>
+    </VStack>
   </Dropdown>
 </template>

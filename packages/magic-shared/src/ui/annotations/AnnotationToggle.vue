@@ -7,15 +7,6 @@
   import { useAnnotationControls } from './useAnnotationControls.ts';
 
   const controls = useAnnotationControls();
-
-  const toggle = () => {
-    if (controls.isActive.value) {
-      controls.deactivate();
-      return;
-    }
-
-    controls.activate();
-  };
 </script>
 
 <template>
@@ -23,11 +14,12 @@
 
   <Well class="p-0 rounded-full overflow-hidden">
     <ToggleIconButton
+      :model-value="controls.isActive.value"
       class="bg-transparent dark:bg-transparent p-4"
-      label="Annotations"
+      label="Annotations (a)"
       :size="20"
       :path="mdiPencil"
-      @click="toggle"
+      @update:model-value="controls.toggle"
     />
   </Well>
 </template>

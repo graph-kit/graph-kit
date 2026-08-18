@@ -18,7 +18,7 @@ export type ProductFlags = {
    */
   annotations: boolean;
   /**
-   * adds the link sharing button to the central menu
+   * adds the link sharing button to the "more options" menu
    * @default true
    */
   linkSharing: boolean;

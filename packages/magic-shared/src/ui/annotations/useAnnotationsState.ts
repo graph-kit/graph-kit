@@ -306,6 +306,15 @@ export const useAnnotationsState = (
     canvas.events.unhandle('onClick', consume);
   };
 
+  const toggle = () => {
+    if (isActive.value) {
+      deactivate();
+      return;
+    }
+
+    activate();
+  };
+
   const load = (annotations: Annotation[]) => {
     scribbles.value = annotations;
   };
@@ -323,6 +332,7 @@ export const useAnnotationsState = (
 
     activate: activate,
     deactivate: deactivate,
+    toggle: toggle,
 
     load,
 

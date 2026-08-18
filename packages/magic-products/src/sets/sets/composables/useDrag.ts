@@ -1,4 +1,4 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 import { Coordinate } from '@core/utils/canvas/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 
@@ -10,7 +10,7 @@ type ActiveDrag<Item> = {
 };
 
 export const useDrag = <Item>(
-  surface: CanvasProps,
+  surface: CanvasSurface,
   getItemCoords: (coords: Coordinate) => Item | undefined,
   setItemCoords: (item: Item, diff: Coordinate) => void,
 ) => {
@@ -41,14 +41,14 @@ export const useDrag = <Item>(
     activeDrag.value = undefined;
   };
 
-  surface.domEvents.subscribe('onMouseDown', beginDrag);
-  surface.domEvents.subscribe('onMouseMove', drag);
-  surface.domEvents.subscribe('onMouseUp', drop);
+  surface.events.subscribe('onMouseDown', beginDrag);
+  surface.events.subscribe('onMouseMove', drag);
+  surface.events.subscribe('onMouseUp', drop);
 
   const cleanup = () => {
-    surface.domEvents.unsubscribe('onMouseDown', beginDrag);
-    surface.domEvents.unsubscribe('onMouseMove', drag);
-    surface.domEvents.unsubscribe('onMouseUp', drop);
+    surface.events.unsubscribe('onMouseDown', beginDrag);
+    surface.events.unsubscribe('onMouseMove', drag);
+    surface.events.unsubscribe('onMouseUp', drop);
   };
 
   onBeforeUnmount(cleanup);

@@ -1,4 +1,4 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 import { UserId } from '@multiplayer/protocol/room';
 
 import { onMounted } from 'vue';
@@ -18,7 +18,7 @@ export const requestJump = (userId: UserId) => {
 };
 
 type JumpToUserOptions = {
-  surface: CanvasProps;
+  surface: CanvasSurface;
   multiplayer: ProductMultiplayer;
 };
 

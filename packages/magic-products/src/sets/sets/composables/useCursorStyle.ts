@@ -1,4 +1,4 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 import { nullThrows } from '@core/utils/assert';
 import { CURSOR } from '@core/utils/cursor';
 
@@ -16,18 +16,18 @@ const getAngleBetweenTwoPoints = (
   return Math.atan2(Math.abs(y1 - y2), Math.abs(x1 - x2));
 };
 
-const useMouseDown = (surface: CanvasProps) => {
+const useMouseDown = (surface: CanvasSurface) => {
   const isMouseDown = ref(false);
 
   const setMouseDown = () => (isMouseDown.value = true);
   const setMouseUp = () => (isMouseDown.value = false);
 
-  surface.domEvents.subscribe('onMouseDown', setMouseDown);
-  surface.domEvents.subscribe('onMouseUp', setMouseUp);
+  surface.events.subscribe('onMouseDown', setMouseDown);
+  surface.events.subscribe('onMouseUp', setMouseUp);
 
   const cleanup = () => {
-    surface.domEvents.unsubscribe('onMouseDown', setMouseDown);
-    surface.domEvents.unsubscribe('onMouseUp', setMouseUp);
+    surface.events.unsubscribe('onMouseDown', setMouseDown);
+    surface.events.unsubscribe('onMouseUp', setMouseUp);
   };
 
   onBeforeUnmount(cleanup);
@@ -42,7 +42,7 @@ const useMouseDown = (surface: CanvasProps) => {
  */
 export const useCursorStyle = (
   definitions: Ref<SetDefinition[]>,
-  surface: CanvasProps,
+  surface: CanvasSurface,
 ) => {
   const iseMouseDown = useMouseDown(surface);
   const cursor = computed(() => {

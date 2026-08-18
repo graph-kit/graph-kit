@@ -24,7 +24,7 @@ export type CanvasRef = {
   cleanup: (canvas: HTMLCanvasElement) => void;
 };
 
-export type CanvasProps = {
+export type CanvasSurface = {
   canvas: Ref<HTMLCanvasElement | undefined>;
   camera: Omit<Camera, 'cleanup'>;
   cursorCoordinates: Ref<Coordinate>;
@@ -35,7 +35,5 @@ export type CanvasProps = {
   ref: CanvasRef;
   draw: DrawFns;
   lifecycleEvents: ReadonlyEventHub<CanvasLifecycleEvents>;
-  domEvents: ReadonlyEventHub<CanvasDOMEvents>;
+  events: ReadonlyEventHub<CanvasDOMEvents>;
 };
-
-export type UseCanvas = () => CanvasProps;

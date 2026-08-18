@@ -1,11 +1,11 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 
 import { ProductId } from '../product/manifests/index.ts';
 import { MultiplayerHostField } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
 
 export const usePresenceBroadcast = (options: {
-  surface: CanvasProps;
+  surface: CanvasSurface;
   productId: ProductId;
   multiplayer: ProductMultiplayer;
   host: MultiplayerHostField;
@@ -30,8 +30,8 @@ export const usePresenceBroadcast = (options: {
     });
   };
 
-  surface.domEvents.subscribe('onMouseMove', broadcast);
+  surface.events.subscribe('onMouseMove', broadcast);
   // a drop that ends without the cursor moving again still has to tell the room the
   // drag is over, since an empty list is the only thing that ends one
-  surface.domEvents.subscribe('onMouseUp', broadcast);
+  surface.events.subscribe('onMouseUp', broadcast);
 };

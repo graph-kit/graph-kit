@@ -1,4 +1,4 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { BasicColorMode } from '@vueuse/core';
 import * as Y from 'yjs';
@@ -55,7 +55,7 @@ export type MagicProductHost = {
    * is what local storage and link sharing are built on, see {@link ProductFlags}
    */
   transit?: TransitField;
-  surface: CanvasProps;
+  surface: CanvasSurface;
   onAppearanceChanged: (color: BasicColorMode) => void;
   multiplayer: MultiplayerHostField;
   history?: HistoryField;
@@ -115,7 +115,7 @@ export type Magic = {
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
   debug: DebugControls;
-  surface: CanvasProps;
+  surface: CanvasSurface;
   transit?: TransitField;
   history?: HistoryField;
   annotations?: AnnotationsControls;

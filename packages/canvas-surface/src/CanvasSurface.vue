@@ -3,9 +3,9 @@
 
   import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-  import type { CanvasProps } from './types.ts';
+  import type { CanvasSurface } from './types.ts';
 
-  const props = defineProps<CanvasProps['ref']>();
+  const props = defineProps<CanvasSurface['ref']>();
 
   const canvas = ref<HTMLCanvasElement>();
 

@@ -29,12 +29,14 @@
   const insertLatexString = (latexString: string) => {
     getQuery(props.queryId).editor.insert(latexString);
   };
+
+  const { C, ...displayedSetOps } = SET_OP_TO_LATEX;
 </script>
 
 <template>
   <HStack>
     <Tooltip
-      v-for="(latexString, key) in SET_OP_TO_LATEX"
+      v-for="(latexString, key) in displayedSetOps"
       :key="key"
       :label="SET_OP_TOOLTIPS[key]"
     >

@@ -43,12 +43,12 @@
         />
       </VStack>
 
-      <div class="w-full h-px bg-white/20"></div>
+      <div class="w-full h-px bg-black/20 dark:bg-white/20"></div>
 
       <CopySessionCode />
 
       <Button
-        class="dark:bg-red-500 bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-white"
+        class="dark:bg-red-500 bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 active:bg-red-600 text-white"
         @click="multiplayer.room.leave"
       >
         <template #start>

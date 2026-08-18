@@ -13,6 +13,7 @@ import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
+import { DebugControls } from '../ui/debug/useDebugState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ProductFlagOptions, ProductFlags } from './flags.ts';
 import { LocalStorageControls } from './internals/useProductLocalStorage.ts';
@@ -113,6 +114,7 @@ export type Magic = {
   simulation: SimulationControls;
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
+  debug: DebugControls;
   surface: CanvasProps;
   transit?: TransitField;
   history?: HistoryField;

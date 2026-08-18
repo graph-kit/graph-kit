@@ -28,7 +28,7 @@
   });
 
   const base =
-    'inline-flex cursor-pointer items-center justify-center gap-1 rounded-md px-3 py-2 text-md font-bold transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
+    'inline-flex cursor-pointer items-center justify-center gap-1 rounded-md px-3 py-2 text-md font-bold transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
 
   const attrs = useAttrs();
 

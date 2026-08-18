@@ -19,17 +19,19 @@ describe('resolveProductFlags', () => {
       localStorage: true,
       annotations: true,
       linkSharing: true,
-      debug: false,
     });
   });
 
   it('takes what the product asked for over the default', () => {
-    const flags = resolveProductFlags({ history: false, debug: true }, hosting);
+    const flags = resolveProductFlags(
+      { history: false, annotations: false },
+      hosting,
+    );
 
     expect(flags.history).toBe(false);
-    expect(flags.debug).toBe(true);
+    expect(flags.annotations).toBe(false);
     // untouched by the override
-    expect(flags.annotations).toBe(true);
+    expect(flags.linkSharing).toBe(true);
   });
 
   it('reads an explicit undefined as no opinion', () => {
@@ -53,11 +55,10 @@ describe('resolveProductFlags', () => {
     });
 
     it('leaves every other flag alone', () => {
-      const flags = resolveProductFlags({ debug: true }, stateless);
+      const flags = resolveProductFlags({ annotations: false }, stateless);
 
       expect(flags.history).toBe(true);
-      expect(flags.annotations).toBe(true);
-      expect(flags.debug).toBe(true);
+      expect(flags.annotations).toBe(false);
     });
 
     it('overrules a product that asked for one anyway', () => {
@@ -79,7 +80,7 @@ describe('resolveProductFlags', () => {
     it('stays quiet when the product only inherited the default', () => {
       const warn = warnings();
 
-      resolveProductFlags({ debug: true }, stateless);
+      resolveProductFlags({ annotations: true }, stateless);
 
       expect(warn).not.toHaveBeenCalled();
     });

@@ -22,11 +22,6 @@ export type ProductFlags = {
    * @default true
    */
   linkSharing: boolean;
-  /**
-   * shows dev mode debugging components
-   * @default false
-   */
-  debug: boolean;
 };
 
 const DEFAULTS: ProductFlags = {
@@ -34,7 +29,6 @@ const DEFAULTS: ProductFlags = {
   localStorage: true,
   annotations: true,
   linkSharing: true,
-  debug: false,
 };
 
 /** what a product author writes: only what differs from {@link ProductFlags} defaults */

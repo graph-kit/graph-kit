@@ -1,23 +1,38 @@
 import { AnnotationsControls } from '@core/annotations/index';
 import { useSignals } from '@graph/vue/utils/useSignal';
 
-/**
- * the one place annotations become vue. the engine is pull based like the rest of the
- * sdk and the chrome around it is a template, so the bridge sits here rather than in
- * every component that wants to read a mode or a color.
- *
- * host agnostic on purpose: whatever hands the harness its annotations gets the same
- * toggle and island, graph or not.
- */
-export const useAnnotationsUI = (annotations: AnnotationsControls) => ({
-  ...annotations,
-  ...useSignals({
-    isActive: annotations.isActive,
-    mode: annotations.mode,
-    color: annotations.color,
-    brushWeight: annotations.brushWeight,
-    annotations: annotations.annotations,
-  }),
-});
+import { useComponent } from '../../component-slot/useComponent.ts';
+import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
+import AnnotationsPanel from './AnnotationPanel.vue';
+
+const ANNOTATION_PANEL_SLOT_ID = 'product/annotations/panel';
+
+export const useAnnotationsUI = (
+  annotations: AnnotationsControls,
+  componentSlots: ComponentSlotControls,
+) => {
+  const panel = useComponent(componentSlots, {
+    component: AnnotationsPanel,
+    id: ANNOTATION_PANEL_SLOT_ID,
+    position: 'center-left',
+  });
+
+  annotations.events.subscribe('onActivated', panel.show);
+  annotations.events.subscribe('onDeactivated', panel.hide);
+
+  return {
+    ui: {
+      panel,
+    },
+    ...annotations,
+    ...useSignals({
+      isActive: annotations.isActive,
+      mode: annotations.mode,
+      color: annotations.color,
+      brushWeight: annotations.brushWeight,
+      annotations: annotations.annotations,
+    }),
+  };
+};
 
 export type AnnotationsUIControls = ReturnType<typeof useAnnotationsUI>;

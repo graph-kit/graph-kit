@@ -2,6 +2,10 @@ import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 
 import { ComputedRef, computed, onUnmounted } from 'vue';
 
+import {
+  ComponentControls,
+  useComponent,
+} from '../../component-slot/useComponent.ts';
 import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
 import { MultiplayerEventMap } from '../../multiplayer/events.ts';
 import { RoomState } from '../../multiplayer/types.ts';
@@ -26,44 +30,24 @@ export const useRosterPanel = ({
   room,
   events,
   componentSlots,
-}: RosterPanelOptions): RosterPanelControls => {
-  const show = () =>
-    componentSlots.add({
-      id: ROSTER_PANEL_SLOT_ID,
-      component: RosterPanel,
-      position: 'center-right',
-    });
-
-  const hide = () => componentSlots.remove(ROSTER_PANEL_SLOT_ID);
-
-  const isShown = computed(() =>
-    componentSlots.entries.value.some(
-      (slot) => slot.id === ROSTER_PANEL_SLOT_ID,
-    ),
-  );
-
-  const setHighlight = (v: boolean) => {
-    if (!isShown.value) return;
-    componentSlots.clearHighlighted();
-    if (v) componentSlots.setHighlighted(ROSTER_PANEL_SLOT_ID);
-  };
+}: RosterPanelOptions): ComponentControls => {
+  const roster = useComponent(componentSlots, {
+    id: ROSTER_PANEL_SLOT_ID,
+    component: RosterPanel,
+    position: 'center-right',
+  });
 
   // mounting into a room the connection is already in is a navigation, not a join
-  if (room.value.connected) show();
+  if (room.value.connected) roster.show();
 
-  events.subscribe('onRoomJoined', show);
-  events.subscribe('onRoomLeft', hide);
+  events.subscribe('onRoomJoined', roster.show);
+  events.subscribe('onRoomLeft', roster.hide);
 
   // the connection outlives the product
   onUnmounted(() => {
-    events.unsubscribe('onRoomJoined', show);
-    events.unsubscribe('onRoomLeft', hide);
+    events.unsubscribe('onRoomJoined', roster.show);
+    events.unsubscribe('onRoomLeft', roster.hide);
   });
 
-  return {
-    show,
-    hide,
-    isShown,
-    setHighlight,
-  };
+  return roster;
 };

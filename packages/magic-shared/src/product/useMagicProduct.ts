@@ -29,7 +29,7 @@ export const useMagicProduct = (
   const appearance = useProductAppearance(host.onAppearanceChanged);
 
   const annotations = host.annotations
-    ? useAnnotationsUI(host.annotations)
+    ? useAnnotationsUI(host.annotations, componentSlots)
     : undefined;
 
   const flags = resolveProductFlags(options.flags, host);

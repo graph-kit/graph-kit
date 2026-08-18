@@ -44,6 +44,11 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
 
   graph.events.subscribe('onStructureChange', magic.localStorage.invalidate);
+  graph.annotations.events.subscribe(
+    'onAnnotationsChanged',
+    magic.localStorage.invalidate,
+  );
+
   // any settled move, not just a drag drop, so programmatic repositioning persists too
   graph.events.subscribe(
     'onNodePositionsCommitted',

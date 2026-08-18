@@ -1,3 +1,5 @@
+import { devWarning } from '@core/utils/debugging';
+
 import { ComputedRef, computed, markRaw, ref, shallowRef } from 'vue';
 
 import { ComponentSlot } from './types.ts';
@@ -29,19 +31,30 @@ export const useComponentSlotsState = (): ComponentSlotControls => {
     componentSlots.value = [...componentSlots.value, ...newSlots];
   };
 
+  const clearHighlighted = () => (highlightedSlot.value = undefined);
+  const setHighlighted = (slotId: ComponentSlot['id']) => {
+    const validSlot = componentSlots.value.some((s) => s.id === slotId);
+    if (!validSlot) {
+      devWarning(`tried highlighting non-existent slot with ID ${slotId}`);
+      return;
+    }
+    highlightedSlot.value = slotId;
+  };
+
+  const remove = (slotId: ComponentSlot['id']) => {
+    if (slotId === highlightedSlot.value) clearHighlighted();
+    componentSlots.value = componentSlots.value.filter(
+      (slot) => slot.id !== slotId,
+    );
+  };
+
   return {
     entries: computed(() => componentSlots.value),
     add: (slot) => addMany([slot]),
     addMany,
-    remove: (slotId) => {
-      componentSlots.value = componentSlots.value.filter(
-        (slot) => slot.id !== slotId,
-      );
-    },
-    setHighlighted: (slotId) => {
-      highlightedSlot.value = slotId;
-    },
-    clearHighlighted: () => (highlightedSlot.value = undefined),
+    remove,
+    setHighlighted,
+    clearHighlighted,
     highlightedId: computed(() => highlightedSlot.value),
     visibility: {
       isHidden: computed(() => isHidden.value),

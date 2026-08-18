@@ -24,7 +24,7 @@
 </script>
 
 <template>
-  <Well class="p-2 bg-transparent dark:bg-transparent">
+  <Well class="">
     <HStack>
       <Well
         v-for="mode of ANNOTATION_MODES"

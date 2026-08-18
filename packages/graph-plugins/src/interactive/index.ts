@@ -44,6 +44,8 @@ export const interactive =
       const node = finalActions.addNode({
         position: { x: coords.x, y: coords.y },
       });
+      if (!node) return;
+
       controls.focus?.set([node.id]);
       captureHistorySnapshot();
     };
@@ -79,6 +81,7 @@ export const interactive =
       });
     };
 
+    /** this plugin's policy on top of the graph's own rules, which are asked last */
     const doesEdgeConformToRules = (
       sourceNode: { id: string },
       targetNode: { id: string },
@@ -107,7 +110,10 @@ export const interactive =
         if (violatesRule) return false;
       }
 
-      return true;
+      return controls.inspect.canAddEdge({
+        source: sourceNode.id,
+        target: targetNode.id,
+      });
     };
 
     const handleEdgeCreation = (sourceNode: { id: string }) => {
@@ -131,6 +137,8 @@ export const interactive =
         target: targetNode.id,
         weight: new Fraction(getValue(optionsWithDefaults.newEdgeWeight)),
       });
+      if (!edge) return;
+
       controls.focus?.set([edge.id]);
       captureHistorySnapshot();
     };

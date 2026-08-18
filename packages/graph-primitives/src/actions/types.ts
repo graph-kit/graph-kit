@@ -105,9 +105,11 @@ type BulkHandler<Action extends BulkActionConfig, ReturnValue> = (options: {
 export type GraphActions<Actions extends BaseActions> = {
   /**
    * Adds a single {@link CoreNode | node} to the graph. Missing properties get default values.
-   * @returns The newly created node instance.
+   * @returns The newly created node instance, or undefined when the graph refused it, which
+   * it reports on the console. Ask {@link CoreControls.inspect | inspect} ahead of time to
+   * offer the edit only when it can be made.
    */
-  addNode: (options: Actions['addNode']) => CoreNode;
+  addNode: (options: Actions['addNode']) => CoreNode | undefined;
 
   /**
    * Deletes a single {@link CoreNode | node} from the graph.
@@ -119,9 +121,12 @@ export type GraphActions<Actions extends BaseActions> = {
 
   /**
    * Adds a single {@link CoreEdge | edge} connecting two existing {@link CoreNode | nodes}.
-   * @returns The newly created edge instance.
+   * @returns The newly created edge instance, or undefined when the graph refused it, which
+   * it reports on the console. An endpoint that no longer exists and a path that already
+   * carries an edge are both ordinary refusals rather than faults, since a collaborator can
+   * cause either one between the edit being offered and being made.
    */
-  addEdge: (options: Actions['addEdge']) => CoreEdge;
+  addEdge: (options: Actions['addEdge']) => CoreEdge | undefined;
 
   /**
    * Deletes a single {@link CoreEdge | edge} from the graph.

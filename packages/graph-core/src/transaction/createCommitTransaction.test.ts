@@ -5,19 +5,24 @@ import { describe, expect, it, vi } from 'vitest';
 import { createCommitTransaction } from './createCommitTransaction.ts';
 import { createEmptyPayload } from './createEmptyPayload.ts';
 import { TransactionOptions } from './types.ts';
+import { createInspectDraft } from './validateDraft.ts';
 
 const options = (
   state: {
     nodes?: CoreNode[];
     edges?: CoreEdge[];
+    directed?: boolean;
     success?: () => void;
   } = {},
 ): TransactionOptions => {
+  const graph = {
+    nodes: () => state.nodes ?? [],
+    edges: () => state.edges ?? [],
+  };
+
   return {
-    graph: {
-      nodes: () => state.nodes ?? [],
-      edges: () => state.edges ?? [],
-    },
+    graph,
+    inspectDraft: createInspectDraft(graph, state.directed ?? true),
     onTransactionSucceeded: state.success ?? (() => {}),
   };
 };
@@ -59,6 +64,24 @@ describe(createCommitTransaction, () => {
 
     const payload = commitTransaction({ removeNodeIds: ['node-1'] });
     expect(payload).toEqual(expectedPayload);
+  });
+
+  it('refuses an added edge whose endpoint is not in the graph', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const node: CoreNode = { id: 'node-1' };
+    const orphan: CoreEdge = {
+      id: 'edge-1',
+      source: 'node-1',
+      target: 'deleted-by-a-peer',
+    };
+
+    const commitTransaction = createCommitTransaction(
+      options({ nodes: [node] }),
+    );
+
+    const payload = commitTransaction({ addEdges: [orphan] });
+    expect(payload).toEqual(createEmptyPayload());
   });
 
   it('fires the onTransactionSuccess callback with the correct payload', () => {

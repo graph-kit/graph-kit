@@ -69,6 +69,7 @@ export const nodeLabel: NodeLabelPlugin = ({
       ...actions,
       addNode: (options) => {
         const node = actions.addNode(options);
+        if (!node) return;
         setNodeLabels([
           { label: options.label ?? generateLabel(), nodeId: node.id },
         ]);

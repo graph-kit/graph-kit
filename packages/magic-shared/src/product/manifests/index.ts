@@ -10,6 +10,7 @@ export const manifests = {
     id: 'sets',
     multiplayer: false,
     name: 'Magic Sets',
+    abbreviatedName: 'SET',
     navigation: {
       slug: 'sets',
       card: {
@@ -30,6 +31,7 @@ export const manifests = {
     id: 'markov-chains',
     multiplayer: true,
     name: 'Magic Markov Chains',
+    abbreviatedName: 'MKV',
     navigation: {
       slug: 'markov-chains',
       card: {
@@ -52,6 +54,7 @@ export const manifests = {
     // sending events on the client when the simulation is activated and resume with a force push of the post-sim state
     multiplayer: false,
     name: 'Magic AVL Trees',
+    abbreviatedName: 'AVL',
     navigation: {
       slug: 'trees',
       card: {
@@ -72,6 +75,7 @@ export const manifests = {
     id: 'traversals',
     multiplayer: true,
     name: 'Magic Traversals',
+    abbreviatedName: 'TRV',
     navigation: {
       slug: 'traversals',
       card: {
@@ -92,6 +96,7 @@ export const manifests = {
     id: 'path-finding',
     multiplayer: true,
     name: 'Magic Path Finding',
+    abbreviatedName: 'PTH',
     navigation: {
       slug: 'path',
       card: {
@@ -113,6 +118,7 @@ export const manifests = {
     id: 'min-spanning-trees',
     multiplayer: true,
     name: 'Magic Minimum Spanning Trees',
+    abbreviatedName: 'MST',
     navigation: {
       slug: 'mst',
       card: {
@@ -133,6 +139,7 @@ export const manifests = {
     id: 'dev',
     multiplayer: false,
     name: 'Dev Playground',
+    abbreviatedName: 'DEV',
     navigation: {
       slug: 'dev',
     },
@@ -145,6 +152,7 @@ export const manifests = {
     id: 'welcome',
     multiplayer: false,
     name: 'Go To Experiences',
+    abbreviatedName: 'HOME',
     navigation: {
       slug: 'welcome',
     },

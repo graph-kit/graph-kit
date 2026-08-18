@@ -14,7 +14,6 @@ import {
   edgeIdOf,
   edges,
   nodeIdOf,
-  nodeIdOfLabel,
   welcomeNodes,
 } from './scene.ts';
 
@@ -82,11 +81,11 @@ const createWelcomeScene = (graph: Graph) => {
     timeouts.push(setTimeout(task, delayMs));
   };
 
-  const addProductNode = ({ productId, label, position }: WelcomeNode) =>
+  const addProductNode = ({ productId, position }: WelcomeNode) =>
     graph.animation.capture(() =>
       graph.actions.addNode({
         id: nodeIdOf(productId),
-        label,
+        label: manifests[productId].abbreviatedName,
         position,
       }),
     );
@@ -97,8 +96,8 @@ const createWelcomeScene = (graph: Graph) => {
         nodes: [],
         edges: edges.map(([source, target], index) => ({
           id: edgeIdOf(index),
-          source: nodeIdOfLabel(source),
-          target: nodeIdOfLabel(target),
+          source: nodeIdOf(source),
+          target: nodeIdOf(target),
         })),
       }),
     );

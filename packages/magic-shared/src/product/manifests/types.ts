@@ -33,6 +33,8 @@ export type MagicProductManifest = {
   id: string;
   /** full product name, shown in the navigation menu trigger */
   name: string;
+  /** short form of the name, for anywhere a full one cannot fit, like a graph node */
+  abbreviatedName: string;
   navigation: MagicProductNavigation;
   meta: MagicProductMeta;
   /**

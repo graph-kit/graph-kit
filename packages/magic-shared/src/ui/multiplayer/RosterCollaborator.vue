@@ -19,6 +19,7 @@
   import KickUser from './KickUser.vue';
   import MeBadge from './MeBadge.vue';
   import MoveUser from './MoveUser.vue';
+  import ProductBadge from './ProductBadge.vue';
   import TierBadge from './TierBadge.vue';
   import TierEdit from './TierEdit.vue';
 
@@ -51,20 +52,7 @@
 </script>
 
 <template>
-  <HStack
-    v-if="menuItems.length === 0"
-    class="w-full py-1 px-2 justify-between rounded-md"
-  >
-    <span>{{ member.displayName }}</span>
-    <HStack>
-      <MeBadge v-if="isMe" />
-      <TierBadge :tier="member.tier" />
-    </HStack>
-  </HStack>
-  <Dropdown
-    v-else
-    side="left"
-  >
+  <Dropdown side="left">
     <template #trigger>
       <HStack
         class="w-full hover:bg-gray-900 py-1 px-2 cursor-pointer justify-between rounded-md"
@@ -72,6 +60,10 @@
         <span>{{ member.displayName }}</span>
         <HStack>
           <MeBadge v-if="isMe" />
+          <ProductBadge
+            v-else-if="member.productId"
+            :product-id="member.productId"
+          />
           <TierBadge :tier="member.tier" />
           <Icon
             v-if="menuItems.length > 0"

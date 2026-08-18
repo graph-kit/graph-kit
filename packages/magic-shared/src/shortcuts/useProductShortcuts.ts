@@ -20,6 +20,11 @@ export const useProductShortcuts = (magic: Magic) => {
         }
       : undefined,
     {
+      id: 'product/toggle-debug',
+      key: 'd',
+      callback: magic.debug.toggle,
+    },
+    {
       id: 'product/toggle-component-slot-ui',
       key: 'meta+.',
       callback: magic.componentSlots.visibility.toggle,

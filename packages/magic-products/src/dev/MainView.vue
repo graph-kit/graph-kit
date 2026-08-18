@@ -12,7 +12,6 @@
         would leave a run measuring that scene on top of the one it asked for
       */
       localStorage: false,
-      debug: true,
     },
     core: {
       directed: true,

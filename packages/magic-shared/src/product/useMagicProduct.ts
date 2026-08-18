@@ -8,6 +8,7 @@ import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
 import { useAnnotationsState } from '../ui/annotations/useAnnotationsState.ts';
 import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
+import { useDebugState } from '../ui/debug/useDebugState.ts';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
@@ -33,7 +34,8 @@ export const useMagicProduct = (
 
   const flags = resolveProductFlags(options.flags, host);
 
-  useProductUI(componentSlots, flags);
+  useProductUI(componentSlots);
+  const debug = useDebugState(componentSlots);
   const shortcuts = useShortcuts();
 
   const manifest = manifests[options.productId];
@@ -60,6 +62,7 @@ export const useMagicProduct = (
     simulation,
     appearance,
     shortcuts,
+    debug,
     annotations,
     lensChips: options.lensChips,
     surface: host.surface,

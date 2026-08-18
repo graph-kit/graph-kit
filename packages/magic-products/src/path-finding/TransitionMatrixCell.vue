@@ -4,11 +4,6 @@
 
   import { onUnmounted } from 'vue';
 
-  // resolves the same theme-driven color/cursor a real edge renders with on
-  // canvas, so a matrix cell backed by an edge looks and updates (hover,
-  // focus, theme changes) exactly like that edge does - a scoped slot rather
-  // than owning the <td> itself, since the parent still drives everything
-  // else about the cell (weight border, row/column hover wash, click)
   const props = defineProps<{ edgeId: string }>();
 
   const graph = useProvidedGraph();

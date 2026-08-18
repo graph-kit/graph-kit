@@ -18,8 +18,8 @@
       <IconButton
         @click="magic.history.undo"
         :disabled="magic.history.canUndo.value ? undefined : 'Nothing to undo'"
-        class="p-4 bg-transparent dark:bg-transparent"
-        label="Undo"
+        class="p-3 pl-5 bg-transparent dark:bg-transparent rounded-r-none"
+        label="Undo (cmd + z)"
         :size="20"
         :path="mdiUndo"
       />
@@ -27,8 +27,8 @@
       <IconButton
         @click="magic.history.redo"
         :disabled="magic.history.canRedo.value ? undefined : 'Nothing to redo'"
-        class="p-4 bg-transparent dark:bg-transparent"
-        label="Redo"
+        class="p-3 pr-5 bg-transparent dark:bg-transparent rounded-l-none"
+        label="Redo (cmd + shift + z)"
         :size="20"
         :path="mdiRedo"
       />

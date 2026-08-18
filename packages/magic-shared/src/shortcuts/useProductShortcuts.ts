@@ -24,6 +24,23 @@ export const useProductShortcuts = (magic: Magic) => {
       key: 'meta+.',
       callback: magic.componentSlots.visibility.toggle,
     },
+    {
+      id: 'product/zoom-out',
+      key: '-',
+      callback: () => magic.surface.camera.actions.zoomOut(),
+    },
+    // the key carries shift on the layouts that print + above =, so the shifted
+    // binding is the literal press and the bare one is the same key without it
+    {
+      id: 'product/zoom-in',
+      key: 'shift++',
+      callback: () => magic.surface.camera.actions.zoomIn(),
+    },
+    {
+      id: 'product/zoom-in-unshifted',
+      key: '=',
+      callback: () => magic.surface.camera.actions.zoomIn(),
+    },
     magic.history
       ? {
           id: 'product/undo',

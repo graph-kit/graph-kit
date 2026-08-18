@@ -145,7 +145,7 @@
       <MenuItem
         @click="multiplayer.room.leave"
         :icon="departure.icon"
-        class="hover:bg-red-500 dark:hover:bg-red-500 hover:text-white"
+        class="hover:bg-red-500 dark:hover:bg-red-500 active:bg-red-600 hover:text-white"
       >
         {{ departure.text }}
       </MenuItem>

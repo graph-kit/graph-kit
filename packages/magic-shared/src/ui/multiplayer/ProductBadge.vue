@@ -35,7 +35,9 @@
     side="left"
   >
     <template #trigger>
-      <div class="px-2 text-sm rounded-sm text-white bg-gray-500">
+      <div
+        class="px-2 text-sm rounded-sm text-white bg-gray-500 hover:bg-gray-600"
+      >
         {{ badgeContent }}
       </div>
     </template>

@@ -54,12 +54,10 @@ export const nodeDrag =
       }
 
       const nodeIds = topElement.data?.[NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD];
-      if (nodeIds !== undefined) {
-        if (!validateNodeIds(nodeIds)) {
-          devWarning('node drag expected array of node ids: got', nodeIds);
-        } else {
-          nodeIdsToDrag.push(...nodeIds);
-        }
+      if (validateNodeIds(nodeIds)) {
+        nodeIdsToDrag.push(...nodeIds);
+      } else if (nodeIds !== undefined) {
+        devWarning('node drag expected array of node ids: got', nodeIds);
       }
 
       // a selection can name a node that has since left the graph, so what is carried is

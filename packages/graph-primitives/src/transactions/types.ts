@@ -1,4 +1,13 @@
-import { CoreEdge, CoreNode } from '../types.ts';
+import Fraction from 'fraction.js';
+
+import { CoreEdge, CoreNode, Position } from '../types.ts';
+
+/**
+ * An element on its way through a transaction, carrying what fills the position and weight
+ * stores once it is accepted.
+ */
+export type DraftNode = CoreNode & { position?: Partial<Position> };
+export type DraftEdge = CoreEdge & { weight?: Fraction };
 
 export type TransactionPayload = {
   addedNodes: CoreNode[];

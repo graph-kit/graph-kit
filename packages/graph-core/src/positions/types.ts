@@ -1,13 +1,9 @@
 import { MaybeGetter } from '@core/utils/maybeGetter/index';
-import { CoreNode } from '@graph/primitives/types';
+import { CoreNode, Position } from '@graph/primitives/types';
 
 import type { NodePositionStoreEventMap } from './events.ts';
 
-export type Position = {
-  x: number;
-  y: number;
-  z: number;
-};
+export type { Position };
 
 export type NodePositionEntry = {
   nodeId: CoreNode['id'];

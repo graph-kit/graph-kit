@@ -40,14 +40,18 @@
     if (edgeId) graph.focus.set([edgeId]);
   };
 
-  // alphabetical by the node's displayed label rather than its (random,
-  // meaningless) id
-  const displayOrder = computed(() =>
-    nodeIds.value
-      .map((_, index) => index)
-      .sort((a, b) =>
-        labelOf(nodeIds.value[a]).localeCompare(labelOf(nodeIds.value[b])),
-      ),
+  const displayedNodeIds = computed(() =>
+    [...nodeIds.value].sort((a, b) => labelOf(a).localeCompare(labelOf(b))),
+  );
+
+  const matrixRows = computed(() =>
+    displayedNodeIds.value.map((fromId) => ({
+      id: fromId,
+      cells: displayedNodeIds.value.map((toId) => ({
+        id: toId,
+        edgeId: edgeIdFor(fromId, toId),
+      })),
+    })),
   );
 
   const cellText = (fromId: string, toId: string) => {
@@ -57,9 +61,6 @@
     return graph.transitionMatrix.value[fromIndex][toIndex].toFraction();
   };
 
-  // a row header is the "from" state, so clicking it should filter down to
-  // what it leads to; a column header is the "to" state, so clicking it
-  // should filter down to what leads into it - never both directions at once
   const successorsOf = (id: string) =>
     nodeIds.value.filter((otherId) => otherId !== id && hasEdge(id, otherId));
 
@@ -78,20 +79,21 @@
       ...predecessorsOf(id).map((otherId) => edgeIdFor(otherId, id)!),
     ]);
 
-  const cellSize = computed(() => {
-    return graph.nodes.value.length > 5
-      ? graph.nodes.value.length > 10
-        ? 8
-        : 10
-      : 12;
+  const density = computed(() => {
+    const count = graph.nodes.value.length;
+    if (count > 10) return { cellSize: 8, nodeScale: 0.5 };
+    if (count > 5) return { cellSize: 10, nodeScale: 0.625 };
+    return { cellSize: 12, nodeScale: 0.75 };
   });
-  const nodeScale = computed(() => {
-    return graph.nodes.value.length > 5
-      ? graph.nodes.value.length > 10
-        ? 0.5
-        : 0.625
-      : 0.75;
-  });
+
+  const headerCellClass = computed(() => `size-${density.value.cellSize}`);
+  const emptyCellClass = computed(
+    () => `size-${density.value.cellSize} rounded-sm bg-gray-500/20`,
+  );
+  const dataCellClass = computed(
+    () =>
+      `size-${density.value.cellSize} max-w-12 overflow-hidden rounded-sm px-1 text-center font-bold text-white tabular-nums`,
+  );
 </script>
 
 <template>
@@ -101,56 +103,56 @@
         <table class="table-fixed border-separate border-spacing-1">
           <thead>
             <tr>
-              <th :class="`size-${cellSize}`"></th>
+              <th :class="headerCellClass"></th>
               <th
-                v-for="toIndex in displayOrder"
-                :key="nodeIds[toIndex]"
-                :class="`size-${cellSize}`"
-                @click="focusToState(nodeIds[toIndex])"
+                v-for="toId in displayedNodeIds"
+                :key="toId"
+                :class="headerCellClass"
+                @click="focusToState(toId)"
               >
                 <Node
-                  :id="nodeIds[toIndex]"
-                  :scale="nodeScale"
+                  :id="toId"
+                  :scale="density.nodeScale"
                 />
               </th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="fromIndex in displayOrder"
-              :key="nodeIds[fromIndex]"
+              v-for="row in matrixRows"
+              :key="row.id"
             >
               <th
-                :class="`size-${cellSize}`"
-                @click="focusFromState(nodeIds[fromIndex])"
+                :class="headerCellClass"
+                @click="focusFromState(row.id)"
               >
                 <Node
-                  :id="nodeIds[fromIndex]"
-                  :scale="nodeScale"
+                  :id="row.id"
+                  :scale="density.nodeScale"
                 />
               </th>
               <template
-                v-for="toIndex in displayOrder"
-                :key="`${nodeIds[fromIndex]}::${edgeIdFor(nodeIds[fromIndex], nodeIds[toIndex]) ?? 'none'}`"
+                v-for="cell in row.cells"
+                :key="`${row.id}::${cell.edgeId ?? 'none'}`"
               >
                 <TransitionMatrixCell
-                  v-if="edgeIdFor(nodeIds[fromIndex], nodeIds[toIndex])"
-                  :edge-id="edgeIdFor(nodeIds[fromIndex], nodeIds[toIndex])!"
+                  v-if="cell.edgeId"
+                  :edge-id="cell.edgeId"
                   v-slot="{ color, cursor }"
                 >
                   <td
-                    :class="`size-${cellSize} max-w-12 overflow-hidden rounded-sm px-1 text-center font-bold text-white tabular-nums`"
+                    :class="dataCellClass"
                     :style="{ backgroundColor: color, cursor }"
-                    @click="focusEdge(nodeIds[fromIndex], nodeIds[toIndex])"
+                    @click="focusEdge(row.id, cell.id)"
                   >
                     <span class="block truncate">{{
-                      cellText(nodeIds[fromIndex], nodeIds[toIndex])
+                      cellText(row.id, cell.id)
                     }}</span>
                   </td>
                 </TransitionMatrixCell>
                 <td
                   v-else
-                  :class="`size-${cellSize} rounded-sm bg-gray-500/20`"
+                  :class="emptyCellClass"
                 ></td>
               </template>
             </tr>

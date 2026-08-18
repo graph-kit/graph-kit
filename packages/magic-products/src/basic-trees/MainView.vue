@@ -9,7 +9,6 @@
     flags: {
       history: false,
       localStorage: false,
-      debug: true,
     },
     core: {
       weighted: false,

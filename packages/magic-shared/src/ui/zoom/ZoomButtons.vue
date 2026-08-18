@@ -37,7 +37,7 @@
             ? 'Zoomed all the way out'
             : undefined
         "
-        class="p-3 bg-transparent dark:bg-transparent rounded-r-none"
+        class="p-3 pl-4 bg-transparent dark:bg-transparent rounded-r-none"
         label="Zoom out (-)"
         :size="20"
         :path="mdiMinus"
@@ -52,7 +52,7 @@
             ? 'Zoomed all the way in'
             : undefined
         "
-        class="p-3 bg-transparent dark:bg-transparent rounded-l-none"
+        class="p-3 pr-4 bg-transparent dark:bg-transparent rounded-l-none"
         label="Zoom in (+)"
         :size="20"
         :path="mdiPlus"

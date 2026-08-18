@@ -24,7 +24,7 @@
 </script>
 
 <template>
-  <Well class="w-80 p-3">
+  <Well class="relative w-80 p-3">
     <VStack class="font-bold">
       <div class="text-2xl text-center">
         Collaborators ({{ roster.length }})

@@ -2,7 +2,7 @@ import {
   AnimatedShapeFactories,
   ShapeRenderer,
 } from '@canvas/primitives/animation/index';
-import { CanvasProps, Coordinate } from '@canvas/surface/types';
+import { CanvasSurface, Coordinate } from '@canvas/surface/types';
 import {
   GraphPlugin,
   WithEvents,
@@ -31,8 +31,8 @@ export type GraphUnderCursor = {
 };
 
 type BaseCanvasControls = {
-  /** @internal */
-  surface: CanvasProps;
+  /** canvas rendering surface */
+  surface: CanvasSurface;
   /**
    * manages the set of canvas elements rendered on the canvas.
    * use `aggregator.transformers` to register custom canvas elements for your extension.

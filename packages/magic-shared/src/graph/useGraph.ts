@@ -1,5 +1,5 @@
-import { useCanvas } from '@canvas/surface/index';
-import { CanvasProps } from '@canvas/surface/types';
+import { useCanvasSurface } from '@canvas/surface/index';
+import { CanvasSurface } from '@canvas/surface/types';
 import { CoreOptions } from '@graph/core/options';
 import { createGraph } from '@graph/create-graph/index';
 import { adjacencyLists } from '@graph/plugins/adjacency-lists/index';
@@ -42,7 +42,7 @@ export type UseGraphOptions = {
 };
 
 const graphPlugins = (
-  options: UseGraphOptions & { canvasSurface: CanvasProps },
+  options: UseGraphOptions & { canvasSurface: CanvasSurface },
 ) => [
   canvas(options.canvasSurface),
   history,
@@ -61,7 +61,7 @@ const graphPlugins = (
 ];
 
 const createGraphWithPlugins = (
-  options: UseGraphOptions & { canvasSurface: CanvasProps },
+  options: UseGraphOptions & { canvasSurface: CanvasSurface },
 ) => {
   const graph = createGraph({
     coreOptions: options.core ?? {},
@@ -77,7 +77,7 @@ const createGraphWithPlugins = (
 };
 
 export const useGraph = (options: UseGraphOptions = {}) => {
-  const canvasSurface = useCanvas();
+  const canvasSurface = useCanvasSurface();
 
   const graph = createGraphWithPlugins({ ...options, canvasSurface });
 

@@ -92,7 +92,7 @@
     );
   };
 
-  magic.surface.domEvents.subscribe('onDblClick', createSetDefinition);
+  magic.surface.events.subscribe('onDblClick', createSetDefinition);
 
   magic.shortcuts.add({
     id: 'delete-set',

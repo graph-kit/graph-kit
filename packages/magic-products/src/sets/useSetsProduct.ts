@@ -1,4 +1,4 @@
-import { useCanvas } from '@canvas/surface/index';
+import { useCanvasSurface } from '@canvas/surface/index';
 import { nullThrows } from '@core/utils/assert';
 import {
   Magic,
@@ -55,7 +55,7 @@ export const useProvidedSetsProductState = () => {
 };
 
 export const useSetsProduct = () => {
-  const surface = useCanvas();
+  const surface = useCanvasSurface();
 
   // sets has no serializable state yet, so there is nothing to mirror either way. it
   // is not flagged multiplayer, and giving it real transit is what would unblock both,

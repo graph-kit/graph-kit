@@ -1,6 +1,6 @@
 import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { crossPattern } from '@canvas/surface/crossPattern';
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 import { createThemeController } from '@core/themes/index';
 import { KeyboardEventEntries } from '@core/utils/types';
 import { createEventHub } from '@graph/primitives/events/createEventHub';
@@ -27,7 +27,7 @@ const sameElements = (previous: CanvasElement[], next: CanvasElement[]) => {
 };
 
 export const canvas =
-  (surface: CanvasProps): CanvasPlugin =>
+  (surface: CanvasSurface): CanvasPlugin =>
   ({ controls, getters }) => {
     const canvasEventRegistry = createCanvasEventRegistry();
     const canvasEvents = createEventHub(canvasEventRegistry);
@@ -43,14 +43,8 @@ export const canvas =
       },
     };
 
-    /*
-      what sits under the cursor is a function of the cursor position and everything drawn
-      on the canvas, and the canvas moves on its own: animations interpolating, a peer
-      dragging a node, a simulation stepping. enumerating those causes so each one can
-      invalidate a cache is a losing game, and every plugin that pushes to the aggregator
-      is one more chance to forget. so this recomputes off the aggregator that draw just
-      rebuilt, every frame, and only emits when the answer actually changed
-    */
+    // too many things move the canvas on their own to invalidate a cache
+    // reliably, so this recomputes each frame and emits only on a real change
     const refreshGraphUnderCursor = () => {
       const coords = surface.cursorCoordinates.value;
       const elements = aggregator.getCanvasElementsAtCoordinate(coords);
@@ -96,12 +90,8 @@ export const canvas =
       CANVAS_PLUGIN_ID,
     );
 
-    /*
-      graphUnderCursor is captured on mousemove and refreshed once a frame, so a
-      press can carry a point the cursor has already left: right after a camera
-      move the cursor never moved through, or before the next draw lands. the
-      native event knows where it happened, so the hit test is redone against it
-    */
+    // graphUnderCursor can lag a press (camera moved, or no draw since), so the
+    // hit test is redone against the point the native event carries
     const graphMouseEvent = (event: MouseEvent): CanvasGraphMouseEvent => {
       const coords = surface.toWorldCoordinates(event);
       const elements = aggregator.getCanvasElementsAtCoordinate(coords);
@@ -114,7 +104,7 @@ export const canvas =
       };
     };
 
-    emitMouseEvents(surface.domEvents, graphMouseEvent, canvasEvents.emit);
+    emitMouseEvents(surface.events, graphMouseEvent, canvasEvents.emit);
 
     const keyboardEvents = emitKeyboardEvents(canvasEvents.emit);
 

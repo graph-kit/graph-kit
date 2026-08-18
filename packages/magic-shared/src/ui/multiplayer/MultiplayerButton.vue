@@ -101,6 +101,7 @@
 
   const toggleRoster = () => {
     const panel = rosterPanel.value;
+    panel.setHighlight(false);
     if (panel.isShown.value) return panel.hide();
     panel.show();
   };
@@ -134,15 +135,17 @@
       gap="0"
     >
       <MenuItem
-        :icon="rosterToggle.icon"
         @click="toggleRoster"
+        @mouseenter="rosterPanel.setHighlight(true)"
+        @mouseleave="rosterPanel.setHighlight(false)"
+        :icon="rosterToggle.icon"
       >
         {{ rosterToggle.text }}
       </MenuItem>
       <MenuItem
         @click="multiplayer.room.leave"
-        class="hover:bg-red-500 dark:hover:bg-red-500 hover:text-white"
         :icon="departure.icon"
+        class="hover:bg-red-500 dark:hover:bg-red-500 hover:text-white"
       >
         {{ departure.text }}
       </MenuItem>
@@ -166,8 +169,8 @@
           />
           <DropdownItem>
             <Button
-              :disabled="joinBlockedBy"
               @click="joinSession"
+              :disabled="joinBlockedBy"
             >
               {{ joiningSession ? 'Joining…' : 'Join Session' }}
             </Button>
@@ -175,9 +178,9 @@
         </VStack>
       </DropdownSubmenu>
       <MenuItem
+        @click="startSession"
         :icon="mdiAccountMultiplePlus"
         :disabled="startBlockedBy"
-        @click="startSession"
       >
         {{ startingSession ? 'Starting…' : 'Start A Session' }}
       </MenuItem>

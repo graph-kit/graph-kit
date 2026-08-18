@@ -21,3 +21,12 @@ export type CoreEdge = {
    */
   source: string;
 };
+
+/**
+ * where a node sits in world space
+ */
+export type Position = {
+  x: number;
+  y: number;
+  z: number;
+};

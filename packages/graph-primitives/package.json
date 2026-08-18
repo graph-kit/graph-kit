@@ -15,7 +15,9 @@
   "scripts": {
     "build:types": "vue-tsc -b tsconfig.json"
   },
-  "dependencies": {},
+  "dependencies": {
+    "fraction.js": "^5.3.4"
+  },
   "devDependencies": {
     "ts-essentials": "^10.2.0"
   }

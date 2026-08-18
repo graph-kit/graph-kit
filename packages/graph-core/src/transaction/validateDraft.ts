@@ -1,11 +1,12 @@
+import { devWarning } from '@core/utils/debugging';
 import { TransactionDraft } from '@graph/primitives/transactions/types';
 import { CoreEdge } from '@graph/primitives/types';
 
 import { GraphState } from './types.ts';
 
 /**
- * An edit that has not been asked for yet, which is what a consumer holds while deciding
- * whether to ask. Ids are optional because an element only earns one at the action.
+ * An edit a consumer is still deciding whether to ask for. Ids are optional because an
+ * element only earns one at the action.
  */
 export type ProspectiveDraft = {
   addNodes?: { id?: string }[];
@@ -21,9 +22,9 @@ export type DraftRejection = {
 };
 
 export type DraftInspection = {
-  /** true when the draft survives whole, which is what a consumer gates an edit on */
+  /** true when the draft survives whole */
   valid: boolean;
-  /** the draft as the transaction would take it, holding only what survived */
+  /** the draft as the transaction would take it */
   draft: Partial<TransactionDraft>;
   rejections: DraftRejection[];
 };
@@ -36,21 +37,19 @@ export type ValidateDraft = (
 /**
  * What an edge occupies, which at most one edge may hold.
  *
- * TODO multigraphs are not supported yet. Lifting this means every consumer that resolves
- * a path back to a single edge has to answer with a set instead, so it is a change to the
- * edge model rather than a rule to delete here.
+ * TODO multigraphs are not supported yet. Lifting this means every consumer resolving a
+ * path back to a single edge answers with a set instead, so it is a change to the edge
+ * model rather than a rule to delete here.
  */
 const pathOf = (
   { source, target }: Pick<CoreEdge, 'source' | 'target'>,
   directed: boolean,
-) =>
-  // an undirected path is the same path travelled either way, so it is stored one way
-  JSON.stringify(directed ? [source, target] : [source, target].sort());
+) => JSON.stringify(directed ? [source, target] : [source, target].sort());
 
 /**
- * Answers what a transaction would make of a draft without committing anything, so an edit
- * can be refused where the user asked for it rather than thrown out of an action. Pure and
- * stateless: the transaction is what reports, and a consumer asking is not an event.
+ * Answers what a transaction would make of a draft without committing it, so an edit can be
+ * refused where the user asked rather than dropped inside an action. Pure and stateless:
+ * asking is not an event.
  */
 export const createInspectDraft = (
   graph: GraphState,
@@ -62,8 +61,7 @@ export const createInspectDraft = (
     const removedNodeIds = new Set(draft.removeNodeIds ?? []);
     const removedEdgeIds = new Set(draft.removeEdgeIds ?? []);
 
-    // an edge on its way out frees the path it holds, so one transaction can replace an
-    // edge with another along the same path. removing an endpoint takes its edges with it
+    // an edge on its way out frees its path, and removing an endpoint takes its edges
     const survives = (edge: CoreEdge) =>
       !removedEdgeIds.has(edge.id) &&
       !removedNodeIds.has(edge.source) &&
@@ -91,8 +89,8 @@ export const createInspectDraft = (
       addNodes.push(node);
     }
 
-    // an endpoint the same draft is adding counts, since restoring a node together with
-    // its edges arrives as a single draft. one the same draft is removing does not
+    // an endpoint the same draft adds counts, since a node and its edges are restored in
+    // one draft; one it removes does not
     const resolves = (nodeId: string) =>
       nodeIds.has(nodeId) && !removedNodeIds.has(nodeId);
 
@@ -124,8 +122,8 @@ export const createInspectDraft = (
 
     return {
       valid: rejections.length === 0,
-      // every element the transaction path hands over already carries an id, so what
-      // survives an inspection of a real draft is a real draft
+      // elements from the transaction path already carry ids, so what survives a real
+      // draft is a real draft
       draft: { ...draft, addNodes, addEdges } as Partial<TransactionDraft>,
       rejections,
     };
@@ -133,20 +131,18 @@ export const createInspectDraft = (
 };
 
 /**
- * The gate every mutation passes through, so that live state can only ever hold a graph
- * that resolves. Rejected elements are dropped rather than thrown on: a peer deleting the
- * node an inbound edge points at is lawful concurrency, and only the single element actions
- * turn the resulting empty payload into an error, where the caller is local code that asked
- * for one specific thing.
+ * The gate every mutation passes through, so live state only ever holds a graph that
+ * resolves. Rejected elements are dropped, since a peer deleting the node an inbound edge
+ * points at is lawful concurrency; only the single element actions turn the empty payload
+ * into an error.
  *
  * One validator per graph, because it remembers what it has already complained about.
  */
 export const createValidateDraft = (
   inspectDraft: InspectDraft,
 ): ValidateDraft => {
-  // a rejected element is usually still sitting in whatever the caller is reconciling
-  // against, so it gets offered again on every later pass. one line per problem rather
-  // than one per attempt
+  // a rejected element gets offered again on every later pass, so warn once per problem
+  // rather than once per attempt
   const reported = new Set<string>();
 
   return (draft) => {
@@ -156,9 +152,7 @@ export const createValidateDraft = (
     for (const { id, reason } of rejections) {
       if (id !== undefined && reported.has(id)) continue;
       if (id !== undefined) reported.add(id);
-      console.warn(
-        `[graph/core] dropped "${id}" from a transaction: ${reason}`,
-      );
+      devWarning(`[graph/core] dropped "${id}" from a transaction: ${reason}`);
     }
 
     return accepted;

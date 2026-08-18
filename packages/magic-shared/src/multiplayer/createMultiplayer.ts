@@ -268,7 +268,7 @@ export const createMultiplayer = ({
           .timeout(ACK_TIMEOUT_MS)
           .emit('joinRoom', { roomId, displayName: getDisplayName() }, respond),
       ).finally(() => events.emit('onPendingEnded'));
-
+      
       // the only refusal the server has is a room it cannot find, which makes the id
       // dead rather than unlucky. a request that never came back leaves it in the url
       if (!result.joined) {
@@ -276,11 +276,11 @@ export const createMultiplayer = ({
         roomIdUrl.strip();
         return result;
       }
-
       roomIdUrl.write(result.roomId);
       adoptMembership(result);
 
       await adoptRoomProduct({ productId, host });
+
       return result;
     },
 

@@ -56,7 +56,7 @@
             />
           </div>
 
-          <span class="shrink-0 text-white/50">&rarr;</span>
+          <span class="font-bold">&rarr;</span>
 
           <HStack
             v-if="fromNode.successors.length > 0"

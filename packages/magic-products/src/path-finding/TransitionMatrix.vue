@@ -106,6 +106,11 @@
   };
 
   const headerCellClass = computed(() => sizeClasses[density.value.cellSize]);
+  const columnHeaderCellClass = computed(
+    () =>
+      // I don't like this being hard coded, suggestions welcome. I couldn't find a constant anywhere. could forego the feature if thats more practical
+      `${headerCellClass.value} sticky top-0 z-10 bg-gray-200 dark:bg-gray-800`,
+  );
   const emptyCellClass = computed(
     () =>
       `${sizeClasses[density.value.cellSize]} rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
@@ -123,11 +128,11 @@
         <table class="table-fixed border-separate border-spacing-1">
           <thead>
             <tr>
-              <th :class="headerCellClass"></th>
+              <th :class="columnHeaderCellClass"></th>
               <th
                 v-for="toId in displayedNodeIds"
                 :key="toId"
-                :class="headerCellClass"
+                :class="columnHeaderCellClass"
                 @click="focusToState(toId)"
               >
                 <Node

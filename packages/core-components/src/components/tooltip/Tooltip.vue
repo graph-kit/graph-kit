@@ -28,10 +28,13 @@
     label: string | undefined;
     side?: TooltipContentProps['side'];
     class?: HTMLAttributes['class'];
+    /** ms to wait before opening on hover */
+    delay?: number;
   }
 
   const props = withDefaults(defineProps<Props>(), {
     side: 'top',
+    delay: 0,
   });
 
   /** stays true across the trigger, the tooltip, and the gap between them, unlike trigger mouseenter/mouseleave */
@@ -53,7 +56,7 @@
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="0">
+  <TooltipProvider :delay-duration="delay">
     <!-- with no content there is no grace area to close on pointer exit, so leaving the trigger has to -->
     <!-- closing on trigger click would punch a hole in `open` while the pointer is still on the trigger -->
     <!-- focus handed back by something closing, a menu returning it to its trigger or a

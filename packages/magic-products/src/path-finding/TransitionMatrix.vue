@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import Node from '@magic/shared/Node';
+  import Tooltip from '@magic/shared/Tooltip';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-product';
@@ -53,6 +54,9 @@
       })),
     })),
   );
+
+  const cellLabel = (fromId: string, toId: string) =>
+    `${labelOf(fromId)}→${labelOf(toId)}`;
 
   const cellText = (fromId: string, toId: string) => {
     if (!hasEdge(fromId, toId)) return '';
@@ -140,15 +144,22 @@
                   :edge-id="cell.edgeId"
                   v-slot="{ color, cursor }"
                 >
-                  <td
-                    :class="dataCellClass"
-                    :style="{ backgroundColor: color, cursor }"
-                    @click="focusEdge(row.id, cell.id)"
+                  <Tooltip
+                    :label="cellLabel(row.id, cell.id)"
+                    :delay="400"
                   >
-                    <span class="block truncate">{{
-                      cellText(row.id, cell.id)
-                    }}</span>
-                  </td>
+                    <template #trigger>
+                      <td
+                        :class="dataCellClass"
+                        :style="{ backgroundColor: color, cursor }"
+                        @click="focusEdge(row.id, cell.id)"
+                      >
+                        <span class="block truncate">{{
+                          cellText(row.id, cell.id)
+                        }}</span>
+                      </td>
+                    </template>
+                  </Tooltip>
                 </TransitionMatrixCell>
                 <td
                   v-else

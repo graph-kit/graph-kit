@@ -88,6 +88,7 @@ export const useMagicProduct = (
       id: 'product/simulation-buttons',
       component: SimulationButtonGroup,
       position: 'bottom-middle',
+      priority: 999,
     });
   }
 

@@ -1,4 +1,6 @@
 import { debounce } from '@core/utils/debounce';
+import { devWarning } from '@core/utils/debugging';
+import { readLocalStorage, writeLocalStorage } from '@core/utils/localStorage';
 
 import { ProductFlags } from '../flags.ts';
 import { MagicProductHost, TransitField } from '../types.ts';
@@ -24,15 +26,22 @@ const useLocalStorageSync = (
   const key = localStorageKey(productId);
 
   const invalidate = debounce(() => {
-    window?.localStorage.setItem(key, JSON.stringify(transit.encode()));
+    writeLocalStorage(key, JSON.stringify(transit.encode()));
   }, 500);
 
   // no longer mounts itself: restoring now has to lose to a room, and only the
   // harness knows whether one answered. see the restore order in useMagicProduct
   const sync = () => {
-    const data = window?.localStorage.getItem(key);
+    const data = readLocalStorage(key);
     if (!data) return;
-    transit.decode(JSON.parse(data));
+    try {
+      transit.decode(JSON.parse(data));
+    } catch (error) {
+      devWarning(
+        `[magic] discarding unreadable saved state for ${productId}`,
+        error,
+      );
+    }
   };
 
   return { invalidate, sync };

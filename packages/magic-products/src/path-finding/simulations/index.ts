@@ -1,4 +1,4 @@
-import { useProvidedMagicGraph } from '@magic/shared/graph-product';
+import { Graph } from '@magic/shared/graph';
 
 import { ref } from 'vue';
 
@@ -9,8 +9,7 @@ import { dijkstras } from './single-source/dijkstras.ts';
 import { singleSourceSimulationDefinition } from './single-source/effects.ts';
 import type { SourceNodeId } from './single-source/effects.ts';
 
-export const usePathFindingSimulations = () => {
-  const graph = useProvidedMagicGraph();
+export const usePathFindingSimulations = (graph: Graph) => {
   const sourceNodeId: SourceNodeId = ref();
 
   /*
@@ -21,9 +20,18 @@ export const usePathFindingSimulations = () => {
   const singleSource = { graph, sourceNodeId };
 
   return {
-    dijkstras: singleSourceSimulationDefinition(dijkstras, singleSource),
-    bellmanFord: singleSourceSimulationDefinition(bellmanFord, singleSource),
-    floydWarshall: allPairsSimulationDefinition(floydWarshall, { graph }),
+    dijkstras: {
+      name: "Dijkstra's",
+      ...singleSourceSimulationDefinition(dijkstras, singleSource),
+    },
+    bellmanFord: {
+      name: 'Bellman-Ford',
+      ...singleSourceSimulationDefinition(bellmanFord, singleSource),
+    },
+    floydWarshall: {
+      name: 'Floyd-Warshall',
+      ...allPairsSimulationDefinition(floydWarshall, { graph }),
+    },
     sourceNodeId,
   };
 };

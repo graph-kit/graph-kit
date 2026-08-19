@@ -11,9 +11,7 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   const node = useFocusedNode(graph);
 
   watch(node, (newFocusedNode) => {
-    startNodeId.value = undefined;
-    if (!newFocusedNode) return;
-    startNodeId.value = newFocusedNode.id;
+    startNodeId.value = newFocusedNode?.id;
   });
 
   const disabled = () =>

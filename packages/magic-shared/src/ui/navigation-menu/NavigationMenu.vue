@@ -27,9 +27,7 @@
   <Dropdown>
     <template #trigger>
       <Well class="p-0">
-        <Button
-          class="bg-transparent dark:bg-transparent text-xl p-2 px-4 text-magic dark:text-magic"
-        >
+        <Button class="px-4 text-xl text-magic dark:text-magic">
           {{ activeProduct.name }}
         </Button>
       </Well>

@@ -5,10 +5,12 @@ import { useLensState } from '../lens/useLensState.ts';
 import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
 import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
+import SimulationButtonGroup from '../simulation/start-buttons/ButtonGroup.vue';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
 import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
 import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
+import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
@@ -65,12 +67,29 @@ export const useMagicProduct = (
     debug,
     annotations,
     lensChips: options.lensChips,
+    simulationButtons: options.simulationButtons,
     surface: host.surface,
     transit: host.transit,
     history,
     localStorage,
     multiplayer,
   };
+
+  if (magic.lensChips) {
+    magic.componentSlots.add({
+      id: 'product/lens-chips',
+      component: LensChipGroup,
+      position: 'top-middle',
+    });
+  }
+
+  if (magic.simulationButtons) {
+    magic.componentSlots.add({
+      id: 'product/simulation-buttons',
+      component: SimulationButtonGroup,
+      position: 'bottom-middle',
+    });
+  }
 
   onMounted(() => {
     magic.localStorage.sync();

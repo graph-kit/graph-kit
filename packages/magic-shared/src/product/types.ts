@@ -10,6 +10,7 @@ import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.
 import { LensControls } from '../lens/useLensState.ts';
 import { ProductMultiplayer } from '../multiplayer/types.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
+import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
@@ -102,6 +103,7 @@ export type MagicProductOptions = {
   /** what the product asks for, see {@link ProductFlags} */
   flags?: ProductFlagOptions;
   lensChips?: LensChipDefinition[];
+  simulationButtons?: SimulationButtonDefinition[];
 };
 
 /** the harness itself: the chrome and controls wrapped around a hosted product */
@@ -119,6 +121,7 @@ export type Magic = {
   history?: HistoryField;
   annotations?: AnnotationsUIControls;
   lensChips?: LensChipDefinition[];
+  simulationButtons?: SimulationButtonDefinition[];
   localStorage: LocalStorageControls;
   /**
    * The room connection, or undefined if

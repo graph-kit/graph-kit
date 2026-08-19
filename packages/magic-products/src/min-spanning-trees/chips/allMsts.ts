@@ -106,7 +106,7 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
   };
 
   return {
-    title: () => {
+    name: () => {
       return `Unique MSTs: ${msts.value.length}`;
     },
     tooltipLabel: () => {

@@ -14,6 +14,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   const graph = useGraph(options);
 
   const lensChips = options.lensChips?.(graph);
+  const simulationButtons = options.simulationButtons?.(graph);
 
   const draggedNodes = trackDraggedNodes(graph);
 
@@ -39,6 +40,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     productId: options.productId,
     flags: options.flags,
     lensChips,
+    simulationButtons,
   });
 
   graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
@@ -54,14 +56,6 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     'onNodePositionsCommitted',
     magic.localStorage.invalidate,
   );
-
-  if (magic.lensChips) {
-    magic.componentSlots.add({
-      id: 'product/lens-chips',
-      component: LensChipGroup,
-      position: 'top-middle',
-    });
-  }
 
   useGraphProductShortcuts(magic, graph);
 

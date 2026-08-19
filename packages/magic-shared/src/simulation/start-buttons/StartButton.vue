@@ -6,7 +6,10 @@
   import { useProvidedMagic } from '../../product/context.ts';
   import { SimulationDefinition } from '../types.ts';
 
-  defineProps<{ definition: SimulationDefinition<any> | undefined }>();
+  defineProps<{
+    definition: SimulationDefinition<any> | undefined;
+    disabled: string | false;
+  }>();
 
   const magic = useProvidedMagic();
 </script>
@@ -14,6 +17,7 @@
 <template>
   <Button
     v-if="definition"
+    :disabled="disabled"
     @click="magic.simulation.start(definition)"
   >
     <template #start>

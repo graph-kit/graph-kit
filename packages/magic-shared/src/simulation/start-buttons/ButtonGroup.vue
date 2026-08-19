@@ -22,12 +22,18 @@
     <HStack class="flex-wrap">
       <template
         v-for="(
-          { disabled = () => false, definition, render = StartButton }, index
+          { disabled = () => false as const, definition, render }, index
         ) in buttons"
         :key="index"
       >
         <component
+          v-if="render"
           :is="render"
+          :definition="definition"
+          :disabled="disabled()"
+        />
+        <StartButton
+          v-else
           :definition="definition"
           :disabled="disabled()"
         />

@@ -19,8 +19,5 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   const disabled = () =>
     !startNodeId.value && 'Click a node to set a starting point';
 
-  return [
-    { definition: bfs, disabled },
-    { definition: dfs, disabled },
-  ];
+  return [{ disabled }, { definition: dfs, disabled }];
 };

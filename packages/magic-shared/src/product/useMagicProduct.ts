@@ -80,6 +80,8 @@ export const useMagicProduct = (
       id: 'product/lens-chips',
       component: LensChipGroup,
       position: 'top-middle',
+      // should always be stuck to the top
+      priority: -Infinity,
     });
   }
 
@@ -88,7 +90,8 @@ export const useMagicProduct = (
       id: 'product/simulation-buttons',
       component: SimulationButtonGroup,
       position: 'bottom-middle',
-      priority: 999,
+      // should always be stuck to the bottom
+      priority: Infinity,
     });
   }
 

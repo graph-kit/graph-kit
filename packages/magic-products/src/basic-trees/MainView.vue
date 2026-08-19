@@ -3,8 +3,6 @@
   import { MagicProduct } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities';
 
-  import { provide } from 'vue';
-
   import InsertNode from './InsertNode.vue';
   import RemoveNode from './RemoveNode.vue';
   import { useTreeSimulation } from './simulations/useTreeSimulation.ts';
@@ -21,8 +19,12 @@
     },
     simulationButtons: (graph) => {
       const node = useFocusedNode(graph);
-      const disabled = () => !node.value && 'No target';
-      return [{ disabled, render: RemoveNode }, { render: InsertNode }, {}];
+      const disabled = () => {
+        if (graph.nodes.value.length === 0) return 'No nodes in tree';
+        if (!node.value) return 'Click a node to remove from tree';
+        return false;
+      };
+      return [{ disabled, render: RemoveNode }, { render: InsertNode }];
     },
   });
 

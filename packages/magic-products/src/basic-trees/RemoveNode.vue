@@ -31,6 +31,6 @@
     <template #start>
       <Icon :path="mdiPlay" />
     </template>
-    Remove Node
+    Remove {{ node?.label ?? 'Node' }}
   </Button>
 </template>

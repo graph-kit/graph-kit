@@ -36,13 +36,13 @@
 </script>
 
 <template>
-  <div
+  <button
     @click="graph.focus.set([id])"
     class="rounded-full cursor-pointer"
     :style="nodeStyle"
   >
     <span class="label">{{ styles.text.content }}</span>
-  </div>
+  </button>
 </template>
 
 <style scoped>

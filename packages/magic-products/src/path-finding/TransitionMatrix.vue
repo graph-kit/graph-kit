@@ -85,18 +85,21 @@
 
   const density = computed(() => {
     const count = graph.nodes.value.length;
-    if (count > 10) return { cellSize: 8, nodeScale: 0.5 };
+    if (count > 12) return { cellSize: 6, nodeScale: 0.325 };
+    if (count > 7) return { cellSize: 8, nodeScale: 0.5 };
     if (count > 5) return { cellSize: 10, nodeScale: 0.625 };
     return { cellSize: 12, nodeScale: 0.75 };
   });
 
   const sizeClasses: Record<number, string> = {
-    8: 'size-8',
+    6: 'size-6 text-xs',
+    8: 'size-8 text-sm',
     10: 'size-10',
     12: 'size-12',
   };
   const dataCellSizeClasses: Record<number, string> = {
-    8: 'size-8 max-w-8',
+    6: 'size-6 max-w-6 text-xs',
+    8: 'size-8 max-w-8 text-sm',
     10: 'size-10 max-w-10',
     12: 'size-12 max-w-12',
   };

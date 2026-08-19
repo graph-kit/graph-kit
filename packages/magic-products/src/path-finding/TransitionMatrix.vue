@@ -157,7 +157,7 @@
                 <TransitionMatrixCell
                   v-if="cell.edgeId"
                   :edge-id="cell.edgeId"
-                  v-slot="{ color, cursor }"
+                  v-slot="{ color, cursor, setHovered }"
                 >
                   <Tooltip
                     :label="cellLabel(row.id, cell.id)"
@@ -168,6 +168,8 @@
                         :class="dataCellClass"
                         :style="{ backgroundColor: color, cursor }"
                         @click="focusEdge(row.id, cell.id)"
+                        @mouseenter="setHovered(true)"
+                        @mouseleave="setHovered(false)"
                       >
                         <span class="block truncate">{{
                           cellText(row.id, cell.id)

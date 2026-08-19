@@ -24,16 +24,16 @@
 
 <template>
   <Button
-    class="grow p-3 hover:bg-red-500 hover:text-white active:bg-red-500 dark:bg-red-500 bg-red-500 dark:hover:bg-red-500 dark:active:bg-red-500"
+    class="grow text-white hover:bg-red-500 hover:text-white active:bg-red-500 dark:bg-red-500 bg-red-500 dark:hover:bg-red-500 dark:active:bg-red-500"
     :path="mdiTrashCan"
     :size="28"
-    label="Remove All Annotations"
+    label="Erase All Drawings"
     :disabled="disabledReason"
     @click="controls.clear()"
   >
     <template #start>
       <Icon :path="mdiDelete" />
     </template>
-    Erase All</Button
+    Erase All Drawings</Button
   >
 </template>

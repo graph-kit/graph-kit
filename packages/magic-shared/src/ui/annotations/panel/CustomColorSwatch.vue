@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { COLORS } from '@core/annotations/index';
   import { cn } from '@core/components/cn';
+  import { Color, contrastingTextColor } from '@core/utils/colors';
   import { mdiEyedropperVariant } from '@mdi/js';
 
   import { computed } from 'vue';
@@ -8,23 +8,20 @@
   import Icon from '../../../components/icon/Icon.vue';
   import Tooltip from '../../../components/tooltip/Tooltip.vue';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
-  import { colorName } from './colorName.ts';
+
+  const props = defineProps<{ defaultHexes: readonly Color[] }>();
 
   const controls = useAnnotationControls();
 
-  // the palette swatches carry their own selection, so this one only claims the
-  // ring once the color in hand came from the picker
   const isSelected = computed(() =>
-    COLORS.every((color) => color !== controls.color.value),
+    props.defaultHexes.every((color) => color !== controls.color.value),
   );
 
-  const label = computed(() =>
-    isSelected.value ? colorName(controls.color.value) : 'Custom Color',
-  );
+  const iconColor = computed(() => contrastingTextColor(controls.color.value));
 
   const classes = computed(() =>
     cn(
-      'size-10 shrink-0 cursor-pointer appearance-none rounded-xl border-2 border-dashed border-gray-500 bg-transparent p-0 transition-transform hover:scale-110 dark:border-gray-400',
+      'size-10 shrink-0 cursor-pointer appearance-none rounded-xl bg-transparent p-0 transition-transform hover:scale-105 dark:border-gray-400',
       isSelected.value &&
         'outline-3 outline-offset-2 outline-gray-900 dark:outline-white',
     ),
@@ -32,20 +29,19 @@
 </script>
 
 <template>
-  <Tooltip :label="label">
+  <Tooltip label="Custom">
     <template #trigger>
       <div class="relative size-10 shrink-0">
         <input
           type="color"
-          :aria-label="label"
+          aria-label="Custom"
           :class="classes"
           :value="controls.color.value"
           @input="controls.setColor(($event.target as HTMLInputElement).value)"
         />
-        <!-- difference blending is what keeps the dropper legible against a swatch
-             wearing any color the user cares to pick -->
         <Icon
-          class="pointer-events-none absolute inset-0 m-auto text-white mix-blend-difference"
+          class="pointer-events-none absolute inset-0 m-auto"
+          :style="{ color: iconColor }"
           :path="mdiEyedropperVariant"
           :size="20"
         />

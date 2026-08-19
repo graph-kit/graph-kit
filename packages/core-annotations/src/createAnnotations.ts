@@ -12,8 +12,8 @@ import {
   ANNOTATION_CURSOR_PRIORITY,
   ANNOTATION_IN_PROGRESS_PRIORITY,
   ANNOTATION_PRIORITY,
-  BRUSH_WEIGHTS,
-  COLORS,
+  DEFAULT_BRUSH_WEIGHT,
+  DEFAULT_COLOR,
   ERASER_BRUSH_RADIUS,
   ERASER_CURSOR_ID,
   ERASER_OUTLINE_WIDTH,
@@ -46,8 +46,8 @@ export const createAnnotations = ({
 
   const isActive = signal(false);
   const mode = signal<AnnotationMode>('drawing');
-  const color = signal<Color>(COLORS[0]);
-  const brushWeight = signal(BRUSH_WEIGHTS[1]);
+  const color = signal<Color>(DEFAULT_COLOR);
+  const brushWeight = signal(DEFAULT_BRUSH_WEIGHT);
 
   // reactiveMap rather than Map: committed annotations are read through `annotations`,
   // which a plugin getter or a bridged ref sits on top of. insertion order is paint order

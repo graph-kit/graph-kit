@@ -7,19 +7,16 @@
 
   import Tooltip from '../../../components/tooltip/Tooltip.vue';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
-  import { colorName } from './colorName.ts';
 
-  const props = defineProps<{ color: Color }>();
+  const props = defineProps<{ name: string; hex: Color }>();
 
   const controls = useAnnotationControls();
 
-  const label = computed(() => colorName(props.color));
-
-  const isSelected = computed(() => controls.color.value === props.color);
+  const isSelected = computed(() => controls.color.value === props.hex);
 
   const classes = computed(() =>
     cn(
-      'size-10 shrink-0 cursor-pointer rounded-full border-2 border-black/10 transition-transform hover:scale-110 dark:border-white/20',
+      'size-10 shrink-0 cursor-pointer rounded-xl transition-transform hover:scale-105 dark:border-white/20',
       isSelected.value &&
         'outline-3 outline-offset-2 outline-gray-900 dark:outline-white',
     ),
@@ -27,15 +24,15 @@
 </script>
 
 <template>
-  <Tooltip :label="label">
+  <Tooltip :label="name">
     <template #trigger>
       <button
         type="button"
-        :aria-label="label"
+        :aria-label="name"
         :aria-pressed="isSelected"
         :class="classes"
-        :style="{ backgroundColor: color }"
-        @click="controls.setColor(color)"
+        :style="{ backgroundColor: hex }"
+        @click="controls.setColor(hex)"
         @mousedown="preventFocusSteal"
       />
     </template>

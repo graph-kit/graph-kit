@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import ToolTip from '@core/components/Tooltip';
   import HStack from '@magic/shared/HStack';
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
@@ -35,6 +36,12 @@
   const focusNode = (id: string) => graph.focus.set([id]);
   const focusEdge = (edgeId: string, nodeId: string) =>
     graph.focus.set([edgeId, nodeId]);
+
+  const edgeWeightLabel = (fromId: string, edgeId: string, toId: string) =>
+    `${labelOf(fromId)}→${labelOf(toId)}: ${graph.getEdge(edgeId).weight.toFraction()}`;
+
+  const noSuccessorsLabel = (fromId: string) =>
+    `${labelOf(fromId)} doesn't point to any nodes`;
 </script>
 
 <template>
@@ -67,13 +74,33 @@
               :key="successor.edgeId"
               :edge-id="successor.edgeId"
             >
-              <Node
-                @click="focusEdge(successor.edgeId, successor.targetId)"
-                :id="successor.targetId"
-                :scale="0.75"
-              />
+              <ToolTip
+                :label="
+                  edgeWeightLabel(
+                    fromNode.id,
+                    successor.edgeId,
+                    successor.targetId,
+                  )
+                "
+              >
+                <template #trigger>
+                  <Node
+                    @click="focusEdge(successor.edgeId, successor.targetId)"
+                    :id="successor.targetId"
+                    :scale="0.75"
+                  />
+                </template>
+              </ToolTip>
             </AdjacencyListCell>
           </HStack>
+          <ToolTip
+            v-else
+            :label="noSuccessorsLabel(fromNode.id)"
+          >
+            <template #trigger>
+              <span class="font-bold text-lg">None</span>
+            </template>
+          </ToolTip>
         </HStack>
       </VStack>
     </div>

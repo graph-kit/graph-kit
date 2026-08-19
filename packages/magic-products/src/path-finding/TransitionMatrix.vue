@@ -91,6 +91,7 @@
     return { cellSize: 12, nodeScale: 0.75 };
   });
 
+  // TODO: handle overflow with component: https://github.com/graph-kit/graph-kit/issues/909
   const sizeClasses: Record<number, string> = {
     6: 'size-6 text-xs',
     8: 'size-8 text-sm',

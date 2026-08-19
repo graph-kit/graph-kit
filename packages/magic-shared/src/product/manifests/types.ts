@@ -21,6 +21,8 @@ export type MagicProductNavigation = {
 type MagicProductMeta = {
   title: string;
   description: string;
+  /** link preview artwork, absent for products that ship no thumbnail */
+  ogImage?: string;
 };
 
 /**

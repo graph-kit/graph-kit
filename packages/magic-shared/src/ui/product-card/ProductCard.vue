@@ -4,15 +4,15 @@
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import { useProvidedMagic } from '../../product/context.ts';
+  import { productThumbnail } from '../../product/manifests/thumbnail.ts';
   import { MagicProductCard } from '../../product/manifests/types.ts';
 
   const props = defineProps<{ productId: string; card: MagicProductCard }>();
 
   const magic = useProvidedMagic();
 
-  const thumbnail = computed(
-    () =>
-      `/product-thumbnails/${magic.appearance.state.value}/${props.productId}.png`,
+  const thumbnail = computed(() =>
+    productThumbnail(props.productId, magic.appearance.state.value),
   );
 </script>
 

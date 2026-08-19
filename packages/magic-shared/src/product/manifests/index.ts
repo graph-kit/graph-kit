@@ -1,3 +1,4 @@
+import { productThumbnail } from './thumbnail.ts';
 import { MagicProductManifest } from './types.ts';
 
 /**
@@ -23,6 +24,7 @@ export const manifests = {
       title: 'Set Theory | Magic Graphs',
       description:
         'Draw sets on an infinite canvas, write queries like A union B, and watch the regions they select highlight as you type.',
+      ogImage: productThumbnail('sets', 'dark'),
     },
   },
   'markov-chains': {
@@ -42,6 +44,7 @@ export const manifests = {
       title: 'Markov Chains | Magic Graphs',
       description:
         'Build a Markov chain state by state, set the transition probabilities between them and step through the walk to see where it settles.',
+      ogImage: productThumbnail('markov-chains', 'dark'),
     },
   },
   'avl-trees': {
@@ -63,6 +66,7 @@ export const manifests = {
       title: 'AVL Trees | Magic Graphs',
       description:
         'Insert and remove values in an AVL tree and step through every rotation the tree performs to keep itself balanced.',
+      ogImage: productThumbnail('avl-trees', 'dark'),
     },
   },
   traversals: {
@@ -82,6 +86,7 @@ export const manifests = {
       title: 'Traversals | Magic Graphs',
       description:
         'Run breadth first and depth first search on your own graph and watch the queue, the stack and the visited set change at every step.',
+      ogImage: productThumbnail('traversals', 'dark'),
     },
   },
   'path-finding': {
@@ -101,6 +106,7 @@ export const manifests = {
       title: 'Path Finding | Magic Graphs',
       description:
         "Run Dijkstra's, Bellman Ford and Floyd Warshall on a weighted graph you build and watch the shortest paths take shape step by step.",
+      ogImage: productThumbnail('path-finding', 'dark'),
     },
   },
   'min-spanning-trees': {
@@ -120,6 +126,7 @@ export const manifests = {
       title: 'Minimum Spanning Trees | Magic Graphs',
       description:
         "Run Kruskal's and Prim's on a weighted graph you build and see each one grow a minimum spanning tree edge by edge.",
+      ogImage: productThumbnail('min-spanning-trees', 'dark'),
     },
   },
   dev: {
@@ -134,6 +141,7 @@ export const manifests = {
       title: 'Dev Playground | Magic Graphs',
       description:
         'Internal playground for exercising graph features outside of a product experience.',
+      ogImage: productThumbnail('dev', 'dark'),
     },
   },
   welcome: {

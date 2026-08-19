@@ -92,11 +92,12 @@
 
   const headerCellClass = computed(() => `size-${density.value.cellSize}`);
   const emptyCellClass = computed(
-    () => `size-${density.value.cellSize} rounded-sm bg-gray-500/20`,
+    () =>
+      `size-${density.value.cellSize} rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
   );
   const dataCellClass = computed(
     () =>
-      `size-${density.value.cellSize} max-w-12 overflow-hidden rounded-sm px-1 text-center font-bold text-white tabular-nums`,
+      `size-${density.value.cellSize} max-w-12 overflow-hidden rounded-sm px-1.5 text-center font-bold text-white tabular-nums`,
   );
 </script>
 
@@ -164,7 +165,9 @@
                 <td
                   v-else
                   :class="emptyCellClass"
-                ></td>
+                >
+                  0
+                </td>
               </template>
             </tr>
           </tbody>

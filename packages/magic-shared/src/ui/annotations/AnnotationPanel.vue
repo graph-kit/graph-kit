@@ -1,51 +1,20 @@
 <script setup lang="ts">
-  import { ANNOTATION_MODES, AnnotationMode } from '@core/annotations/index';
-  import { mdiEraser, mdiLaserPointer, mdiPencil, mdiTrashCan } from '@mdi/js';
-
-  import IconButton from '../../components/icon-button/IconButton.vue';
-  import HStack from '../../components/layout/HStack.vue';
+  import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import ToggleIconButton from '../../components/toggle-icon-button/ToggleIconButton.vue';
-  import { useAnnotationControls } from './useAnnotationControls.ts';
-
-  const controls = useAnnotationControls();
-
-  const modeToIcon: Record<AnnotationMode, string> = {
-    drawing: mdiPencil,
-    erasing: mdiEraser,
-    laser: mdiLaserPointer,
-  };
-
-  const modeToLabel: Record<AnnotationMode, string> = {
-    drawing: 'Draw',
-    erasing: 'Erase',
-    laser: 'Laser Pointer',
-  };
+  import BrushWeightPicker from './panel/BrushWeightPicker.vue';
+  import ColorPicker from './panel/ColorPicker.vue';
+  import PanelActions from './panel/PanelActions.vue';
+  import ToolPicker from './panel/ToolPicker.vue';
 </script>
 
 <template>
-  <Well class="">
-    <HStack>
-      <Well
-        v-for="mode of ANNOTATION_MODES"
-        class="p-0"
-      >
-        <ToggleIconButton
-          class="bg-transparent dark:bg-transparent"
-          :path="modeToIcon[mode]"
-          :model-value="controls.mode.value === mode"
-          @click="controls.setMode(mode)"
-          :label="modeToLabel[mode]"
-        />
-      </Well>
-      <Well class="p-0">
-        <IconButton
-          class="bg-transparent dark:bg-transparent"
-          :path="mdiTrashCan"
-          @click="controls.clear()"
-          label="Remove All Annotations"
-        />
-      </Well>
-    </HStack>
+  <Well class="w-72 p-4">
+    <VStack :gap="4">
+      <ToolPicker />
+      <ColorPicker />
+      <BrushWeightPicker />
+      <div class="h-px w-full rounded-full bg-black/10 dark:bg-white/15"></div>
+      <PanelActions />
+    </VStack>
   </Well>
 </template>

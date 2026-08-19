@@ -51,6 +51,8 @@ export type PresenceEntry = {
    * gesture can carry a whole selection, and empty whenever nothing is being moved
    */
   draggedElements: DraggedElement[];
+  /** the annotation tools are taking input, which is not the same as a stroke being in flight */
+  isAnnotating: boolean;
 };
 
 export type RoomData = {

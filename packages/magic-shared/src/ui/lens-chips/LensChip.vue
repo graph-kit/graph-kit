@@ -31,7 +31,7 @@
         class="gap-2"
       >
         <span>
-          {{ getValue(title) }}
+          {{ getValue(name) }}
         </span>
         <Icon
           v-if="getValue(tooltipLabel)"

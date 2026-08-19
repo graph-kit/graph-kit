@@ -1,23 +1,18 @@
 import { nullThrows } from '@core/utils/assert';
-import { useProvidedMagicGraph } from '@magic/shared/graph-product';
+import { Graph } from '@magic/shared/graph';
 import { SimulationDefinition } from '@magic/shared/simulation';
 
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 
 import { graphToTree } from '../graph-conversion/graphToTree.ts';
 import { AVLTree } from '../tree/AVLTree.ts';
 import { createSync } from './createSync.ts';
 import { explainer } from './explainer.ts';
 import { AVLFrame, AVLMode } from './frames.ts';
-import {
-  SuggestedNodesControls,
-  useSuggestedNodes,
-} from './useSuggestedNodes.ts';
 
-type Controls = {
+export type TreeSimulation = {
   definition: SimulationDefinition<AVLFrame>;
-  controls: AVLControls;
-  suggested: SuggestedNodesControls;
+  controls: TreeControls;
 };
 
 const useAVLControls = () => {
@@ -26,11 +21,9 @@ const useAVLControls = () => {
   return { target, mode };
 };
 
-export type AVLControls = ReturnType<typeof useAVLControls>;
+export type TreeControls = ReturnType<typeof useAVLControls>;
 
-export const useAVLSimulationDefinition = (): Controls => {
-  const graph = useProvidedMagicGraph();
-
+export const useTreeSimulation = (graph: Graph): TreeSimulation => {
   const avlControls = useAVLControls();
 
   const tree = new AVLTree();
@@ -38,6 +31,7 @@ export const useAVLSimulationDefinition = (): Controls => {
   const sync = createSync(graph);
 
   const definition: SimulationDefinition<AVLFrame> = {
+    name: 'AVL Tree',
     collectFrames: (collector) => {
       tree.attachFrameCollector(collector);
 
@@ -55,23 +49,16 @@ export const useAVLSimulationDefinition = (): Controls => {
     },
     setup: (context) => {
       const { currentFrame, frames } = context;
-      suggested.remove();
       return {
         explainer,
         onSetupCompleted: () => sync(currentFrame.value),
         onFrameTransition: () => sync(currentFrame.value),
         onBeforeTeardown: () =>
           sync(nullThrows(frames.value.at(-1), 'last frame undefined')),
-        onTeardownCompleted: () => {
-          suggested.add();
-        },
       };
     },
     recomputeFramesOnStructureChange: false,
   };
-
-  const suggested = useSuggestedNodes(graph, definition, avlControls);
-  onMounted(suggested.add);
 
   graph.events.transit.subscribe('onDecoded', () => {
     tree.root = graphToTree(graph);
@@ -80,6 +67,5 @@ export const useAVLSimulationDefinition = (): Controls => {
   return {
     definition,
     controls: avlControls,
-    suggested,
   };
 };

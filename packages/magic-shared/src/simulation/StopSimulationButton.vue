@@ -6,6 +6,7 @@
   import { useProvidedMagic } from '../product/context.ts';
 
   const magic = useProvidedMagic();
+
   const { useShortcut } = magic.shortcuts;
   useShortcut({
     key: 'escape',
@@ -17,7 +18,7 @@
   <Button
     v-if="magic.simulation.current.value"
     @click="magic.simulation.stop()"
-    class="bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 text-white"
+    class="bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 dark:active:bg-red-600 active:bg-red-600 text-white"
   >
     <template #start>
       <Icon :path="mdiStop" />

@@ -6,6 +6,7 @@
     "rewriteRelativeImportExtensions": false
   },
   "references": [
+    { "path": "../core-annotations" },
     { "path": "../core-components" },
     { "path": "../core-utils" },
     { "path": "../graph-core" },

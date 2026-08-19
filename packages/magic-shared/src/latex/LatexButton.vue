@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  import Button from '@magic/shared/Button';
-
+  import Button from '../components/button/Button.vue';
   import LatexText from './LatexText.vue';
 
   withDefaults(

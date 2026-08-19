@@ -12,6 +12,7 @@
     { "path": "../graph-plugins-shared" },
     { "path": "../graph-primitives" },
     { "path": "../graph-render-functions" },
+    { "path": "../core-annotations" },
     { "path": "../core-themes" },
     { "path": "../graph-computed-tokens" },
     { "path": "../canvas-primitives" },

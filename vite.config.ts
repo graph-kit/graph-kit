@@ -13,6 +13,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@core/annotations': r('packages/core-annotations/src'),
       '@core/themes': r('packages/core-themes/src'),
       '@core/utils': r('packages/core-utils/src'),
       '@canvas/primitives': r('packages/canvas-primitives/src'),

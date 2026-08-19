@@ -1,11 +1,11 @@
 import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { CoreEdge } from '@graph/primitives/types';
-import { GNode } from '@magic/shared/graph';
-import { MagicGraph } from '@magic/shared/graph-product';
+import { GNode, Graph } from '@magic/shared/graph';
 import { Lens } from '@magic/shared/lens';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import type {
+  SetupContext,
   SimulationDefinition,
   SimulationEffects,
 } from '@magic/shared/simulation/types';
@@ -63,13 +63,13 @@ const edgeRoles = {
 export type StartNodeId = Ref<GNode['id'] | undefined>;
 
 export type PrimsSimulationOptions = {
-  graph: MagicGraph;
+  graph: Graph;
   startNodeId: StartNodeId;
 };
 
 // shared by both algorithms: an edge ruled out (closes a loop) fades instead
 // of disappearing, so it stays visible as "seen and rejected"
-const createExcludedEdgeThemer = (graph: MagicGraph) => {
+const createExcludedEdgeThemer = (graph: Graph) => {
   const excludedIds = new Set<string>();
   const fadeExcluded = (edge: CoreEdge, resolveUnderneath: () => Color) => {
     if (!excludedIds.has(edge.id)) return;
@@ -98,7 +98,10 @@ const createExcludedEdgeThemer = (graph: MagicGraph) => {
   };
 };
 
-const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
+const primsEffects = (
+  graph: Graph,
+  context: SetupContext<PrimsFrame>,
+): SimulationEffects<PrimsFrame> => {
   const frontier = createNodeIdThemer(graph, nodeRoles.frontier);
   const settled = createNodeIdThemer(graph, nodeRoles.settled);
   const anchor = createNodeIdThemer(graph, nodeRoles.anchor);
@@ -173,7 +176,7 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     explainer: primsExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    onViolation: graph.magic.simulation.stop,
+    onViolation: context.stopSimulation,
   };
 };
 
@@ -181,6 +184,7 @@ export const primsSimulationDefinition = (
   prims: PrimsFunction,
   options: PrimsSimulationOptions,
 ): SimulationDefinition<PrimsFrame> => ({
+  name: "Prim's",
   guard: new SimulationGuardBuilder(options.graph)
     .custom(() => {
       const startNodeInNodes = options.graph.nodes.value.some(
@@ -202,7 +206,7 @@ export const primsSimulationDefinition = (
       nullThrows(options.startNodeId.value, 'start node id not defined'),
     )(collector);
   },
-  setup: () => primsEffects(options.graph),
+  setup: (context) => primsEffects(options.graph, context),
 });
 
 // active = the endpoints of the edge currently under consideration
@@ -224,11 +228,12 @@ const kruskalsEdgeRoles = {
 } as const satisfies Record<KruskalsEdgeConcept, EdgeRole>;
 
 export type KruskalsSimulationOptions = {
-  graph: MagicGraph;
+  graph: Graph;
 };
 
 const kruskalsEffects = (
-  graph: MagicGraph,
+  graph: Graph,
+  context: SetupContext<KruskalsFrame>,
 ): SimulationEffects<KruskalsFrame> => {
   const active = createNodeIdThemer(graph, kruskalsNodeRoles.active);
   const settled = createNodeIdThemer(graph, kruskalsNodeRoles.settled);
@@ -287,7 +292,7 @@ const kruskalsEffects = (
     explainer: kruskalsExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    onViolation: graph.magic.simulation.stop,
+    onViolation: context.stopSimulation,
   };
 };
 
@@ -295,6 +300,7 @@ export const kruskalsSimulationDefinition = (
   kruskals: KruskalsFunction,
   options: KruskalsSimulationOptions,
 ): SimulationDefinition<KruskalsFrame> => ({
+  name: "Kruskal's",
   guard: new SimulationGuardBuilder(options.graph)
     .minNodes(2)
     .custom(() => {
@@ -306,5 +312,5 @@ export const kruskalsSimulationDefinition = (
   collectFrames: (collector) => {
     kruskals(options.graph)(collector);
   },
-  setup: () => kruskalsEffects(options.graph),
+  setup: (context) => kruskalsEffects(options.graph, context),
 });

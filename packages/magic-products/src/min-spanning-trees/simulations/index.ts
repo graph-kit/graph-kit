@@ -1,4 +1,4 @@
-import { useProvidedMagicGraph } from '@magic/shared/graph-product';
+import { Graph } from '@magic/shared/graph';
 
 import { ref } from 'vue';
 
@@ -10,8 +10,7 @@ import {
   primsSimulationDefinition,
 } from './shared.ts';
 
-export const usePrimsSimulation = () => {
-  const graph = useProvidedMagicGraph();
+export const usePrimsSimulation = (graph: Graph) => {
   const startNodeId: StartNodeId = ref();
 
   return {
@@ -20,10 +19,6 @@ export const usePrimsSimulation = () => {
   };
 };
 
-export const useKruskalsSimulation = () => {
-  const graph = useProvidedMagicGraph();
-
-  return {
-    kruskals: kruskalsSimulationDefinition(kruskals, { graph }),
-  };
-};
+export const useKruskalsSimulation = (graph: Graph) => ({
+  kruskals: kruskalsSimulationDefinition(kruskals, { graph }),
+});

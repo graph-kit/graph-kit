@@ -3,7 +3,7 @@ import { MaybeGetter } from '@core/utils/maybeGetter/index';
 import { Lens } from '../../lens/types.ts';
 
 export type LensChipDefinition = {
-  title: MaybeGetter<string>;
+  name: MaybeGetter<string>;
   lens: Lens;
   tooltipLabel?: MaybeGetter<string>;
 };

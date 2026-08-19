@@ -1,4 +1,5 @@
 import { CanvasSurface } from '@canvas/surface/types';
+import { AnnotationsControls } from '@core/annotations/index';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { BasicColorMode } from '@vueuse/core';
 import * as Y from 'yjs';
@@ -6,12 +7,12 @@ import * as Y from 'yjs';
 import { ComputedRef } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
-import { Graph } from '../graph/types.ts';
 import { LensControls } from '../lens/useLensState.ts';
 import { ProductMultiplayer } from '../multiplayer/types.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
+import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
-import { AnnotationsControls } from '../ui/annotations/useAnnotationsState.ts';
+import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
@@ -55,6 +56,12 @@ export type MagicProductHost = {
    * is what local storage and link sharing are built on, see {@link ProductFlags}
    */
   transit?: TransitField;
+  /**
+   * the annotation tools the host owns, absent when it has none or has them flagged off.
+   * the harness only puts chrome around them, so anything holding a canvas can hand its
+   * own over, see `@core/annotations`
+   */
+  annotations?: AnnotationsControls;
   surface: CanvasSurface;
   onAppearanceChanged: (color: BasicColorMode) => void;
   multiplayer: MultiplayerHostField;
@@ -95,14 +102,8 @@ export type MagicProductOptions = {
   productId: ProductId;
   /** what the product asks for, see {@link ProductFlags} */
   flags?: ProductFlagOptions;
-  /**
-   * the canvas annotations draw onto, absent when the host has them flagged off. a
-   * handle rather than a boolean because only the graph canvas carries the aggregator
-   * and cursor annotations need. moving the capability onto {@link MagicProductHost}
-   * is tracked in https://github.com/graph-kit/graph-kit/issues/846
-   */
-  annotations?: Graph['canvas'];
   lensChips?: LensChipDefinition[];
+  simulationButtons?: SimulationButtonDefinition[];
 };
 
 /** the harness itself: the chrome and controls wrapped around a hosted product */
@@ -118,8 +119,9 @@ export type Magic = {
   surface: CanvasSurface;
   transit?: TransitField;
   history?: HistoryField;
-  annotations?: AnnotationsControls;
+  annotations?: AnnotationsUIControls;
   lensChips?: LensChipDefinition[];
+  simulationButtons?: SimulationButtonDefinition[];
   localStorage: LocalStorageControls;
   /**
    * The room connection, or undefined if

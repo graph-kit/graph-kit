@@ -2,14 +2,12 @@ import { generateId } from '@core/utils/id';
 import { getRandomInRange } from '@core/utils/random';
 import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
 import { CoreNode } from '@graph/primitives/types';
-import { MagicGraph } from '@magic/shared/graph-product';
-import { SimulationDefinition } from '@magic/shared/simulation';
+import { Graph } from '@magic/shared/graph';
 import tinycolor from 'tinycolor2';
 
 import { onUnmounted } from 'vue';
 
-import { AVLFrame } from './frames.ts';
-import { AVLControls } from './useAVLSimulation.ts';
+import { TreeControls } from './useTreeSimulation.ts';
 
 const Y = 250;
 const X = 800;
@@ -27,9 +25,9 @@ const POSITIONS = [
  * real ones so the tree, history and share links only ever see nodes the user committed to
  */
 export const useSuggestedNodes = (
-  graph: MagicGraph,
-  simDefinition: SimulationDefinition<AVLFrame>,
-  controls: AVLControls,
+  graph: Graph,
+  onClicked: () => void,
+  controls: TreeControls,
 ) => {
   const suggestions = () => graph.phantom.nodes();
 
@@ -90,7 +88,7 @@ export const useSuggestedNodes = (
 
     controls.mode.value = 'insert';
     controls.target.value = node.id;
-    graph.magic.simulation.start(simDefinition);
+    onClicked();
   };
 
   graph.canvas.events.subscribe('onClick', kickOffNodeInsertion);

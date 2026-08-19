@@ -9,6 +9,7 @@ export type FrameCollector<Frame> = {
 };
 
 export type SetupContext<Frame> = {
+  stopSimulation: () => void;
   frames: ComputedRef<Frame[]>;
   currentFrame: ComputedRef<Frame>;
 };
@@ -42,6 +43,9 @@ export type SimulationDefinition<Frame> = {
   collectFrames: FrameCollectorFn<Frame>;
   setup: (context: SetupContext<Frame>) => SimulationEffects<Frame> | undefined;
 
+  // TODO add mutations (add, remove, move etc) that may occur at a given step, not just structure change
   recomputeFramesOnStructureChange?: boolean;
-  // add: mutations (add, remove, move etc) that may occur at a given step
+
+  /** user facing name of the simulation */
+  name: string;
 };

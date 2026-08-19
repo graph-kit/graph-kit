@@ -46,7 +46,7 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
     'The total cost if you sum up all the edges making up the minimum spanning tree.';
 
   return {
-    title: () => `Total Cost: ${totalMstCost.value.toFraction()}`,
+    name: () => `Total Cost: ${totalMstCost.value.toFraction()}`,
     tooltipLabel: () =>
       fractionIsInteger(totalMstCost.value)
         ? costExplanation

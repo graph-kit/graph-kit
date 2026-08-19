@@ -13,7 +13,7 @@
       <ToolPicker />
       <ColorPicker />
       <BrushWeightPicker />
-      <div class="h-0.5 w-full rounded-full bg-black/10 dark:bg-white/15"></div>
+      <div class="h-px w-full rounded-full bg-black/10 dark:bg-white/15"></div>
       <PanelActions />
     </VStack>
   </Well>

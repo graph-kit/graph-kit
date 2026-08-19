@@ -9,8 +9,11 @@
   import Tooltip from '../../../components/tooltip/Tooltip.vue';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
   import PanelSection from './PanelSection.vue';
+  import { useDisabledWhileErasing } from './useDisabledWhileErasing.ts';
 
   const controls = useAnnotationControls();
+
+  const disabled = useDisabledWhileErasing();
 
   const classes = cn(
     toggleIconButton,
@@ -24,6 +27,7 @@
   <PanelSection
     label="Brush"
     :icon="mdiBrush"
+    :disabled="disabled"
   >
     <HStack :gap="2">
       <Tooltip

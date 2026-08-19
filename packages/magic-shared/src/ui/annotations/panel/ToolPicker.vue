@@ -1,43 +1,35 @@
 <script setup lang="ts">
   import { ANNOTATION_MODES, AnnotationMode } from '@core/annotations/index';
-  import { mdiEraser, mdiLaserPointer, mdiPencil, mdiToolbox } from '@mdi/js';
+  import { mdiEraser, mdiLaserPointer, mdiPencil } from '@mdi/js';
 
+  import Icon from '../../../components/icon/Icon.vue';
   import HStack from '../../../components/layout/HStack.vue';
-  import ToggleIconButton from '../../../components/toggle-icon-button/ToggleIconButton.vue';
+  import ToggleButton from '../../../components/toggle-button/ToggleButton.vue';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
-  import PanelSection from './PanelSection.vue';
 
   const controls = useAnnotationControls();
 
-  const modeToIcon: Record<AnnotationMode, string> = {
-    drawing: mdiPencil,
-    erasing: mdiEraser,
-    laser: mdiLaserPointer,
-  };
-
-  const modeToLabel: Record<AnnotationMode, string> = {
-    drawing: 'Draw',
-    erasing: 'Erase',
-    laser: 'Laser Pointer',
+  const modeToTool: Record<AnnotationMode, { icon: string; name: string }> = {
+    drawing: { icon: mdiPencil, name: 'Draw' },
+    erasing: { icon: mdiEraser, name: 'Erase' },
+    laser: { icon: mdiLaserPointer, name: 'Laser' },
   };
 </script>
 
 <template>
-  <PanelSection
-    label="Tool"
-    :icon="mdiToolbox"
-  >
-    <HStack :gap="2">
-      <ToggleIconButton
-        v-for="mode of ANNOTATION_MODES"
-        :key="mode"
-        class="grow bg-transparent p-3 dark:bg-transparent"
-        :path="modeToIcon[mode]"
-        :size="28"
-        :model-value="controls.mode.value === mode"
-        :label="modeToLabel[mode]"
-        @click="controls.setMode(mode)"
+  <HStack :gap="1">
+    <ToggleButton
+      v-for="mode of ANNOTATION_MODES"
+      :key="mode"
+      class="grow flex-col bg-transparent px-5 py-2 hover:bg-gray-100 dark:bg-transparent dark:hover:bg-gray-700"
+      :model-value="controls.mode.value === mode"
+      @click="controls.setMode(mode)"
+    >
+      <Icon
+        :path="modeToTool[mode].icon"
+        :size="20"
       />
-    </HStack>
-  </PanelSection>
+      <span class="text-sm leading-4">{{ modeToTool[mode].name }}</span>
+    </ToggleButton>
+  </HStack>
 </template>

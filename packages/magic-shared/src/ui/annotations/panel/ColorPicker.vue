@@ -6,12 +6,16 @@
   import ColorSwatch from './ColorSwatch.vue';
   import CustomColorSwatch from './CustomColorSwatch.vue';
   import PanelSection from './PanelSection.vue';
+  import { useDisabledWhileErasing } from './useDisabledWhileErasing.ts';
+
+  const disabled = useDisabledWhileErasing();
 </script>
 
 <template>
   <PanelSection
     label="Color"
     :icon="mdiPalette"
+    :disabled="disabled"
   >
     <HStack
       :gap="2"

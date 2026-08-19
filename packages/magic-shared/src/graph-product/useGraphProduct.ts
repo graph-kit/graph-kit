@@ -57,6 +57,8 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     magic.localStorage.invalidate,
   );
 
+  magic.simulation.events.subscribe('onSimulationStarted', graph.focus.clear);
+
   useGraphProductShortcuts(magic, graph);
 
   provideGraph(graph);

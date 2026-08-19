@@ -1,9 +1,8 @@
 <script setup lang="ts">
-  import Well from '@magic/shared/Well';
-
   import { computed } from 'vue';
 
   import HStack from '../../components/layout/HStack.vue';
+  import Well from '../../components/layout/Well.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import StartButton from './StartButton.vue';
 

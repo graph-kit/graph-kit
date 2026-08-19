@@ -3,18 +3,19 @@
   import { mdiPalette } from '@mdi/js';
 
   import HStack from '../../../components/layout/HStack.vue';
-  import ColorSwatch from './ColorSwatch.vue';
-  import CustomColorSwatch from './CustomColorSwatch.vue';
+  import ColorSwatchVue from './ColorSwatch.vue';
+  import CustomColorSwatchVue from './CustomColorSwatch.vue';
   import PanelSection from './PanelSection.vue';
+  import { ColorSwatch } from './types.ts';
   import { useDisabledWhileErasing } from './useDisabledWhileErasing.ts';
 
   const disabled = useDisabledWhileErasing();
 
-  const swatchColors = [
-    { name: 'Red', hex: colors.RED_600 },
-    { name: 'Blue', hex: colors.BLUE_600 },
-    { name: 'Green', hex: colors.GREEN_600 },
-    { name: 'Yellow', hex: colors.YELLOW_600 },
+  const swatchColors: ColorSwatch[] = [
+    { name: 'Red', value: colors.RED_600 },
+    { name: 'Blue', value: colors.BLUE_600 },
+    { name: 'Green', value: colors.GREEN_600 },
+    { name: 'Yellow', value: colors.YELLOW_600 },
   ];
 </script>
 
@@ -32,14 +33,14 @@
         :gap="2"
         class="grow"
       >
-        <ColorSwatch
+        <ColorSwatchVue
           v-for="color of swatchColors"
-          :key="color.hex"
+          :key="color.value"
           :name="color.name"
-          :hex="color.hex"
+          :hex="color.value"
         />
       </HStack>
-      <CustomColorSwatch :default-hexes="swatchColors.map((c) => c.hex)" />
+      <CustomColorSwatchVue :swatches="swatchColors" />
     </HStack>
   </PanelSection>
 </template>

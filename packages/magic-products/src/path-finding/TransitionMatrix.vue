@@ -90,14 +90,25 @@
     return { cellSize: 12, nodeScale: 0.75 };
   });
 
-  const headerCellClass = computed(() => `size-${density.value.cellSize}`);
+  const sizeClasses: Record<number, string> = {
+    8: 'size-8',
+    10: 'size-10',
+    12: 'size-12',
+  };
+  const dataCellSizeClasses: Record<number, string> = {
+    8: 'size-8 max-w-8',
+    10: 'size-10 max-w-10',
+    12: 'size-12 max-w-12',
+  };
+
+  const headerCellClass = computed(() => sizeClasses[density.value.cellSize]);
   const emptyCellClass = computed(
     () =>
-      `size-${density.value.cellSize} rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
+      `${sizeClasses[density.value.cellSize]} rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
   );
   const dataCellClass = computed(
     () =>
-      `size-${density.value.cellSize} max-w-12 overflow-hidden rounded-sm px-1.5 text-center font-bold text-white tabular-nums`,
+      `${dataCellSizeClasses[density.value.cellSize]} overflow-hidden rounded-sm text-center font-bold text-white tabular-nums`,
   );
 </script>
 

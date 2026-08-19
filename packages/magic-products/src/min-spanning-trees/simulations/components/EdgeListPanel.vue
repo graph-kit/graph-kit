@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import Edge from '@magic/shared/Edge';
   import HStack from '@magic/shared/HStack';
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
@@ -7,8 +8,6 @@
   import type { GEdge } from '@magic/shared/graph/types';
 
   import { computed } from 'vue';
-
-  import Edge from './Edge.vue';
 
   const props = defineProps<{
     title: string;
@@ -62,7 +61,7 @@
           />
           <Edge
             :id="edge.id"
-            class="w-18 -mx-4"
+            class="w-24 -mx-4"
           />
           <Node
             :id="edge.target"

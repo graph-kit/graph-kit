@@ -32,25 +32,27 @@
 </script>
 
 <template>
-  <HStack
-    @click="graph.focus.set([id])"
-    class="cursor-pointer"
-  >
-    <div
-      class="flex-1 h-full"
-      :style="edgeStyle"
-    />
-
-    <span
-      class="px-2 font-bold whitespace-nowrap"
-      :style="labelStyle"
+  <button>
+    <HStack
+      @click="graph.focus.set([id])"
+      class="cursor-pointer"
     >
-      {{ styles.text.content }}
-    </span>
+      <div
+        class="flex-1 h-full"
+        :style="edgeStyle"
+      />
 
-    <div
-      class="flex-1 h-full"
-      :style="edgeStyle"
-    />
-  </HStack>
+      <span
+        class="px-2 font-bold whitespace-nowrap"
+        :style="labelStyle"
+      >
+        {{ styles.text.content }}
+      </span>
+
+      <div
+        class="flex-1 h-full"
+        :style="edgeStyle"
+      />
+    </HStack>
+  </button>
 </template>

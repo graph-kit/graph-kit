@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
   import { fractionIsInteger, fractionToDecimal } from '@core/utils/math';
-  import WellVue from '@magic/shared/Well';
+  import Well from '@magic/shared/Well';
   import { Explainer, ExplainerText } from '@magic/shared/explainer';
   import { useProvidedGraph } from '@magic/shared/graph-product';
   import Fraction from 'fraction.js';
@@ -22,42 +22,21 @@
     result.value.skipped ? new Fraction(0) : result.value.totalWeight,
   );
 
-  const themer = graph.theme.createThemer({
-    canvas: {
-      'edge.default.color': (edge) => {
-        const inMst = mst.value.some((e) => e.id === edge.id);
-        return inMst
-          ? graph.focus.theme._resolveToken(
-              'edge.focus.color',
-              graph.getEdge(edge.id),
-            )
-          : undefined;
-      },
-    },
-  });
-
-  const mstCostExplainer = computed<Explainer>(() => {
-    if (result.value.skipped) {
-      return {
-        content: `graph is too large to enumerate every minimum spanning tree`,
-        highlights: [],
-      };
-    }
+  const mstCostExplainer = computed<Explainer | undefined>(() => {
+    if (result.value.skipped) return;
 
     const stringOfPluses = mst.value
       .map((edge) => `{${edge.id}} + `)
       .join('')
       .slice(0, -2);
     return {
-      content: `${stringOfPluses} = [${cost.value.toFraction()}]`,
+      content: `${stringOfPluses} = ${cost.value.toFraction()}`,
       highlights: [
         {
           tooltipLabel: () =>
             fractionIsInteger(cost.value)
               ? undefined
               : fractionToDecimal(cost.value),
-          activate: () => themer.activate(),
-          deactivate: () => themer.deactivate(),
         },
       ],
     };
@@ -65,7 +44,7 @@
 </script>
 
 <template>
-  <WellVue>
+  <Well v-if="graph.edges.value.length > 0">
     <ExplainerText :explainer="mstCostExplainer" />
-  </WellVue>
+  </Well>
 </template>

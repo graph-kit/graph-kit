@@ -7,7 +7,6 @@ export type Thumbnail = Record<ThemePreset, string>;
 export type MagicProductCard = {
   name: string;
   description: string;
-  thumbnail: Thumbnail;
 };
 
 /** everything the navigation menu needs to list a product and route to it */
@@ -22,6 +21,8 @@ export type MagicProductNavigation = {
 type MagicProductMeta = {
   title: string;
   description: string;
+  /** link preview artwork, absent for products that ship no thumbnail */
+  ogImage?: string;
 };
 
 /**

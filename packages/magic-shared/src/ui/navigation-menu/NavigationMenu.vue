@@ -39,7 +39,10 @@
         @click="navigateToProduct(product)"
         class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
       >
-        <ProductCard :card="card" />
+        <ProductCard
+          :product-id="product.id"
+          :card="card"
+        />
       </MenuItem>
     </VStack>
   </Dropdown>

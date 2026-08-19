@@ -15,6 +15,7 @@ export type { ProductFlagOptions, ProductFlags } from './flags.ts';
 export { provideMagic, useProvidedMagic } from './context.ts';
 
 export { manifests, products } from './manifests/index.ts';
+export { productThumbnail } from './manifests/thumbnail.ts';
 export type { ProductId } from './manifests/index.ts';
 export type {
   MagicProductCard,

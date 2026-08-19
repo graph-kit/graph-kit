@@ -18,7 +18,7 @@ const meta = {
     ...IMAGE_SCHEMA_DEFAULTS,
     width: 100,
     height: 100,
-    src: '/favicon.ico',
+    src: '/favicons/magic-graphs-bg-gradient.svg',
     at: { x: 20, y: 20 },
     ...DOC_MARKING_DEFAULTS,
   },

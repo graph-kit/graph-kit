@@ -153,7 +153,6 @@
     "vue": "^3.5.18"
   },
   "dependencies": {
-    "@canvas/primitives": "workspace:*",
     "@canvas/surface": "workspace:*",
     "@core/annotations": "workspace:*",
     "@core/components": "workspace:*",
@@ -180,7 +179,6 @@
   },
   "devDependencies": {
     "nuxt": "^4.1.2",
-    "ts-essentials": "^10.2.1",
     "vue": "catalog:"
   }
 }

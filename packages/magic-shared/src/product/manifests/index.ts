@@ -1,3 +1,4 @@
+import { productThumbnail } from './thumbnail.ts';
 import { MagicProductManifest } from './types.ts';
 
 /**
@@ -15,16 +16,15 @@ export const manifests = {
       slug: 'sets',
       card: {
         name: 'Set Theory',
-        description: 'the desmos of set theory!',
-        thumbnail: {
-          light: '/products/thumbnails/set-visualizer.png',
-          dark: '/products/thumbnails/set-visualizer.png',
-        },
+        description:
+          'Draw sets on a canvas and watch queries light up the regions they select.',
       },
     },
     meta: {
-      title: 'Sets',
-      description: 'The Desmos of Set Theory!',
+      title: 'Set Theory | Magic Graphs',
+      description:
+        'Draw sets on an infinite canvas, write queries like A union B, and watch the regions they select highlight as you type.',
+      ogImage: productThumbnail('sets', 'dark'),
     },
   },
   'markov-chains': {
@@ -36,16 +36,15 @@ export const manifests = {
       slug: 'markov-chains',
       card: {
         name: 'Markov Chains',
-        description: 'Learn the ins and outs of Markov Chains!',
-        thumbnail: {
-          light: '/products/thumbnails/markov-chains.png',
-          dark: '/products/thumbnails/markov-chains.png',
-        },
+        description:
+          'Wire up states, set transition probabilities and follow the walk.',
       },
     },
     meta: {
-      title: 'Markov Chains',
-      description: 'this is markov chains in magic graphs',
+      title: 'Markov Chains | Magic Graphs',
+      description:
+        'Build a Markov chain state by state, set the transition probabilities between them and step through the walk to see where it settles.',
+      ogImage: productThumbnail('markov-chains', 'dark'),
     },
   },
   'avl-trees': {
@@ -59,16 +58,15 @@ export const manifests = {
       slug: 'trees',
       card: {
         name: 'AVL Trees',
-        description: 'Learn about how an AVL tree works!',
-        thumbnail: {
-          light: '/products/thumbnails/binary-tree.png',
-          dark: '/products/thumbnails/binary-tree.png',
-        },
+        description:
+          'Insert and remove values, then watch the tree rotate back into balance.',
       },
     },
     meta: {
-      title: 'AVL Trees',
-      description: 'this is the basic AVL trees product',
+      title: 'AVL Trees | Magic Graphs',
+      description:
+        'Insert and remove values in an AVL tree and step through every rotation the tree performs to keep itself balanced.',
+      ogImage: productThumbnail('avl-trees', 'dark'),
     },
   },
   traversals: {
@@ -80,16 +78,15 @@ export const manifests = {
       slug: 'traversals',
       card: {
         name: 'Traversals',
-        description: 'Learn about how traversals like BFS and DFS work!',
-        thumbnail: {
-          light: '/products/sim-thumbnails/bfs.png',
-          dark: '/products/sim-thumbnails/bfs.png',
-        },
+        description:
+          'Step through BFS and DFS one visit at a time on a graph you build.',
       },
     },
     meta: {
-      title: 'Traversals!!',
-      description: 'this is the traversals product',
+      title: 'Traversals | Magic Graphs',
+      description:
+        'Run breadth first and depth first search on your own graph and watch the queue, the stack and the visited set change at every step.',
+      ogImage: productThumbnail('traversals', 'dark'),
     },
   },
   'path-finding': {
@@ -102,16 +99,14 @@ export const manifests = {
       card: {
         name: 'Path Finding',
         description:
-          'Learn about how path finding algorithms like Dijkstras work!',
-        thumbnail: {
-          light: '/products/thumbnails/dijkstras.png',
-          dark: '/products/thumbnails/dijkstras.png',
-        },
+          'Watch Dijkstra, Bellman Ford and Floyd Warshall hunt for shortest paths.',
       },
     },
     meta: {
-      title: 'Path Finding',
-      description: 'Path finding description',
+      title: 'Path Finding | Magic Graphs',
+      description:
+        "Run Dijkstra's, Bellman Ford and Floyd Warshall on a weighted graph you build and watch the shortest paths take shape step by step.",
+      ogImage: productThumbnail('path-finding', 'dark'),
     },
   },
   'min-spanning-trees': {
@@ -123,16 +118,15 @@ export const manifests = {
       slug: 'mst',
       card: {
         name: 'Minimum Spanning Trees',
-        description: 'Learn about how MST algorithms like Kruskals work!',
-        thumbnail: {
-          light: '/products/thumbnails/mst.png',
-          dark: '/products/thumbnails/mst.png',
-        },
+        description:
+          "Watch Kruskal's and Prim's pick the cheapest edges that connect everything.",
       },
     },
     meta: {
-      title: 'Minimum Spanning Trees',
-      description: 'this is the minimum spanning trees product',
+      title: 'Minimum Spanning Trees | Magic Graphs',
+      description:
+        "Run Kruskal's and Prim's on a weighted graph you build and see each one grow a minimum spanning tree edge by edge.",
+      ogImage: productThumbnail('min-spanning-trees', 'dark'),
     },
   },
   dev: {
@@ -144,8 +138,10 @@ export const manifests = {
       slug: 'dev',
     },
     meta: {
-      title: 'Path Finding',
-      description: 'Path finding description',
+      title: 'Dev Playground | Magic Graphs',
+      description:
+        'Internal playground for exercising graph features outside of a product experience.',
+      ogImage: productThumbnail('dev', 'dark'),
     },
   },
   welcome: {
@@ -159,7 +155,7 @@ export const manifests = {
     meta: {
       title: 'Magic Graphs',
       description:
-        'Use Magic Graphs to learn computer science theory interactively!',
+        'Interactive computer science theory: traversals, shortest paths, spanning trees, AVL trees, Markov chains and set theory.',
     },
   },
 } as const satisfies Record<string, MagicProductManifest>;

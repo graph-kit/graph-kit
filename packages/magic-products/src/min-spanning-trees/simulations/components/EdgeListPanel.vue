@@ -37,7 +37,7 @@
 
   const highlightClass = (edgeId: GEdge['id']) => {
     return (
-      'justify-between rounded-md transition-colors ' +
+      'justify-between rounded-md ' +
       (edgeId === props.highlightId
         ? 'bg-amber-500/15 ring-2 ring-amber-500 p-1'
         : 'm-1')

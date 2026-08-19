@@ -13,27 +13,22 @@
   import Icon from '../../../components/icon/Icon.vue';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
 
-  const controls = useAnnotationControls();
+  const { annotations, clear } = useAnnotationControls();
 
   const disabledReason = computed(() =>
-    controls.annotations.value.length === 0
-      ? 'Nothing has been drawn yet'
-      : false,
+    annotations.value.length === 0 ? 'Nothing to clear yet' : false,
   );
 </script>
 
 <template>
   <Button
-    class="grow text-white hover:bg-red-500 hover:text-white active:bg-red-500 dark:bg-red-500 bg-red-500 dark:hover:bg-red-500 dark:active:bg-red-500"
-    :path="mdiTrashCan"
-    :size="28"
-    label="Erase All Drawings"
+    @click="clear"
+    label="Clear Annotations"
     :disabled="disabledReason"
-    @click="controls.clear()"
   >
     <template #start>
-      <Icon :path="mdiDelete" />
+      <Icon :path="mdiBroom" />
     </template>
-    Erase All Drawings</Button
+    Clear Annotations</Button
   >
 </template>

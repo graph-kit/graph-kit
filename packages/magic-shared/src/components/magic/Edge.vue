@@ -10,6 +10,7 @@
     defineProps<{
       id: GEdge['id'];
       scale?: number;
+      width?: number;
     }>(),
     { scale: 1 },
   );
@@ -17,6 +18,13 @@
   const graph = useProvidedGraph();
 
   const { styles, dispose } = useEdgeStyles(graph, props.id);
+
+  const buttonStyle = computed<StyleValue>(() => ({
+    width:
+      props.width !== undefined
+        ? `calc(var(--spacing) * ${props.width})`
+        : undefined,
+  }));
 
   const edgeStyle = computed<StyleValue>(() => ({
     backgroundColor: styles.value.color,
@@ -26,13 +34,16 @@
 
   const labelStyle = computed<StyleValue>(() => ({
     fontSize: `calc(1rem * ${props.scale})`,
+    maxWidth: 'calc(3ch + 10px)',
+    boxSizing: 'content-box',
+    flexShrink: 0,
   }));
 
   onUnmounted(dispose);
 </script>
 
 <template>
-  <button>
+  <button :style="buttonStyle">
     <HStack
       @click="graph.focus.set([id])"
       class="cursor-pointer"
@@ -42,12 +53,14 @@
         :style="edgeStyle"
       />
 
-      <span
-        class="px-2 font-bold whitespace-nowrap"
+      <div
+        class="px-1 flex items-center justify-center overflow-hidden"
         :style="labelStyle"
       >
-        {{ styles.text.content }}
-      </span>
+        <span class="font-bold truncate min-w-0">
+          {{ styles.text.content }}
+        </span>
+      </div>
 
       <div
         class="flex-1 h-full"

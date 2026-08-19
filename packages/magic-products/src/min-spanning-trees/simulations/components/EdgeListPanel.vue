@@ -61,7 +61,8 @@
           />
           <Edge
             :id="edge.id"
-            class="w-24 -mx-4"
+            :width="24"
+            class="-mx-4"
           />
           <Node
             :id="edge.target"

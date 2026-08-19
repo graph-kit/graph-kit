@@ -18,7 +18,7 @@ import {
 } from './scene.ts';
 
 /** how long each node waits before popping in, so the ring assembles itself */
-const STAGGER_MS = 160;
+const STAGGER_MS = 0; // TODO set back to 160 when auto animate stabilizes
 
 const KEY = 'WELCOME_SCENE';
 

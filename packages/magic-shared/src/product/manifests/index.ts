@@ -17,10 +17,6 @@ export const manifests = {
         name: 'Set Theory',
         description:
           'Draw sets on a canvas and watch queries light up the regions they select.',
-        thumbnail: {
-          light: '/products/thumbnails/set-visualizer.png',
-          dark: '/products/thumbnails/set-visualizer.png',
-        },
       },
     },
     meta: {
@@ -40,10 +36,6 @@ export const manifests = {
         name: 'Markov Chains',
         description:
           'Wire up states, set transition probabilities and follow the walk.',
-        thumbnail: {
-          light: '/products/thumbnails/markov-chains.png',
-          dark: '/products/thumbnails/markov-chains.png',
-        },
       },
     },
     meta: {
@@ -65,10 +57,6 @@ export const manifests = {
         name: 'AVL Trees',
         description:
           'Insert and remove values, then watch the tree rotate back into balance.',
-        thumbnail: {
-          light: '/products/thumbnails/binary-tree.png',
-          dark: '/products/thumbnails/binary-tree.png',
-        },
       },
     },
     meta: {
@@ -88,10 +76,6 @@ export const manifests = {
         name: 'Traversals',
         description:
           'Step through BFS and DFS one visit at a time on a graph you build.',
-        thumbnail: {
-          light: '/products/sim-thumbnails/bfs.png',
-          dark: '/products/sim-thumbnails/bfs.png',
-        },
       },
     },
     meta: {
@@ -111,10 +95,6 @@ export const manifests = {
         name: 'Path Finding',
         description:
           'Watch Dijkstra, Bellman Ford and Floyd Warshall hunt for shortest paths.',
-        thumbnail: {
-          light: '/products/thumbnails/dijkstras.png',
-          dark: '/products/thumbnails/dijkstras.png',
-        },
       },
     },
     meta: {
@@ -134,10 +114,6 @@ export const manifests = {
         name: 'Minimum Spanning Trees',
         description:
           "Watch Kruskal's and Prim's pick the cheapest edges that connect everything.",
-        thumbnail: {
-          light: '/products/thumbnails/mst.png',
-          dark: '/products/thumbnails/mst.png',
-        },
       },
     },
     meta: {

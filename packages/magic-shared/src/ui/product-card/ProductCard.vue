@@ -6,12 +6,13 @@
   import { useProvidedMagic } from '../../product/context.ts';
   import { MagicProductCard } from '../../product/manifests/types.ts';
 
-  const props = defineProps<{ card: MagicProductCard }>();
+  const props = defineProps<{ productId: string; card: MagicProductCard }>();
 
   const magic = useProvidedMagic();
 
   const thumbnail = computed(
-    () => props.card.thumbnail[magic.appearance.state.value],
+    () =>
+      `/product-thumbnails/${magic.appearance.state.value}/${props.productId}.png`,
   );
 </script>
 

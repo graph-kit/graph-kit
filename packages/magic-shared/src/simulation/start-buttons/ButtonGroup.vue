@@ -6,7 +6,6 @@
   import HStack from '../../components/layout/HStack.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import StartButton from './StartButton.vue';
-  import { SimulationButtonDefinition } from './types.ts';
 
   const magic = useProvidedMagic();
 
@@ -16,22 +15,23 @@
     const simRunning = magic.simulation.current.value;
     return buttons.value.length > 0 && !simRunning;
   });
-
-  const startSim = (def: SimulationButtonDefinition['definition']) => {
-    magic.simulation.start(def);
-  };
 </script>
 
 <template>
   <Well v-if="show">
     <HStack class="flex-wrap">
-      <StartButton
-        v-for="{ disabled = () => false, definition } in buttons"
-        @click="startSim(definition)"
-        :key="definition.name"
-        :disabled="disabled()"
-        >{{ definition.name }}</StartButton
+      <template
+        v-for="(
+          { disabled = () => false, definition, render = StartButton }, index
+        ) in buttons"
+        :key="index"
       >
+        <component
+          :is="render"
+          :definition="definition"
+          :disabled="disabled()"
+        />
+      </template>
     </HStack>
   </Well>
 </template>

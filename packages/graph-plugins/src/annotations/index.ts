@@ -3,6 +3,7 @@ import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { DeepReadonly } from 'ts-essentials';
 
+import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '../canvas/aggregator/createAggregator.ts';
 import { Aggregator } from '../canvas/aggregator/types.ts';
 import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { GraphUnderCursor } from '../canvas/types.ts';
@@ -61,8 +62,18 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   // while the tools have the pointer, a click is a stroke and nothing else
   const swallowClick = (_: unknown, consume: () => void) => consume();
 
+  // annotations are drawn over the graph, never targeted through it: a committed stroke is
+  // not clickable and the tool cursors are not elements the pointer can land on
   const addAnnotationsToAggregator = (aggregator: Aggregator) => {
-    aggregator.push(...engine.canvasElements());
+    for (const element of engine.canvasElements()) {
+      aggregator.push({
+        ...element,
+        data: {
+          ...element.data,
+          [CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY]: true,
+        },
+      });
+    }
     return aggregator;
   };
 

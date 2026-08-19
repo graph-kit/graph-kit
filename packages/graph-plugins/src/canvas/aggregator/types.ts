@@ -32,7 +32,9 @@ export type CanvasElement = {
    */
   shape: Shape;
   /**
-   * attached metadata
+   * attached metadata. a handful of keys are reserved by the canvas itself, each declared as
+   * a constant alongside the code that reads it: `CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY` in
+   * `createAggregator` and `CANVAS_ELEMENT_CURSOR_FIELD_KEY` in `setupCanvasCursor`
    */
   data?: Record<string, unknown>;
 };

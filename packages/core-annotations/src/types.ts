@@ -25,6 +25,7 @@ export type AnnotationCanvasElement = {
   id: string;
   shape: Shape;
   priority: number;
+  data?: Record<string, unknown>;
 };
 
 export type CreateAnnotationsOptions = {

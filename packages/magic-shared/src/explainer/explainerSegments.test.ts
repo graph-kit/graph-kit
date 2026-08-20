@@ -23,7 +23,7 @@ const { explainerSegments } = await import('./explainerSegments.ts');
 const graph = {
   isNode: (id: string): boolean => id.startsWith('node-'),
   isEdge: (id: string): boolean => id.startsWith('edge-'),
-  getEdge: (id: string) => ({ id }) as GEdge,
+  getEdge: (id: string) => ({ id, source: 'node-a', target: 'node-b' }) as GEdge,
   theme: {
     createThemer: () => ({
       activate: vi.fn(),
@@ -249,7 +249,7 @@ describe(explainerSegments, () => {
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       'Take edge ',
-      'Weight edge-a',
+      'Label node-aLabel node-b',
       ' next',
     ]);
     expect(segments[1].highlight).toBeDefined();
@@ -267,7 +267,7 @@ describe(explainerSegments, () => {
       'From ',
       'Label node-a',
       ' along ',
-      'Weight edge-a',
+      'Label node-aLabel node-b',
     ]);
     expect(segments[1].highlight).toBeDefined();
     expect(segments[3].highlight).toBeDefined();

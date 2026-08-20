@@ -30,7 +30,7 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
   };
 
   const themer = graph.theme.createThemer({
-    canvas: {
+    surface: {
       'edge.default.color': colorMstEdge,
       'edge.default.text.color': colorMstEdge,
       'edge.hover.color': colorMstEdge,

@@ -1,69 +1,51 @@
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasSurface } from '@canvas/surface/types';
-import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { CoreEdge } from '@graph/primitives/types';
 
-import { CANVAS_PLUGIN_ID } from './constants.ts';
-import { createCanvasEventRegistry } from './events.ts';
+import { SURFACE_PLUGIN_ID } from './constants.ts';
 import { createNodeCanvasElementPriorityGetter } from './nodeCanvasElementPriority.ts';
 import { createNodePaintOrder } from './nodePaintOrder.ts';
-import { setupCanvasCursor } from './setupCanvasCursor.ts';
-import { createCanvasDetectors, createCanvasThemeOverrides } from './themes.ts';
-import { CanvasPlugin } from './types.ts';
+import { setupCursor } from './setupCursor.ts';
+import {
+  createSurfaceDetectors,
+  createSurfaceThemeOverrides,
+} from './themes.ts';
+import { SurfacePlugin } from './types.ts';
 
-export const canvas =
-  (surface: CanvasSurface): CanvasPlugin =>
+export const surface =
+  (canvasSurface: CanvasSurface): SurfacePlugin =>
   ({ controls, getters }) => {
-    const canvasEventRegistry = createCanvasEventRegistry();
-    const canvasEvents = createEventHub(canvasEventRegistry);
+    const { aggregator } = canvasSurface;
 
-    const { aggregator, shapes, renderer } = surface;
+    const theme = createThemeController(createSurfaceThemeOverrides());
 
-    aggregator.events.subscribe('onBeforeDraw', (ctx) =>
-      canvasEvents.emit('onBeforeDraw', ctx),
-    );
-    aggregator.events.subscribe('onDraw', (ctx) =>
-      canvasEvents.emit('onDraw', ctx),
-    );
-
-    surface.events.elements.subscribe('onElementsUnderCursorChange', (data) =>
-      canvasEvents.emit('onGraphUnderCursorChange', data),
-    );
-    surface.events.elements.subscribe(
-      'onHoveredElementChange',
-      (newElement, oldElement) =>
-        canvasEvents.emit('onHoveredElementChange', newElement, oldElement),
-    );
-
-    const theme = createThemeController(createCanvasThemeOverrides());
-
-    setupCanvasCursor({
-      canvas: surface.canvas,
+    setupCursor({
+      canvas: canvasSurface.canvas,
       getNode: getters.getNode,
-      subscribe: canvasEvents.subscribe,
+      subscribe: aggregator.events.subscribe,
       resolveToken: theme._resolveToken,
-      elementsUnderCursor: surface.elementsUnderCursor,
+      elementsUnderCursor: canvasSurface.elementsUnderCursor,
     });
 
     const paintOrder = createNodePaintOrder();
 
-    canvasEvents.handle(
+    canvasSurface.events.elements.handle(
       'onHoveredElementChange',
       (hoveredEl) => {
         if (!hoveredEl) return;
         const { id } = hoveredEl;
         if (controls.isNode(id)) paintOrder.promote(id);
       },
-      CANVAS_PLUGIN_ID,
+      SURFACE_PLUGIN_ID,
     );
 
-    surface.draw.backgroundPattern.value = crossPattern((alpha) =>
+    canvasSurface.draw.backgroundPattern.value = crossPattern((alpha) =>
       theme._resolveToken('canvas.patternColor', alpha),
     );
 
-    canvasEvents.subscribe('onDraw', () => {
-      const canvas = surface.canvas.value;
+    aggregator.events.subscribe('onDraw', () => {
+      const canvas = canvasSurface.canvas.value;
       if (!canvas) return;
       canvas.style.backgroundColor = theme._resolveToken('canvas.color');
     });
@@ -72,7 +54,7 @@ export const canvas =
       nodes: controls.nodes,
       paintOrder,
     });
-    canvasEvents.subscribe('onBeforeDraw', () => {
+    aggregator.events.subscribe('onBeforeDraw', () => {
       getNodePriority = createNodeCanvasElementPriorityGetter({
         nodes: controls.nodes,
         paintOrder,
@@ -80,28 +62,23 @@ export const canvas =
     });
 
     return {
-      name: 'canvas',
+      name: 'surface',
       controls: {
-        aggregator,
-        shapes,
-        renderer,
-        events: canvasEvents,
-
-        surface,
+        ...canvasSurface,
 
         getNodePriority: () => getNodePriority,
 
         theme: {
           ...theme,
-          detectors: createCanvasDetectors(
+          detectors: createSurfaceDetectors(
             theme._resolveToken,
-            surface.elementsUnderCursor,
+            canvasSurface.elementsUnderCursor,
           ),
         },
       },
       transit: {
         encode: () => {
-          const camera = surface.camera.state;
+          const camera = canvasSurface.camera.state;
           return {
             panX: camera.panX.value,
             panY: camera.panY.value,
@@ -109,7 +86,7 @@ export const canvas =
           };
         },
         decode: (data) => {
-          const camera = surface.camera.state;
+          const camera = canvasSurface.camera.state;
           camera.panX.value = data.panX;
           camera.panY.value = data.panY;
           camera.zoom.value = data.zoom;
@@ -118,7 +95,7 @@ export const canvas =
       },
       onAfterInit: () => {
         const weightLayer = theme.createLayer(
-          CANVAS_PLUGIN_ID + '/edge-weight',
+          SURFACE_PLUGIN_ID + '/edge-weight',
         );
         const weight = (edge: CoreEdge) => {
           if (!controls.isEdge(edge.id)) return;

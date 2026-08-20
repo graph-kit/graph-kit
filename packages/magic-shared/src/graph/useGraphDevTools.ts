@@ -5,10 +5,8 @@ import { SceneGraph } from '@graph/dev-tools/perf/scene';
 import { onBeforeUnmount, onMounted } from 'vue';
 
 type DevToolsGraph = SceneGraph & {
-  canvas: {
-    surface: {
-      events: { lifecycle: RepaintEvents };
-    };
+  surface: {
+    events: { lifecycle: RepaintEvents };
   };
 };
 
@@ -23,7 +21,7 @@ export const useGraphDevTools = (graph: DevToolsGraph) => {
       expensive half (the canvas call counter) stays off until __graphPerf
       .countCalls() asks for it
     */
-    const perf = startPerfTools(graph, graph.canvas.surface.events.lifecycle);
+    const perf = startPerfTools(graph, graph.surface.events.lifecycle);
     cleanups.push(perf.stop);
   });
   onBeforeUnmount(() => {

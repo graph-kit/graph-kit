@@ -37,13 +37,13 @@ const createLabelPlugin = (): LooseGraphPlugin => {
   });
 };
 
-// stands in for canvas: transit state that must survive an undo rather than be
+// stands in for surface: transit state that must survive an undo rather than be
 // restored by it. name matches PLUGINS_EXCLUDED_FROM_HISTORY.
-const createCanvasPlugin = (): LooseGraphPlugin => {
+const createSurfacePlugin = (): LooseGraphPlugin => {
   const camera = { zoom: 1 };
 
   return ({ actions, getters, events }) => ({
-    name: 'canvas',
+    name: 'surface',
     controls: {
       setZoom: (zoom: number) => {
         camera.zoom = zoom;
@@ -68,7 +68,7 @@ const setup = () => {
   const coreGraph = core({});
   const folded = foldPlugins(
     coreGraph,
-    [history, createLabelPlugin(), createCanvasPlugin()],
+    [history, createLabelPlugin(), createSurfacePlugin()],
     {},
     () => '',
   );
@@ -99,7 +99,7 @@ const setup = () => {
       setLabel: (id: string, label: string) => void;
       getLabel: (id: string) => string | undefined;
     },
-    canvas: folded.controls.canvas as {
+    surface: folded.controls.surface as {
       setZoom: (zoom: number) => void;
       getZoom: () => number;
     },
@@ -228,22 +228,22 @@ describe('history', () => {
   });
 
   it('leaves excluded plugin state untouched across a restore', async () => {
-    graph.canvas.setZoom(1);
+    graph.surface.setZoom(1);
     graph.actions.addNode({});
     graph.historyControls.captureSnapshot();
     await settle();
 
-    graph.canvas.setZoom(5);
+    graph.surface.setZoom(5);
     graph.historyControls.undo();
 
     expect(graph.getNodes()).toHaveLength(0);
-    expect(graph.canvas.getZoom()).toBe(5);
+    expect(graph.surface.getZoom()).toBe(5);
   });
 
   it('does not treat excluded plugin state as a new state worth recording', async () => {
     const recordsBefore = graph.historyControls.recordCount();
 
-    graph.canvas.setZoom(9);
+    graph.surface.setZoom(9);
     graph.historyControls.captureSnapshot();
     await settle();
 

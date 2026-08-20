@@ -59,7 +59,7 @@ export const useSuggestedNodes = (
 
   graph.theme
     .createThemer({
-      canvas: {
+      surface: {
         'node.default.color': dimSuggested,
         'node.default.text.color': dimSuggested,
         'node.default.border.color': dimSuggested,
@@ -91,15 +91,9 @@ export const useSuggestedNodes = (
     onClicked();
   };
 
-  graph.canvas.surface.events.elements.subscribe(
-    'onClick',
-    kickOffNodeInsertion,
-  );
+  graph.surface.events.elements.subscribe('onClick', kickOffNodeInsertion);
   onUnmounted(() =>
-    graph.canvas.surface.events.elements.unsubscribe(
-      'onClick',
-      kickOffNodeInsertion,
-    ),
+    graph.surface.events.elements.unsubscribe('onClick', kickOffNodeInsertion),
   );
 
   return {

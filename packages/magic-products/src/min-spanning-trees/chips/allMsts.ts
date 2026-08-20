@@ -1,8 +1,8 @@
 import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
 import colors from '@core/utils/colors';
 import { generateId } from '@core/utils/id';
-import { GraphUnderCursor } from '@graph/plugins/canvas/types';
 import { createPhantomAwareEdgeRenderFunction } from '@graph/plugins/phantom/createPhantomAwareEdgeRenderFunction';
+import { GraphUnderCursor } from '@graph/plugins/surface/types';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
@@ -54,7 +54,7 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
     if (!removeEdges) return agg;
     return agg.filter((el) => !graph.isEdge(el.id));
   };
-  graph.canvas.aggregator.transformers.push(removeNonPhantomEdges);
+  graph.surface.aggregator.transformers.push(removeNonPhantomEdges);
 
   const mstIndexToColor = (mstIndex: number) =>
     MST_COLORS[mstIndex % MST_COLORS.length];
@@ -71,7 +71,7 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
   };
 
   const edgeThemer = graph.theme.createThemer({
-    canvas: {
+    surface: {
       'edge.default.color': edgeColoring,
       'edge.hover.color': edgeColoring,
       'edge.default.text.color': edgeColoring,
@@ -121,8 +121,8 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
         edgeThemer.activate();
         graph.anchors.lifecycle.disable();
         graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
-        graph.canvas.events.subscribe(
-          'onGraphUnderCursorChange',
+        graph.surface.events.elements.subscribe(
+          'onElementsUnderCursorChange',
           setActiveMstIndex,
         );
       },
@@ -133,8 +133,8 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
         edgeThemer.deactivate();
         graph.anchors.lifecycle.enable();
         graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
-        graph.canvas.events.unsubscribe(
-          'onGraphUnderCursorChange',
+        graph.surface.events.elements.unsubscribe(
+          'onElementsUnderCursorChange',
           setActiveMstIndex,
         );
       },

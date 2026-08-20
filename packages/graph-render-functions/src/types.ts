@@ -78,7 +78,7 @@ export type DefaultEdgeRenderOptions = Omit<
 
 /** the graph state {@link DefaultEdgeRenderOptions} is derived from */
 export type EdgeRenderOptionsSource = {
-  canvas: {
+  surface: {
     shapes: AnimatedShapeFactories;
     theme: { _resolveToken: (token: 'canvas.color') => Color };
   };

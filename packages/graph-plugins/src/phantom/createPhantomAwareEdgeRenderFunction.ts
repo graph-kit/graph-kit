@@ -17,7 +17,7 @@ import { PhantomControls } from './types.ts';
  */
 export type PhantomAwareGraph = Pick<
   EdgeRenderOptionsSource,
-  'canvas' | 'metadata'
+  'surface' | 'metadata'
 > & {
   theme: { tokenResolver: ComputedTokenResolver };
   phantom: Pick<PhantomControls, 'edges' | 'getNodePosition'>;
@@ -42,7 +42,7 @@ export const createPhantomAwareEdgeRenderFunction = (
 
   return createEdgeRenderFunction({
     ...createDefaultEdgeRenderOptions({
-      canvas: graph.canvas,
+      surface: graph.surface,
       metadata: graph.metadata,
       resolveToken: graph.theme.tokenResolver,
     }),

@@ -1,10 +1,10 @@
 import { GraphPlugin } from '@graph/plugins-shared/plugins';
 
-import { CanvasPlugin } from '../canvas/types.ts';
+import { SurfacePlugin } from '../surface/types.ts';
 
 export type AnimationPlugin = GraphPlugin<{
   name: 'animation';
-  dependsOn: [CanvasPlugin];
+  dependsOn: [SurfacePlugin];
   controls: {
     /**
      * opens a capture window and returns the `finalize` that closes it. prefer

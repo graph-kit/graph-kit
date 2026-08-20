@@ -5,8 +5,8 @@ import {
   WithTheme,
 } from '@graph/plugins-shared/plugins';
 
-import { CanvasPlugin } from '../canvas/types.ts';
 import { FocusPlugin } from '../focus/types.ts';
+import { SurfacePlugin } from '../surface/types.ts';
 import { AnchorsEventMap } from './events.ts';
 import { AnchorsThemes } from './themes.ts';
 
@@ -42,6 +42,6 @@ export type AnchorsPlugin = GraphPlugin<{
   name: 'anchors';
   controls: WithLifecycle<AnchorsControls>;
   events: AnchorsEventMap;
-  dependsOn: [CanvasPlugin];
+  dependsOn: [SurfacePlugin];
   optionalDependsOn: [FocusPlugin];
 }>;

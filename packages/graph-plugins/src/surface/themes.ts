@@ -60,7 +60,7 @@ type CanvasThemeValues = {
   cursor: ThemeValue<Cursor | CursorFallback>;
 };
 
-export type CanvasThemes = {
+export type SurfaceThemes = {
   'node.default.text.content': NodeThemeValues['text'];
   'node.default.text.size': NodeThemeValues['textSize'];
   'node.default.text.color': NodeThemeValues['textColor'];
@@ -102,8 +102,8 @@ export type CanvasThemes = {
   'canvas.cursor': CanvasThemeValues['cursor'];
 };
 
-export const createCanvasDetectors = (
-  resolveToken: TokenResolver<CanvasThemes>,
+export const createSurfaceDetectors = (
+  resolveToken: TokenResolver<SurfaceThemes>,
   elementsUnderCursor: DeepReadonly<ElementsUnderCursor>,
 ): ComputedTokenDetectorMap => {
   const hovered = (id: string) => elementsUnderCursor.topElement?.id === id;
@@ -205,44 +205,45 @@ export const createCanvasDetectors = (
   };
 };
 
-export const createCanvasThemeOverrides = (): ThemeOverrides<CanvasThemes> => ({
-  'node.default.text.content': [],
-  'node.default.text.size': [],
-  'node.default.text.color': [],
-  'node.default.text.fontWeight': [],
-  'node.default.size': [],
-  'node.default.border.width': [],
-  'node.default.border.color': [],
-  'node.default.color': [],
-  'node.default.cursor': [],
+export const createSurfaceThemeOverrides =
+  (): ThemeOverrides<SurfaceThemes> => ({
+    'node.default.text.content': [],
+    'node.default.text.size': [],
+    'node.default.text.color': [],
+    'node.default.text.fontWeight': [],
+    'node.default.size': [],
+    'node.default.border.width': [],
+    'node.default.border.color': [],
+    'node.default.color': [],
+    'node.default.cursor': [],
 
-  'node.hover.text.content': [],
-  'node.hover.text.size': [],
-  'node.hover.text.color': [],
-  'node.hover.text.fontWeight': [],
-  'node.hover.size': [],
-  'node.hover.border.width': [],
-  'node.hover.border.color': [],
-  'node.hover.color': [],
-  'node.hover.cursor': [],
+    'node.hover.text.content': [],
+    'node.hover.text.size': [],
+    'node.hover.text.color': [],
+    'node.hover.text.fontWeight': [],
+    'node.hover.size': [],
+    'node.hover.border.width': [],
+    'node.hover.border.color': [],
+    'node.hover.color': [],
+    'node.hover.cursor': [],
 
-  'edge.default.text.content': [],
-  'edge.default.text.size': [],
-  'edge.default.text.color': [],
-  'edge.default.text.fontWeight': [],
-  'edge.default.color': [],
-  'edge.default.width': [],
-  'edge.default.cursor': [],
+    'edge.default.text.content': [],
+    'edge.default.text.size': [],
+    'edge.default.text.color': [],
+    'edge.default.text.fontWeight': [],
+    'edge.default.color': [],
+    'edge.default.width': [],
+    'edge.default.cursor': [],
 
-  'edge.hover.text.content': [],
-  'edge.hover.text.size': [],
-  'edge.hover.text.color': [],
-  'edge.hover.text.fontWeight': [],
-  'edge.hover.color': [],
-  'edge.hover.width': [],
-  'edge.hover.cursor': [],
+    'edge.hover.text.content': [],
+    'edge.hover.text.size': [],
+    'edge.hover.text.color': [],
+    'edge.hover.text.fontWeight': [],
+    'edge.hover.color': [],
+    'edge.hover.width': [],
+    'edge.hover.cursor': [],
 
-  'canvas.color': [],
-  'canvas.patternColor': [],
-  'canvas.cursor': [],
-});
+    'canvas.color': [],
+    'canvas.patternColor': [],
+    'canvas.cursor': [],
+  });

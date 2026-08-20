@@ -5,8 +5,8 @@ import {
   WithTheme,
 } from '@graph/plugins-shared/plugins';
 
-import { CanvasPlugin } from '../canvas/types.ts';
 import { HistoryPlugin } from '../history/types.ts';
+import { SurfacePlugin } from '../surface/types.ts';
 import { AnnotationsThemes } from './themes.ts';
 
 export type AnnotationsPluginControls = WithLifecycle<
@@ -17,6 +17,6 @@ export type AnnotationsPlugin = GraphPlugin<{
   name: 'annotations';
   controls: AnnotationsPluginControls;
   transit: Annotation[];
-  dependsOn: [CanvasPlugin];
+  dependsOn: [SurfacePlugin];
   optionalDependsOn: [HistoryPlugin];
 }>;

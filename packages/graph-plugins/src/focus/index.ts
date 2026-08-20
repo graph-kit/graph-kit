@@ -1,10 +1,10 @@
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { ElementRemovalPayload } from '@graph/primitives/transactions/types';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { NODE_DRAG_PLUGIN_ID } from '../node-drag/constants.ts';
 import { FOCUS_PLUGIN_ID, INTERACTIVE_ELEMENT_SELECTOR } from './constants.ts';
 import { createFocusEventRegistry } from './events.ts';
@@ -76,7 +76,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
     setFocus(newFocusedIds);
   };
 
-  const handleMouseDown = ({ topElement, event }: CanvasGraphMouseEvent) => {
+  const handleMouseDown = ({ topElement, event }: ElementMouseEvent) => {
     if (event.button !== MOUSE_BUTTONS.left) return;
     if (!topElement) {
       if (!event.shiftKey) clearFocus();
@@ -106,7 +106,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
 
   const enable = () => {
     // focus a node when clicked, or clear focus if background is clicked
-    controls.canvas.surface.events.elements.handle(
+    controls.surface.events.elements.handle(
       'onMouseDown',
       handleMouseDown,
       FOCUS_PLUGIN_ID,
@@ -114,21 +114,15 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
         before: [NODE_DRAG_PLUGIN_ID],
       },
     );
-    controls.canvas.surface.events.dom.subscribe(
-      'onClick',
-      clearFocusOnOutsideClick,
-    );
+    controls.surface.events.dom.subscribe('onClick', clearFocusOnOutsideClick);
 
     // clean up the focus so removed elements aren't in the state
     events.subscribe('onElementsRemoved', clearRemovedElementsFromFocus);
   };
 
   const disable = () => {
-    controls.canvas.surface.events.elements.unhandle(
-      'onMouseDown',
-      handleMouseDown,
-    );
-    controls.canvas.surface.events.dom.unsubscribe(
+    controls.surface.events.elements.unhandle('onMouseDown', handleMouseDown);
+    controls.surface.events.dom.unsubscribe(
       'onClick',
       clearFocusOnOutsideClick,
     );

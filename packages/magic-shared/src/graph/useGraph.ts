@@ -6,7 +6,6 @@ import { adjacencyLists } from '@graph/plugins/adjacency-lists/index';
 import { anchors } from '@graph/plugins/anchors/index';
 import { animation } from '@graph/plugins/animation/index';
 import { annotations } from '@graph/plugins/annotations/index';
-import { canvas } from '@graph/plugins/canvas/index';
 import { characteristics } from '@graph/plugins/characteristics/index';
 import { focus } from '@graph/plugins/focus/index';
 import { history } from '@graph/plugins/history/index';
@@ -20,6 +19,7 @@ import { NodeDragOptions } from '@graph/plugins/node-drag/options';
 import { nodeLabel } from '@graph/plugins/node-label/index';
 import { createPhantomAwareEdgeRenderFunction } from '@graph/plugins/phantom/createPhantomAwareEdgeRenderFunction';
 import { phantom } from '@graph/plugins/phantom/index';
+import { surface } from '@graph/plugins/surface/index';
 import { transitionMatrix } from '@graph/plugins/transition-matrix/index';
 import { dark } from '@graph/theme-presets/dark/index';
 import { light } from '@graph/theme-presets/light/index';
@@ -45,7 +45,7 @@ export type UseGraphOptions = {
 const graphPlugins = (
   options: UseGraphOptions & { canvasSurface: CanvasSurface },
 ) => [
-  canvas(options.canvasSurface),
+  surface(options.canvasSurface),
   history,
   focus,
   marquee,

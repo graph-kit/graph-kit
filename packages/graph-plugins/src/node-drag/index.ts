@@ -1,3 +1,4 @@
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { devAssert, devWarning } from '@core/utils/debugging';
@@ -7,8 +8,7 @@ import { createDragState } from '@graph/plugins-shared/drag';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
-import { GraphUnderCursor } from '../canvas/types.ts';
+import { GraphUnderCursor } from '../surface/types.ts';
 import {
   NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD,
   NODE_DRAG_PLUGIN_ID,
@@ -40,7 +40,7 @@ export const nodeDrag =
     let nodePositionStream: NodePositionStreamControls | undefined;
 
     const beginDrag = (
-      { topElement, coords, event }: CanvasGraphMouseEvent,
+      { topElement, coords, event }: ElementMouseEvent,
       consume: () => void,
     ) => {
       if (event.button !== MOUSE_BUTTONS.left) return;
@@ -151,7 +151,7 @@ export const nodeDrag =
     const cursorTheme = createDragThemer(controls, dragState);
 
     const enable = () => {
-      controls.canvas.surface.events.elements.handle(
+      controls.surface.events.elements.handle(
         'onMouseDown',
         beginDrag,
         NODE_DRAG_PLUGIN_ID,
@@ -159,7 +159,7 @@ export const nodeDrag =
           before: [ANCHOR_PLUGIN_ID],
         },
       );
-      controls.canvas.surface.events.elements.handle(
+      controls.surface.events.elements.handle(
         'onMouseUp',
         drop,
         NODE_DRAG_PLUGIN_ID,
@@ -167,8 +167,8 @@ export const nodeDrag =
           before: [ANCHOR_PLUGIN_ID],
         },
       );
-      controls.canvas.events.handle(
-        'onGraphUnderCursorChange',
+      controls.surface.events.elements.handle(
+        'onElementsUnderCursorChange',
         drag,
         NODE_DRAG_PLUGIN_ID,
         {
@@ -180,12 +180,12 @@ export const nodeDrag =
     };
 
     const disable = () => {
-      controls.canvas.surface.events.elements.unhandle(
-        'onMouseDown',
-        beginDrag,
+      controls.surface.events.elements.unhandle('onMouseDown', beginDrag);
+      controls.surface.events.elements.unhandle('onMouseUp', drop);
+      controls.surface.events.elements.unhandle(
+        'onElementsUnderCursorChange',
+        drag,
       );
-      controls.canvas.surface.events.elements.unhandle('onMouseUp', drop);
-      controls.canvas.events.unhandle('onGraphUnderCursorChange', drag);
       events.unsubscribe('onElementsRemoved', abortDragOnTamper);
       cursorTheme.disable();
       drop();

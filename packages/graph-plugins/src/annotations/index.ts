@@ -1,12 +1,12 @@
 import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '@canvas/primitives/aggregator/constants';
 import { Aggregator } from '@canvas/primitives/aggregator/types';
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
-import { GraphUnderCursor } from '../canvas/types.ts';
+import { GraphUnderCursor } from '../surface/types.ts';
 import {
   ANNOTATION_HANDLER_PRIORITY,
   ANNOTATION_PLUGIN_ID,
@@ -24,19 +24,19 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   const theme = createThemeController(createAnnotationsThemeOverrides());
 
   const engine = createAnnotations({
-    surface: controls.canvas.surface,
+    surface: controls.surface,
     eraserOutlineColor: () =>
       theme._resolveToken('annotations.eraser.outline.color'),
   });
 
-  const cursorLayer = controls.canvas.theme.createLayer(
+  const cursorLayer = controls.surface.theme.createLayer(
     ANNOTATION_THEME_LAYER_ID,
   );
 
   let enabled = true;
 
   const beginStroke = (
-    { coords, event }: CanvasGraphMouseEvent,
+    { coords, event }: ElementMouseEvent,
     consume: () => void,
   ) => {
     if (event.button !== MOUSE_BUTTONS.left) return;
@@ -77,7 +77,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     return aggregator;
   };
 
-  controls.canvas.aggregator.transformers.push(addAnnotationsToAggregator);
+  controls.surface.aggregator.transformers.push(addAnnotationsToAggregator);
 
   const captureSnapshot = () => controls.history?.captureSnapshot();
 
@@ -87,11 +87,11 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
     cursorLayer.set('canvas.cursor', () => engine.cursor());
 
-    const { elements } = controls.canvas.surface.events;
+    const { elements } = controls.surface.events;
     const priority = ANNOTATION_HANDLER_PRIORITY;
     elements.handle('onMouseDown', beginStroke, ANNOTATION_PLUGIN_ID, priority);
-    controls.canvas.events.handle(
-      'onGraphUnderCursorChange',
+    controls.surface.events.elements.handle(
+      'onElementsUnderCursorChange',
       extendStroke,
       ANNOTATION_PLUGIN_ID,
       priority,
@@ -105,9 +105,12 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
     cursorLayer.removeAll();
 
-    const { elements } = controls.canvas.surface.events;
+    const { elements } = controls.surface.events;
     elements.unhandle('onMouseDown', beginStroke);
-    controls.canvas.events.unhandle('onGraphUnderCursorChange', extendStroke);
+    controls.surface.events.elements.unhandle(
+      'onElementsUnderCursorChange',
+      extendStroke,
+    );
     elements.unhandle('onMouseUp', endStroke);
     elements.unhandle('onClick', swallowClick);
   };

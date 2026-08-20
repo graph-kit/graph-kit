@@ -11,7 +11,7 @@ export const createNodeThemer = (
   color: ThemeValue<Color, [CoreNode]>,
 ) => {
   return graph.theme.createThemer({
-    canvas: {
+    surface: {
       'node.default.border.color': color,
       'node.hover.border.color': color,
     },

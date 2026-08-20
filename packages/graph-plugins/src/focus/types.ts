@@ -6,7 +6,7 @@ import {
 } from '@graph/plugins-shared/plugins';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
-import { CanvasPlugin } from '../canvas/types.ts';
+import { SurfacePlugin } from '../surface/types.ts';
 import { FocusEventMap } from './events.ts';
 import { FocusThemes } from './themes.ts';
 
@@ -49,5 +49,5 @@ export type FocusPlugin = GraphPlugin<{
   name: 'focus';
   controls: WithLifecycle<FocusControls>;
   events: FocusEventMap;
-  dependsOn: [CanvasPlugin];
+  dependsOn: [SurfacePlugin];
 }>;

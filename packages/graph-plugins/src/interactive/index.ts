@@ -1,10 +1,10 @@
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { nullThrows } from '@core/utils/assert';
 import { getCtx } from '@core/utils/canvas/index';
 import { isTypingTarget } from '@core/utils/keyboard';
 import { getValue } from '@core/utils/maybeGetter/index';
 import Fraction from 'fraction.js';
 
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { INTERACTIVE_PLUGIN_ID } from './constants.ts';
 import { DEFAULT_INTERACTIVE_OPTIONS, InteractiveOptions } from './options.ts';
 import { InteractivePlugin } from './types.ts';
@@ -28,10 +28,7 @@ export const interactive =
 
     let lastClickTime = 0;
 
-    const handleNodeCreation = ({
-      coords,
-      topElement,
-    }: CanvasGraphMouseEvent) => {
+    const handleNodeCreation = ({ coords, topElement }: ElementMouseEvent) => {
       const ABOUT_A_FEW_HUNDRED_MS = 350;
       const timeDiff = Date.now() - lastClickTime;
       const closeEnoughInTime = timeDiff < ABOUT_A_FEW_HUNDRED_MS;
@@ -51,10 +48,7 @@ export const interactive =
       captureHistorySnapshot();
     };
 
-    const handleEdgeTextArea = ({
-      topElement,
-      coords,
-    }: CanvasGraphMouseEvent) => {
+    const handleEdgeTextArea = ({ topElement, coords }: ElementMouseEvent) => {
       if (
         !topElement ||
         !topElement.shape.textHitbox?.(coords) ||
@@ -63,7 +57,7 @@ export const interactive =
         return;
       }
 
-      const ctx = getCtx(controls.canvas.surface.canvas);
+      const ctx = getCtx(controls.surface.canvas);
 
       topElement.shape.startTextAreaEdit?.(ctx, (textAreaContent) => {
         const edge = nullThrows(
@@ -118,7 +112,7 @@ export const interactive =
     };
 
     const handleEdgeCreation = (sourceNode: { id: string }) => {
-      const { elements } = controls.canvas.surface.elementsUnderCursor;
+      const { elements } = controls.surface.elementsUnderCursor;
 
       const nodeUnderneathAnchor = elements.findLast((el) =>
         controls.isNode(el.id),
@@ -157,11 +151,11 @@ export const interactive =
     };
 
     const enable = () => {
-      controls.canvas.surface.events.elements.subscribe(
+      controls.surface.events.elements.subscribe(
         'onMouseDown',
         handleEdgeTextArea,
       );
-      controls.canvas.surface.events.elements.handle(
+      controls.surface.events.elements.handle(
         'onClick',
         handleNodeCreation,
         INTERACTIVE_PLUGIN_ID,
@@ -170,26 +164,20 @@ export const interactive =
         'onNodeAnchorDrop',
         handleEdgeCreation,
       );
-      controls.canvas.surface.events.dom.subscribe(
-        'onKeyDown',
-        removeFocusedElements,
-      );
+      controls.surface.events.dom.subscribe('onKeyDown', removeFocusedElements);
     };
 
     const disable = () => {
-      controls.canvas.surface.events.elements.unsubscribe(
+      controls.surface.events.elements.unsubscribe(
         'onMouseDown',
         handleEdgeTextArea,
       );
-      controls.canvas.surface.events.elements.unhandle(
-        'onClick',
-        handleNodeCreation,
-      );
+      controls.surface.events.elements.unhandle('onClick', handleNodeCreation);
       controls.anchors?.events.unsubscribe(
         'onNodeAnchorDrop',
         handleEdgeCreation,
       );
-      controls.canvas.surface.events.dom.unsubscribe(
+      controls.surface.events.dom.unsubscribe(
         'onKeyDown',
         removeFocusedElements,
       );

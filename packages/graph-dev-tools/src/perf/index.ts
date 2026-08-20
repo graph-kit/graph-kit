@@ -7,7 +7,7 @@
  *
  * @example
  * // in a product's setup, behind import.meta.env.DEV
- * startPerfTools(graph, graph.canvas.magicCanvas.lifecycleEvents);
+ * startPerfTools(graph, graph.surface.magicCanvas.lifecycleEvents);
  *
  * // then, in the console
  * __graphPerf.scene({ nodes: 25 })

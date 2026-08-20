@@ -3,6 +3,9 @@ import {
   CanvasElement,
 } from '@canvas/primitives/aggregator/types';
 import { rect } from '@canvas/primitives/shapes/rect/index';
+import { TEXT_BLOCK_DEFAULTS } from '@canvas/primitives/text/defaults';
+import { getTextDimensions } from '@canvas/primitives/text/getTextDimensions';
+import type { TextBlock } from '@canvas/primitives/text/types';
 
 import { onMounted } from 'vue';
 
@@ -26,6 +29,16 @@ import { useProductHistory } from './internals/useProductHistory.ts';
 import { useProductLocalStorage } from './internals/useProductLocalStorage.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
+
+const NAME_TAG_HEIGHT = 20;
+const NAME_TAG_PADDING_X = 8;
+const NAME_TAG_MAX_CHARS = 10;
+const NAME_TAG_TRUNCATED_CHARS = 8;
+
+const toDisplayedName = (name: string) =>
+  name.length > NAME_TAG_MAX_CHARS
+    ? `${name.slice(0, NAME_TAG_TRUNCATED_CHARS)}...`
+    : name;
 
 export const useMagicProduct = (
   host: MagicProductHost,
@@ -88,26 +101,23 @@ export const useMagicProduct = (
     for (const [userId, p] of Object.entries(
       magic.multiplayer.room.state.value.userIdToPresence,
     )) {
+      const textBlock: Required<TextBlock> = {
+        ...TEXT_BLOCK_DEFAULTS,
+        content: toDisplayedName(roster[userId].displayName),
+        fontWeight: 'bold',
+        color: 'white',
+      };
+
       const el: CanvasElement = {
         id: userId + '_nameTag',
         priority: Infinity,
         shape: rect({
           at: p.cursorPosition ?? { x: 0, y: 0 },
-          height: 20,
-          width: 60,
+          height: NAME_TAG_HEIGHT,
+          width: getTextDimensions(textBlock).width + NAME_TAG_PADDING_X * 2,
           fillColor: tierColor[roster[userId].tier],
           borderRadius: 5,
-          textArea: {
-            textBlock: {
-              // 1. test to see if the name is greater than 10 characters long
-              // 2. if it is, truncate it to 8 characters and a '...'
-              // 3. measure the text with canvas primitive text measuring tool
-              // 4. ensure the width is snug on the displayed name
-              content: roster[userId].displayName,
-              fontWeight: 'bold',
-              color: 'white',
-            },
-          },
+          textArea: { textBlock },
         }),
       };
       agg.push(el);

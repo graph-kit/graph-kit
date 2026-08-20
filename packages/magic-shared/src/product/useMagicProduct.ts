@@ -116,10 +116,7 @@ export const useMagicProduct = (
   };
 
   if (multiplayer) {
-    multiplayer.events.subscribe('onRoomJoined', () => {
-      console.log('room joined');
-      magic.surface.aggregator.transformers.push(nameTagElement);
-    });
+    magic.surface.aggregator.transformers.push(nameTagElement);
   }
 
   if (magic.lensChips) {

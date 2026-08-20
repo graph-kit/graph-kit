@@ -1,11 +1,11 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
 import { scribble } from '@canvas/primitives/shapes/scribble/index';
 import type { Coordinate } from '@canvas/primitives/types/utility';
+import { createEventHub } from '@core/events/createEventHub';
 import colors from '@core/utils/colors';
 import type { Color } from '@core/utils/colors';
 import { CURSOR } from '@core/utils/cursor';
 import { generateId } from '@core/utils/id';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { reactiveMap, signal } from '@reactive/primitives/index';
 
 import {

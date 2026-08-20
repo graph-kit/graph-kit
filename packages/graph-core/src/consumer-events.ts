@@ -1,4 +1,4 @@
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
+import { ReadonlyGraphEventHub } from '@graph/primitives/events';
 import {
   ElementAdditionPayload,
   ElementRemovalPayload,
@@ -76,9 +76,9 @@ export type TransitEventMap = {
 // "underscore signals deliberate, semi-public, not the intended path" convention as
 // _resolveToken. this shape will likely change (e.g. _internal growing more fields);
 // consumers reaching into _internal should expect it to move.
-export type ConsumerEventsHub = ReadonlyEventHub<ConsumerEventMap> & {
-  transit: ReadonlyEventHub<TransitEventMap>;
+export type ConsumerEventsHub = ReadonlyGraphEventHub<ConsumerEventMap> & {
+  transit: ReadonlyGraphEventHub<TransitEventMap>;
   _internal: {
-    core: ReadonlyEventHub<CoreEventMap>;
+    core: ReadonlyGraphEventHub<CoreEventMap>;
   };
 };

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@canvas/surface": "workspace:*",
+    "@core/events": "workspace:*",
     "@graph/core": "workspace:*",
     "@graph/plugins-shared": "workspace:*",
     "@graph/primitives": "workspace:*",

@@ -19,8 +19,8 @@
   "dependencies": {
     "@canvas/primitives": "workspace:*",
     "@canvas/surface": "workspace:*",
+    "@core/events": "workspace:*",
     "@core/utils": "workspace:*",
-    "@graph/primitives": "workspace:*",
     "@reactive/primitives": "workspace:*"
   },
   "devDependencies": {

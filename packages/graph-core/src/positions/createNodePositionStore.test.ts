@@ -1,4 +1,4 @@
-import { createMockEventHub } from '@graph/primitives/testing/events/createMockEventHub';
+import { createMockEventHub } from '@core/events/testing/createMockEventHub';
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_POSITION } from './constants.ts';

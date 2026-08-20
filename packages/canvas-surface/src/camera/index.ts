@@ -1,4 +1,4 @@
-import type { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
+import type { ReadonlyEventHub } from '@core/events/createEventHub';
 
 import type { Ref } from 'vue';
 

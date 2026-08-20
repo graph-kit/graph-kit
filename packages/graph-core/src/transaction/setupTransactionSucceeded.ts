@@ -1,4 +1,4 @@
-import { EventHub } from '@graph/primitives/events/createEventHub';
+import { EventHub } from '@core/events/createEventHub';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import { Signal } from '@reactive/primitives/index';
 

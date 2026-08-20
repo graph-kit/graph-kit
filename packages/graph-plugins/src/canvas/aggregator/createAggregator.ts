@@ -1,6 +1,6 @@
 import { ShapeRenderer } from '@canvas/primitives/animation/index';
+import { EventHub } from '@core/events/createEventHub';
 import { Coordinate } from '@graph/plugins-shared/drag';
-import { EventHub } from '@graph/primitives/events/createEventHub';
 import { DeepReadonly } from 'ts-essentials';
 
 import { CanvasEventMap } from '../events.ts';

@@ -5,10 +5,16 @@ import { EventMapToEventRegistry, GenericEventMap } from './types.ts';
  * creates a `subscribe`, `unsubscribe`, and `emit` function for
  * registering, deregistering and broadcasting graph events.
  */
-export const createEventHub = <EventMap extends GenericEventMap>(
+export const createEventHub = <
+  EventMap extends GenericEventMap,
+  HandlerId extends string = string,
+>(
   eventRegistry: EventMapToEventRegistry<EventMap>,
 ) => {
-  const { handle, unhandle, fireHandlers } = createEventHandler<EventMap>();
+  const { handle, unhandle, fireHandlers } = createEventHandler<
+    EventMap,
+    HandlerId
+  >();
   return {
     /**
      * subscribe to an event to receive updates when it is triggered
@@ -76,11 +82,12 @@ export const createEventHub = <EventMap extends GenericEventMap>(
   };
 };
 
-export type EventHub<EventMap extends GenericEventMap> = ReturnType<
-  typeof createEventHub<EventMap>
->;
+export type EventHub<
+  EventMap extends GenericEventMap,
+  HandlerId extends string = string,
+> = ReturnType<typeof createEventHub<EventMap, HandlerId>>;
 
-export type ReadonlyEventHub<EventMap extends GenericEventMap> = Omit<
-  EventHub<EventMap>,
-  'emit'
->;
+export type ReadonlyEventHub<
+  EventMap extends GenericEventMap,
+  HandlerId extends string = string,
+> = Omit<EventHub<EventMap, HandlerId>, 'emit'>;

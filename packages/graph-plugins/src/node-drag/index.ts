@@ -3,7 +3,7 @@ import { devAssert, devWarning } from '@core/utils/debugging';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { createDragState } from '@graph/plugins-shared/drag';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
@@ -34,7 +34,7 @@ export const nodeDrag =
     };
 
     const nodeDragEventRegistry = createNodeDragEventRegistry();
-    const nodeDragEventHub = createEventHub(nodeDragEventRegistry);
+    const nodeDragEventHub = createGraphEventHub(nodeDragEventRegistry);
 
     const dragState = createDragState<NodeIdDragState>();
     let nodePositionStream: NodePositionStreamControls | undefined;

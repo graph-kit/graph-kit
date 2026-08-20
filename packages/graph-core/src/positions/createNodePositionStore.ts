@@ -1,7 +1,7 @@
+import { EventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { IS_DEV, devWarning } from '@core/utils/debugging';
 import { getValue } from '@core/utils/maybeGetter/index';
-import { EventHub } from '@graph/primitives/events/createEventHub';
 
 import { CoreEventMap } from '../events.ts';
 import { DEFAULT_POSITION } from './constants.ts';
@@ -13,7 +13,7 @@ import {
 } from './types.ts';
 
 export const createNodePositionStore = (
-  events: EventHub<CoreEventMap>,
+  events: Pick<EventHub<CoreEventMap>, 'emit'>,
 ): NodePositionStoreControls => {
   // setMany mutates the stored Position in place, so a reactiveMap would miss every
   // move and nothing may derive from positions

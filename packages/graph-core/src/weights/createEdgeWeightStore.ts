@@ -1,6 +1,6 @@
+import { EventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { getValue } from '@core/utils/maybeGetter/index';
-import { EventHub } from '@graph/primitives/events/createEventHub';
 import { reactiveMap } from '@reactive/primitives/index';
 import Fraction from 'fraction.js';
 
@@ -10,7 +10,7 @@ import { DEFAULT_WEIGHT } from './constants.ts';
 import { EdgeWeightStoreControls } from './types.ts';
 
 export const createEdgeWeightStore = (
-  events: EventHub<CoreEventMap>,
+  events: Pick<EventHub<CoreEventMap>, 'emit'>,
   options: CoreOptions,
 ): EdgeWeightStoreControls => {
   const edgeIdToEdgeWeight = reactiveMap<string, Fraction>();

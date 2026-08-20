@@ -1,5 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import type { CoreEdge, CoreNode } from '@graph/primitives/types';
 import { batch, signal } from '@reactive/primitives/index';
 import Fraction from 'fraction.js';
@@ -22,7 +22,7 @@ export const core = (options: Partial<CoreOptions>) => {
   };
 
   const eventRegistry = createCoreEventRegistry();
-  const coreEventHub = createEventHub(eventRegistry);
+  const coreEventHub = createGraphEventHub(eventRegistry);
 
   const nodes = signal<CoreNode[]>([]);
   const edges = signal<CoreEdge[]>([]);

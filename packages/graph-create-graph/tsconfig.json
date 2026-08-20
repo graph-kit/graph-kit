@@ -9,6 +9,7 @@
     { "path": "../graph-core" },
     { "path": "../graph-plugins-shared" },
     { "path": "../graph-plugins" },
+    { "path": "../core-events" },
     { "path": "../graph-primitives" },
     { "path": "../graph-render-functions" },
     { "path": "../core-themes" },

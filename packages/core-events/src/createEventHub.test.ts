@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CoreNode } from '../types.ts';
 import { EventHub, createEventHub } from './createEventHub.ts';
 import { EventMapToEventRegistry } from './types.ts';
 
+type MockNode = { id: string };
+
 type MockEventMap = {
-  onNodesAdded: (nodes: CoreNode[]) => void;
+  onNodesAdded: (nodes: MockNode[]) => void;
   onStructureChange: () => void;
 };
 

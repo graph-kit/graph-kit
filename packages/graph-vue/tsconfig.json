@@ -9,6 +9,7 @@
     { "path": "../reactive-primitives" },
     { "path": "../graph-core" },
     { "path": "../graph-create-graph" },
+    { "path": "../core-events" },
     { "path": "../graph-primitives" },
     { "path": "../graph-plugins" }
   ],

@@ -1,6 +1,6 @@
+import type { ReadonlyEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import type { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 
 import { type Ref, onMounted, ref } from 'vue';
 

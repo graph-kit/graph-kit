@@ -8,7 +8,7 @@
     { "path": "../canvas-primitives" },
     { "path": "../canvas-surface" },
     { "path": "../core-utils" },
-    { "path": "../graph-primitives" },
+    { "path": "../core-events" },
     { "path": "../reactive-primitives" }
   ],
   "include": ["src/**/*.ts", "src/**/*.d.ts"]

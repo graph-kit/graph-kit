@@ -1,5 +1,5 @@
 {
-  "name": "@graph/primitives",
+  "name": "@core/events",
   "version": "1.0.0",
   "private": true,
   "publishConfig": {
@@ -13,13 +13,11 @@
     }
   },
   "scripts": {
-    "build:types": "vue-tsc -b tsconfig.json"
-  },
-  "dependencies": {
-    "@core/events": "workspace:*",
-    "fraction.js": "^5.3.4"
+    "build:types": "tsc -b .",
+    "test": "vitest"
   },
   "devDependencies": {
-    "ts-essentials": "^10.2.0"
+    "ts-essentials": "^10.2.0",
+    "vitest": "^3.2.4"
   }
 }

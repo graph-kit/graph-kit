@@ -3,44 +3,39 @@ import type { AnyFunction } from 'ts-essentials';
 import { getSortedByPriority } from './getSortedByPriority.ts';
 import { GenericEventMap } from './types.ts';
 
-export type HandlerPriority = {
+export type HandlerPriority<HandlerId extends string = string> = {
   /** all registered handlers that we you want to yield to */
   before: readonly HandlerId[];
 };
-
-export type HandlerId =
-  | 'core'
-  | 'plugins/canvas'
-  | 'plugins/anchors'
-  | 'plugins/node-drag'
-  | 'plugins/history'
-  | 'plugins/marquee'
-  | 'plugins/focus'
-  | 'plugins/annotations'
-  | 'plugins/interactive';
 
 export type WithConsume<Callback extends AnyFunction> = (
   ...args: [...Parameters<Callback>, consume: () => void]
 ) => ReturnType<Callback>;
 
-type HandlerData<Callback extends AnyFunction> = {
-  id: string | undefined;
-  priority: HandlerPriority;
+type HandlerData<Callback extends AnyFunction, HandlerId extends string> = {
+  id: HandlerId | undefined;
+  priority: HandlerPriority<HandlerId>;
   callback: WithConsume<Callback>;
 };
 
-type HandlerRecord<EventMap extends GenericEventMap> = {
-  [EventName in keyof EventMap]?: HandlerData<EventMap[EventName]>[];
+type HandlerRecord<
+  EventMap extends GenericEventMap,
+  HandlerId extends string,
+> = {
+  [EventName in keyof EventMap]?: HandlerData<EventMap[EventName], HandlerId>[];
 };
 
-export const createEventHandler = <EventMap extends GenericEventMap>() => {
-  const allHandlers: HandlerRecord<EventMap> = {};
+export const createEventHandler = <
+  EventMap extends GenericEventMap,
+  HandlerId extends string = string,
+>() => {
+  const allHandlers: HandlerRecord<EventMap, HandlerId> = {};
   return {
     handle: <EventName extends keyof EventMap>(
       eventName: EventName,
       eventCallback: WithConsume<EventMap[EventName]>,
       handlerId: HandlerId,
-      priority: HandlerPriority = { before: [] },
+      priority: HandlerPriority<HandlerId> = { before: [] },
     ) => {
       const handlers = allHandlers[eventName] ?? [];
 

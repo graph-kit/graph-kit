@@ -34,7 +34,7 @@
 
       <VStack
         gap="0"
-        class="text-lg"
+        class="text-lg max-h-72 overflow-auto"
       >
         <RosterCollaborator
           v-for="(member, userId) in roster"

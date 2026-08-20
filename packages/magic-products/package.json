@@ -31,7 +31,6 @@
     "@magic/shared": "workspace:*",
     "@mdi/js": "^7.4.47",
     "@vueuse/core": "catalog:",
-    "ctrl-keys": "^1.0.6",
     "fraction.js": "^5.3.4",
     "tinycolor2": "catalog:"
   },

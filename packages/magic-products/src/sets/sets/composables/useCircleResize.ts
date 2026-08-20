@@ -1,4 +1,4 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 
 import type { Ref } from 'vue';
 
@@ -8,7 +8,7 @@ import { MAX_CIRCLE_RADIUS, MIN_CIRCLE_RADIUS } from '../other/constants.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleResizeProps = {
-  surface: CanvasProps;
+  surface: CanvasSurface;
   definitions: Ref<SetDefinition[]>;
 };
 

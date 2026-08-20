@@ -1,5 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import type { CoreEdge, CoreNode } from '@graph/primitives/types';
 import { batch, signal } from '@reactive/primitives/index';
 import Fraction from 'fraction.js';
@@ -11,6 +11,7 @@ import { CoreOptions, DEFAULT_CORE_OPTIONS } from './options.ts';
 import { createNodePositionStore } from './positions/createNodePositionStore.ts';
 import { createCommitTransaction } from './transaction/createCommitTransaction.ts';
 import { setupTransactionSucceeded } from './transaction/setupTransactionSucceeded.ts';
+import { createInspectDraft } from './transaction/validateDraft.ts';
 import type { CoreControls, CoreTransitControls } from './types.ts';
 import { createEdgeWeightStore } from './weights/createEdgeWeightStore.ts';
 
@@ -21,7 +22,7 @@ export const core = (options: Partial<CoreOptions>) => {
   };
 
   const eventRegistry = createCoreEventRegistry();
-  const coreEventHub = createEventHub(eventRegistry);
+  const coreEventHub = createGraphEventHub(eventRegistry);
 
   const nodes = signal<CoreNode[]>([]);
   const edges = signal<CoreEdge[]>([]);
@@ -53,11 +54,21 @@ export const core = (options: Partial<CoreOptions>) => {
   const onTransactionSucceeded = setupTransactionSucceeded({
     edges,
     nodes,
+    positions: nodePositionStore,
+    weights: edgeWeightStore,
     emit: coreEventHub.emit,
   });
 
+  // one set of rules, asked either way: the transaction enforces them, consumers ask
+  // ahead of an edit so a refusal lands where the user made it
+  const inspectDraft = createInspectDraft(
+    { nodes: readNodes, edges: readEdges },
+    metadata.directed,
+  );
+
   const commitTransaction = createCommitTransaction({
     graph: { nodes: readNodes, edges: readEdges },
+    inspectDraft,
     onTransactionSucceeded,
   });
 
@@ -66,8 +77,6 @@ export const core = (options: Partial<CoreOptions>) => {
     graph: {
       nodes: readNodes,
       edges: readEdges,
-      positions: nodePositionStore,
-      weights: edgeWeightStore,
     },
   });
 
@@ -76,6 +85,11 @@ export const core = (options: Partial<CoreOptions>) => {
     edges: readEdges,
     isNode: (id: string) => readNodes().some((n) => n.id === id),
     isEdge: (id: string) => readEdges().some((e) => e.id === id),
+    inspect: {
+      draft: inspectDraft,
+      canAddEdge: (edge) => inspectDraft({ addEdges: [edge] }).valid,
+      canAddNode: (node) => inspectDraft({ addNodes: [node] }).valid,
+    },
     nodeIdToIndex: (id: string) => readNodes().findIndex((n) => n.id === id),
     edgeIdToIndex: (id: string) => readEdges().findIndex((n) => n.id === id),
     helpers: createHelpers({
@@ -112,30 +126,34 @@ export const core = (options: Partial<CoreOptions>) => {
     decode: (data) =>
       batch(() => {
         // --- CLEANUP EXISTING STATE ---
-        const nodeIds = nodes().map((n) => n.id);
-        const edgeIds = edges().map((e) => e.id);
-
-        edgeWeightStore._internal.remove(edgeIds);
-        nodePositionStore._internal.remove(nodeIds);
-
+        // removing every node scrapes every edge with it, and the transaction empties both
+        // stores of whatever it removed
         commitTransaction({
-          removeNodeIds: nodeIds,
+          removeNodeIds: nodes().map((n) => n.id),
         });
 
         // --- APPLY NEW STATE ---
-        nodePositionStore._internal.add(data.nodePositions);
-        edgeWeightStore._internal.add(
-          data.edgeWeights.map((e) => ({
-            id: e.id,
-            weight: new Fraction(e.weight),
-          })),
+        const nodeIdToPosition = new Map(
+          data.nodePositions.map(({ id, position }) => [id, position]),
+        );
+        const edgeIdToWeight = new Map(
+          data.edgeWeights.map(({ id, weight }) => [id, weight]),
         );
 
-        // adding and removing needs to be 2 separate transactions due to known bug:
-        // https://github.com/graph-kit/graph-kit/issues/685
+        // positions and weights ride along on the elements, since filling the stores is
+        // the transaction's to do once it has accepted them
         commitTransaction({
-          addNodes: data.nodes,
-          addEdges: data.edges,
+          addNodes: data.nodes.map((node) => ({
+            ...node,
+            position: nodeIdToPosition.get(node.id),
+          })),
+          addEdges: data.edges.map((edge) => {
+            const weight = edgeIdToWeight.get(edge.id);
+            return {
+              ...edge,
+              weight: weight === undefined ? undefined : new Fraction(weight),
+            };
+          }),
         });
       }),
     validate: (data) => true,

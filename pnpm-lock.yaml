@@ -87,12 +87,12 @@ importers:
       '@canvas/primitives':
         specifier: workspace:*
         version: link:../canvas-primitives
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/utils':
         specifier: workspace:*
         version: link:../core-utils
-      '@graph/primitives':
-        specifier: workspace:*
-        version: link:../graph-primitives
       '@vueuse/core':
         specifier: 'catalog:'
         version: 13.9.0(vue@3.5.40(typescript@6.0.3))
@@ -103,6 +103,31 @@ importers:
       vue:
         specifier: 'catalog:'
         version: 3.5.40(typescript@6.0.3)
+
+  packages/core-annotations:
+    dependencies:
+      '@canvas/primitives':
+        specifier: workspace:*
+        version: link:../canvas-primitives
+      '@canvas/surface':
+        specifier: workspace:*
+        version: link:../canvas-surface
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
+      '@core/utils':
+        specifier: workspace:*
+        version: link:../core-utils
+      '@reactive/primitives':
+        specifier: workspace:*
+        version: link:../reactive-primitives
+    devDependencies:
+      ts-essentials:
+        specifier: ^10.2.0
+        version: 10.2.1(typescript@6.0.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(jsdom@29.1.1)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0)
 
   packages/core-components:
     dependencies:
@@ -116,6 +141,15 @@ importers:
       vue:
         specifier: 'catalog:'
         version: 3.5.40(typescript@6.0.3)
+
+  packages/core-events:
+    devDependencies:
+      ts-essentials:
+        specifier: ^10.2.0
+        version: 10.2.1(typescript@6.0.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(jsdom@29.1.1)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0)
 
   packages/core-themes:
     dependencies:
@@ -176,6 +210,9 @@ importers:
 
   packages/graph-core:
     dependencies:
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/utils':
         specifier: workspace:*
         version: link:../core-utils
@@ -195,6 +232,9 @@ importers:
 
   packages/graph-create-graph:
     dependencies:
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/themes':
         specifier: workspace:*
         version: link:../core-themes
@@ -237,6 +277,12 @@ importers:
       '@canvas/surface':
         specifier: workspace:*
         version: link:../canvas-surface
+      '@core/annotations':
+        specifier: workspace:*
+        version: link:../core-annotations
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/themes':
         specifier: workspace:*
         version: link:../core-themes
@@ -274,6 +320,9 @@ importers:
 
   packages/graph-plugins-shared:
     dependencies:
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/themes':
         specifier: workspace:*
         version: link:../core-themes
@@ -298,6 +347,13 @@ importers:
         version: 10.2.1(typescript@6.0.3)
 
   packages/graph-primitives:
+    dependencies:
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
+      fraction.js:
+        specifier: ^5.3.4
+        version: 5.3.4
     devDependencies:
       ts-essentials:
         specifier: ^10.2.0
@@ -335,6 +391,9 @@ importers:
 
   packages/graph-vue:
     dependencies:
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@graph/core':
         specifier: workspace:*
         version: link:../graph-core
@@ -420,9 +479,6 @@ importers:
       '@vueuse/core':
         specifier: 'catalog:'
         version: 13.9.0(vue@3.5.40(typescript@6.0.3))
-      ctrl-keys:
-        specifier: ^1.0.6
-        version: 1.0.6
       fraction.js:
         specifier: ^5.3.4
         version: 5.3.4
@@ -442,15 +498,18 @@ importers:
 
   packages/magic-shared:
     dependencies:
-      '@canvas/primitives':
-        specifier: workspace:*
-        version: link:../canvas-primitives
       '@canvas/surface':
         specifier: workspace:*
         version: link:../canvas-surface
+      '@core/annotations':
+        specifier: workspace:*
+        version: link:../core-annotations
       '@core/components':
         specifier: workspace:*
         version: link:../core-components
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/themes':
         specifier: workspace:*
         version: link:../core-themes
@@ -515,9 +574,6 @@ importers:
       nuxt:
         specifier: ^4.1.2
         version: 4.5.0(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@types/node@24.13.3)(@vue/compiler-sfc@3.5.40)(db0@0.3.4)(esbuild@0.28.1)(ioredis@5.11.1)(lightningcss@1.33.0)(magicast@0.5.3)(oxc-parser@0.140.0)(rollup-plugin-visualizer@7.0.1(rolldown@1.2.0)(rollup@4.62.2))(rollup@4.62.2)(srvx@0.11.22)(terser@5.49.0)(tsx@4.23.1)(typescript@6.0.3)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))(vue-tsc@3.3.8(typescript@6.0.3))(yaml@2.9.0)
-      ts-essentials:
-        specifier: ^10.2.1
-        version: 10.2.1(typescript@6.0.3)
       vue:
         specifier: 'catalog:'
         version: 3.5.40(typescript@6.0.3)
@@ -5110,8 +5166,8 @@ packages:
   vue-component-type-helpers@2.2.12:
     resolution: {integrity: sha512-YbGqHZ5/eW4SnkPNR44mKVc6ZKQoRs/Rux1sxC6rdwXb4qpbOSYfDr9DsTHolOTGmIKgM9j141mZbBeg05R1pw==}
 
-  vue-component-type-helpers@3.3.9:
-    resolution: {integrity: sha512-3c/UfMe0SqyEfcGTyH7mfshHagJ9QTCbppCb0/uGpHZpFug7+If3GeGZN7I0YheKEExemx3xldQPoO7PQSOLQg==}
+  vue-component-type-helpers@3.3.10:
+    resolution: {integrity: sha512-t7IQivQ3oD4D01b7s7a9AWzHAcr3DGBIa/1jZREsFQJcFgSL92gqUkqNiHTYgzTt7QDuJa0I9wCeDwEtZICoBQ==}
 
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
@@ -6634,7 +6690,7 @@ snapshots:
       storybook: 9.1.20(@testing-library/dom@10.4.1)(prettier@3.9.6)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)(yaml@2.9.0))
       type-fest: 2.19.0
       vue: 3.5.40(typescript@5.9.3)
-      vue-component-type-helpers: 3.3.9
+      vue-component-type-helpers: 3.3.10
 
   '@swc/helpers@0.5.23':
     dependencies:
@@ -10145,7 +10201,7 @@ snapshots:
 
   vue-component-type-helpers@2.2.12: {}
 
-  vue-component-type-helpers@3.3.9: {}
+  vue-component-type-helpers@3.3.10: {}
 
   vue-demi@0.14.10(vue@3.5.40(typescript@6.0.3)):
     dependencies:

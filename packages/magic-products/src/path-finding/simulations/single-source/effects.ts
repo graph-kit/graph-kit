@@ -1,9 +1,9 @@
 import { nullThrows } from '@core/utils/assert';
-import { GNode } from '@magic/shared/graph';
-import { MagicGraph } from '@magic/shared/graph-product';
+import { GNode, Graph } from '@magic/shared/graph';
 import { Lens } from '@magic/shared/lens';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import {
+  SetupContext,
   SimulationDefinition,
   SimulationEffects,
 } from '@magic/shared/simulation/types';
@@ -55,12 +55,13 @@ export const edgeRoles = {
 export type SourceNodeId = Ref<GNode['id'] | undefined>;
 
 export type SingleSourceOptions = {
-  graph: MagicGraph;
+  graph: Graph;
   sourceNodeId: SourceNodeId;
 };
 
 const singleSourceEffects = (
-  graph: MagicGraph,
+  graph: Graph,
+  context: SetupContext<SingleSourceFrame>,
 ): SimulationEffects<SingleSourceFrame> => {
   const frontier = createNodeIdThemer(graph, nodeRoles.frontier);
   const finalized = createNodeIdThemer(graph, nodeRoles.finalized);
@@ -124,14 +125,14 @@ const singleSourceEffects = (
     explainer: singleSourceExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    onViolation: graph.magic.simulation.stop,
+    onViolation: context.stopSimulation,
   };
 };
 
 export const singleSourceSimulationDefinition = (
   algorithm: SingleSourceFunction,
   options: SingleSourceOptions,
-): SimulationDefinition<SingleSourceFrame> => ({
+): Omit<SimulationDefinition<SingleSourceFrame>, 'name'> => ({
   guard: new SimulationGuardBuilder(options.graph)
     .custom(() => {
       const sourceInNodes = options.graph.nodes.value.some(
@@ -147,5 +148,5 @@ export const singleSourceSimulationDefinition = (
       nullThrows(options.sourceNodeId.value, 'source node id not defined'),
     )(collector);
   },
-  setup: () => singleSourceEffects(options.graph),
+  setup: (context) => singleSourceEffects(options.graph, context),
 });

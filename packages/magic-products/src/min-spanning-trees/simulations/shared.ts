@@ -1,11 +1,11 @@
 import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { CoreEdge } from '@graph/primitives/types';
-import { GNode } from '@magic/shared/graph';
-import { MagicGraph } from '@magic/shared/graph-product';
+import { GNode, Graph } from '@magic/shared/graph';
 import { Lens } from '@magic/shared/lens';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import type {
+  SetupContext,
   SimulationDefinition,
   SimulationEffects,
 } from '@magic/shared/simulation/types';
@@ -19,7 +19,14 @@ import tinycolor from 'tinycolor2';
 
 import { Ref } from 'vue';
 
-import { kruskalsExplainer, primsExplainer } from './explainer.ts';
+import Considering from './components/Considering.vue';
+import Excluded from './components/Excluded.vue';
+import {
+  kruskalsExplainer,
+  kruskalsSlotIds,
+  primsExplainer,
+  primsSlotIds,
+} from './explainer.ts';
 import {
   KruskalsFrame,
   KruskalsFunction,
@@ -27,7 +34,9 @@ import {
   PrimsFunction,
 } from './frame.ts';
 
-// exploring = the tree side node the current decision is anchored to
+// exploring = the tree side node the current decision is anchored to, plus
+//   both endpoints of the edge just selected, so the edge and the node it's
+//   about to add to the tree read as one event
 // settled = already grown into the tree
 // frontier = the far side of a potential edge
 // anchor = start node (user picked)
@@ -54,13 +63,13 @@ const edgeRoles = {
 export type StartNodeId = Ref<GNode['id'] | undefined>;
 
 export type PrimsSimulationOptions = {
-  graph: MagicGraph;
+  graph: Graph;
   startNodeId: StartNodeId;
 };
 
 // shared by both algorithms: an edge ruled out (closes a loop) fades instead
 // of disappearing, so it stays visible as "seen and rejected"
-const createExcludedEdgeThemer = (graph: MagicGraph) => {
+const createExcludedEdgeThemer = (graph: Graph) => {
   const excludedIds = new Set<string>();
   const fadeExcluded = (edge: CoreEdge, resolveUnderneath: () => Color) => {
     if (!excludedIds.has(edge.id)) return;
@@ -89,7 +98,10 @@ const createExcludedEdgeThemer = (graph: MagicGraph) => {
   };
 };
 
-const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
+const primsEffects = (
+  graph: Graph,
+  context: SetupContext<PrimsFrame>,
+): SimulationEffects<PrimsFrame> => {
   const frontier = createNodeIdThemer(graph, nodeRoles.frontier);
   const settled = createNodeIdThemer(graph, nodeRoles.settled);
   const anchor = createNodeIdThemer(graph, nodeRoles.anchor);
@@ -98,6 +110,8 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
   const tree = createEdgeIdThemer(graph, edgeRoles.tree);
   const candidateEdge = createEdgeIdThemer(graph, edgeRoles.candidate);
   const crossingEdge = createEdgeIdThemer(graph, edgeRoles.crossing);
+  // colored solid before excludedEdgeIds picks them up and fades them
+  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
   const excludedEdge = createExcludedEdgeThemer(graph);
 
   const themers = [
@@ -108,25 +122,47 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     tree,
     candidateEdge,
     crossingEdge,
+    excludingEdge,
     excludedEdge,
   ];
 
   const syncToFrame = (frame: PrimsFrame) => {
-    exploring.setId(frame.activeNodeId);
+    const selectedEdgeEndpoints = frame.selectedEdge
+      ? [
+          graph.getEdge(frame.selectedEdge).source,
+          graph.getEdge(frame.selectedEdge).target,
+        ]
+      : [];
+
+    exploring.setIds(
+      frame.activeNodeId
+        ? [frame.activeNodeId, ...selectedEdgeEndpoints]
+        : selectedEdgeEndpoints,
+    );
     settled.setIds(frame.treeNodeIds);
     frontier.setIds(frame.pendingNodeIds ?? []);
     anchor.setId(frame.anchorNodeId);
     tree.setIds(frame.treeEdgeIds);
     candidateEdge.setIds(frame.candidateEdges ?? []);
-    crossingEdge.setIds([
-      ...(frame.currentComparison ?? []),
-      ...(frame.selectedEdge ? [frame.selectedEdge] : []),
-    ]);
+    crossingEdge.setIds(frame.selectedEdge ? [frame.selectedEdge] : []);
+    excludingEdge.setIds(frame.excludingEdges ?? []);
     excludedEdge.setIds(frame.excludedEdgeIds);
   };
 
   const lens: Lens = {
     id: 'min-spanning-trees/prims',
+    components: [
+      {
+        component: Excluded,
+        position: 'center-left',
+        id: primsSlotIds.excluded,
+      },
+      {
+        component: Considering,
+        position: 'center-right',
+        id: primsSlotIds.considering,
+      },
+    ],
     activate: () => {
       for (const { themer } of themers) themer.activate();
     },
@@ -140,7 +176,7 @@ const primsEffects = (graph: MagicGraph): SimulationEffects<PrimsFrame> => {
     explainer: primsExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    onViolation: graph.magic.simulation.stop,
+    onViolation: context.stopSimulation,
   };
 };
 
@@ -148,6 +184,7 @@ export const primsSimulationDefinition = (
   prims: PrimsFunction,
   options: PrimsSimulationOptions,
 ): SimulationDefinition<PrimsFrame> => ({
+  name: "Prim's",
   guard: new SimulationGuardBuilder(options.graph)
     .custom(() => {
       const startNodeInNodes = options.graph.nodes.value.some(
@@ -169,7 +206,7 @@ export const primsSimulationDefinition = (
       nullThrows(options.startNodeId.value, 'start node id not defined'),
     )(collector);
   },
-  setup: () => primsEffects(options.graph),
+  setup: (context) => primsEffects(options.graph, context),
 });
 
 // active = the endpoints of the edge currently under consideration
@@ -191,31 +228,57 @@ const kruskalsEdgeRoles = {
 } as const satisfies Record<KruskalsEdgeConcept, EdgeRole>;
 
 export type KruskalsSimulationOptions = {
-  graph: MagicGraph;
+  graph: Graph;
 };
 
 const kruskalsEffects = (
-  graph: MagicGraph,
+  graph: Graph,
+  context: SetupContext<KruskalsFrame>,
 ): SimulationEffects<KruskalsFrame> => {
   const active = createNodeIdThemer(graph, kruskalsNodeRoles.active);
   const settled = createNodeIdThemer(graph, kruskalsNodeRoles.settled);
 
   const tree = createEdgeIdThemer(graph, kruskalsEdgeRoles.tree);
   const crossingEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.crossing);
+  // colored solid before excludedEdgeIds picks it up and fades it
+  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
   const excludedEdge = createExcludedEdgeThemer(graph);
 
-  const themers = [active, settled, tree, crossingEdge, excludedEdge];
+  // activation order is paint order (later wins on overlapping ids), so
+  // active/crossing must activate after settled/tree to stay visible when a
+  // node or edge is both newly touched and already part of the tree
+  const themers = [
+    settled,
+    active,
+    tree,
+    crossingEdge,
+    excludingEdge,
+    excludedEdge,
+  ];
 
   const syncToFrame = (frame: KruskalsFrame) => {
     active.setIds(frame.activeNodeIds ?? []);
     settled.setIds(frame.treeNodeIds);
     tree.setIds(frame.treeEdgeIds);
     crossingEdge.setId(frame.activeEdgeId);
-    excludedEdge.setIds(frame.excludedEdgeIds);
+    excludingEdge.setId(frame.excludingEdgeId);
+    excludedEdge.setIds(frame.dimmedEdgeIds);
   };
 
   const lens: Lens = {
     id: 'min-spanning-trees/kruskals',
+    components: [
+      {
+        component: Excluded,
+        position: 'center-left',
+        id: kruskalsSlotIds.excluded,
+      },
+      {
+        component: Considering,
+        position: 'center-right',
+        id: kruskalsSlotIds.considering,
+      },
+    ],
     activate: () => {
       for (const { themer } of themers) themer.activate();
     },
@@ -229,7 +292,7 @@ const kruskalsEffects = (
     explainer: kruskalsExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    onViolation: graph.magic.simulation.stop,
+    onViolation: context.stopSimulation,
   };
 };
 
@@ -237,6 +300,7 @@ export const kruskalsSimulationDefinition = (
   kruskals: KruskalsFunction,
   options: KruskalsSimulationOptions,
 ): SimulationDefinition<KruskalsFrame> => ({
+  name: "Kruskal's",
   guard: new SimulationGuardBuilder(options.graph)
     .minNodes(2)
     .custom(() => {
@@ -248,5 +312,5 @@ export const kruskalsSimulationDefinition = (
   collectFrames: (collector) => {
     kruskals(options.graph)(collector);
   },
-  setup: () => kruskalsEffects(options.graph),
+  setup: (context) => kruskalsEffects(options.graph, context),
 });

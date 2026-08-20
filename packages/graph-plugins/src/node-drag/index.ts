@@ -1,8 +1,9 @@
 import { nullThrows } from '@core/utils/assert';
+import { devAssert, devWarning } from '@core/utils/debugging';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { createDragState } from '@graph/plugins-shared/drag';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
@@ -20,7 +21,7 @@ import { validateNodeIds } from './validateNodeIds.ts';
 
 export const nodeDrag =
   (options: Partial<NodeDragOptions>): NodeDragPlugin =>
-  ({ controls, getters }) => {
+  ({ controls, events, getters }) => {
     const optionsWithDefaults = {
       ...DEFAULT_NODE_DRAG_OPTIONS,
       ...options,
@@ -33,7 +34,7 @@ export const nodeDrag =
     };
 
     const nodeDragEventRegistry = createNodeDragEventRegistry();
-    const nodeDragEventHub = createEventHub(nodeDragEventRegistry);
+    const nodeDragEventHub = createGraphEventHub(nodeDragEventRegistry);
 
     const dragState = createDragState<NodeIdDragState>();
     let nodePositionStream: NodePositionStreamControls | undefined;
@@ -53,31 +54,30 @@ export const nodeDrag =
       }
 
       const nodeIds = topElement.data?.[NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD];
-      if (nodeIds !== undefined) {
-        if (!validateNodeIds(nodeIds)) {
-          console.warn('node drag expected array of node ids: got', nodeIds);
-        } else {
-          nodeIdsToDrag.push(...nodeIds);
-        }
+      if (validateNodeIds(nodeIds)) {
+        nodeIdsToDrag.push(...nodeIds);
+      } else if (nodeIds !== undefined) {
+        devWarning('node drag expected array of node ids: got', nodeIds);
       }
 
-      if (nodeIdsToDrag.length === 0) return;
+      // a selection can name a node that has since left the graph, so what is carried is
+      // what is still here rather than whatever was selected
+      const liveNodeIdsToDrag = nodeIdsToDrag.filter((nodeId) =>
+        controls.isNode(nodeId),
+      );
+      if (liveNodeIdsToDrag.length === 0) return;
 
       consume();
 
-      const nodes = nodeIdsToDrag.map((nodeId) =>
-        nullThrows(
-          getters.getNode(nodeId),
-          'canvas element of graph type node not resolvable as node',
-        ),
-      );
+      const nodes = liveNodeIdsToDrag.map((nodeId) => getters.getNode(nodeId));
 
-      if (nodePositionStream) {
-        throw new Error(
-          'beginDrag called while a node position stream is already active',
-        );
-      }
-      dragState.startDrag(coords, { nodeIds: nodeIdsToDrag });
+      devAssert(
+        !nodePositionStream,
+        'node drag started while the previous drag still had an open position stream, meaning its mouse release was missed',
+      );
+      nodePositionStream?.stop();
+
+      dragState.startDrag(coords, { nodeIds: liveNodeIdsToDrag });
       nodePositionStream = controls.positions.createStream();
       nodeDragEventHub.emit('onNodeDragStart', nodes);
     };
@@ -93,17 +93,34 @@ export const nodeDrag =
       nodePositionStream = undefined;
       nodeDragEventHub.emit(
         'onNodeDrop',
-        data.nodeIds.map((nodeId) =>
-          nullThrows(getters.getNode(nodeId), 'dropped node not found'),
-        ),
+        data.nodeIds
+          .filter((nodeId) => controls.isNode(nodeId))
+          .map((nodeId) => getters.getNode(nodeId)),
       );
       captureHistorySnapshot();
+    };
+
+    /**
+     * A drag ends as soon as any of its nodes is deleted, since finishing with the
+     * survivors would drop a different selection than the user picked up.
+     */
+    const abortDragOnTamper = () => {
+      const active = dragState.getDragState();
+      if (!active) return;
+      const intact = active.data.nodeIds.every((nodeId) =>
+        controls.isNode(nodeId),
+      );
+      if (intact) return;
+      drop();
     };
 
     const drag = (
       { coords }: DeepReadonly<GraphUnderCursor>,
       consume: () => void,
     ) => {
+      // just in case a removal happened that never triggered onElementsRemoved
+      abortDragOnTamper();
+
       const dragData = dragState.applyMove(coords);
       if (!dragData) return;
 
@@ -116,9 +133,7 @@ export const nodeDrag =
 
       if (!dx && !dy) return;
 
-      const nodes = nodeIds.map((nodeId) =>
-        nullThrows(getters.getNode(nodeId), 'dragged node not found'),
-      );
+      const nodes = nodeIds.map((nodeId) => getters.getNode(nodeId));
 
       const stream = nullThrows(
         nodePositionStream,
@@ -155,6 +170,7 @@ export const nodeDrag =
           before: [ANCHOR_PLUGIN_ID],
         },
       );
+      events.subscribe('onElementsRemoved', abortDragOnTamper);
       cursorTheme.enable();
     };
 
@@ -162,6 +178,7 @@ export const nodeDrag =
       controls.canvas.events.unhandle('onMouseDown', beginDrag);
       controls.canvas.events.unhandle('onMouseUp', drop);
       controls.canvas.events.unhandle('onGraphUnderCursorChange', drag);
+      events.unsubscribe('onElementsRemoved', abortDragOnTamper);
       cursorTheme.disable();
       drop();
     };

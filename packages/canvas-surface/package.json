@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@canvas/primitives": "workspace:*",
+    "@core/events": "workspace:*",
     "@core/utils": "workspace:*",
-    "@graph/primitives": "workspace:*",
     "@vueuse/core": "catalog:",
     "tailwind-merge": "^3.3.1"
   },

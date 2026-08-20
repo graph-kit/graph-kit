@@ -5,14 +5,18 @@ import { useLensState } from '../lens/useLensState.ts';
 import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
 import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
+import SimulationButtonGroup from '../simulation/start-buttons/ButtonGroup.vue';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
-import { useAnnotationsState } from '../ui/annotations/useAnnotationsState.ts';
+import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
 import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
+import { useDebugState } from '../ui/debug/useDebugState.ts';
+import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
-import { useLocalStorageSync } from './internals/useLocalStorageSync.ts';
+import { resolveProductFlags } from './flags.ts';
 import { useProductHistory } from './internals/useProductHistory.ts';
+import { useProductLocalStorage } from './internals/useProductLocalStorage.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
 
@@ -26,18 +30,19 @@ export const useMagicProduct = (
 
   const appearance = useProductAppearance(host.onAppearanceChanged);
 
-  const annotations = options.annotations
-    ? useAnnotationsState(options.annotations, appearance)
+  const annotations = host.annotations
+    ? useAnnotationsUI(host.annotations, componentSlots)
     : undefined;
 
-  const ui = useProductUI(componentSlots, options.ui);
+  const flags = resolveProductFlags(options.flags, host);
+
+  useProductUI(componentSlots);
+  const debug = useDebugState(componentSlots);
   const shortcuts = useShortcuts();
 
   const manifest = manifests[options.productId];
 
-  const localStorage = options.localStorage
-    ? useLocalStorageSync(manifest.id, host.transit)
-    : { invalidate: () => {}, sync: () => {} };
+  const localStorage = useProductLocalStorage(manifest.id, host, flags);
 
   const { product: multiplayer, roomHistory } = useMultiplayer({
     host,
@@ -53,14 +58,16 @@ export const useMagicProduct = (
 
   const magic: Magic = {
     manifest,
+    flags,
     lens,
     componentSlots,
     simulation,
-    ui,
     appearance,
     shortcuts,
+    debug,
     annotations,
     lensChips: options.lensChips,
+    simulationButtons: options.simulationButtons,
     surface: host.surface,
     transit: host.transit,
     history,
@@ -68,10 +75,30 @@ export const useMagicProduct = (
     multiplayer,
   };
 
+  if (magic.lensChips) {
+    magic.componentSlots.add({
+      id: 'product/lens-chips',
+      component: LensChipGroup,
+      position: 'top-middle',
+      // should always be stuck to the top
+      priority: -Infinity,
+    });
+  }
+
+  if (magic.simulationButtons) {
+    magic.componentSlots.add({
+      id: 'product/simulation-buttons',
+      component: SimulationButtonGroup,
+      position: 'bottom-middle',
+      // should always be stuck to the bottom
+      priority: Infinity,
+    });
+  }
+
   onMounted(() => {
     magic.localStorage.sync();
     // replace what was in local storage with what was in link
-    if (magic.ui.linkSharing) loadFromLinkPayload(magic);
+    if (magic.flags.linkSharing) loadFromLinkPayload(magic);
 
     // whatever was restored is the starting point, not the state setup began with
     magic.history?.clear();

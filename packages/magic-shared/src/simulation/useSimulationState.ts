@@ -1,4 +1,5 @@
-import { nullThrows } from '@core/utils/assert';
+import { ReadonlyEventHub, createEventHub } from '@core/events/createEventHub';
+import { assert, nullThrows } from '@core/utils/assert';
 import { delta } from '@core/utils/delta/index';
 
 import { ComputedRef, computed, ref, shallowRef } from 'vue';
@@ -6,6 +7,7 @@ import { ComputedRef, computed, ref, shallowRef } from 'vue';
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { LensControls } from '../lens/useLensState.ts';
 import StopSimulationButton from './StopSimulationButton.vue';
+import { SimulationEventMap, createSimulationEventRegistry } from './events.ts';
 import { Violation } from './guard/SimulationGuardBuilder.ts';
 import SimulationScrubber from './scrubber/SimulationScrubber.vue';
 import {
@@ -23,6 +25,8 @@ export type SimulationControls = {
   current: ComputedRef<Simulation<any> | undefined>;
   /** Reports that the underlying data changed, letting the simulation recheck its guard and recompute frames. */
   invalidate: () => void;
+  /** Simulation events to passively listen for start, end, etc */
+  events: ReadonlyEventHub<SimulationEventMap>;
 };
 
 type Playhead = {
@@ -59,6 +63,8 @@ export const useSimulationState = (
 ): SimulationControls => {
   // shallow cus sims carry lenses which carry vue component definitions
   const simulation = shallowRef<Simulation<any>>();
+
+  const events = createEventHub(createSimulationEventRegistry());
 
   const getSimulation = () =>
     nullThrows(simulation.value, 'no running simulation!');
@@ -150,22 +156,21 @@ export const useSimulationState = (
   };
 
   const start = <Frame>(definition: SimulationDefinition<Frame>) => {
-    if (simulation.value) {
-      throw new Error(
-        'cannot start simulation: a simulation is already active!',
-      );
-    }
+    assert(
+      !simulation.value,
+      'cannot start simulation: a simulation is already active!',
+    );
 
     const violation = definition.guard?.();
-    if (violation) {
-      throw new Error(
-        `cannot start simulation: guard is already failing (${violation.id})`,
-      );
-    }
+    assert(
+      !violation,
+      `cannot start simulation: guard is already failing (${violation?.id})`,
+    );
 
     const { frames, playhead } = computeRun(definition);
 
     const setupContext: SetupContext<Frame> = {
+      stopSimulation: stop,
       currentFrame,
       frames: allFrames,
     };
@@ -198,6 +203,7 @@ export const useSimulationState = (
     }
 
     simulation.value.onSetupCompleted?.(setupContext.currentFrame.value);
+    events.emit('onSimulationStarted');
   };
 
   const stop = () => {
@@ -210,6 +216,7 @@ export const useSimulationState = (
     if (sim.lens) lensControls.remove(sim.lens.id);
     sim.onTeardownCompleted?.();
     simulation.value = undefined;
+    events.emit('onSimulationEnded');
   };
 
   // reconciles sim.violation with a fresh guard check, swapping the
@@ -284,5 +291,6 @@ export const useSimulationState = (
     stop,
     current: computed(() => simulation.value),
     invalidate: recompute,
+    events,
   };
 };

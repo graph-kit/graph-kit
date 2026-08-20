@@ -1,5 +1,5 @@
+import { createEventHub } from '@core/events/createEventHub';
 import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { useElementSize } from '@vueuse/core';
 
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -10,7 +10,7 @@ import { useWorldCoordinates } from './coordinates/index.ts';
 import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
 import { useDOMEvents } from './domEvents.ts';
 import { createCanvasLifecycleEventRegistry } from './events.ts';
-import type { DrawContent, UseCanvas } from './types.ts';
+import type { CanvasSurface, DrawContent } from './types.ts';
 
 const REPAINT_FPS = 60;
 
@@ -37,7 +37,7 @@ const sizeCanvas = (canvas: HTMLCanvasElement | undefined) => {
   return rect;
 };
 
-export const useCanvas: UseCanvas = () => {
+export const useCanvasSurface = (): CanvasSurface => {
   const canvas = ref<HTMLCanvasElement>();
   const canvasBoxSize = useElementSize(canvas);
 
@@ -101,11 +101,11 @@ export const useCanvas: UseCanvas = () => {
 
   watch([canvasBoxSize.width, canvasBoxSize.height], resizeCanvas);
 
-  const { events: domEvents, cleanup: cleanupDOMEvents } = useDOMEvents(canvas);
+  const { events, cleanup: cleanupDOMEvents } = useDOMEvents(canvas);
 
-  const { cleanup: cleanupCamera, ...camera } = useCamera(canvas, domEvents);
+  const { cleanup: cleanupCamera, ...camera } = useCamera(canvas, events);
   const { worldCoordinates: cursorCoordinates, toWorldCoordinates } =
-    useWorldCoordinates(camera.state, domEvents);
+    useWorldCoordinates(camera.state, events);
   const visibleWorldRect = useVisibleWorldRect(camera.state, canvasCssSize);
 
   const pattern = useBackgroundPattern(
@@ -144,6 +144,6 @@ export const useCanvas: UseCanvas = () => {
       contentSuspended,
     },
     lifecycleEvents,
-    domEvents,
+    events,
   };
 };

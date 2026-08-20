@@ -1,12 +1,12 @@
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import { ElementRemovalPayload } from '@graph/primitives/transactions/types';
 import { DeepReadonly } from 'ts-essentials';
 
 import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { NODE_DRAG_PLUGIN_ID } from '../node-drag/constants.ts';
-import { FOCUS_PLUGIN_ID } from './constants.ts';
+import { FOCUS_PLUGIN_ID, INTERACTIVE_ELEMENT_SELECTOR } from './constants.ts';
 import { createFocusEventRegistry } from './events.ts';
 import { createFocusDetectors, createFocusThemeOverrides } from './themes.ts';
 import { FocusPlugin } from './types.ts';
@@ -19,7 +19,7 @@ const sameIds = (previous: ReadonlySet<string>, next: ReadonlySet<string>) => {
 
 export const focus: FocusPlugin = ({ controls, events, getters }) => {
   const focusEventRegistry = createFocusEventRegistry();
-  const focusEventHub = createEventHub(focusEventRegistry);
+  const focusEventHub = createGraphEventHub(focusEventRegistry);
 
   let focusedElementIds: ReadonlySet<string> = new Set<string>();
 
@@ -90,6 +90,12 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
     else setFocus([topElement.id]);
   };
 
+  const clearFocusOnOutsideClick = ({ target }: MouseEvent) => {
+    if (!(target instanceof Element)) return;
+    if (target.closest(INTERACTIVE_ELEMENT_SELECTOR)) return;
+    clearFocus();
+  };
+
   const setFocusToAll = () => {
     const nodeIds = controls.nodes().map((node) => node.id);
     const edgeIds = controls.edges().map((edge) => edge.id);
@@ -108,6 +114,10 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
         before: [NODE_DRAG_PLUGIN_ID],
       },
     );
+    controls.canvas.surface.events.subscribe(
+      'onDocumentClick',
+      clearFocusOnOutsideClick,
+    );
 
     // clean up the focus so removed elements aren't in the state
     events.subscribe('onElementsRemoved', clearRemovedElementsFromFocus);
@@ -115,6 +125,10 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
 
   const disable = () => {
     controls.canvas.events.unhandle('onMouseDown', handleMouseDown);
+    controls.canvas.surface.events.unsubscribe(
+      'onDocumentClick',
+      clearFocusOnOutsideClick,
+    );
 
     events.unsubscribe('onElementsRemoved', clearRemovedElementsFromFocus);
     clearFocus();

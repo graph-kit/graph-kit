@@ -1,5 +1,5 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 
 import { type Ref, computed, ref } from 'vue';
 
@@ -8,7 +8,7 @@ import { isOnEdge } from '../other/circleUtils.ts';
 
 type SetFocusProps = {
   definitions: Ref<SetDefinition[]>;
-  surface: CanvasProps;
+  surface: CanvasSurface;
 };
 
 /**
@@ -56,7 +56,7 @@ export const useSetFocus = ({
     setFocus(definition.id);
   };
 
-  surface.domEvents.subscribe('onMouseDown', focusSetAtCursor);
+  surface.events.subscribe('onMouseDown', focusSetAtCursor);
 
   return {
     isFocused: (id) => focusedSetIds.value.has(id),

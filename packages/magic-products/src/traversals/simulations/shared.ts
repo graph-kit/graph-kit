@@ -114,7 +114,7 @@ const traversalThemers = (graph: Graph): TraversalThemers => {
 export const traversalSimulationDefinition = (
   traversal: TraversalFunction,
   options: TraversalSimulationOptions,
-): SimulationDefinition<TraversalFrame> => {
+): Omit<SimulationDefinition<TraversalFrame>, 'name'> => {
   return {
     guard: new SimulationGuardBuilder(options.graph)
       .custom(() => {
@@ -135,14 +135,14 @@ export const traversalSimulationDefinition = (
         nullThrows(options.startNodeId.value, 'start node id not defined'),
       )(collector);
     },
-    setup: () => {
+    setup: (context) => {
       const { lens, syncToFrame } = traversalThemers(options.graph);
       return {
         lens,
         explainer: traversalExplainer(options.graph),
         onSetupCompleted: syncToFrame,
         onFrameTransition: syncToFrame,
-        onViolation: options.graph.magic.simulation.stop,
+        onViolation: context.stopSimulation,
       };
     },
   };

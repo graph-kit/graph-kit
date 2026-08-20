@@ -20,7 +20,9 @@
     { "path": "./packages/canvas-primitives" },
     { "path": "./packages/canvas-primitives/tsconfig.storybook.json" },
     { "path": "./packages/core-utils" },
+    { "path": "./packages/core-events" },
     { "path": "./packages/core-components" },
+    { "path": "./packages/core-annotations" },
     { "path": "./packages/core-themes" },
     { "path": "./packages/magic-shared" },
     { "path": "./packages/multiplayer-protocol" }

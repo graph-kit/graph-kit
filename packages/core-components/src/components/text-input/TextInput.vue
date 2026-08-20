@@ -8,20 +8,28 @@
 
   defineOptions({ inheritAttrs: false });
 
-  withDefaults(defineProps<PrimitiveProps>(), {
+  interface TextInputProps extends PrimitiveProps {
+    invalid?: boolean;
+  }
+
+  const props = withDefaults(defineProps<TextInputProps>(), {
     as: 'input',
+    invalid: false,
   });
 
   const model = defineModel<string>({ default: '' });
 
+  // the transparent border keeps the invalid state from resizing the input
   const base =
-    'w-full rounded-md px-2 py-1 text-md transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 placeholder:font-bold font-bold';
+    'w-full rounded-md border-2 border-transparent px-2 py-1 text-md transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 placeholder:font-bold font-bold';
 
   const attrs = useAttrs();
 
   const attrClass = useAttrClass();
 
-  const classes = computed(() => cn(base, attrClass.value));
+  const classes = computed(() =>
+    cn(base, attrClass.value, props.invalid && 'border-red-500'),
+  );
 
   const onInput = async (event: Event) => {
     const input = event.target as HTMLInputElement;

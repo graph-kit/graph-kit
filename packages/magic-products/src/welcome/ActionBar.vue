@@ -21,6 +21,7 @@
   >
     <HStack class="gap-4">
       <ProductCard
+        :product-id="activeProduct.id"
         :card="
           nullThrows(activeProduct.navigation.card, 'no navigation card found')
         "

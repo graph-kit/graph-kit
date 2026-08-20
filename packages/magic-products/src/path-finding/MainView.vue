@@ -2,10 +2,10 @@
   import { useGraphProduct } from '@magic/shared/graph-product';
   import { MagicProduct } from '@magic/shared/product';
 
-  import ActionBar from './ActionBar.vue';
   import { lensChips } from './lensChips.ts';
+  import { simulationButtons } from './simulationButtons.ts';
 
-  const graph = useGraphProduct({
+  useGraphProduct({
     productId: 'path-finding',
     interactive: {
       allowSelfLoops: false,
@@ -13,11 +13,7 @@
     },
     lensChips,
   });
-
-  graph.magic.componentSlots.add({
-    id: 'action-bar',
-    component: ActionBar,
-    position: 'bottom-middle',
+    simulationButtons,
   });
 </script>
 

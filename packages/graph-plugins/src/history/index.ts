@@ -1,4 +1,4 @@
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 
 import { MAX_HISTORY, PLUGINS_EXCLUDED_FROM_HISTORY } from './constants.ts';
 import { createHistoryEventRegistry } from './events.ts';
@@ -15,7 +15,7 @@ import { HistoryPlugin } from './types.ts';
  */
 export const history: HistoryPlugin = ({ finalTransit }) => {
   const historyRegistry = createHistoryEventRegistry();
-  const historyEventHub = createEventHub(historyRegistry);
+  const historyEventHub = createGraphEventHub(historyRegistry);
 
   /**
    * snapshots are held serialized. transit payloads are JSON round trip safe by design

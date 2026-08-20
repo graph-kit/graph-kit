@@ -1,12 +1,12 @@
-import { CanvasProps } from '@canvas/surface/types';
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
+import { CanvasSurface } from '@canvas/surface/types';
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 
 import { onUnmounted } from 'vue';
 
 import { MultiplayerEventMap } from './events.ts';
 
 type SuspendedContentOptions = {
-  surface: CanvasProps;
+  surface: CanvasSurface;
   events: ReadonlyEventHub<MultiplayerEventMap>;
 };
 

@@ -3,7 +3,7 @@ import { generateId } from '@core/utils/id';
 import { CreateCoreAction } from '../../types.ts';
 
 export const createAddElementsHandler: CreateCoreAction<'addElements'> =
-  ({ graph, commitTransaction }) =>
+  ({ commitTransaction }) =>
   ({ nodes = [], edges = [] }) => {
     const newNodes = nodes.map((n) => ({
       id: generateId(),
@@ -13,16 +13,6 @@ export const createAddElementsHandler: CreateCoreAction<'addElements'> =
       id: generateId(),
       ...e,
     }));
-
-    // https://github.com/graph-kit/graph-kit/issues/685
-    // must be before commitTransaction because anything reading the new elements resolves
-    // their schemas, which requires a lookup to the node positioning system.
-    // I don't like putting this call before knowing if the transaction
-    // is successful because if the transaction fails, node
-    // positioning system will hold a reference to a node id that
-    // doesn't exist in the graph
-    graph.positions._internal.add(newNodes);
-    graph.weights._internal.add(newEdges);
 
     const { addedEdges, addedNodes } = commitTransaction({
       addNodes: newNodes,

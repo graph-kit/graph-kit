@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist/types",
+    "rootDir": "./src"
+  },
+  "references": [
+    { "path": "../canvas-primitives" },
+    { "path": "../canvas-surface" },
+    { "path": "../core-utils" },
+    { "path": "../core-events" },
+    { "path": "../reactive-primitives" }
+  ],
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+}

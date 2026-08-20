@@ -1,4 +1,4 @@
-import { MagicGraph, useProvidedMagicGraph } from '@magic/shared/graph-product';
+import { Graph } from '@magic/shared/graph';
 
 import { ref } from 'vue';
 
@@ -7,18 +7,23 @@ import { dfs } from './dfs.ts';
 import { StartNodeId, traversalSimulationDefinition } from './shared.ts';
 
 export type TraversalSimulationOptions = {
-  graph: MagicGraph;
+  graph: Graph;
   startNodeId: StartNodeId;
 };
 
-export const useTraversalSimulations = () => {
-  const graph = useProvidedMagicGraph();
+export const useTraversalSimulations = (graph: Graph) => {
   const startNodeId: StartNodeId = ref();
   const options: TraversalSimulationOptions = { graph, startNodeId };
 
   return {
-    bfs: traversalSimulationDefinition(bfs, options),
-    dfs: traversalSimulationDefinition(dfs, options),
+    bfs: {
+      name: 'Breath-First Search',
+      ...traversalSimulationDefinition(bfs, options),
+    },
+    dfs: {
+      name: 'Depth-First Search',
+      ...traversalSimulationDefinition(dfs, options),
+    },
     startNodeId,
   };
 };

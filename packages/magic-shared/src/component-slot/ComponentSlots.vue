@@ -32,11 +32,11 @@
 
   const highlightProps = (id: string): HighlightProps => {
     const isHighlighted = magic.componentSlots.highlightedId.value === id;
+    const sharedClasses = 'relative border-4 rounded-lg';
+    const colorClass = isHighlighted ? 'border-red-500' : 'border-transparent';
     return {
       isHighlighted,
-      classes: isHighlighted
-        ? 'border-4 border-red-500 rounded-lg'
-        : 'border-4 border-transparent rounded-lg',
+      classes: `${sharedClasses} ${colorClass}`,
     };
   };
 </script>

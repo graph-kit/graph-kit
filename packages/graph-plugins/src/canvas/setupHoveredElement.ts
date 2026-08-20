@@ -1,4 +1,4 @@
-import { EventHub } from '@graph/primitives/events/createEventHub';
+import { EventHub } from '@core/events/createEventHub';
 import { DeepReadonly } from 'ts-essentials';
 
 import { CanvasElement } from './aggregator/types.ts';

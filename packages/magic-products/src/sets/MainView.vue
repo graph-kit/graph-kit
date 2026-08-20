@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { nullThrows } from '@core/utils/assert';
   import { Color } from '@core/utils/colors';
   import { MagicProduct } from '@magic/shared/product';
 
@@ -93,7 +92,7 @@
     );
   };
 
-  magic.surface.domEvents.subscribe('onDblClick', createSetDefinition);
+  magic.surface.events.subscribe('onDblClick', createSetDefinition);
 
   magic.shortcuts.add({
     id: 'delete-set',

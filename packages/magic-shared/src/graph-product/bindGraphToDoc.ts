@@ -1,3 +1,5 @@
+import { Coordinate } from '@canvas/surface/types';
+import { Annotation, AnnotationsChange } from '@core/annotations/index';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { ConsumerEventMap } from '@graph/create-graph/consumer-events';
 import { UserId } from '@multiplayer/protocol/room';
@@ -32,6 +34,17 @@ type DocEdge = {
 };
 
 /**
+ * The room's view of an annotation, keyed by its id. Everything an annotation is except
+ * the id and the type, which is always a draw: an erased stroke leaves the map rather
+ * than staying in it as an erasure.
+ */
+type DocAnnotation = {
+  points: Coordinate[];
+  fillColor?: string;
+  brushWeight?: number;
+};
+
+/**
  * Marks writes this binding makes into the document, so its own observer skips them.
  * Distinct from the connection's remote origin, which decides what goes on the wire.
  */
@@ -39,6 +52,19 @@ const BINDING_ORIGIN = Symbol('graph-product/binding');
 
 const readNodes = (doc: Y.Doc) => doc.getMap<DocNode>('nodes');
 const readEdges = (doc: Y.Doc) => doc.getMap<DocEdge>('edges');
+const readAnnotations = (doc: Y.Doc) =>
+  doc.getMap<DocAnnotation>('annotations');
+
+const annotationToDoc = ({
+  points,
+  fillColor,
+  brushWeight,
+}: Annotation): DocAnnotation => ({ points, fillColor, brushWeight });
+
+const annotationFromDoc = (
+  id: string,
+  annotation: DocAnnotation,
+): Annotation => ({ id, type: 'draw', ...annotation });
 
 const nodeFromGraph = (graph: Graph, nodeId: string): DocNode => {
   const { x, y } = graph.positions.get(nodeId);
@@ -61,11 +87,14 @@ const edgeFromGraph = (graph: Graph, edgeId: string): DocEdge | undefined => {
  * with everything else, where restoring a snapshot would rewrite a peer's work too.
  */
 const createDocHistory = (doc: Y.Doc): HistoryField => {
-  const undoManager = new Y.UndoManager([readNodes(doc), readEdges(doc)], {
-    // BINDING_ORIGIN is the only origin a local edit carries, so tracking it and nothing
-    // else is what scopes undo to this client
-    trackedOrigins: new Set([BINDING_ORIGIN]),
-  });
+  const undoManager = new Y.UndoManager(
+    [readNodes(doc), readEdges(doc), readAnnotations(doc)],
+    {
+      // BINDING_ORIGIN is the only origin a local edit carries, so tracking it and
+      // nothing else is what scopes undo to this client
+      trackedOrigins: new Set([BINDING_ORIGIN]),
+    },
+  );
 
   const refresh = ref(0);
   const bump = () => refresh.value++;
@@ -109,6 +138,7 @@ export const bindGraphToDoc = (
 ): HostBinding => {
   const nodes = readNodes(doc);
   const edges = readEdges(doc);
+  const annotations = readAnnotations(doc);
 
   // graph events emit synchronously inside the mutation's own stack frame, so a handler
   // always observes the flag the apply that triggered it set
@@ -148,6 +178,18 @@ export const bindGraphToDoc = (
         const edge = edgeFromGraph(graph, edgeId);
         if (edge) edges.set(edgeId, edge);
       }
+
+      const liveAnnotations = graph.annotations.annotations();
+      const liveAnnotationIds = new Set(liveAnnotations.map(({ id }) => id));
+
+      for (const annotationId of [...annotations.keys()]) {
+        if (!liveAnnotationIds.has(annotationId)) {
+          annotations.delete(annotationId);
+        }
+      }
+      for (const annotation of liveAnnotations) {
+        annotations.set(annotation.id, annotationToDoc(annotation));
+      }
     });
   };
 
@@ -172,6 +214,12 @@ export const bindGraphToDoc = (
           weight: new Fraction(edge.weight),
         })),
       });
+
+      graph.annotations.setAll(
+        [...annotations.entries()].map(([id, annotation]) =>
+          annotationFromDoc(id, annotation),
+        ),
+      );
     });
   };
 
@@ -227,6 +275,22 @@ export const bindGraphToDoc = (
         .filter(([id, node]) => graph.getNode(id)?.label !== node.label)
         .map(([id, node]) => ({ nodeId: id, label: node.label }));
       if (relabeled.length > 0) graph.nodeLabel.setMany(relabeled);
+
+      const localAnnotationIds = new Set(
+        graph.annotations.annotations().map(({ id }) => id),
+      );
+      // by id alone: a stroke is only ever drawn or erased, never edited
+      const removedAnnotationIds = [...localAnnotationIds].filter(
+        (id) => !annotations.has(id),
+      );
+      if (removedAnnotationIds.length > 0) {
+        graph.annotations.remove(removedAnnotationIds);
+      }
+
+      const addedAnnotations = [...annotations.entries()]
+        .filter(([id]) => !localAnnotationIds.has(id))
+        .map(([id, annotation]) => annotationFromDoc(id, annotation));
+      if (addedAnnotations.length > 0) graph.annotations.add(addedAnnotations);
 
       const reweighted = [...edges.entries()]
         .filter(([id, edge]) => {
@@ -296,6 +360,16 @@ export const bindGraphToDoc = (
     });
   };
 
+  // the settled stroke rather than every point of it, the same boundary node drags use
+  const onAnnotationsChanged = ({ added, removedIds }: AnnotationsChange) => {
+    intoDoc(() => {
+      for (const annotation of added) {
+        annotations.set(annotation.id, annotationToDoc(annotation));
+      }
+      for (const annotationId of removedIds) annotations.delete(annotationId);
+    });
+  };
+
   // rawEvents rather than graph.events, whose subscribe registers an onUnmounted per
   // call: binding happens after the join resolves, so there is no component instance
   // left to attach to
@@ -305,6 +379,11 @@ export const bindGraphToDoc = (
   const subscribe = () => {
     nodes.observe(onDocChanged);
     edges.observe(onDocChanged);
+    annotations.observe(onDocChanged);
+    graph.annotations.events.subscribe(
+      'onAnnotationsChanged',
+      onAnnotationsChanged,
+    );
     graph.rawEvents.subscribe('onElementsAdded', onElementsAdded);
     graph.rawEvents.subscribe('onElementsRemoved', onElementsRemoved);
     graph.rawEvents.subscribe(
@@ -338,8 +417,9 @@ export const bindGraphToDoc = (
     for (const [peerId, elements] of Object.entries(dragsByPeer)) {
       const moves = elements
         // a node the local user has hold of stays where they are putting it, and one
-        // that is not on this graph yet arrives with the move that adds it
-        .filter(({ id }) => !isDraggedLocally(id) && graph.getNode(id))
+        // that is not on this graph yet arrives with the move that adds it. isNode
+        // rather than getNode, which throws on a node this client has already removed
+        .filter(({ id }) => !isDraggedLocally(id) && graph.isNode(id))
         .map(({ id, position }) => ({ nodeId: id, update: position }));
       if (moves.length === 0) continue;
 
@@ -353,6 +433,11 @@ export const bindGraphToDoc = (
     for (const peerId of [...peerStreams.keys()]) stopPeerStream(peerId);
     nodes.unobserve(onDocChanged);
     edges.unobserve(onDocChanged);
+    annotations.unobserve(onDocChanged);
+    graph.annotations.events.unsubscribe(
+      'onAnnotationsChanged',
+      onAnnotationsChanged,
+    );
     graph.rawEvents.unsubscribe('onElementsAdded', onElementsAdded);
     graph.rawEvents.unsubscribe('onElementsRemoved', onElementsRemoved);
     graph.rawEvents.unsubscribe(
@@ -363,7 +448,7 @@ export const bindGraphToDoc = (
     graph.rawEvents.transit.unsubscribe('onDecoded', writeWholeGraph);
   };
 
-  if (nodes.size === 0 && edges.size === 0) {
+  if (nodes.size === 0 && edges.size === 0 && annotations.size === 0) {
     writeWholeGraph();
   } else {
     readWholeDoc();

@@ -11,6 +11,7 @@ const SlotComponent = defineComponent({ template: '<div />' });
 type Frame = { step: number };
 
 const definition = (frameCount = 3) => ({
+  name: 'test-simulation',
   collectFrames: (collector: { add: (frame: Frame) => void }) => {
     for (let i = 0; i < frameCount; i++) collector.add({ step: i });
   },

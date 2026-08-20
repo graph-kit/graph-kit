@@ -1,4 +1,4 @@
-import { GNode } from '@magic/shared/graph';
+import { GEdge, GNode } from '@magic/shared/graph';
 
 import {
   KruskalsFrame,
@@ -44,42 +44,35 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
     return true;
   };
 
-  /*
-    stable-sorting a pre-shuffled array randomizes which edge wins a weight
-    tie, the same way prims picks randomly among tied frontier candidates.
-    without this, ties would always resolve in edge-creation order, and a
-    graph with many equally-valid MSTs would produce the same "arbitrary"
-    tree almost every run
-  */
-  const shuffled = [...graph.edges.value];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  const sortedEdges = shuffled.toSorted((a, b) => a.weight.compare(b.weight));
+  const edgesSortedByWeight = graph.edges.value.toSorted((a, b) =>
+    a.weight.compare(b.weight),
+  );
+  const sortedEdgeIds = edgesSortedByWeight.map((edge) => edge.id);
 
   const treeNodes = new Set<GNode['id']>();
   const treeEdges: string[] = [];
   const excludedEdges: string[] = [];
 
-  const frame = <T extends KruskalsStep>(
-    fields: T & KruskalsHighlights,
-  ): KruskalsFrame => ({
-    treeNodeIds: [...treeNodes],
-    treeEdgeIds: [...treeEdges],
-    excludedEdgeIds: [...excludedEdges],
-    ...fields,
-  });
+  const frame = (
+    fields: KruskalsStep &
+      KruskalsHighlights &
+      Partial<Pick<KruskalsFrame, 'dimmedEdgeIds'>>,
+  ): KruskalsFrame => {
+    const decided = new Set([...treeEdges, ...excludedEdges]);
+    return {
+      treeNodeIds: [...treeNodes],
+      treeEdgeIds: [...treeEdges],
+      excludedEdgeIds: [...excludedEdges],
+      dimmedEdgeIds: [...excludedEdges],
+      candidateEdges: sortedEdgeIds.filter((id) => !decided.has(id)),
+      ...fields,
+    };
+  };
 
-  frameCollector.add(
-    frame({
-      type: 'start',
-      sortedEdges: sortedEdges.map((edge) => edge.id),
-    }),
-  );
+  frameCollector.add(frame({ type: 'start' }));
 
-  for (let i = 0; i < sortedEdges.length; i++) {
-    const edge = sortedEdges[i];
+  for (let i = 0; i < edgesSortedByWeight.length; i++) {
+    const edge = edgesSortedByWeight[i];
 
     frameCollector.add(
       frame({
@@ -87,6 +80,7 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
         edge: edge.id,
         activeEdgeId: edge.id,
         activeNodeIds: [edge.source, edge.target],
+        selectedEdge: edge.id,
       }),
     );
 
@@ -97,6 +91,7 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
           edge: edge.id,
           activeEdgeId: edge.id,
           activeNodeIds: [edge.source, edge.target],
+          selectedEdge: edge.id,
         }),
       );
 
@@ -105,10 +100,7 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
       treeNodes.add(edge.target);
 
       if (treeEdges.length === nodeIds.length - 1) {
-        // every remaining edge in sorted order never gets its own verdict,
-        // but it still would only close a loop - fade it out along with the
-        // edges that were actually rejected
-        const skipped = sortedEdges.slice(i + 1).map((e) => e.id);
+        const skipped = edgesSortedByWeight.slice(i + 1).map((e) => e.id);
         if (skipped.length > 0) {
           excludedEdges.push(...skipped);
           frameCollector.add(frame({ type: 'all-connected', edges: skipped }));
@@ -117,19 +109,18 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
       }
     } else {
       excludedEdges.push(edge.id);
-
       frameCollector.add(
         frame({
           type: 'reject-edge',
           edge: edge.id,
-          activeEdgeId: edge.id,
+          excludingEdgeId: edge.id,
           activeNodeIds: [edge.source, edge.target],
+          dimmedEdgeIds: excludedEdges.slice(0, -1),
         }),
       );
     }
   }
 
-  // a lone node with no edges at all is trivially spanned, not disconnected
   const unreachable =
     nodeIds.length > 1 ? nodeIds.filter((id) => !treeNodes.has(id)) : [];
 

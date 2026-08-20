@@ -1,5 +1,5 @@
+import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { DocUpdate, toDocUpdate } from '@multiplayer/protocol/doc';
 import { JoinResult } from '@multiplayer/protocol/events';
 import {
@@ -210,10 +210,8 @@ export const createMultiplayer = ({
     return socket;
   };
 
-  // a tab that goes without closing its socket is only noticed once the heartbeat times
-  // out, which leaves whoever left sitting in everyone else's roster until then. pagehide
-  // covers the close and the refresh alike, and unlike visibilitychange it does not fire
-  // for a tab switch, which is not a departure
+  // without this, a closed tab lingers in everyone's roster until the heartbeat times out.
+  // pagehide covers close and refresh, and unlike visibilitychange it skips tab switches
   window.addEventListener('pagehide', () => socket?.disconnect());
 
   /** the product's own state, which is what a room opens on */
@@ -278,10 +276,11 @@ export const createMultiplayer = ({
         roomIdUrl.strip();
         return result;
       }
-
       roomIdUrl.write(result.roomId);
       adoptMembership(result);
+
       await adoptRoomProduct({ productId, host });
+
       return result;
     },
 
@@ -310,7 +309,6 @@ export const createMultiplayer = ({
     },
 
     room,
-
     events,
   };
 };

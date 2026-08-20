@@ -316,6 +316,28 @@ export const BLACK = '#000000';
 export const TRANSPARENT = '#00000000';
 
 /**
+ * whichever of black or white stays legible painted on top of `background`.
+ * takes hex, with or without the leading hash, in either the 3 or 6 digit form
+ */
+export const contrastingTextColor = (background: Color): Color => {
+  const hex = background.replace('#', '').slice(0, 6);
+  const digits =
+    hex.length === 3
+      ? [...hex].map((digit) => digit + digit).join('')
+      : hex.padEnd(6, '0');
+
+  const [red, green, blue] = [0, 2, 4]
+    .map((offset) => parseInt(digits.slice(offset, offset + 2), 16) / 255)
+    .map((channel) =>
+      channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4,
+    );
+
+  const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  // the point where contrast against white and against black come out equal
+  return luminance > 0.179 ? BLACK : WHITE;
+};
+
+/**
  * every color in one enum
  */
 export default {

@@ -48,20 +48,22 @@
       <InsertSetOpButtons :queryId="focusedQueryId" />
     </Well>
     <div>
-      <Tooltip
-        v-if="queries.length < MAX_NUMBER_OF_QUERIES"
-        label="Add highlight region"
-      >
-        <template #trigger>
-          <Button
-            @click="addAndFocusQuery"
-            :path="mdiPlus"
-            class="rounded-b-none rounded-t-xl text-md w-14 h-6"
-          >
-            +
-          </Button>
-        </template>
-      </Tooltip>
+      <Well class="p-0 w-14 h-6 rounded-b-none rounded-t-xl overflow-hidden">
+        <Tooltip
+          v-if="queries.length < MAX_NUMBER_OF_QUERIES"
+          label="Add highlight region"
+        >
+          <template #trigger>
+            <Button
+              @click="addAndFocusQuery"
+              :path="mdiPlus"
+              class="w-full h-full select-none text-md bg-transparent dark:bg-transparent"
+            >
+              +
+            </Button>
+          </template>
+        </Tooltip>
+      </Well>
       <Well class="rounded-tl-none">
         <VStack class="flex-col-reverse">
           <Query

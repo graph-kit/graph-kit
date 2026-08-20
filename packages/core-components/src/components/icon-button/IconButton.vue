@@ -51,6 +51,18 @@
     typeof props.disabled === 'string' ? props.disabled : undefined,
   );
 
+  // a menu handed this button its trigger props, so it arrives as a boolean rather
+  // than the string the DOM would hold
+  const isExpanded = computed(
+    () => attrs['aria-expanded'] === true || attrs['aria-expanded'] === 'true',
+  );
+
+  // whatever this button expanded says more about it than the tooltip can, and
+  // the accessible name is on the button itself, so nothing is lost by standing down
+  const tooltipLabel = computed(() =>
+    isExpanded.value ? undefined : (disabledReason.value ?? props.label),
+  );
+
   const classes = computed(() => {
     const enabled = cn(base, buttonVariants[props.variant], attrClass.value);
     return isDisabled.value ? disabledClasses(enabled) : enabled;
@@ -63,7 +75,7 @@
 </script>
 
 <template>
-  <Tooltip :label="disabledReason ?? label">
+  <Tooltip :label="tooltipLabel">
     <template #trigger>
       <Primitive
         :as="as"

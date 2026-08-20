@@ -1,4 +1,4 @@
-import { EventMapToEventRegistry } from '@graph/primitives/events/types';
+import { EventMapToEventRegistry } from '@core/events/types';
 import { CoreNode } from '@graph/primitives/types';
 import { DeepReadonly } from 'ts-essentials';
 

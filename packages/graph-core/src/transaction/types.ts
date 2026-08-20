@@ -1,11 +1,25 @@
-import { TransactionPayload } from '@graph/primitives/transactions/types';
-import { CoreEdge, CoreNode } from '@graph/primitives/types';
+import {
+  DraftEdge,
+  DraftNode,
+  TransactionPayload,
+} from '@graph/primitives/transactions/types';
 
 import { CoreControls } from '../types.ts';
+import { InspectDraft } from './validateDraft.ts';
 
 export type GraphState = Pick<CoreControls, 'nodes' | 'edges'>;
 
+/** the payload as core builds it, still holding what the stores need */
+export type CorePayload = Omit<
+  TransactionPayload,
+  'addedNodes' | 'addedEdges'
+> & {
+  addedNodes: DraftNode[];
+  addedEdges: DraftEdge[];
+};
+
 export type TransactionOptions = {
   graph: GraphState;
-  onTransactionSucceeded: (payload: TransactionPayload) => void;
+  inspectDraft: InspectDraft;
+  onTransactionSucceeded: (payload: CorePayload) => void;
 };

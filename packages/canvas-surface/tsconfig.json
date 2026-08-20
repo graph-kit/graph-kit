@@ -9,7 +9,7 @@
   "references": [
     { "path": "../canvas-primitives" },
     { "path": "../core-utils" },
-    { "path": "../graph-primitives" }
+    { "path": "../core-events" }
   ],
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
 }

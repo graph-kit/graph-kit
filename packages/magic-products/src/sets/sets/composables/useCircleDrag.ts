@@ -1,5 +1,5 @@
 import { circle } from '@canvas/primitives/shapes/circle/index';
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
 
 import type { Ref } from 'vue';
 
@@ -7,7 +7,7 @@ import type { SetDefinition } from '../../types.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleDragProps = {
-  surface: CanvasProps;
+  surface: CanvasSurface;
   definitions: Ref<SetDefinition[]>;
   isResizing: Ref<Boolean>;
 };

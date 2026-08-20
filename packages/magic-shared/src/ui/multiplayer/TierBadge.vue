@@ -39,7 +39,10 @@
       <HStack
         gap="1"
         :class="
-          cn('px-2 text-sm rounded-sm text-white', tierClasses[props.tier])
+          cn(
+            'px-2 text-sm capitalize rounded-sm text-white',
+            tierClasses[props.tier],
+          )
         "
       >
         <Icon

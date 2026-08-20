@@ -11,6 +11,7 @@
     "Directedness",
     "dismissable",
     "Eulerian",
+    "favicons",
     "gsap",
     "handback",
     "Highlightable",
@@ -33,6 +34,7 @@
     "monetizable",
     "Moodle",
     "msts",
+    "multigraphs",
     "negotiables",
     "nuxt",
     "overlaybadge",
@@ -59,6 +61,7 @@
     "unserialize",
     "unshifted",
     "unshifts",
+    "unvalidated",
     "usetoast",
     "Warshall"
   ],

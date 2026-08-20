@@ -1,3 +1,4 @@
+import { GenericEventMap } from '@core/events/types';
 import { ComputedTokenResolver } from '@graph/computed-tokens/index';
 import { CoreActions } from '@graph/core/actions/types';
 import { ConsumerEventsHub } from '@graph/core/consumer-events';
@@ -6,7 +7,6 @@ import {
   GraphActions,
   PartialBaseActions,
 } from '@graph/primitives/actions/types';
-import { GenericEventMap } from '@graph/primitives/events/types';
 import { BaseGetters, GraphGetters } from '@graph/primitives/getters/types';
 import { LooseGraphTransit } from '@graph/primitives/transit/types';
 import { RenderFunctions } from '@graph/render-functions/types';

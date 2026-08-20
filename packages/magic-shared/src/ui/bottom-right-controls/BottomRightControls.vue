@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { mdiCog } from '@mdi/js';
+  import { mdiDotsVertical } from '@mdi/js';
 
   import Dropdown from '../../components/dropdown/Dropdown.vue';
   import IconButton from '../../components/icon-button/IconButton.vue';
@@ -12,14 +12,12 @@
   import FullscreenButton from '../fullscreen/FullscreenButton.vue';
   import LinkSharingButton from '../link-sharing/LinkSharingButton.vue';
   import MultiplayerButton from '../multiplayer/MultiplayerButton.vue';
-  import HistoryButtons from '../undo-redo/HistoryButtons.vue';
 
   const magic = useProvidedMagic();
 </script>
 
 <template>
   <HStack>
-    <HistoryButtons />
     <AnnotationToggle v-if="magic.annotations" />
 
     <Well class="p-0 rounded-full overflow-hidden">
@@ -28,18 +26,17 @@
         align="end"
       >
         <template #trigger>
-          <!-- opening a menu is not a toggle, so the lit state follows aria-expanded,
-               which reka keeps honest, rather than a pressed state of its own -->
           <IconButton
-            label="Settings"
-            class="p-4 bg-transparent dark:bg-transparent aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-700"
             :size="20"
-            :path="mdiCog"
+            :path="mdiDotsVertical"
+            label="More Options"
+            class="p-4 bg-transparent dark:bg-transparent aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-700"
           />
         </template>
         <VStack gap="0">
           <MultiplayerButton v-if="magic.multiplayer" />
-          <LinkSharingButton v-if="magic.ui.linkSharing" />
+          <LinkSharingButton v-if="magic.flags.linkSharing" />
+
           <FullscreenButton />
           <AppearanceToggle />
         </VStack>

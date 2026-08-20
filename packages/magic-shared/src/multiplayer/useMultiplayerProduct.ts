@@ -31,14 +31,15 @@ export const useMultiplayerProduct = ({
   // opting in is per product and explicit. a product that has not declared itself
   // multiplayer never registers, so nothing can be routed to it even if the server
   // were to try
-  if (!manifests[productId].multiplayer || !multiplayer) return undefined;
+  if (!manifests[productId].multiplayer || !multiplayer) {
+    onMounted(roomIdUrl.strip);
+    return undefined;
+  }
 
   const { actions, room, events } = multiplayer;
   const binding = { productId, host };
 
   onMounted(async () => {
-    // ahead of the url, which still names the room this connection is already in:
-    // mounting inside one is a navigation, and rejoining would arrive as a new member
     if (room.value.connected) {
       await actions.product.enter(binding);
       return;
@@ -47,8 +48,6 @@ export const useMultiplayerProduct = ({
     const targetRoomId = roomIdUrl.read();
     if (!targetRoomId) return;
 
-    // a dead room id is a non event, handled at the source by stripping it. never
-    // reaching the server is not: the id stays put so a refresh can try it again
     try {
       await actions.room.join({ ...binding, roomId: targetRoomId });
     } catch (err) {

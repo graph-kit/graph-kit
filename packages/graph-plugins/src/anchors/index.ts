@@ -2,7 +2,7 @@ import type { CircleSchema } from '@canvas/primitives/shapes/circle/types';
 import type { WithId } from '@canvas/primitives/types/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import { CoreNode } from '@graph/primitives/types';
 
 import { CanvasElement } from '../canvas/aggregator/types.ts';
@@ -32,7 +32,7 @@ const isAnchor = (id: string) => id.endsWith(ANCHOR_ID_POSTFIX);
  */
 export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
   const anchorsEventRegistry = createAnchorsEventRegistry();
-  const anchorsEventHub = createEventHub(anchorsEventRegistry);
+  const anchorsEventHub = createGraphEventHub(anchorsEventRegistry);
 
   const theme = createThemeController(createAnchorsThemeOverrides());
 

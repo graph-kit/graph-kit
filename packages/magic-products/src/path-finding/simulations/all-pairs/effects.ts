@@ -1,7 +1,8 @@
-import { MagicGraph } from '@magic/shared/graph-product';
+import { Graph } from '@magic/shared/graph';
 import { Lens } from '@magic/shared/lens';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import {
+  SetupContext,
   SimulationDefinition,
   SimulationEffects,
 } from '@magic/shared/simulation/types';
@@ -27,13 +28,14 @@ export const nodeRoles = {
 */
 
 export type AllPairsOptions = {
-  graph: MagicGraph;
+  graph: Graph;
 };
 
 export const matrixSlotId = 'path-finding/matrix';
 
 const allPairsEffects = (
-  graph: MagicGraph,
+  graph: Graph,
+  context: SetupContext<AllPairsFrame>,
 ): SimulationEffects<AllPairsFrame> => {
   const pivot = createNodeIdThemer(graph, nodeRoles.pivot);
   const pair = createNodeIdThemer(graph, nodeRoles.pair);
@@ -64,17 +66,17 @@ const allPairsEffects = (
     explainer: allPairsExplainer(),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    onViolation: graph.magic.simulation.stop,
+    onViolation: context.stopSimulation,
   };
 };
 
 export const allPairsSimulationDefinition = (
   algorithm: AllPairsFunction,
   options: AllPairsOptions,
-): SimulationDefinition<AllPairsFrame> => ({
+): Omit<SimulationDefinition<AllPairsFrame>, 'name'> => ({
   guard: new SimulationGuardBuilder(options.graph).minNodes(1).build(),
   collectFrames: (collector) => {
     algorithm(options.graph)(collector);
   },
-  setup: () => allPairsEffects(options.graph),
+  setup: (context) => allPairsEffects(options.graph, context),
 });

@@ -2,6 +2,7 @@
 export { useGraphProduct } from './useGraphProduct.ts';
 export type {
   GraphLensChipOption,
+  GraphSimulationButtonOption,
   GraphProductOptions,
   MagicGraph,
 } from './types.ts';

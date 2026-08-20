@@ -1,3 +1,5 @@
+import { readLocalStorage } from '@core/utils/localStorage';
+
 /** what a url driven join sends until the panel that owns the name mounts and renames */
 const UNNAMED_DISPLAY_NAMES = [
   'Acyclic Aardvark',
@@ -36,7 +38,7 @@ const unnamedDisplayName = () =>
   ) ?? 'Error Prone Ostrich';
 
 export const getDisplayName = () => {
-  const displayName = localStorage.getItem(DISPLAY_NAME_LOCAL_KEY);
+  const displayName = readLocalStorage(DISPLAY_NAME_LOCAL_KEY);
   if (!displayName || displayName.trim().length === 0) {
     return unnamedDisplayName();
   }

@@ -16,6 +16,7 @@
     "build:types": "vue-tsc -b tsconfig.json"
   },
   "dependencies": {
+    "@core/events": "workspace:*",
     "@core/utils": "workspace:*",
     "@graph/primitives": "workspace:*",
     "@reactive/primitives": "workspace:*",

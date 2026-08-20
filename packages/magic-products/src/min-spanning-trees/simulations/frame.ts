@@ -21,19 +21,17 @@ type ConsiderEdgesFrame = {
   edges: readonly GEdge['id'][];
 };
 
-// comparing two edges to see which is cheaper
-type CompareEdgesFrame = {
-  type: 'compare-edges';
-  left: GEdge['id'];
-  right: GEdge['id'];
-};
-
 // the edge that was chosen to grow the tree
 type SelectEdgeFrame = {
   type: 'select-edge';
   edge: GEdge['id'];
   node: GNode['id'];
   tiedEdges?: readonly GEdge['id'][];
+};
+
+type ExcludingEdgesFrame = {
+  type: 'excluding-edges';
+  edges: readonly GEdge['id'][];
 };
 
 type ExcludeEdgesFrame = {
@@ -50,8 +48,8 @@ export type PrimsStep =
   | StartFrame
   | EndFrame
   | ConsiderEdgesFrame
-  | CompareEdgesFrame
   | SelectEdgeFrame
+  | ExcludingEdgesFrame
   | ExcludeEdgesFrame
   | UnreachableFrame;
 
@@ -66,8 +64,8 @@ export type PrimsHighlights = {
   activeNodeId?: GNode['id'];
   pendingNodeIds?: readonly GNode['id'][];
   candidateEdges?: readonly GEdge['id'][];
-  currentComparison?: readonly GEdge['id'][];
   selectedEdge?: GEdge['id'];
+  excludingEdges?: readonly GEdge['id'][];
 };
 
 export type PrimsFrame = PrimsStep & PrimsState & PrimsHighlights;
@@ -78,7 +76,6 @@ export type KruskalsFunction = (
 
 type KruskalsStartFrame = {
   type: 'start';
-  sortedEdges: readonly GEdge['id'][];
 };
 
 type KruskalsEndFrame = {
@@ -128,11 +125,17 @@ type KruskalsState = {
   treeNodeIds: readonly GNode['id'][];
   treeEdgeIds: readonly GEdge['id'][];
   excludedEdgeIds: readonly GEdge['id'][];
+  // same as excludedEdgeIds, but a just-rejected edge is held back for one
+  // frame so its color change reads before it fades
+  dimmedEdgeIds: readonly GEdge['id'][];
+  candidateEdges: readonly GEdge['id'][];
 };
 
 export type KruskalsHighlights = {
   activeEdgeId?: GEdge['id'];
   activeNodeIds?: readonly GNode['id'][];
+  selectedEdge?: GEdge['id'];
+  excludingEdgeId?: GEdge['id'];
 };
 
 export type KruskalsFrame = KruskalsStep & KruskalsState & KruskalsHighlights;

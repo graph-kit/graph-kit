@@ -21,7 +21,8 @@ export type InteractiveOptions = {
   /**
    * whether an edge may be added between two nodes that are already connected.
    * connection is direction agnostic, so with this off an existing A to B edge also
-   * blocks B to A
+   * blocks B to A. on, the graph still refuses a second edge along a path it already
+   * carries, since multigraphs are not supported
    * @default true
    */
   allowRepeatConnections: boolean;

@@ -1,8 +1,8 @@
-import { CanvasProps } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/types';
+import { EventHub } from '@core/events/createEventHub';
 import { CURSOR_FALLBACK } from '@core/themes/index';
 import { CURSOR, Cursor, isValidCursor } from '@core/utils/cursor';
 import { CoreGetters } from '@graph/core/getters';
-import { EventHub } from '@graph/primitives/events/createEventHub';
 import { GraphGetters } from '@graph/primitives/getters/types';
 
 import { CanvasEventMap } from './events.ts';
@@ -10,7 +10,7 @@ import { CanvasControls } from './types.ts';
 
 type GraphCursorProps = {
   subscribe: EventHub<CanvasEventMap>['subscribe'];
-  canvas: CanvasProps['canvas'];
+  canvas: CanvasSurface['canvas'];
   getNode: GraphGetters<CoreGetters>['getNode'];
   resolveToken: CanvasControls['theme']['_resolveToken'];
   graphUnderCursor: CanvasControls['graphUnderCursor'];

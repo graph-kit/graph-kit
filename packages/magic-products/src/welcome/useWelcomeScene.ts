@@ -14,12 +14,11 @@ import {
   edgeIdOf,
   edges,
   nodeIdOf,
-  nodeIdOfLabel,
   welcomeNodes,
 } from './scene.ts';
 
 /** how long each node waits before popping in, so the ring assembles itself */
-const STAGGER_MS = 160;
+const STAGGER_MS = 0; // TODO set back to 160 when auto animate stabilizes
 
 const KEY = 'WELCOME_SCENE';
 
@@ -82,11 +81,11 @@ const createWelcomeScene = (graph: Graph) => {
     timeouts.push(setTimeout(task, delayMs));
   };
 
-  const addProductNode = ({ productId, label, position }: WelcomeNode) =>
+  const addProductNode = ({ productId, position }: WelcomeNode) =>
     graph.animation.capture(() =>
       graph.actions.addNode({
         id: nodeIdOf(productId),
-        label,
+        label: manifests[productId].abbreviatedName,
         position,
       }),
     );
@@ -97,8 +96,8 @@ const createWelcomeScene = (graph: Graph) => {
         nodes: [],
         edges: edges.map(([source, target], index) => ({
           id: edgeIdOf(index),
-          source: nodeIdOfLabel(source),
-          target: nodeIdOfLabel(target),
+          source: nodeIdOf(source),
+          target: nodeIdOf(target),
         })),
       }),
     );

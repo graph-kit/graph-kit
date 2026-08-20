@@ -1,7 +1,7 @@
-import { TransactionPayload } from '@graph/primitives/transactions/types';
+import { CorePayload } from './types.ts';
 
 export function createEmptyPayload() {
-  const payload: TransactionPayload = {
+  const payload: CorePayload = {
     addedNodes: [],
     addedEdges: [],
 

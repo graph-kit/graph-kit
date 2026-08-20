@@ -1,4 +1,4 @@
-import { createMockEventHub } from '@graph/primitives/testing/events/createMockEventHub';
+import { createMockEventHub } from '@core/events/testing/createMockEventHub';
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_POSITION } from './constants.ts';
@@ -288,6 +288,53 @@ describe(createNodePositionStore, () => {
         );
         expect(ends).toHaveLength(1);
       });
+    });
+
+    describe('a node that leaves the graph mid stream', () => {
+      it('commits only what is still here, rather than throwing', () => {
+        const { store } = makeStore();
+        store._internal.add([{ id: 'a' }, { id: 'b' }]);
+        const stream = store.createStream();
+        stream.setMany([
+          { nodeId: 'a', update: { x: 1 } },
+          { nodeId: 'b', update: { x: 2 } },
+        ]);
+
+        store._internal.remove(['b']);
+
+        expect(stream.stop()).toEqual([
+          { nodeId: 'a', position: { ...DEFAULT_POSITION, x: 1 } },
+        ]);
+      });
+
+      it('skips it on a later write', () => {
+        const { store } = makeStore();
+        store._internal.add([{ id: 'a' }]);
+        const stream = store.createStream();
+
+        store._internal.remove(['a']);
+
+        expect(
+          stream.setMany([
+            { nodeId: 'a', update: { x: 1 } },
+            { nodeId: 'gone', update: { x: 2 } },
+          ]),
+        ).toEqual([]);
+      });
+    });
+  });
+
+  describe('setMany with a node that is no longer in the graph', () => {
+    it('moves the rest rather than throwing', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a' }]);
+
+      expect(
+        store.setMany([
+          { nodeId: 'a', update: { x: 1 } },
+          { nodeId: 'gone', update: { x: 2 } },
+        ]),
+      ).toEqual([{ nodeId: 'a', position: { ...DEFAULT_POSITION, x: 1 } }]);
     });
   });
 });

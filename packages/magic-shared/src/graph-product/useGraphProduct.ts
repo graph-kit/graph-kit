@@ -1,4 +1,5 @@
 import { useGraph } from '../graph/useGraph.ts';
+import { resolveProductFlags } from '../product/flags.ts';
 import { MagicProductHost } from '../product/types.ts';
 import { useMagicProduct } from '../product/useMagicProduct.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
@@ -13,13 +14,20 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   const graph = useGraph(options);
 
   const lensChips = options.lensChips?.(graph);
+  const simulationButtons = options.simulationButtons?.(graph);
 
   const draggedNodes = trackDraggedNodes(graph);
+
+  const flags = resolveProductFlags(options.flags, graph);
+
+  if (!flags.history) graph.history.lifecycle.disable();
+  if (!flags.annotations) graph.annotations.lifecycle.disable();
 
   const host: MagicProductHost = {
     surface: graph.canvas.surface,
     transit: graph.transit,
-    history: graph.history,
+    annotations: flags.annotations ? graph.annotations : undefined,
+    history: flags.history ? graph.history : undefined,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {
@@ -30,28 +38,26 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const magic = useMagicProduct(host, {
     productId: options.productId,
-    localStorage: options.localStorage !== false,
-    annotations: options.annotations === false ? undefined : graph.canvas,
-    ui: options.ui,
+    flags: options.flags,
     lensChips,
+    simulationButtons,
   });
 
   graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
 
   graph.events.subscribe('onStructureChange', magic.localStorage.invalidate);
+  graph.annotations.events.subscribe(
+    'onAnnotationsChanged',
+    magic.localStorage.invalidate,
+  );
+
   // any settled move, not just a drag drop, so programmatic repositioning persists too
   graph.events.subscribe(
     'onNodePositionsCommitted',
     magic.localStorage.invalidate,
   );
 
-  if (magic.lensChips) {
-    magic.componentSlots.add({
-      id: 'product/lens-chips',
-      component: LensChipGroup,
-      position: 'top-middle',
-    });
-  }
+  magic.simulation.events.subscribe('onSimulationStarted', graph.focus.clear);
 
   useGraphProductShortcuts(magic, graph);
 

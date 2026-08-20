@@ -5,7 +5,7 @@ import AdjacencyList from '../AdjacencyList.vue';
 
 export const adjacencyListChip = (graph: Graph): LensChipDefinition => {
   return {
-    title: () => 'Adjacency List',
+    name: () => 'Adjacency List',
     tooltipLabel: () => 'The nodes each node points to, directly, as a list.',
 
     lens: {

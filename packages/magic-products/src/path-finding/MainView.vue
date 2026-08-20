@@ -12,7 +12,6 @@
       allowRepeatConnections: true,
     },
     lensChips,
-  });
     simulationButtons,
   });
 </script>

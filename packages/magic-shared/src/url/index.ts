@@ -31,6 +31,15 @@ export const captureQuery = () => {
 const requireQuery = (param: string) =>
   nullThrows(query, `url: touched "${param}" before the query was captured`);
 
+/**
+ * the captured query as a url suffix, for building hrefs. empty on the server, where
+ * there is no query to carry, so a link can be rendered before capture rather than throw.
+ */
+export const queryString = () => {
+  const search = query?.toString();
+  return search ? `?${search}` : '';
+};
+
 export const queryParam = (param: string) => requireQuery(param).get(param);
 
 const editQuery = (param: string, edit: QueryEdit) => {

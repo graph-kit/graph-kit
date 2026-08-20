@@ -16,8 +16,6 @@ export const adjacencyListChip = (graph: Graph): LensChipDefinition => {
           position: 'center-right',
         },
       ],
-      activate: () => null,
-      deactivate: () => null,
     },
   };
 };

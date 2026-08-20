@@ -61,4 +61,12 @@ describe(createEventHub, () => {
   it('does not throw or fail when emitting an event with no subscribers', () => {
     expect(() => hub.emit('onNodesAdded', [{ id: '1' }])).not.toThrow();
   });
+
+  it('invokes a handler once when the same callback is handled twice', () => {
+    const handler = vi.fn();
+    hub.handle('onStructureChange', handler, 'hub');
+    hub.handle('onStructureChange', handler, 'hub');
+    hub.emit('onStructureChange');
+    expect(handler).toHaveBeenCalledOnce();
+  });
 });

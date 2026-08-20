@@ -1,9 +1,7 @@
-import { ShapeRenderer } from '@canvas/primitives/animation/index';
-import { EventHub } from '@core/events/createEventHub';
-import { Coordinate } from '@graph/plugins-shared/drag';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CanvasEventMap } from '../events.ts';
+import { ShapeRenderer } from '../animation/index.ts';
+import { Coordinate } from '../types/utility.ts';
 import { Aggregator, AggregatorTransformer, CanvasElement } from './types.ts';
 
 export type AggregatorControls = {
@@ -23,10 +21,19 @@ export type AggregatorControls = {
  */
 export const CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY = 'paintOnly';
 
-export const createAggregator = (
-  { emit }: Pick<EventHub<CanvasEventMap>, 'emit'>,
-  renderer: Pick<ShapeRenderer, 'drawGroup' | 'beginFrame' | 'endFrame'>,
-): AggregatorControls => {
+type CreateAggregatorOptions = {
+  renderer: Pick<ShapeRenderer, 'drawGroup' | 'beginFrame' | 'endFrame'>;
+  /** before the aggregator is rebuilt, so a producer can refresh what its transformer reads */
+  onBeforeDraw?: (ctx: CanvasRenderingContext2D) => void;
+  /** once every element has been painted */
+  onDraw?: (ctx: CanvasRenderingContext2D) => void;
+};
+
+export const createAggregator = ({
+  renderer,
+  onBeforeDraw,
+  onDraw,
+}: CreateAggregatorOptions): AggregatorControls => {
   let aggregator: Aggregator = [];
   const transformers: AggregatorTransformer[] = [];
 
@@ -52,7 +59,7 @@ export const createAggregator = (
   };
 
   const draw = (ctx: CanvasRenderingContext2D) => {
-    emit('onBeforeDraw', ctx);
+    onBeforeDraw?.(ctx);
     updateAggregator();
 
     renderer.beginFrame();
@@ -64,7 +71,7 @@ export const createAggregator = (
     }
     renderer.endFrame(ctx);
 
-    emit('onDraw', ctx);
+    onDraw?.(ctx);
   };
 
   /**

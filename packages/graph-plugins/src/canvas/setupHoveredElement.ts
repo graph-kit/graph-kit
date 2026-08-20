@@ -1,7 +1,7 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { EventHub } from '@core/events/createEventHub';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CanvasElement } from './aggregator/types.ts';
 import { CanvasEventMap } from './events.ts';
 
 export type HoveredElement = { value: DeepReadonly<CanvasElement> | undefined };

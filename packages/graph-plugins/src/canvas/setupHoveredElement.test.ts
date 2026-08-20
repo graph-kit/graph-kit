@@ -1,7 +1,7 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { createMockEventHub } from '@core/events/testing/createMockEventHub';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CanvasElement } from './aggregator/types.ts';
 import { createCanvasEventRegistry } from './events.ts';
 import { setupOnHoveredElementChangeEvent } from './setupHoveredElement.ts';
 

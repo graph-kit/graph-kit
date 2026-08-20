@@ -1,6 +1,6 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { generateId } from '@core/utils/id';
 import { getRandomInRange } from '@core/utils/random';
-import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
 import { CoreNode } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import tinycolor from 'tinycolor2';

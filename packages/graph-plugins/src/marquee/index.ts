@@ -1,3 +1,4 @@
+import { Aggregator, CanvasElement } from '@canvas/primitives/aggregator/types';
 import { normalizeBoundingBox } from '@canvas/primitives/helpers';
 import type { BoundingBox, Coordinate } from '@canvas/primitives/types/utility';
 import { createThemeController } from '@core/themes/index';
@@ -6,7 +7,6 @@ import { createGraphEventHub } from '@graph/primitives/events';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
-import { Aggregator, CanvasElement } from '../canvas/aggregator/types.ts';
 import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../canvas/setupCanvasCursor.ts';
 import { GraphUnderCursor } from '../canvas/types.ts';

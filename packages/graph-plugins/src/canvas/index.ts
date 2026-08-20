@@ -1,3 +1,5 @@
+import { createAggregator } from '@canvas/primitives/aggregator/index';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasSurface } from '@canvas/surface/types';
@@ -6,8 +8,6 @@ import { KeyboardEventEntries } from '@core/utils/types';
 import { createGraphEventHub } from '@graph/primitives/events';
 import { CoreEdge } from '@graph/primitives/types';
 
-import { createAggregator } from './aggregator/createAggregator.ts';
-import { CanvasElement } from './aggregator/types.ts';
 import { CANVAS_PLUGIN_ID } from './constants.ts';
 import { emitKeyboardEvents, emitMouseEvents } from './emitDOMEvents.ts';
 import { CanvasGraphMouseEvent, createCanvasEventRegistry } from './events.ts';
@@ -33,7 +33,13 @@ export const canvas =
     const canvasEvents = createGraphEventHub(canvasEventRegistry);
 
     const { shapes, ...renderer } = createAnimatedShapes();
-    const aggregator = createAggregator(canvasEvents, renderer);
+    // the aggregator knows nothing of the graph event hub, so its two draw hooks are
+    // what republish the frame as the canvas events plugins actually subscribe to
+    const aggregator = createAggregator({
+      renderer,
+      onBeforeDraw: (ctx) => canvasEvents.emit('onBeforeDraw', ctx),
+      onDraw: (ctx) => canvasEvents.emit('onDraw', ctx),
+    });
 
     const graphUnderCursor: GraphUnderCursor = {
       coords: { x: 0, y: 0 },

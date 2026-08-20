@@ -1,6 +1,6 @@
+import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
 import colors from '@core/utils/colors';
 import { generateId } from '@core/utils/id';
-import { AggregatorTransformer } from '@graph/plugins/canvas/aggregator/types';
 import { GraphUnderCursor } from '@graph/plugins/canvas/types';
 import { createPhantomAwareEdgeRenderFunction } from '@graph/plugins/phantom/createPhantomAwareEdgeRenderFunction';
 import { CoreEdge } from '@graph/primitives/types';

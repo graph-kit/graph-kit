@@ -1,7 +1,7 @@
+import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { createThemeController } from '@core/themes/index';
 import { core } from '@graph/core/index';
-import { AggregatorTransformer } from '@graph/plugins/canvas/aggregator/types';
-import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
 import { createCanvasThemeOverrides } from '@graph/plugins/canvas/themes';
 import { phantom } from '@graph/plugins/phantom/index';
 import { PhantomControls } from '@graph/plugins/phantom/types';

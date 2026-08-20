@@ -1,4 +1,4 @@
-import { Shape } from '@canvas/primitives/types/index';
+import { Shape } from '../types/index.ts';
 
 /**
  * the array in which canvas elements are added into in order to be rendered on the canvas

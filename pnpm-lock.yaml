@@ -232,6 +232,9 @@ importers:
 
   packages/graph-create-graph:
     dependencies:
+      '@canvas/primitives':
+        specifier: workspace:*
+        version: link:../canvas-primitives
       '@core/events':
         specifier: workspace:*
         version: link:../core-events

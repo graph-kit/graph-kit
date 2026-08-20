@@ -1,3 +1,4 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type { CircleSchema } from '@canvas/primitives/shapes/circle/types';
 import type { WithId } from '@canvas/primitives/types/index';
 import { createThemeController } from '@core/themes/index';
@@ -5,7 +6,6 @@ import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { createGraphEventHub } from '@graph/primitives/events';
 import { CoreNode } from '@graph/primitives/types';
 
-import { CanvasElement } from '../canvas/aggregator/types.ts';
 import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../canvas/setupCanvasCursor.ts';
 import { HoveredElement } from '../canvas/setupHoveredElement.ts';

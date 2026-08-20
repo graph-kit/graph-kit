@@ -1,7 +1,7 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { nullThrows } from '@core/utils/assert';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
-import { CanvasElement } from '../canvas/aggregator/types.ts';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../canvas/setupCanvasCursor.ts';
 import { createLabelThemer } from './createLabelThemer.ts';
 import {

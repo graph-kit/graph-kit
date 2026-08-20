@@ -1,10 +1,10 @@
+import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '@canvas/primitives/aggregator/index';
+import { Aggregator } from '@canvas/primitives/aggregator/types';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '../canvas/aggregator/createAggregator.ts';
-import { Aggregator } from '../canvas/aggregator/types.ts';
 import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { GraphUnderCursor } from '../canvas/types.ts';
 import {

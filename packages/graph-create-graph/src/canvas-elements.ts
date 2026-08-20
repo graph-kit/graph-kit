@@ -1,7 +1,7 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { nullThrows } from '@core/utils/assert';
 import { ComputedTokenResolver } from '@graph/computed-tokens/index';
 import { CoreControls } from '@graph/core/types';
-import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@graph/plugins/canvas/setupCanvasCursor';
 import { CanvasControls } from '@graph/plugins/canvas/types';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';

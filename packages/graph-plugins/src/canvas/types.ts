@@ -1,3 +1,5 @@
+import { AggregatorControls } from '@canvas/primitives/aggregator/index';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import {
   AnimatedShapeFactories,
   ShapeRenderer,
@@ -10,8 +12,6 @@ import {
 } from '@graph/plugins-shared/plugins';
 import { DeepReadonly } from 'ts-essentials';
 
-import { AggregatorControls } from './aggregator/createAggregator.ts';
-import { CanvasElement } from './aggregator/types.ts';
 import { CanvasEventMap } from './events.ts';
 import { CanvasThemes } from './themes.ts';
 

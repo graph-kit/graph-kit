@@ -1,3 +1,4 @@
+import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
 import { nullThrows } from '@core/utils/assert';
 import { createComputedTokenResolver } from '@graph/computed-tokens/index';
 import { core } from '@graph/core/index';
@@ -11,7 +12,6 @@ import {
   LooseGraphPlugin,
   PluginThemes,
 } from '@graph/plugins-shared/plugins';
-import { AggregatorTransformer } from '@graph/plugins/canvas/aggregator/types';
 import { CanvasControls } from '@graph/plugins/canvas/types';
 import { GraphActions } from '@graph/primitives/actions/types';
 import { GraphGetters } from '@graph/primitives/getters/types';

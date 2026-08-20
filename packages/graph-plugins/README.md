@@ -64,7 +64,7 @@ This one reads backwards at first. The node list is right there, it is typed, an
 controls.nodes();
 
 // what is drawn on the canvas this frame
-controls.canvas.aggregator.aggregator();
+controls.surface.aggregator.aggregator();
 ```
 
 `anchors` never reads the node list to decide where to orbit. It sets its parent node from `onGraphUnderCursorChange`, and the cursor is recomputed off the freshly drawn aggregator every frame. `marquee` resolves which elements its box encloses by iterating the aggregator rather than iterating through the nodes.

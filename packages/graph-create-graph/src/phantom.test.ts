@@ -1,22 +1,22 @@
+import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { createThemeController } from '@core/themes/index';
 import { core } from '@graph/core/index';
-import { AggregatorTransformer } from '@graph/plugins/canvas/aggregator/types';
-import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
-import { createCanvasThemeOverrides } from '@graph/plugins/canvas/themes';
 import { phantom } from '@graph/plugins/phantom/index';
 import { PhantomControls } from '@graph/plugins/phantom/types';
+import { createSurfaceThemeOverrides } from '@graph/plugins/surface/themes';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { foldPlugins } from './fold-plugins.ts';
 import { createGraphTransit } from './graph-transit.ts';
 
 // phantom only reaches for the aggregator and the theme layer, so the rest of the real
-// canvas plugin (a live surface, a renderer, hit testing) is not worth standing up here
-const createCanvasStub = (transformers: AggregatorTransformer[]) => () => ({
-  name: 'canvas',
+// surface plugin (a live surface, a renderer, hit testing) is not worth standing up here
+const createSurfaceStub = (transformers: AggregatorTransformer[]) => () => ({
+  name: 'surface',
   controls: {
     aggregator: { transformers },
-    theme: createThemeController(createCanvasThemeOverrides()),
+    theme: createThemeController(createSurfaceThemeOverrides()),
   },
 });
 
@@ -26,8 +26,8 @@ const setup = () => {
 
   const folded = foldPlugins(
     coreGraph,
-    [createCanvasStub(transformers), phantom] as any,
-    { '': { canvas: {} } },
+    [createSurfaceStub(transformers), phantom] as any,
+    { '': { surface: {} } },
     () => '',
   );
 

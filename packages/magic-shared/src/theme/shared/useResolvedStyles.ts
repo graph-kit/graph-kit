@@ -12,9 +12,10 @@ export const useResolvedStyles = <T>(graph: Graph, resolve: () => T) => {
   const syncToRef = () => {
     styles.value = resolve();
   };
-  graph.canvas.events.subscribe('onDraw', syncToRef);
+  graph.surface.aggregator.events.subscribe('onDraw', syncToRef);
 
-  const dispose = () => graph.canvas.events.unsubscribe('onDraw', syncToRef);
+  const dispose = () =>
+    graph.surface.aggregator.events.unsubscribe('onDraw', syncToRef);
 
   return {
     styles,

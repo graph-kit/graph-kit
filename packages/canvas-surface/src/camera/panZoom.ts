@@ -2,9 +2,13 @@ import type { ReadonlyEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 
-import { type Ref, onMounted, ref } from 'vue';
+import { type Ref, ref } from 'vue';
 
-import type { CanvasDOMEvents } from '../domEvents.ts';
+import { CANVAS_MISSING } from '../constants.ts';
+import type {
+  CanvasBoundEvents,
+  DocumentBoundEvents,
+} from '../events/index.ts';
 
 export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 10;
@@ -14,14 +18,15 @@ export const PAN_SENSITIVITY = 1;
 
 export const usePanAndZoom = (
   canvas: Ref<HTMLCanvasElement | undefined>,
-  domEvents: ReadonlyEventHub<CanvasDOMEvents>,
+  canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>,
+  domEvents: Pick<ReadonlyEventHub<DocumentBoundEvents>, 'subscribe'>,
 ) => {
   const panX = ref(0);
   const panY = ref(0);
   const zoom = ref(1);
 
   const getCanvasRect = () =>
-    nullThrows(canvas.value, 'canvas not found').getBoundingClientRect();
+    nullThrows(canvas.value, CANVAS_MISSING).getBoundingClientRect();
 
   /** the point a button press zooms toward, since it has no cursor to zoom toward */
   const getCanvasCenter = () => {
@@ -92,16 +97,16 @@ export const usePanAndZoom = (
     middleMouseDown = false;
   };
 
-  domEvents.subscribe('onWheel', onWheel);
-  domEvents.subscribe('onMouseDown', onMousedown);
-  domEvents.subscribe('onMouseMove', onMousemove);
+  canvasEvents.subscribe('onWheel', onWheel);
+  canvasEvents.subscribe('onMouseDown', onMousedown);
+  canvasEvents.subscribe('onMouseMove', onMousemove);
 
   /*
     the release that ends a pan is the one the canvas never sees: dragging past
-    the edge of the window and letting go there. that makes it a document event
-    rather than a canvas one, so it stays off the surface's dom event hub
+    the edge of the window and letting go there, which is why it comes off the
+    document hub rather than the canvas one
   */
-  onMounted(() => document.addEventListener('mouseup', onMouseup));
+  domEvents.subscribe('onMouseUp', onMouseup);
 
   return {
     actions: {
@@ -131,6 +136,5 @@ export const usePanAndZoom = (
       translateX: panX.value,
       translateY: panY.value,
     }),
-    cleanup: () => document.removeEventListener('mouseup', onMouseup),
   };
 };

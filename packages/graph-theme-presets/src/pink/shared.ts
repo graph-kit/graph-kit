@@ -1,5 +1,5 @@
-import { CURSOR } from '@core/utils/cursor';
 import colors from '@core/utils/colors';
+import { CURSOR } from '@core/utils/cursor';
 
 const sharedText = {
   content: '?',

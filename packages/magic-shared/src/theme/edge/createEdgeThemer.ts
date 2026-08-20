@@ -11,7 +11,7 @@ export const createEdgeThemer = (
   color: ThemeValue<Color, [CoreEdge]>,
 ) => {
   return graph.theme.createThemer({
-    canvas: {
+    surface: {
       'edge.default.color': color,
       'edge.hover.color': color,
     },

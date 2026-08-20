@@ -26,11 +26,11 @@ export const getSelectionBox = (
     maxY = -Infinity;
 
   for (const node of focusedNodes) {
-    const nodeRadius = controls.canvas.theme._resolveToken(
+    const nodeRadius = controls.surface.theme._resolveToken(
       'node.default.size',
       node,
     );
-    const nodeBorderWidth = controls.canvas.theme._resolveToken(
+    const nodeBorderWidth = controls.surface.theme._resolveToken(
       'node.default.border.width',
       node,
     );

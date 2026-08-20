@@ -1,7 +1,7 @@
 import { ThemeOverrides, TokenResolver } from '@core/themes/index';
 import { ComputedTokenDetectorMap } from '@graph/computed-tokens/index';
 
-import { EdgeThemeValues, NodeThemeValues } from '../canvas/themes.ts';
+import { EdgeThemeValues, NodeThemeValues } from '../surface/themes.ts';
 
 export type FocusThemes = {
   'node.focus.text.content': NodeThemeValues['text'];

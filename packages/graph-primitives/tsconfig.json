@@ -4,6 +4,6 @@
     "outDir": "./dist/types",
     "rootDir": "./src"
   },
-  "references": [{ "path": "../core-events" }],
+  "references": [],
   "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

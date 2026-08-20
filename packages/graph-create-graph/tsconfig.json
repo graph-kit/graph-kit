@@ -9,6 +9,7 @@
     { "path": "../graph-core" },
     { "path": "../graph-plugins-shared" },
     { "path": "../graph-plugins" },
+    { "path": "../canvas-primitives" },
     { "path": "../core-events" },
     { "path": "../graph-primitives" },
     { "path": "../graph-render-functions" },

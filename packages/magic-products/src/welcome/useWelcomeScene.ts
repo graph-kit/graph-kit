@@ -39,7 +39,7 @@ const createWelcomeScene = (graph: Graph) => {
 
   graph.theme
     .createThemer({
-      canvas: {
+      surface: {
         'node.default.border.color': paint,
         'node.default.size': NODE_RADIUS,
         'node.hover.border.color': litPaint,
@@ -112,12 +112,18 @@ const createWelcomeScene = (graph: Graph) => {
 
   onMounted(() => {
     seed();
-    graph.canvas.events.subscribe('onHoveredElementChange', trackHover);
+    graph.surface.events.elements.subscribe(
+      'onHoveredElementChange',
+      trackHover,
+    );
   });
 
   onUnmounted(() => {
     for (const timeout of timeouts) clearTimeout(timeout);
-    graph.canvas.events.unsubscribe('onHoveredElementChange', trackHover);
+    graph.surface.events.elements.unsubscribe(
+      'onHoveredElementChange',
+      trackHover,
+    );
   });
 
   return { activeProduct };

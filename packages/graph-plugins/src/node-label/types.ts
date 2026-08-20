@@ -1,8 +1,8 @@
 import { MaybeGetter } from '@core/utils/maybeGetter/index';
 import { GraphPlugin, WithLifecycle } from '@graph/plugins-shared/plugins';
 
-import { CanvasPlugin } from '../canvas/types.ts';
 import { FocusPlugin } from '../focus/types.ts';
+import { SurfacePlugin } from '../surface/types.ts';
 
 export type NodeLabelEntry = {
   nodeId: string;
@@ -53,6 +53,6 @@ export type NodeLabelPlugin = GraphPlugin<{
   actions: NodeLabelActions;
   getters: NodeLabelGetters;
   transit: NodeLabelEncode[];
-  dependsOn: [CanvasPlugin];
+  dependsOn: [SurfacePlugin];
   optionalDependsOn: [FocusPlugin];
 }>;

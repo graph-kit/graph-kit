@@ -56,7 +56,7 @@ export const useSetFocus = ({
     setFocus(definition.id);
   };
 
-  surface.events.subscribe('onMouseDown', focusSetAtCursor);
+  surface.events.canvas.subscribe('onMouseDown', focusSetAtCursor);
 
   return {
     isFocused: (id) => focusedSetIds.value.has(id),

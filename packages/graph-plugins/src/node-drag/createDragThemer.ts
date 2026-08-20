@@ -11,7 +11,7 @@ export const createDragThemer = (
   controls: PluginOptions<NodeDragPlugin>['controls'],
   dragState: DragStateControls<NodeIdDragState>,
 ) => {
-  const canvas = controls.canvas.theme.createLayer(layerId);
+  const canvas = controls.surface.theme.createLayer(layerId);
   const focus = controls.focus?.theme.createLayer(layerId);
   const marquee = controls.marquee?.theme.createLayer(layerId);
 

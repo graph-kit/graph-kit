@@ -47,7 +47,7 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
   const widthByFrequency = (edge: CoreEdge) => frequencyWidth(ratioOf(edge.id));
 
   const themer = graph.theme.createThemer({
-    canvas: {
+    surface: {
       'edge.default.width': widthByFrequency,
       'edge.hover.width': widthByFrequency,
     },

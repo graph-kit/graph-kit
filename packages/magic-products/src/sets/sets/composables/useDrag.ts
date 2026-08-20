@@ -41,14 +41,14 @@ export const useDrag = <Item>(
     activeDrag.value = undefined;
   };
 
-  surface.events.subscribe('onMouseDown', beginDrag);
-  surface.events.subscribe('onMouseMove', drag);
-  surface.events.subscribe('onMouseUp', drop);
+  surface.events.canvas.subscribe('onMouseDown', beginDrag);
+  surface.events.canvas.subscribe('onMouseMove', drag);
+  surface.events.dom.subscribe('onMouseUp', drop);
 
   const cleanup = () => {
-    surface.events.unsubscribe('onMouseDown', beginDrag);
-    surface.events.unsubscribe('onMouseMove', drag);
-    surface.events.unsubscribe('onMouseUp', drop);
+    surface.events.canvas.unsubscribe('onMouseDown', beginDrag);
+    surface.events.canvas.unsubscribe('onMouseMove', drag);
+    surface.events.dom.unsubscribe('onMouseUp', drop);
   };
 
   onBeforeUnmount(cleanup);

@@ -15,11 +15,14 @@
 
   const edgeId = ref();
 
-  graph.canvas.events.subscribe('onHoveredElementChange', (element) => {
-    if (!element) return (edgeId.value = undefined);
-    const isEdge = graph.isEdge(element.id);
-    edgeId.value = isEdge ? element.id : undefined;
-  });
+  graph.surface.events.elements.subscribe(
+    'onHoveredElementChange',
+    (element) => {
+      if (!element) return (edgeId.value = undefined);
+      const isEdge = graph.isEdge(element.id);
+      edgeId.value = isEdge ? element.id : undefined;
+    },
+  );
 
   const displayString = computed(
     () => `In ${frequencyOf(edgeId.value)} of ${totalMsts.value} Minimum Spanning

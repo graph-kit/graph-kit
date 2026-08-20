@@ -1,9 +1,10 @@
-import { ShapeRenderer } from '@canvas/primitives/animation/index';
-import { EventHub } from '@core/events/createEventHub';
-import { Coordinate } from '@graph/plugins-shared/drag';
+import { ReadonlyEventHub, createEventHub } from '@core/events/createEventHub';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CanvasEventMap } from '../events.ts';
+import { ShapeRenderer } from '../animation/index.ts';
+import { Coordinate } from '../types/utility.ts';
+import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from './constants.ts';
+import { AggregatorEventMap, createAggregatorEventRegistry } from './events.ts';
 import { Aggregator, AggregatorTransformer, CanvasElement } from './types.ts';
 
 export type AggregatorControls = {
@@ -12,21 +13,14 @@ export type AggregatorControls = {
   updateAggregator: () => void;
   getCanvasElementsAtCoordinate: (coords: Coordinate) => CanvasElement[];
   draw: (ctx: CanvasRenderingContext2D) => void;
+  events: ReadonlyEventHub<AggregatorEventMap>;
 };
 
-/**
- * key on {@link CanvasElement.data} marking an element as paint only. it renders like any
- * other, but {@link AggregatorControls.getCanvasElementsAtCoordinate} never returns it, so
- * the pointer lands on whatever sits beneath it instead.
- *
- * @example data: { [CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY]: true }
- */
-export const CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY = 'paintOnly';
-
 export const createAggregator = (
-  { emit }: Pick<EventHub<CanvasEventMap>, 'emit'>,
   renderer: Pick<ShapeRenderer, 'drawGroup' | 'beginFrame' | 'endFrame'>,
 ): AggregatorControls => {
+  const events = createEventHub(createAggregatorEventRegistry());
+
   let aggregator: Aggregator = [];
   const transformers: AggregatorTransformer[] = [];
 
@@ -52,7 +46,7 @@ export const createAggregator = (
   };
 
   const draw = (ctx: CanvasRenderingContext2D) => {
-    emit('onBeforeDraw', ctx);
+    events.emit('onBeforeDraw', ctx);
     updateAggregator();
 
     renderer.beginFrame();
@@ -64,7 +58,7 @@ export const createAggregator = (
     }
     renderer.endFrame(ctx);
 
-    emit('onDraw', ctx);
+    events.emit('onDraw', ctx);
   };
 
   /**
@@ -88,5 +82,6 @@ export const createAggregator = (
     updateAggregator,
     getCanvasElementsAtCoordinate,
     draw,
+    events,
   };
 };

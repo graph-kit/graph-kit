@@ -1,6 +1,6 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { generateId } from '@core/utils/id';
 import { getRandomInRange } from '@core/utils/random';
-import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
 import { CoreNode } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import tinycolor from 'tinycolor2';
@@ -59,7 +59,7 @@ export const useSuggestedNodes = (
 
   graph.theme
     .createThemer({
-      canvas: {
+      surface: {
         'node.default.color': dimSuggested,
         'node.default.text.color': dimSuggested,
         'node.default.border.color': dimSuggested,
@@ -91,9 +91,9 @@ export const useSuggestedNodes = (
     onClicked();
   };
 
-  graph.canvas.events.subscribe('onClick', kickOffNodeInsertion);
+  graph.surface.events.elements.subscribe('onClick', kickOffNodeInsertion);
   onUnmounted(() =>
-    graph.canvas.events.unsubscribe('onClick', kickOffNodeInsertion),
+    graph.surface.events.elements.unsubscribe('onClick', kickOffNodeInsertion),
   );
 
   return {

@@ -4,18 +4,18 @@ import { CURSOR } from '@core/utils/cursor';
 import { PluginThemes } from '@graph/plugins-shared/plugins';
 import { AnchorsPlugin } from '@graph/plugins/anchors/types';
 import { AnnotationsPlugin } from '@graph/plugins/annotations/types';
-import { CanvasPlugin } from '@graph/plugins/canvas/types';
 import { FocusPlugin } from '@graph/plugins/focus/types';
 import { MarqueePlugin } from '@graph/plugins/marquee/types';
+import { SurfacePlugin } from '@graph/plugins/surface/types';
 
 import { shared } from './shared.ts';
 
 type DarkPreset = PluginThemes<
-  [CanvasPlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin, AnnotationsPlugin]
+  [SurfacePlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin, AnnotationsPlugin]
 >;
 
 export const dark = {
-  canvas: {
+  surface: {
     'canvas.color': colors.GRAY_600,
     'canvas.cursor': CURSOR_FALLBACK,
     'canvas.patternColor': (alpha) => colors.GRAY_500 + alpha,

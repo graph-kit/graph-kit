@@ -1,8 +1,4 @@
-import {
-  CursorFallback,
-  ThemeOverrides,
-  ThemeValue,
-} from '@core/themes/index';
+import { CursorFallback, ThemeOverrides, ThemeValue } from '@core/themes/index';
 import { Color } from '@core/utils/colors';
 import { Cursor } from '@core/utils/cursor';
 import { CoreNode } from '@graph/primitives/types';

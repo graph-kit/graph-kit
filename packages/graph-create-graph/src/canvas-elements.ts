@@ -1,9 +1,9 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { nullThrows } from '@core/utils/assert';
 import { ComputedTokenResolver } from '@graph/computed-tokens/index';
 import { CoreControls } from '@graph/core/types';
-import { CanvasElement } from '@graph/plugins/canvas/aggregator/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@graph/plugins/canvas/setupCanvasCursor';
-import { CanvasControls } from '@graph/plugins/canvas/types';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@graph/plugins/surface/setupCursor';
+import { SurfaceControls } from '@graph/plugins/surface/types';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import {
   EdgeRenderFunction,
@@ -31,19 +31,19 @@ export type CanvasElementFactories = {
 };
 
 export const createCanvasElementFactories = (
-  controls: CoreControls & { canvas: CanvasControls },
+  controls: CoreControls & { surface: SurfaceControls },
   tokenResolver: ComputedTokenResolver,
 ): CanvasElementFactories => {
   const renderFunctionOverrides: Partial<RenderFunctions> = {};
 
   const defaultNodeRenderFunction = createNodeRenderFunction({
-    shapes: controls.canvas.shapes,
+    shapes: controls.surface.shapes,
     resolveToken: tokenResolver,
   });
 
   const defaultEdgeRenderFunction = createEdgeRenderFunction({
     ...createDefaultEdgeRenderOptions({
-      canvas: controls.canvas,
+      surface: controls.surface,
       metadata: controls.metadata,
       resolveToken: tokenResolver,
     }),
@@ -74,7 +74,7 @@ export const createCanvasElementFactories = (
         `could not resolve position for node with id ${node.id}`,
       ),
     }),
-    priority: controls.canvas.getNodePriority()(node.id),
+    priority: controls.surface.getNodePriority()(node.id),
     data: {
       [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: tokenResolver('node.cursor', node),
     },

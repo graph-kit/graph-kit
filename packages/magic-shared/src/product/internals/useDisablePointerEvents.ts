@@ -22,13 +22,13 @@ export const useDisablePointerEvents = (magic: Magic) => {
   const startPointerEvents = () => (disableUIPointerEvents.value = false);
 
   onMounted(() => {
-    magic.surface.events.subscribe('onMouseDown', stopPointerEvents);
-    magic.surface.events.subscribe('onMouseUp', startPointerEvents);
+    magic.surface.events.canvas.subscribe('onMouseDown', stopPointerEvents);
+    magic.surface.events.dom.subscribe('onMouseUp', startPointerEvents);
   });
 
   onUnmounted(() => {
-    magic.surface.events.unsubscribe('onMouseDown', stopPointerEvents);
-    magic.surface.events.unsubscribe('onMouseUp', startPointerEvents);
+    magic.surface.events.canvas.unsubscribe('onMouseDown', stopPointerEvents);
+    magic.surface.events.dom.unsubscribe('onMouseUp', startPointerEvents);
   });
 
   return pointerEvents;

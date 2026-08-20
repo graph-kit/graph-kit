@@ -1,10 +1,10 @@
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import { createGraphEventHub } from '@graph/primitives/events';
 import { ElementRemovalPayload } from '@graph/primitives/transactions/types';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { NODE_DRAG_PLUGIN_ID } from '../node-drag/constants.ts';
 import { FOCUS_PLUGIN_ID, INTERACTIVE_ELEMENT_SELECTOR } from './constants.ts';
 import { createFocusEventRegistry } from './events.ts';
@@ -19,7 +19,7 @@ const sameIds = (previous: ReadonlySet<string>, next: ReadonlySet<string>) => {
 
 export const focus: FocusPlugin = ({ controls, events, getters }) => {
   const focusEventRegistry = createFocusEventRegistry();
-  const focusEventHub = createGraphEventHub(focusEventRegistry);
+  const focusEventHub = createEventHub(focusEventRegistry);
 
   let focusedElementIds: ReadonlySet<string> = new Set<string>();
 
@@ -76,7 +76,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
     setFocus(newFocusedIds);
   };
 
-  const handleMouseDown = ({ topElement, event }: CanvasGraphMouseEvent) => {
+  const handleMouseDown = ({ topElement, event }: ElementMouseEvent) => {
     if (event.button !== MOUSE_BUTTONS.left) return;
     if (!topElement) {
       if (!event.shiftKey) clearFocus();
@@ -106,7 +106,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
 
   const enable = () => {
     // focus a node when clicked, or clear focus if background is clicked
-    controls.canvas.events.handle(
+    controls.surface.events.elements.handle(
       'onMouseDown',
       handleMouseDown,
       FOCUS_PLUGIN_ID,
@@ -114,8 +114,8 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
         before: [NODE_DRAG_PLUGIN_ID],
       },
     );
-    controls.canvas.surface.events.subscribe(
-      'onDocumentClick',
+    controls.surface.events.dom.subscribe(
+      'onMouseDown',
       clearFocusOnOutsideClick,
     );
 
@@ -124,9 +124,9 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
   };
 
   const disable = () => {
-    controls.canvas.events.unhandle('onMouseDown', handleMouseDown);
-    controls.canvas.surface.events.unsubscribe(
-      'onDocumentClick',
+    controls.surface.events.elements.unhandle('onMouseDown', handleMouseDown);
+    controls.surface.events.dom.unsubscribe(
+      'onMouseDown',
       clearFocusOnOutsideClick,
     );
 

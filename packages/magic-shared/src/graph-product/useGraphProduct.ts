@@ -24,7 +24,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   if (!flags.annotations) graph.annotations.lifecycle.disable();
 
   const host: MagicProductHost = {
-    surface: graph.canvas.surface,
+    surface: graph.surface,
     transit: graph.transit,
     annotations: flags.annotations ? graph.annotations : undefined,
     history: flags.history ? graph.history : undefined,

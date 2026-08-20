@@ -1,25 +1,17 @@
 <script setup lang="ts">
+  import { nullThrows } from '@core/utils/assert';
   import { type ClassNameValue, twMerge } from 'tailwind-merge';
 
-  import { onBeforeUnmount, onMounted, ref } from 'vue';
+  import { onMounted, ref } from 'vue';
 
+  import { CANVAS_MISSING } from './constants.ts';
   import type { CanvasSurface } from './types.ts';
 
   const props = defineProps<CanvasSurface['ref']>();
 
   const canvas = ref<HTMLCanvasElement>();
 
-  onMounted(() => {
-    if (!canvas.value)
-      throw new Error('Canvas not found in DOM. Check ref link.');
-    props.canvasRef(canvas.value);
-  });
-
-  onBeforeUnmount(() => {
-    if (!canvas.value)
-      throw new Error('Canvas not found in DOM. Check ref link.');
-    props.cleanup(canvas.value);
-  });
+  onMounted(() => props.canvasRef(nullThrows(canvas.value, CANVAS_MISSING)));
 
   /**
    * a canvas element is not focusable on its own, so clicking it leaves DOM

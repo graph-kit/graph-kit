@@ -1,15 +1,15 @@
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 import { GenericEventMap } from '@core/events/types';
 import { ConsumerEventsHub } from '@graph/core/consumer-events';
-import { ReadonlyGraphEventHub } from '@graph/primitives/events';
 
 import { onUnmounted } from 'vue';
 
 // only subscribe/unsubscribe get wrapped — handle/unhandle are plugin-priority
-// wiring keyed by GraphHandlerId, not per-component subscriptions, so there's nothing
+// wiring keyed by handler id, not per-component subscriptions, so there's nothing
 // to tie to this component's lifetime.
 const withAutoUnsubscribe = <EventMap extends GenericEventMap>(
-  hub: ReadonlyGraphEventHub<EventMap>,
-): ReadonlyGraphEventHub<EventMap> => ({
+  hub: ReadonlyEventHub<EventMap>,
+): ReadonlyEventHub<EventMap> => ({
   ...hub,
   subscribe: (eventName, eventCallback) => {
     hub.subscribe(eventName, eventCallback);

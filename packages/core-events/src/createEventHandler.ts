@@ -38,9 +38,7 @@ export const createEventHandler = <
       priority: HandlerPriority<HandlerId> = { before: [] },
     ) => {
       const handlers = allHandlers[eventName] ?? [];
-
-      // TODO check for duplicate handler registrations
-      // https://github.com/graph-kit/graph-kit/issues/640
+      if (handlers.some(({ callback }) => callback === eventCallback)) return;
 
       allHandlers[eventName] = getSortedByPriority([
         ...handlers,

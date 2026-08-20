@@ -114,7 +114,10 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
         before: [NODE_DRAG_PLUGIN_ID],
       },
     );
-    controls.surface.events.dom.subscribe('onClick', clearFocusOnOutsideClick);
+    controls.surface.events.dom.subscribe(
+      'onMouseDown',
+      clearFocusOnOutsideClick,
+    );
 
     // clean up the focus so removed elements aren't in the state
     events.subscribe('onElementsRemoved', clearRemovedElementsFromFocus);
@@ -123,7 +126,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
   const disable = () => {
     controls.surface.events.elements.unhandle('onMouseDown', handleMouseDown);
     controls.surface.events.dom.unsubscribe(
-      'onClick',
+      'onMouseDown',
       clearFocusOnOutsideClick,
     );
 

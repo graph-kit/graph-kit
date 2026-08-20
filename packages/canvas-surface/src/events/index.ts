@@ -7,11 +7,8 @@ import type { CanvasLifecycleEvents } from './lifecycle.ts';
 
 export type { CanvasBoundEvents } from './canvas.ts';
 export type { DocumentBoundEvents } from './dom.ts';
-export type {
-  ElementEvents,
-  ElementMouseEvent,
-  ElementsUnderCursor,
-} from './elements.ts';
+export type { ElementEvents, ElementsUnderCursor } from './elements.ts';
+export type { ElementMouseEvent } from './elementMouseEvents.ts';
 export type { CanvasLifecycleEvents } from './lifecycle.ts';
 
 export { createCanvasBoundEvents } from './canvas.ts';

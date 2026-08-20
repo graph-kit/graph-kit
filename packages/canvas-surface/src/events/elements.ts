@@ -12,6 +12,11 @@ import type { Ref } from 'vue';
 
 import type { CanvasBoundEvents } from './canvas.ts';
 import type { DocumentBoundEvents } from './dom.ts';
+import {
+  type ElementMouseEventMap,
+  createElementMouseEventRegistry,
+  emitElementMouseEvents,
+} from './elementMouseEvents.ts';
 
 export type ElementsUnderCursor = {
   coords: Coordinate;
@@ -21,12 +26,7 @@ export type ElementsUnderCursor = {
   readonly topElement: CanvasElement | undefined;
 };
 
-/** a native mouse event resolved against whatever was drawn where it landed */
-export type ElementMouseEvent = DeepReadonly<ElementsUnderCursor> & {
-  event: MouseEvent;
-};
-
-export type ElementEvents = {
+export type ElementEvents = ElementMouseEventMap & {
   /** the cursor moved, or what sits beneath it changed */
   onElementsUnderCursorChange: (
     data: DeepReadonly<ElementsUnderCursor>,
@@ -36,26 +36,13 @@ export type ElementEvents = {
     newElement: DeepReadonly<CanvasElement> | undefined,
     oldElement: DeepReadonly<CanvasElement> | undefined,
   ) => void;
-
-  onClick: (ev: ElementMouseEvent) => void;
-  onMouseDown: (ev: ElementMouseEvent) => void;
-  onMouseUp: (ev: ElementMouseEvent) => void;
-  onMouseMove: (ev: ElementMouseEvent) => void;
-  onDblClick: (ev: ElementMouseEvent) => void;
-  onContextMenu: (ev: ElementMouseEvent) => void;
 };
 
 const createElementEventRegistry =
   (): EventMapToEventRegistry<ElementEvents> => ({
+    ...createElementMouseEventRegistry(),
     onElementsUnderCursorChange: new Set(),
     onHoveredElementChange: new Set(),
-
-    onClick: new Set(),
-    onMouseDown: new Set(),
-    onMouseUp: new Set(),
-    onMouseMove: new Set(),
-    onDblClick: new Set(),
-    onContextMenu: new Set(),
   });
 
 const sameElements = (previous: CanvasElement[], next: CanvasElement[]) => {
@@ -119,7 +106,16 @@ export const createElementsUnderCursor = ({
     refreshHoveredElement(elementsUnderCursor.topElement);
   };
 
+  // on the aggregator's own frame, so what is reported is the canvas as drawn
   aggregator.events.subscribe('onDraw', refresh);
+
+  emitElementMouseEvents({
+    emit: events.emit,
+    aggregator,
+    toWorldCoordinates,
+    canvasEvents,
+    domEvents,
+  });
 
   return { events, elementsUnderCursor };
 };

@@ -151,7 +151,7 @@ export const nodeDrag =
     const cursorTheme = createDragThemer(controls, dragState);
 
     const enable = () => {
-      controls.canvas.events.handle(
+      controls.canvas.surface.events.elements.handle(
         'onMouseDown',
         beginDrag,
         NODE_DRAG_PLUGIN_ID,
@@ -159,9 +159,14 @@ export const nodeDrag =
           before: [ANCHOR_PLUGIN_ID],
         },
       );
-      controls.canvas.events.handle('onMouseUp', drop, NODE_DRAG_PLUGIN_ID, {
-        before: [ANCHOR_PLUGIN_ID],
-      });
+      controls.canvas.surface.events.elements.handle(
+        'onMouseUp',
+        drop,
+        NODE_DRAG_PLUGIN_ID,
+        {
+          before: [ANCHOR_PLUGIN_ID],
+        },
+      );
       controls.canvas.events.handle(
         'onGraphUnderCursorChange',
         drag,
@@ -175,8 +180,11 @@ export const nodeDrag =
     };
 
     const disable = () => {
-      controls.canvas.events.unhandle('onMouseDown', beginDrag);
-      controls.canvas.events.unhandle('onMouseUp', drop);
+      controls.canvas.surface.events.elements.unhandle(
+        'onMouseDown',
+        beginDrag,
+      );
+      controls.canvas.surface.events.elements.unhandle('onMouseUp', drop);
       controls.canvas.events.unhandle('onGraphUnderCursorChange', drag);
       events.unsubscribe('onElementsRemoved', abortDragOnTamper);
       cursorTheme.disable();

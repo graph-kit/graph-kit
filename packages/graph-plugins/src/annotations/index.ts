@@ -87,17 +87,17 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
     cursorLayer.set('canvas.cursor', () => engine.cursor());
 
-    const { events } = controls.canvas;
+    const { elements } = controls.canvas.surface.events;
     const priority = ANNOTATION_HANDLER_PRIORITY;
-    events.handle('onMouseDown', beginStroke, ANNOTATION_PLUGIN_ID, priority);
-    events.handle(
+    elements.handle('onMouseDown', beginStroke, ANNOTATION_PLUGIN_ID, priority);
+    controls.canvas.events.handle(
       'onGraphUnderCursorChange',
       extendStroke,
       ANNOTATION_PLUGIN_ID,
       priority,
     );
-    events.handle('onMouseUp', endStroke, ANNOTATION_PLUGIN_ID, priority);
-    events.handle('onClick', swallowClick, ANNOTATION_PLUGIN_ID, priority);
+    elements.handle('onMouseUp', endStroke, ANNOTATION_PLUGIN_ID, priority);
+    elements.handle('onClick', swallowClick, ANNOTATION_PLUGIN_ID, priority);
   };
 
   const deactivate = () => {
@@ -105,11 +105,11 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
     cursorLayer.removeAll();
 
-    const { events } = controls.canvas;
-    events.unhandle('onMouseDown', beginStroke);
-    events.unhandle('onGraphUnderCursorChange', extendStroke);
-    events.unhandle('onMouseUp', endStroke);
-    events.unhandle('onClick', swallowClick);
+    const { elements } = controls.canvas.surface.events;
+    elements.unhandle('onMouseDown', beginStroke);
+    controls.canvas.events.unhandle('onGraphUnderCursorChange', extendStroke);
+    elements.unhandle('onMouseUp', endStroke);
+    elements.unhandle('onClick', swallowClick);
   };
 
   const toggle = () => {

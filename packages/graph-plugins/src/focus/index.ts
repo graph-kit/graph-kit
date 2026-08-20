@@ -106,7 +106,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
 
   const enable = () => {
     // focus a node when clicked, or clear focus if background is clicked
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onMouseDown',
       handleMouseDown,
       FOCUS_PLUGIN_ID,
@@ -124,7 +124,10 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
   };
 
   const disable = () => {
-    controls.canvas.events.unhandle('onMouseDown', handleMouseDown);
+    controls.canvas.surface.events.elements.unhandle(
+      'onMouseDown',
+      handleMouseDown,
+    );
     controls.canvas.surface.events.dom.unsubscribe(
       'onClick',
       clearFocusOnOutsideClick,

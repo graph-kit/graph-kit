@@ -11,12 +11,16 @@ import type { CanvasLifecycleEvents } from './lifecycle.ts';
 export type DocumentBoundEvents = {
   onClick: (ev: MouseEvent) => void;
   onMouseUp: (ev: MouseEvent) => void;
+  onKeyDown: (ev: KeyboardEvent) => void;
+  onKeyUp: (ev: KeyboardEvent) => void;
 };
 
 const createDocumentBoundEventRegistry =
   (): EventMapToEventRegistry<DocumentBoundEvents> => ({
     onClick: new Set(),
     onMouseUp: new Set(),
+    onKeyDown: new Set(),
+    onKeyUp: new Set(),
   });
 
 const createBindings = (
@@ -24,6 +28,8 @@ const createBindings = (
 ): DocumentBinding[] => [
   createDocumentBinding('click', (ev) => emit('onClick', ev)),
   createDocumentBinding('mouseup', (ev) => emit('onMouseUp', ev)),
+  createDocumentBinding('keydown', (ev) => emit('onKeyDown', ev)),
+  createDocumentBinding('keyup', (ev) => emit('onKeyUp', ev)),
 ];
 
 export const createDocumentBoundEvents = (

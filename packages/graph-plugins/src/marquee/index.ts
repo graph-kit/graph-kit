@@ -160,17 +160,17 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   const enable = () => {
     controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
 
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onMouseDown',
       handleMarqueeEngagement,
       MARQUEE_PLUGIN_ID,
     );
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onMouseUp',
       disengageMarqueeBox,
       MARQUEE_PLUGIN_ID,
     );
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onContextMenu',
       disengageMarqueeBox,
       MARQUEE_PLUGIN_ID,
@@ -190,10 +190,22 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   const disable = () => {
     controls.focus.events.unsubscribe('onFocusChange', updateSelectionBox);
 
-    controls.canvas.events.unhandle('onMouseDown', handleMarqueeEngagement);
-    controls.canvas.events.unhandle('onMouseUp', disengageMarqueeBox);
-    controls.canvas.events.unhandle('onContextMenu', disengageMarqueeBox);
-    controls.canvas.events.unhandle('onMouseMove', setMarqueeBoxDimensions);
+    controls.canvas.surface.events.elements.unhandle(
+      'onMouseDown',
+      handleMarqueeEngagement,
+    );
+    controls.canvas.surface.events.elements.unhandle(
+      'onMouseUp',
+      disengageMarqueeBox,
+    );
+    controls.canvas.surface.events.elements.unhandle(
+      'onContextMenu',
+      disengageMarqueeBox,
+    );
+    controls.canvas.surface.events.elements.unhandle(
+      'onMouseMove',
+      setMarqueeBoxDimensions,
+    );
 
     events._internal.core.unsubscribe('onNodeMoveStream', updateSelectionBox);
 

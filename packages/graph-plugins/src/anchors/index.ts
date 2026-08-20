@@ -7,6 +7,7 @@ import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { CoreNode } from '@graph/primitives/types';
 import { DeepReadonly } from 'ts-essentials';
 
+import { CANVAS_PLUGIN_ID } from '../canvas/constants.ts';
 import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../canvas/setupCanvasCursor.ts';
 import { ANCHOR_PLUGIN_ID } from './constants.ts';
@@ -353,35 +354,39 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
     );
 
     // when a node is finished dragging, set the dropped node as anchor parent
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onMouseUp',
       checkForParentNodeUpdate,
       ANCHOR_PLUGIN_ID,
     );
 
     // if an anchor is being dragged, update its position
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onMouseMove',
       updateCurrentlyDraggingAnchorPosition,
       ANCHOR_PLUGIN_ID,
     );
 
     // scans the canvas when the cursor is moving and sets the hovered node anchor state
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onMouseMove',
       updateHoveredNodeAnchorId,
       ANCHOR_PLUGIN_ID,
     );
 
     // picks up the node anchor to begin drag
-    controls.canvas.events.handle(
+    controls.canvas.surface.events.elements.handle(
       'onMouseDown',
       setCurrentlyDraggingAnchor,
       ANCHOR_PLUGIN_ID,
     );
 
     // drop the node anchor being dragged
-    controls.canvas.events.handle('onMouseUp', dropAnchor, ANCHOR_PLUGIN_ID);
+    controls.canvas.surface.events.elements.handle(
+      'onMouseUp',
+      dropAnchor,
+      ANCHOR_PLUGIN_ID,
+    );
 
     // prevents fast mouse movement from updating the hovered element to the destination node mid-drag
     controls.canvas.events.handle(
@@ -389,7 +394,7 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
       consumeOnElementHoverEvent,
       ANCHOR_PLUGIN_ID,
       {
-        before: ['plugins/canvas'],
+        before: [CANVAS_PLUGIN_ID],
       },
     );
 
@@ -399,18 +404,27 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
   const disable = () => {
     events.unhandle('onNodesRemoved', clearAnchorStateIfParentRemoved);
     events._internal.core.unhandle('onNodeMoveStreamStart', clearAnchorState);
-    controls.canvas.events.unhandle('onMouseUp', checkForParentNodeUpdate);
+    controls.canvas.surface.events.elements.unhandle(
+      'onMouseUp',
+      checkForParentNodeUpdate,
+    );
     controls.canvas.events.unhandle(
       'onGraphUnderCursorChange',
       checkForParentNodeUpdate,
     );
-    controls.canvas.events.unhandle(
+    controls.canvas.surface.events.elements.unhandle(
       'onMouseMove',
       updateCurrentlyDraggingAnchorPosition,
     );
-    controls.canvas.events.unhandle('onMouseMove', updateHoveredNodeAnchorId);
-    controls.canvas.events.unhandle('onMouseDown', setCurrentlyDraggingAnchor);
-    controls.canvas.events.unhandle('onMouseUp', dropAnchor);
+    controls.canvas.surface.events.elements.unhandle(
+      'onMouseMove',
+      updateHoveredNodeAnchorId,
+    );
+    controls.canvas.surface.events.elements.unhandle(
+      'onMouseDown',
+      setCurrentlyDraggingAnchor,
+    );
+    controls.canvas.surface.events.elements.unhandle('onMouseUp', dropAnchor);
     controls.canvas.events.unhandle(
       'onHoveredElementChange',
       consumeOnElementHoverEvent,

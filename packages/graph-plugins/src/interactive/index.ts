@@ -1,5 +1,6 @@
 import { nullThrows } from '@core/utils/assert';
 import { getCtx } from '@core/utils/canvas/index';
+import { isTypingTarget } from '@core/utils/keyboard';
 import { getValue } from '@core/utils/maybeGetter/index';
 import Fraction from 'fraction.js';
 
@@ -144,6 +145,9 @@ export const interactive =
     };
 
     const removeFocusedElements = (e: KeyboardEvent) => {
+      // the surface hands on every keystroke in the page, so a backspace aimed at an
+      // edge weight field or a product panel must not delete the graph out from under it
+      if (isTypingTarget(e)) return;
       if (e.key !== 'Backspace') return;
       finalActions.removeElements({
         nodes: controls.focus?.focusedNodes() ?? [],
@@ -153,8 +157,11 @@ export const interactive =
     };
 
     const enable = () => {
-      controls.canvas.events.subscribe('onMouseDown', handleEdgeTextArea);
-      controls.canvas.events.handle(
+      controls.canvas.surface.events.elements.subscribe(
+        'onMouseDown',
+        handleEdgeTextArea,
+      );
+      controls.canvas.surface.events.elements.handle(
         'onClick',
         handleNodeCreation,
         INTERACTIVE_PLUGIN_ID,
@@ -163,17 +170,29 @@ export const interactive =
         'onNodeAnchorDrop',
         handleEdgeCreation,
       );
-      controls.canvas.events.subscribe('onKeyDown', removeFocusedElements);
+      controls.canvas.surface.events.dom.subscribe(
+        'onKeyDown',
+        removeFocusedElements,
+      );
     };
 
     const disable = () => {
-      controls.canvas.events.unsubscribe('onMouseDown', handleEdgeTextArea);
-      controls.canvas.events.unhandle('onClick', handleNodeCreation);
+      controls.canvas.surface.events.elements.unsubscribe(
+        'onMouseDown',
+        handleEdgeTextArea,
+      );
+      controls.canvas.surface.events.elements.unhandle(
+        'onClick',
+        handleNodeCreation,
+      );
       controls.anchors?.events.unsubscribe(
         'onNodeAnchorDrop',
         handleEdgeCreation,
       );
-      controls.canvas.events.unsubscribe('onKeyDown', removeFocusedElements);
+      controls.canvas.surface.events.dom.unsubscribe(
+        'onKeyDown',
+        removeFocusedElements,
+      );
     };
 
     enable();

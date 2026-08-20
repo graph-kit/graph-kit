@@ -2,11 +2,9 @@ import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasSurface } from '@canvas/surface/types';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
-import { KeyboardEventEntries } from '@core/utils/types';
 import { CoreEdge } from '@graph/primitives/types';
 
 import { CANVAS_PLUGIN_ID } from './constants.ts';
-import { emitKeyboardEvents, emitMouseEvents } from './emitDOMEvents.ts';
 import { createCanvasEventRegistry } from './events.ts';
 import { createNodeCanvasElementPriorityGetter } from './nodeCanvasElementPriority.ts';
 import { createNodePaintOrder } from './nodePaintOrder.ts';
@@ -59,26 +57,6 @@ export const canvas =
       },
       CANVAS_PLUGIN_ID,
     );
-
-    emitMouseEvents(surface.events.elements, canvasEvents.emit);
-
-    const keyboardEvents = emitKeyboardEvents(canvasEvents.emit);
-
-    surface.events.lifecycle.subscribe('onMounted', () => {
-      for (const [event, listeners] of Object.entries(
-        keyboardEvents,
-      ) as KeyboardEventEntries) {
-        document.addEventListener(event, listeners);
-      }
-    });
-
-    surface.events.lifecycle.subscribe('onBeforeUnmount', () => {
-      for (const [event, listeners] of Object.entries(
-        keyboardEvents,
-      ) as KeyboardEventEntries) {
-        document.removeEventListener(event, listeners);
-      }
-    });
 
     surface.draw.backgroundPattern.value = crossPattern((alpha) =>
       theme._resolveToken('canvas.patternColor', alpha),

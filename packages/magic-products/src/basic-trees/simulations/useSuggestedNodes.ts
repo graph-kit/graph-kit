@@ -91,9 +91,15 @@ export const useSuggestedNodes = (
     onClicked();
   };
 
-  graph.canvas.events.subscribe('onClick', kickOffNodeInsertion);
+  graph.canvas.surface.events.elements.subscribe(
+    'onClick',
+    kickOffNodeInsertion,
+  );
   onUnmounted(() =>
-    graph.canvas.events.unsubscribe('onClick', kickOffNodeInsertion),
+    graph.canvas.surface.events.elements.unsubscribe(
+      'onClick',
+      kickOffNodeInsertion,
+    ),
   );
 
   return {

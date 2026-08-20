@@ -123,7 +123,7 @@
 
 <template>
   <Well v-if="nodeIds.length > 0">
-    <VStack class="gap-2">
+    <VStack>
       <div class="max-h-[50vh] max-w-[40vw] overflow-auto">
         <table class="table-fixed border-separate border-spacing-1">
           <thead>

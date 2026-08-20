@@ -28,7 +28,6 @@
     label: string | undefined;
     side?: TooltipContentProps['side'];
     class?: HTMLAttributes['class'];
-    /** ms to wait before opening on hover */
     delay?: number;
   }
 

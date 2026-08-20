@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import ToolTip from '@core/components/Tooltip';
+  import { nullThrows } from '@core/utils/assert';
   import HStack from '@magic/shared/HStack';
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
@@ -12,28 +13,24 @@
 
   const graph = useProvidedGraph();
 
+  const adjacencyList = computed(() => graph.adjacencyLists.standard.value);
+
   const nodeIds = computed(() => graph.nodes.value.map((node) => node.id));
 
   const labelOf = (id: string) => graph.getNode(id).label;
 
-  const displayedNodeIds = computed(() =>
-    [...nodeIds.value].sort((a, b) => labelOf(a).localeCompare(labelOf(b))),
-  );
+  const edgeIdBetween = (fromId: string, toId: string) =>
+    nullThrows(
+      graph.helpers.nodes.getEdgeBetween(fromId, toId),
+      `no edge between ${fromId} and ${toId}`,
+    ).id;
 
-  const successorsOf = (id: string) =>
-    graph.edges.value
-      .filter((edge) => edge.source === id)
-      .map((edge) => ({ edgeId: edge.id, targetId: edge.target }))
-      .sort((a, b) => labelOf(a.targetId).localeCompare(labelOf(b.targetId)));
-
-  const adjacencyList = computed(() =>
-    displayedNodeIds.value.map((id) => ({
-      id,
-      successors: successorsOf(id),
-    })),
-  );
-
-  const focusNode = (id: string) => graph.focus.set([id]);
+  const focusNode = (id: string) => {
+    const outgoingEdgeIds = (adjacencyList.value[id] ?? []).map((targetId) =>
+      edgeIdBetween(id, targetId),
+    );
+    graph.focus.set([id, ...outgoingEdgeIds]);
+  };
   const focusEdge = (edgeId: string, nodeId: string) =>
     graph.focus.set([edgeId, nodeId]);
 
@@ -49,16 +46,16 @@
     <div class="max-h-[50vh] max-w-[40vw] overflow-auto">
       <VStack class="gap-2">
         <HStack
-          v-for="fromNode in adjacencyList"
-          :key="fromNode.id"
+          v-for="(successorIds, fromId) in adjacencyList"
+          :key="fromId"
           class="items-center gap-2"
         >
           <div
             class="shrink-0 cursor-pointer"
-            @click="focusNode(fromNode.id)"
+            @click="focusNode(fromId)"
           >
             <Node
-              :id="fromNode.id"
+              :id="fromId"
               :scale="0.75"
             />
           </div>
@@ -66,27 +63,29 @@
           <span class="font-bold">&rarr;</span>
 
           <HStack
-            v-if="fromNode.successors.length > 0"
-            class="flex-wrap items-center gap-1.5"
+            v-if="successorIds.length > 0"
+            class="flex-wrap items-center"
           >
             <AdjacencyListCell
-              v-for="successor in fromNode.successors"
-              :key="successor.edgeId"
-              :edge-id="successor.edgeId"
+              v-for="targetId in successorIds"
+              :key="edgeIdBetween(fromId, targetId)"
+              :edge-id="edgeIdBetween(fromId, targetId)"
             >
               <ToolTip
                 :label="
                   edgeWeightLabel(
-                    fromNode.id,
-                    successor.edgeId,
-                    successor.targetId,
+                    fromId,
+                    edgeIdBetween(fromId, targetId),
+                    targetId,
                   )
                 "
               >
                 <template #trigger>
                   <Node
-                    @click="focusEdge(successor.edgeId, successor.targetId)"
-                    :id="successor.targetId"
+                    @click="
+                      focusEdge(edgeIdBetween(fromId, targetId), targetId)
+                    "
+                    :id="targetId"
                     :scale="0.75"
                   />
                 </template>
@@ -95,7 +94,7 @@
           </HStack>
           <ToolTip
             v-else
-            :label="noSuccessorsLabel(fromNode.id)"
+            :label="noSuccessorsLabel(fromId)"
           >
             <template #trigger>
               <span class="font-bold text-lg">None</span>

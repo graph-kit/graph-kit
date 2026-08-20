@@ -70,8 +70,8 @@ type CreateElementsUnderCursorOptions = {
   aggregator: AggregatorControls;
   cursorCoordinates: Ref<Coordinate>;
   toWorldCoordinates: (ev: MouseEvent) => Coordinate;
-  canvasEvents: ReadonlyEventHub<CanvasBoundEvents>;
-  domEvents: ReadonlyEventHub<DocumentBoundEvents>;
+  canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>;
+  domEvents: Pick<ReadonlyEventHub<DocumentBoundEvents>, 'subscribe'>;
 };
 
 export const createElementsUnderCursor = ({

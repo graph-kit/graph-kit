@@ -11,8 +11,8 @@ import { addTransform, useDevicePixelRatio } from './utils.ts';
 
 export const useCamera = (
   canvas: Ref<HTMLCanvasElement | undefined>,
-  canvasEvents: ReadonlyEventHub<CanvasBoundEvents>,
-  domEvents: ReadonlyEventHub<DocumentBoundEvents>,
+  canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>,
+  domEvents: Pick<ReadonlyEventHub<DocumentBoundEvents>, 'subscribe'>,
 ) => {
   const { getTransform: getPanZoomTransform, ...rest } = usePanAndZoom(
     canvas,

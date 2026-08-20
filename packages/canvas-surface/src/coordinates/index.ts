@@ -12,7 +12,7 @@ import { Coordinate } from '../types.ts';
  */
 export const useWorldCoordinates = (
   { panX, panY, zoom }: Camera['state'],
-  domEvents: ReadonlyEventHub<CanvasBoundEvents>,
+  domEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>,
 ) => {
   // offset is already relative to the canvas the listener sits on, so nothing is measured
   const toWorldCoordinates = (ev: MouseEvent): Coordinate => ({

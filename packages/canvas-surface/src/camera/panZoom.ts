@@ -18,8 +18,8 @@ export const PAN_SENSITIVITY = 1;
 
 export const usePanAndZoom = (
   canvas: Ref<HTMLCanvasElement | undefined>,
-  canvasEvents: ReadonlyEventHub<CanvasBoundEvents>,
-  domEvents: ReadonlyEventHub<DocumentBoundEvents>,
+  canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>,
+  domEvents: Pick<ReadonlyEventHub<DocumentBoundEvents>, 'subscribe'>,
 ) => {
   const panX = ref(0);
   const panY = ref(0);

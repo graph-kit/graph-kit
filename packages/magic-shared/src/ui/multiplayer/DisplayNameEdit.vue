@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { writeLocalStorage } from '@core/utils/localStorage';
   import { mdiTagEdit } from '@mdi/js';
   import { RosterEntry } from '@multiplayer/protocol/room';
 
@@ -25,7 +26,7 @@
 
   const setDisplayName = () => {
     if (!displayName.value) return;
-    localStorage.setItem(DISPLAY_NAME_LOCAL_KEY, displayName.value);
+    writeLocalStorage(DISPLAY_NAME_LOCAL_KEY, displayName.value);
     room.value.controls.setDisplayName(displayName.value);
   };
 </script>

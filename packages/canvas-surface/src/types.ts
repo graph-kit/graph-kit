@@ -1,5 +1,5 @@
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 import type { Coordinate, WorldRect } from '@core/utils/canvas/index';
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 
 import type { ComputedRef, Ref } from 'vue';
 

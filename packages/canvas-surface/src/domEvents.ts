@@ -1,8 +1,5 @@
-import {
-  type EventHub,
-  createEventHub,
-} from '@graph/primitives/events/createEventHub';
-import type { EventMapToEventRegistry } from '@graph/primitives/events/types';
+import { type EventHub, createEventHub } from '@core/events/createEventHub';
+import type { EventMapToEventRegistry } from '@core/events/types';
 
 import { type Ref, onMounted } from 'vue';
 

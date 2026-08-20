@@ -10,6 +10,7 @@
     { "path": "../core-utils" },
     { "path": "../graph-core" },
     { "path": "../graph-plugins-shared" },
+    { "path": "../core-events" },
     { "path": "../graph-primitives" },
     { "path": "../graph-render-functions" },
     { "path": "../core-annotations" },

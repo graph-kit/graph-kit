@@ -1,5 +1,5 @@
 import { CanvasSurface } from '@canvas/surface/types';
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 
 import { onUnmounted } from 'vue';
 

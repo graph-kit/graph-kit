@@ -2,9 +2,9 @@ import type { ScribbleSchema } from '@canvas/primitives/shapes/scribble/types';
 import type { Shape } from '@canvas/primitives/types/index';
 import type { Coordinate } from '@canvas/primitives/types/utility';
 import type { CanvasSurface } from '@canvas/surface/types';
+import type { ReadonlyEventHub } from '@core/events/createEventHub';
 import type { Color } from '@core/utils/colors';
 import type { Cursor } from '@core/utils/cursor';
-import type { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
 
 import type { ANNOTATION_MODES } from './constants.ts';
 import type { AnnotationsEventMap } from './events.ts';

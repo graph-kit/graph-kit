@@ -12,6 +12,7 @@
     { "path": "../graph-core" },
     { "path": "../graph-vue" },
     { "path": "../graph-plugins" },
+    { "path": "../core-events" },
     { "path": "../graph-primitives" },
     { "path": "../core-themes" },
     { "path": "../graph-render-functions" },

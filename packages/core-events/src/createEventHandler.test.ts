@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { HandlerId, createEventHandler } from './createEventHandler.ts';
+import { createEventHandler } from './createEventHandler.ts';
 
 type TestEventMap = {
   onClick: (x: number) => void;
@@ -9,7 +9,7 @@ type TestEventMap = {
 
 type TestEventHandler = ReturnType<typeof createEventHandler<TestEventMap>>;
 
-const TEST_HANDLER_ID = 'hub' as HandlerId;
+const TEST_HANDLER_ID = 'hub';
 
 describe(createEventHandler, () => {
   let handle: TestEventHandler['handle'];
@@ -37,11 +37,11 @@ describe(createEventHandler, () => {
 
     it('invokes multiple handlers in priority order', () => {
       const order: string[] = [];
-      handle('onClick', () => order.push('second'), 'second' as HandlerId, {
+      handle('onClick', () => order.push('second'), 'second', {
         before: [],
       });
-      handle('onClick', () => order.push('first'), 'first' as HandlerId, {
-        before: ['second' as HandlerId],
+      handle('onClick', () => order.push('first'), 'first', {
+        before: ['second'],
       });
       fireHandlers('onClick', 1);
       expect(order).toEqual(['first', 'second']);
@@ -77,9 +77,9 @@ describe(createEventHandler, () => {
     it('stops calling handlers after consume is called', () => {
       const a = vi.fn((_x: number, consume: () => void) => consume());
       const b = vi.fn();
-      handle('onClick', b, 'second' as HandlerId);
-      handle('onClick', a, 'first' as HandlerId, {
-        before: ['second' as HandlerId],
+      handle('onClick', b, 'second');
+      handle('onClick', a, 'first', {
+        before: ['second'],
       });
       fireHandlers('onClick', 0);
       expect(a).toHaveBeenCalledOnce();

@@ -3,7 +3,7 @@ import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasSurface } from '@canvas/surface/types';
 import { createThemeController } from '@core/themes/index';
 import { KeyboardEventEntries } from '@core/utils/types';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import { CoreEdge } from '@graph/primitives/types';
 
 import { createAggregator } from './aggregator/createAggregator.ts';
@@ -30,7 +30,7 @@ export const canvas =
   (surface: CanvasSurface): CanvasPlugin =>
   ({ controls, getters }) => {
     const canvasEventRegistry = createCanvasEventRegistry();
-    const canvasEvents = createEventHub(canvasEventRegistry);
+    const canvasEvents = createGraphEventHub(canvasEventRegistry);
 
     const { shapes, ...renderer } = createAnimatedShapes();
     const aggregator = createAggregator(canvasEvents, renderer);

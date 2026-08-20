@@ -1,5 +1,5 @@
+import { createEventHub } from '@core/events/createEventHub';
 import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
 import { useElementSize } from '@vueuse/core';
 
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';

@@ -156,6 +156,7 @@
     "@canvas/surface": "workspace:*",
     "@core/annotations": "workspace:*",
     "@core/components": "workspace:*",
+    "@core/events": "workspace:*",
     "@core/themes": "workspace:*",
     "@core/utils": "workspace:*",
     "@graph/core": "workspace:*",

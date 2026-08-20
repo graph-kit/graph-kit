@@ -1,9 +1,6 @@
+import { ReadonlyEventHub, createEventHub } from '@core/events/createEventHub';
 import { assert, nullThrows } from '@core/utils/assert';
 import { delta } from '@core/utils/delta/index';
-import {
-  ReadonlyEventHub,
-  createEventHub,
-} from '@graph/primitives/events/createEventHub';
 
 import { ComputedRef, computed, ref, shallowRef } from 'vue';
 

@@ -1,9 +1,9 @@
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
-import { GenericEventMap } from '@graph/primitives/events/types';
+import { GenericEventMap } from '@core/events/types';
+import { ReadonlyGraphEventHub } from '@graph/primitives/events';
 
 type PluginEventHub<EventMap extends GenericEventMap> = {
   /** events for plugin */
-  events: ReadonlyEventHub<EventMap>;
+  events: ReadonlyGraphEventHub<EventMap>;
 };
 
 export type WithEvents<Controls, EventMap extends GenericEventMap> = Controls &

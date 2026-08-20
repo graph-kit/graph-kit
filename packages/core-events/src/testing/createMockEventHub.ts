@@ -1,10 +1,7 @@
 import { MockInstance, vi } from 'vitest';
 
-import { EventHub, createEventHub } from '../../events/createEventHub.ts';
-import {
-  EventMapToEventRegistry,
-  GenericEventMap,
-} from '../../events/types.ts';
+import { EventHub, createEventHub } from '../createEventHub.ts';
+import { EventMapToEventRegistry, GenericEventMap } from '../types.ts';
 
 export type MockEventHub<EventMap extends GenericEventMap> =
   EventHub<EventMap> & {

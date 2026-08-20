@@ -5,6 +5,7 @@
     "rootDir": "./src"
   },
   "references": [
+    { "path": "../core-events" },
     { "path": "../graph-primitives" },
     { "path": "../graph-core" },
     { "path": "../core-utils" },

@@ -1,4 +1,4 @@
-import { EventMapToEventRegistry } from '@graph/primitives/events/types';
+import { EventMapToEventRegistry } from '@core/events/types';
 import { RosterEntry } from '@multiplayer/protocol/room';
 
 export type MultiplayerEventMap = {

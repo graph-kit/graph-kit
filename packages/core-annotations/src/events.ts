@@ -1,4 +1,4 @@
-import type { EventMapToEventRegistry } from '@graph/primitives/events/types';
+import type { EventMapToEventRegistry } from '@core/events/types';
 
 import type { Annotation } from './types.ts';
 

@@ -1,10 +1,7 @@
 import { CanvasDOMEvents } from '@canvas/surface/domEvents';
+import { EventHub, ReadonlyEventHub } from '@core/events/createEventHub';
 import { isTypingTarget } from '@core/utils/keyboard';
 import { KeyboardEventMap } from '@core/utils/types';
-import {
-  EventHub,
-  ReadonlyEventHub,
-} from '@graph/primitives/events/createEventHub';
 
 import { CanvasEventMap, CanvasGraphMouseEvent } from './events.ts';
 

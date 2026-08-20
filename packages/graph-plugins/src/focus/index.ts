@@ -1,6 +1,6 @@
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import { createEventHub } from '@graph/primitives/events/createEventHub';
+import { createGraphEventHub } from '@graph/primitives/events';
 import { ElementRemovalPayload } from '@graph/primitives/transactions/types';
 import { DeepReadonly } from 'ts-essentials';
 
@@ -19,7 +19,7 @@ const sameIds = (previous: ReadonlySet<string>, next: ReadonlySet<string>) => {
 
 export const focus: FocusPlugin = ({ controls, events, getters }) => {
   const focusEventRegistry = createFocusEventRegistry();
-  const focusEventHub = createEventHub(focusEventRegistry);
+  const focusEventHub = createGraphEventHub(focusEventRegistry);
 
   let focusedElementIds: ReadonlySet<string> = new Set<string>();
 

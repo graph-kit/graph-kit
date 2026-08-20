@@ -19,6 +19,7 @@
     "vue": "^3.5.18"
   },
   "dependencies": {
+    "@core/events": "workspace:*",
     "@graph/core": "workspace:*",
     "@graph/primitives": "workspace:*",
     "@graph/create-graph": "workspace:*",

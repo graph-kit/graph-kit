@@ -1,4 +1,4 @@
-import { ReadonlyEventHub } from '@graph/primitives/events/createEventHub';
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 import {
   ClientToServerEvents,
   JoinResult,

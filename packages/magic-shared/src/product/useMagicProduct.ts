@@ -1,3 +1,9 @@
+import {
+  AggregatorTransformer,
+  CanvasElement,
+} from '@canvas/primitives/aggregator/types';
+import { rect } from '@canvas/primitives/shapes/rect/index';
+
 import { onMounted } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
@@ -12,6 +18,7 @@ import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
+import { tierColor } from '../ui/multiplayer/tier.ts';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
 import { resolveProductFlags } from './flags.ts';
@@ -74,6 +81,46 @@ export const useMagicProduct = (
     localStorage,
     multiplayer,
   };
+
+  const nameTagElement: AggregatorTransformer = (agg) => {
+    if (!magic.multiplayer?.room.state.value.connected) return agg;
+    const roster = magic.multiplayer.room.state.value.userIdToRosterEntry;
+    for (const [userId, p] of Object.entries(
+      magic.multiplayer.room.state.value.userIdToPresence,
+    )) {
+      const el: CanvasElement = {
+        id: userId + '_nameTag',
+        priority: Infinity,
+        shape: rect({
+          at: p.cursorPosition ?? { x: 0, y: 0 },
+          height: 20,
+          width: 60,
+          fillColor: tierColor[roster[userId].tier],
+          borderRadius: 5,
+          textArea: {
+            textBlock: {
+              // 1. test to see if the name is greater than 10 characters long
+              // 2. if it is, truncate it to 8 characters and a '...'
+              // 3. measure the text with canvas primitive text measuring tool
+              // 4. ensure the width is snug on the displayed name
+              content: roster[userId].displayName,
+              fontWeight: 'bold',
+              color: 'white',
+            },
+          },
+        }),
+      };
+      agg.push(el);
+    }
+    return agg;
+  };
+
+  if (multiplayer) {
+    multiplayer.events.subscribe('onRoomJoined', () => {
+      console.log('room joined');
+      magic.surface.aggregator.transformers.push(nameTagElement);
+    });
+  }
 
   if (magic.lensChips) {
     magic.componentSlots.add({

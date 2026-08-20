@@ -177,6 +177,7 @@
     "ctrl-keys": "^1.0.6",
     "fraction.js": "^5.3.4",
     "katex": "^0.18.1",
+    "@canvas/primitives": "workspace:*",
     "lz-string": "^1.5.0",
     "mathlive": "^0.110.0",
     "socket.io-client": "^4.8.1",

@@ -17,6 +17,12 @@
     /** an icon path string from '@mdi/js', e.g. mdiHome */
     icon?: string;
     disabled?: boolean | string;
+    /**
+     * renders the row as a real link, so the browser owns the navigation rather than a
+     * click handler. `as` cannot be passed through attrs here, since reka's own item
+     * claims that prop on the way down.
+     */
+    href?: string;
   }
 
   defineProps<Props>();
@@ -38,6 +44,8 @@
     <Button
       :class="classes"
       :disabled="disabled"
+      :as="href ? 'a' : 'button'"
+      :href="disabled ? undefined : href"
     >
       <template #start>
         <Icon

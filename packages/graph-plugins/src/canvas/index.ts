@@ -1,8 +1,8 @@
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasSurface } from '@canvas/surface/types';
+import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { KeyboardEventEntries } from '@core/utils/types';
-import { createGraphEventHub } from '@graph/primitives/events';
 import { CoreEdge } from '@graph/primitives/types';
 
 import { CANVAS_PLUGIN_ID } from './constants.ts';
@@ -18,7 +18,7 @@ export const canvas =
   (surface: CanvasSurface): CanvasPlugin =>
   ({ controls, getters }) => {
     const canvasEventRegistry = createCanvasEventRegistry();
-    const canvasEvents = createGraphEventHub(canvasEventRegistry);
+    const canvasEvents = createEventHub(canvasEventRegistry);
 
     const { aggregator, shapes, renderer } = surface;
 

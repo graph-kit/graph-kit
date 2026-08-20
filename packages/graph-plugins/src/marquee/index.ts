@@ -1,9 +1,9 @@
 import { Aggregator, CanvasElement } from '@canvas/primitives/aggregator/types';
 import { normalizeBoundingBox } from '@canvas/primitives/helpers';
 import type { BoundingBox, Coordinate } from '@canvas/primitives/types/utility';
+import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import { createGraphEventHub } from '@graph/primitives/events';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
@@ -19,7 +19,7 @@ import { MarqueePlugin } from './types.ts';
 
 export const marquee: MarqueePlugin = ({ controls, events }) => {
   const marqueeEventRegistry = createMarqueeEventRegistry();
-  const marqueeEventHub = createGraphEventHub(marqueeEventRegistry);
+  const marqueeEventHub = createEventHub(marqueeEventRegistry);
 
   const theme = createThemeController(createMarqueeThemeOverrides());
 

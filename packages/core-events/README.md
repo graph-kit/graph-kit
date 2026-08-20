@@ -9,9 +9,5 @@ annotation tools take the pointer ahead of anything that would act on what is un
 Ordering is declared relationally, `{ before: [...] }` against other handler ids, rather
 than as a number nobody can pick correctly in isolation.
 
-Handler ids are any string by default. A system that owns a fixed set of them imports
-`eventHubFor` instead and binds its own union once, so `handle` and every `before` list
-only accept ids that exist — see `createGraphEventHub` in `@graph/primitives/events`.
-
 Nothing here knows about graphs or canvases. The graph core, the canvas surface, the
 annotation engine and the product harness all build their own event maps on top of it.

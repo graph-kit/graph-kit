@@ -357,9 +357,6 @@ importers:
 
   packages/graph-primitives:
     dependencies:
-      '@core/events':
-        specifier: workspace:*
-        version: link:../core-events
       fraction.js:
         specifier: ^5.3.4
         version: 5.3.4

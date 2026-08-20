@@ -16,7 +16,6 @@
     "build:types": "vue-tsc -b tsconfig.json"
   },
   "dependencies": {
-    "@core/events": "workspace:*",
     "fraction.js": "^5.3.4"
   },
   "devDependencies": {

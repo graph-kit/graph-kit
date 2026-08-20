@@ -2,16 +2,21 @@ import type { ReadonlyEventHub } from '@core/events/createEventHub';
 
 import type { Ref } from 'vue';
 
-import type { CanvasDOMEvents } from '../domEvents.ts';
+import type {
+  CanvasBoundEvents,
+  DocumentBoundEvents,
+} from '../events/index.ts';
 import { usePanAndZoom } from './panZoom.ts';
 import { addTransform, useDevicePixelRatio } from './utils.ts';
 
 export const useCamera = (
   canvas: Ref<HTMLCanvasElement | undefined>,
-  domEvents: ReadonlyEventHub<CanvasDOMEvents>,
+  canvasEvents: ReadonlyEventHub<CanvasBoundEvents>,
+  domEvents: ReadonlyEventHub<DocumentBoundEvents>,
 ) => {
   const { getTransform: getPanZoomTransform, ...rest } = usePanAndZoom(
     canvas,
+    canvasEvents,
     domEvents,
   );
   const dpr = useDevicePixelRatio();

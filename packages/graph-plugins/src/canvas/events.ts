@@ -1,19 +1,28 @@
+import type { CanvasElement } from '@canvas/primitives/aggregator/types';
+import type {
+  ElementMouseEvent as CanvasGraphMouseEvent,
+  ElementsUnderCursor,
+} from '@canvas/surface/events/index';
 import { EventMapToEventRegistry } from '@core/events/types';
 import { DeepReadonly } from 'ts-essentials';
-
-import { HoveredElement } from './setupHoveredElement.ts';
-import { GraphUnderCursor } from './types.ts';
 
 /**
  * a standard mouse event along with extra graph related info
  * regarding the mouse position
  */
-export type CanvasGraphMouseEvent = DeepReadonly<GraphUnderCursor> & {
-  /**
-   * the native browser event that triggered this canvas graph event
-   */
-  event: MouseEvent;
-};
+export type { CanvasGraphMouseEvent };
+
+/** every canvas event that is a mouse event the surface already resolved to elements */
+export const MOUSE_EVENT_NAMES = [
+  'onClick',
+  'onMouseDown',
+  'onMouseUp',
+  'onMouseMove',
+  'onDblClick',
+  'onContextMenu',
+] as const;
+
+export type MouseEventName = (typeof MOUSE_EVENT_NAMES)[number];
 
 export type CanvasEventMap = {
   /**
@@ -66,10 +75,10 @@ export type CanvasEventMap = {
    */
   onBeforeDraw: (ctx: CanvasRenderingContext2D) => void;
 
-  onGraphUnderCursorChange: (data: DeepReadonly<GraphUnderCursor>) => void;
+  onGraphUnderCursorChange: (data: DeepReadonly<ElementsUnderCursor>) => void;
   onHoveredElementChange: (
-    newElement: HoveredElement['value'],
-    oldElement: HoveredElement['value'],
+    newElement: DeepReadonly<CanvasElement> | undefined,
+    oldElement: DeepReadonly<CanvasElement> | undefined,
   ) => void;
 };
 

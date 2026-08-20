@@ -5,10 +5,10 @@ import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { createGraphEventHub } from '@graph/primitives/events';
 import { CoreNode } from '@graph/primitives/types';
+import { DeepReadonly } from 'ts-essentials';
 
 import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../canvas/setupCanvasCursor.ts';
-import { HoveredElement } from '../canvas/setupHoveredElement.ts';
 import { ANCHOR_PLUGIN_ID } from './constants.ts';
 import { createAnchorDragState } from './createAnchorDragState.ts';
 import { createAnchorDragThemer } from './createAnchorDragThemer.ts';
@@ -252,7 +252,7 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
     const draggedAnchor = anchorDragState.getDragState()?.data;
     if (draggedAnchor) return;
 
-    const { topElement } = controls.canvas.graphUnderCursor;
+    const { topElement } = controls.canvas.surface.elementsUnderCursor;
 
     if (!topElement) return clearAnchorState();
 
@@ -323,8 +323,8 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
   controls.canvas.aggregator.transformers.push(insertLinkPreviewIntoAggregator);
 
   const consumeOnElementHoverEvent = (
-    _: HoveredElement['value'] | undefined,
-    __: HoveredElement['value'] | undefined,
+    _: DeepReadonly<CanvasElement> | undefined,
+    __: DeepReadonly<CanvasElement> | undefined,
     consume: () => void,
   ) => {
     if (anchorDragState.isDragging()) consume();

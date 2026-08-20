@@ -103,6 +103,9 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
     devDependencies:
+      ts-essentials:
+        specifier: ^10.2.0
+        version: 10.2.1(typescript@6.0.3)
       vue:
         specifier: 'catalog:'
         version: 3.5.40(typescript@6.0.3)

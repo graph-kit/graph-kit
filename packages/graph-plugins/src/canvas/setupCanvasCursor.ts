@@ -13,7 +13,7 @@ type GraphCursorProps = {
   canvas: CanvasSurface['canvas'];
   getNode: GraphGetters<CoreGetters>['getNode'];
   resolveToken: CanvasControls['theme']['_resolveToken'];
-  graphUnderCursor: CanvasControls['graphUnderCursor'];
+  elementsUnderCursor: CanvasSurface['elementsUnderCursor'];
 };
 
 export const CANVAS_ELEMENT_CURSOR_FIELD_KEY = 'cursor';
@@ -25,13 +25,13 @@ export const setupCanvasCursor = ({
   subscribe,
   canvas,
   resolveToken,
-  graphUnderCursor,
+  elementsUnderCursor,
 }: GraphCursorProps) => {
   const getCursor = (): Cursor => {
     const canvasTheme = resolveToken('canvas.cursor');
     if (canvasTheme !== CURSOR_FALLBACK) return canvasTheme;
 
-    const topElement = graphUnderCursor.topElement;
+    const topElement = elementsUnderCursor.topElement;
     if (!topElement) return CURSOR.DEFAULT;
 
     const elementCursor = topElement.data?.[CANVAS_ELEMENT_CURSOR_FIELD_KEY];

@@ -1,5 +1,5 @@
-import { AnnotationsControls } from '@core/annotations/index';
 import { CanvasSurface } from '@canvas/surface/types';
+import { AnnotationsControls } from '@core/annotations/index';
 import { Point } from '@multiplayer/protocol/room';
 
 import { ProductId } from '../product/manifests/index.ts';
@@ -41,10 +41,10 @@ export const usePresenceBroadcast = (options: {
     broadcast();
   };
 
-  surface.events.subscribe('onMouseMove', broadcastFromCursor);
+  surface.events.canvas.subscribe('onMouseMove', broadcastFromCursor);
   // a drop that ends without the cursor moving again still has to tell the room the
   // drag is over, since an empty list is the only thing that ends one
-  surface.events.subscribe('onMouseUp', broadcastFromCursor);
+  surface.events.dom.subscribe('onMouseUp', broadcastFromCursor);
 
   // the tools toggle from a keystroke or a button press, neither of which moves the
   // cursor, so nothing else would carry the change out to the room

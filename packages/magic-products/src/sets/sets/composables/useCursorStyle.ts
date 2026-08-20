@@ -22,12 +22,12 @@ const useMouseDown = (surface: CanvasSurface) => {
   const setMouseDown = () => (isMouseDown.value = true);
   const setMouseUp = () => (isMouseDown.value = false);
 
-  surface.events.subscribe('onMouseDown', setMouseDown);
-  surface.events.subscribe('onMouseUp', setMouseUp);
+  surface.events.canvas.subscribe('onMouseDown', setMouseDown);
+  surface.events.dom.subscribe('onMouseUp', setMouseUp);
 
   const cleanup = () => {
-    surface.events.unsubscribe('onMouseDown', setMouseDown);
-    surface.events.unsubscribe('onMouseUp', setMouseUp);
+    surface.events.canvas.unsubscribe('onMouseDown', setMouseDown);
+    surface.events.dom.unsubscribe('onMouseUp', setMouseUp);
   };
 
   onBeforeUnmount(cleanup);
@@ -64,7 +64,7 @@ export const useCursorStyle = (
     return CURSOR.AUTO;
   });
 
-  surface.lifecycleEvents.subscribe('onAfterRepaint', () => {
+  surface.events.lifecycle.subscribe('onAfterRepaint', () => {
     const canvas = nullThrows(surface.canvas.value, 'canvas not defined');
     if (canvas.style.cursor === cursor.value) return;
     canvas.style.cursor = cursor.value;

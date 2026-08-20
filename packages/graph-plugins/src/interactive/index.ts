@@ -117,7 +117,7 @@ export const interactive =
     };
 
     const handleEdgeCreation = (sourceNode: { id: string }) => {
-      const { elements } = controls.canvas.graphUnderCursor;
+      const { elements } = controls.canvas.surface.elementsUnderCursor;
 
       const nodeUnderneathAnchor = elements.findLast((el) =>
         controls.isNode(el.id),

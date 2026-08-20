@@ -1,35 +1,28 @@
-import { CanvasDOMEvents } from '@canvas/surface/domEvents';
-import { EventHub, ReadonlyEventHub } from '@core/events/createEventHub';
+import type { SurfaceEvents } from '@canvas/surface/events/index';
+import { EventHub } from '@core/events/createEventHub';
 import { isTypingTarget } from '@core/utils/keyboard';
 import { KeyboardEventMap } from '@core/utils/types';
 
-import { CanvasEventMap, CanvasGraphMouseEvent } from './events.ts';
+import {
+  CanvasEventMap,
+  CanvasGraphMouseEvent,
+  MOUSE_EVENT_NAMES,
+} from './events.ts';
 
 /**
- * republishes the surface's mouse events as canvas events, each one carrying
- * the graph elements sitting under the point it happened at.
+ * republishes the surface's element resolved mouse events as canvas events. the surface
+ * already paired each one with what was drawn under it, so this only moves them onto the
+ * hub plugins order themselves against.
  */
 export const emitMouseEvents = (
-  domEvents: ReadonlyEventHub<CanvasDOMEvents>,
-  graphMouseEvent: (ev: MouseEvent) => CanvasGraphMouseEvent,
+  elements: SurfaceEvents['elements'],
   emit: EventHub<CanvasEventMap>['emit'],
 ) => {
-  domEvents.subscribe('onClick', (ev) => emit('onClick', graphMouseEvent(ev)));
-  domEvents.subscribe('onMouseMove', (ev) =>
-    emit('onMouseMove', graphMouseEvent(ev)),
-  );
-  domEvents.subscribe('onMouseDown', (ev) =>
-    emit('onMouseDown', graphMouseEvent(ev)),
-  );
-  domEvents.subscribe('onMouseUp', (ev) =>
-    emit('onMouseUp', graphMouseEvent(ev)),
-  );
-  domEvents.subscribe('onDblClick', (ev) =>
-    emit('onDblClick', graphMouseEvent(ev)),
-  );
-  domEvents.subscribe('onContextMenu', (ev) =>
-    emit('onContextMenu', graphMouseEvent(ev)),
-  );
+  for (const eventName of MOUSE_EVENT_NAMES) {
+    elements.subscribe(eventName, (ev: CanvasGraphMouseEvent) =>
+      emit(eventName, ev),
+    );
+  }
 };
 
 /**

@@ -4,7 +4,8 @@ import {
   AnimatedShapeFactories,
   ShapeRenderer,
 } from '@canvas/primitives/animation/index';
-import { CanvasSurface, Coordinate } from '@canvas/surface/types';
+import type { ElementsUnderCursor } from '@canvas/surface/events/index';
+import { CanvasSurface } from '@canvas/surface/types';
 import {
   GraphPlugin,
   WithEvents,
@@ -15,20 +16,7 @@ import { DeepReadonly } from 'ts-essentials';
 import { CanvasEventMap } from './events.ts';
 import { CanvasThemes } from './themes.ts';
 
-export type GraphUnderCursor = {
-  /**
-   * coordinates of the cursor
-   */
-  coords: Coordinate;
-  /**
-   * the canvas elements under the cursor
-   */
-  elements: CanvasElement[];
-  /**
-   * the topmost (active) canvas element under the cursor, equivalent to `elements.at(-1)`.
-   */
-  readonly topElement: CanvasElement | undefined;
-};
+export type { ElementsUnderCursor as GraphUnderCursor };
 
 type BaseCanvasControls = {
   /** canvas rendering surface */
@@ -48,14 +36,6 @@ type BaseCanvasControls = {
    * define an animation or drive a draw pass, not to build a shape.
    */
   renderer: ShapeRenderer;
-  /**
-   * the canvas elements currently under the cursor and the cursor's canvas coordinates.
-   *
-   * recomputed every frame against the canvas as drawn, so anything your extension adds
-   * to the aggregator is hit-tested automatically. `onGraphUnderCursorChange` is triggered
-   * on the frames where the answer changes.
-   */
-  graphUnderCursor: DeepReadonly<GraphUnderCursor>;
   getNodePriority: () => (nodeId: string) => number;
 };
 

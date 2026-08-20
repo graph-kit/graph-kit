@@ -3,15 +3,14 @@ import type {
   AnimatedShapeFactories,
   ShapeRenderer,
 } from '@canvas/primitives/animation/index';
-import { ReadonlyEventHub } from '@core/events/createEventHub';
 import type { Coordinate, WorldRect } from '@core/utils/canvas/index';
+import { DeepReadonly } from 'ts-essentials';
 
 import type { ComputedRef, Ref } from 'vue';
 
 import type { DrawPattern } from './backgroundPattern.ts';
 import type { Camera } from './camera/index.ts';
-import { CanvasDOMEvents } from './domEvents.ts';
-import { CanvasLifecycleEvents } from './events.ts';
+import type { ElementsUnderCursor, SurfaceEvents } from './events/index.ts';
 
 export type { Coordinate, WorldRect };
 
@@ -31,12 +30,11 @@ export type DrawFns = {
 
 export type CanvasRef = {
   canvasRef: (canvas: HTMLCanvasElement) => void;
-  cleanup: (canvas: HTMLCanvasElement) => void;
 };
 
 export type CanvasSurface = {
   canvas: Ref<HTMLCanvasElement | undefined>;
-  camera: Omit<Camera, 'cleanup'>;
+  camera: Camera;
   cursorCoordinates: Ref<Coordinate>;
   /** where a mouse event landed in world coordinates, for hit tests against the event itself */
   toWorldCoordinates: (ev: MouseEvent) => Coordinate;
@@ -53,6 +51,7 @@ export type CanvasSurface = {
   shapes: AnimatedShapeFactories;
   /** the frame lifecycle and timelines behind `shapes` */
   renderer: ShapeRenderer;
-  lifecycleEvents: ReadonlyEventHub<CanvasLifecycleEvents>;
-  events: ReadonlyEventHub<CanvasDOMEvents>;
+  /** what the pointer is over right now, recomputed against the canvas as drawn */
+  elementsUnderCursor: DeepReadonly<ElementsUnderCursor>;
+  events: SurfaceEvents;
 };

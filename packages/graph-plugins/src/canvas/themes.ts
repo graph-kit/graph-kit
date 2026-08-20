@@ -1,4 +1,5 @@
 import type { FontWeight } from '@canvas/primitives/text/types';
+import type { ElementsUnderCursor } from '@canvas/surface/events/index';
 import { Coordinate } from '@canvas/surface/types';
 import {
   CursorFallback,
@@ -11,8 +12,6 @@ import { Cursor } from '@core/utils/cursor';
 import { ComputedTokenDetectorMap } from '@graph/computed-tokens/index';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import { DeepReadonly } from 'ts-essentials';
-
-import { GraphUnderCursor } from './types.ts';
 
 type TextStyleValues = {
   text: string;
@@ -105,9 +104,9 @@ export type CanvasThemes = {
 
 export const createCanvasDetectors = (
   resolveToken: TokenResolver<CanvasThemes>,
-  graphUnderCursor: DeepReadonly<GraphUnderCursor>,
+  elementsUnderCursor: DeepReadonly<ElementsUnderCursor>,
 ): ComputedTokenDetectorMap => {
-  const hovered = (id: string) => graphUnderCursor.topElement?.id === id;
+  const hovered = (id: string) => elementsUnderCursor.topElement?.id === id;
   return {
     hovered: {
       node: {

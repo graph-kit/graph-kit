@@ -1,4 +1,3 @@
-import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasSurface } from '@canvas/surface/types';
 import { createThemeController } from '@core/themes/index';
@@ -8,21 +7,12 @@ import { CoreEdge } from '@graph/primitives/types';
 
 import { CANVAS_PLUGIN_ID } from './constants.ts';
 import { emitKeyboardEvents, emitMouseEvents } from './emitDOMEvents.ts';
-import { CanvasGraphMouseEvent, createCanvasEventRegistry } from './events.ts';
+import { createCanvasEventRegistry } from './events.ts';
 import { createNodeCanvasElementPriorityGetter } from './nodeCanvasElementPriority.ts';
 import { createNodePaintOrder } from './nodePaintOrder.ts';
 import { setupCanvasCursor } from './setupCanvasCursor.ts';
-import { setupOnHoveredElementChangeEvent } from './setupHoveredElement.ts';
 import { createCanvasDetectors, createCanvasThemeOverrides } from './themes.ts';
-import { CanvasPlugin, GraphUnderCursor } from './types.ts';
-
-const sameElements = (previous: CanvasElement[], next: CanvasElement[]) => {
-  if (previous.length !== next.length) return false;
-  for (let i = 0; i < previous.length; i++) {
-    if (previous[i].id !== next[i].id) return false;
-  }
-  return true;
-};
+import { CanvasPlugin } from './types.ts';
 
 export const canvas =
   (surface: CanvasSurface): CanvasPlugin =>
@@ -32,8 +22,6 @@ export const canvas =
 
     const { aggregator, shapes, renderer } = surface;
 
-    // the aggregator has no idea a graph is driving it, so its frame is republished onto
-    // the hub plugins actually subscribe to
     aggregator.events.subscribe('onBeforeDraw', (ctx) =>
       canvasEvents.emit('onBeforeDraw', ctx),
     );
@@ -41,34 +29,14 @@ export const canvas =
       canvasEvents.emit('onDraw', ctx),
     );
 
-    const graphUnderCursor: GraphUnderCursor = {
-      coords: { x: 0, y: 0 },
-      elements: [],
-      get topElement() {
-        return this.elements.at(-1);
-      },
-    };
-
-    // too many things move the canvas on their own to invalidate a cache
-    // reliably, so this recomputes each frame and emits only on a real change
-    const refreshGraphUnderCursor = () => {
-      const coords = surface.cursorCoordinates.value;
-      const elements = aggregator.getCanvasElementsAtCoordinate(coords);
-
-      const changed =
-        coords.x !== graphUnderCursor.coords.x ||
-        coords.y !== graphUnderCursor.coords.y ||
-        !sameElements(graphUnderCursor.elements, elements);
-
-      graphUnderCursor.coords = coords;
-      graphUnderCursor.elements = elements;
-
-      if (!changed) return;
-      canvasEvents.emit('onGraphUnderCursorChange', graphUnderCursor);
-    };
-
-    // ahead of setupCanvasCursor so the cursor it paints reflects this frame's hit test
-    canvasEvents.subscribe('onDraw', refreshGraphUnderCursor);
+    surface.events.elements.subscribe('onElementsUnderCursorChange', (data) =>
+      canvasEvents.emit('onGraphUnderCursorChange', data),
+    );
+    surface.events.elements.subscribe(
+      'onHoveredElementChange',
+      (newElement, oldElement) =>
+        canvasEvents.emit('onHoveredElementChange', newElement, oldElement),
+    );
 
     const theme = createThemeController(createCanvasThemeOverrides());
 
@@ -77,13 +45,9 @@ export const canvas =
       getNode: getters.getNode,
       subscribe: canvasEvents.subscribe,
       resolveToken: theme._resolveToken,
-      graphUnderCursor,
+      elementsUnderCursor: surface.elementsUnderCursor,
     });
 
-    setupOnHoveredElementChangeEvent(canvasEvents);
-
-    // local to this client, and never a position: a hover decides what this user sees in
-    // front, not where the node is
     const paintOrder = createNodePaintOrder();
 
     canvasEvents.handle(
@@ -96,25 +60,11 @@ export const canvas =
       CANVAS_PLUGIN_ID,
     );
 
-    // graphUnderCursor can lag a press (camera moved, or no draw since), so the
-    // hit test is redone against the point the native event carries
-    const graphMouseEvent = (event: MouseEvent): CanvasGraphMouseEvent => {
-      const coords = surface.toWorldCoordinates(event);
-      const elements = aggregator.getCanvasElementsAtCoordinate(coords);
-
-      return {
-        coords,
-        elements,
-        topElement: elements.at(-1),
-        event,
-      };
-    };
-
-    emitMouseEvents(surface.events, graphMouseEvent, canvasEvents.emit);
+    emitMouseEvents(surface.events.elements, canvasEvents.emit);
 
     const keyboardEvents = emitKeyboardEvents(canvasEvents.emit);
 
-    surface.lifecycleEvents.subscribe('onMounted', () => {
+    surface.events.lifecycle.subscribe('onMounted', () => {
       for (const [event, listeners] of Object.entries(
         keyboardEvents,
       ) as KeyboardEventEntries) {
@@ -122,7 +72,7 @@ export const canvas =
       }
     });
 
-    surface.lifecycleEvents.subscribe('onBeforeUnmount', () => {
+    surface.events.lifecycle.subscribe('onBeforeUnmount', () => {
       for (const [event, listeners] of Object.entries(
         keyboardEvents,
       ) as KeyboardEventEntries) {
@@ -161,15 +111,13 @@ export const canvas =
 
         surface,
 
-        graphUnderCursor,
-
         getNodePriority: () => getNodePriority,
 
         theme: {
           ...theme,
           detectors: createCanvasDetectors(
             theme._resolveToken,
-            graphUnderCursor,
+            surface.elementsUnderCursor,
           ),
         },
       },

@@ -114,8 +114,8 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
         before: [NODE_DRAG_PLUGIN_ID],
       },
     );
-    controls.canvas.surface.events.subscribe(
-      'onDocumentClick',
+    controls.canvas.surface.events.dom.subscribe(
+      'onClick',
       clearFocusOnOutsideClick,
     );
 
@@ -125,8 +125,8 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
 
   const disable = () => {
     controls.canvas.events.unhandle('onMouseDown', handleMouseDown);
-    controls.canvas.surface.events.unsubscribe(
-      'onDocumentClick',
+    controls.canvas.surface.events.dom.unsubscribe(
+      'onClick',
       clearFocusOnOutsideClick,
     );
 

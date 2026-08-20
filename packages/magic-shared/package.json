@@ -16,6 +16,10 @@
       "types": "./dist/types/components/magic/Node.vue.d.ts",
       "default": "./src/components/magic/Node.vue"
     },
+    "./Edge": {
+      "types": "./dist/types/components/magic/Edge.vue.d.ts",
+      "default": "./src/components/magic/Edge.vue"
+    },
     "./NodeList": {
       "types": "./dist/types/components/magic/NodeList.vue.d.ts",
       "default": "./src/components/magic/NodeList.vue"

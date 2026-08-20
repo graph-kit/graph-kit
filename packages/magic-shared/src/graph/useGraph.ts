@@ -1,5 +1,3 @@
-import { useCanvasSurface } from '@canvas/surface/index';
-import { CanvasSurface } from '@canvas/surface/types';
 import { CoreOptions } from '@graph/core/options';
 import { createGraph } from '@graph/create-graph/index';
 import { adjacencyLists } from '@graph/plugins/adjacency-lists/index';
@@ -42,10 +40,8 @@ export type UseGraphOptions = {
   minimumSpanningTrees?: Partial<MinimumSpanningTreesOptions>;
 };
 
-const graphPlugins = (
-  options: UseGraphOptions & { canvasSurface: CanvasSurface },
-) => [
-  surface(options.canvasSurface),
+const graphPlugins = (options: UseGraphOptions) => [
+  surface,
   history,
   focus,
   marquee,
@@ -62,9 +58,7 @@ const graphPlugins = (
   minimumSpanningTrees(options.minimumSpanningTrees ?? {}),
 ];
 
-const createGraphWithPlugins = (
-  options: UseGraphOptions & { canvasSurface: CanvasSurface },
-) => {
+const createGraphWithPlugins = (options: UseGraphOptions) => {
   const graph = createGraph({
     coreOptions: options.core ?? {},
     plugins: graphPlugins(options),
@@ -79,9 +73,7 @@ const createGraphWithPlugins = (
 };
 
 export const useGraph = (options: UseGraphOptions = {}) => {
-  const canvasSurface = useCanvasSurface();
-
-  const graph = createGraphWithPlugins({ ...options, canvasSurface });
+  const graph = createGraphWithPlugins(options);
 
   useGraphDevTools(graph);
 

@@ -53,6 +53,9 @@ importers:
 
   packages/canvas-primitives:
     dependencies:
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/utils':
         specifier: workspace:*
         version: link:../core-utils

@@ -1,4 +1,4 @@
-import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '@canvas/primitives/aggregator/index';
+import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '@canvas/primitives/aggregator/constants';
 import { Aggregator } from '@canvas/primitives/aggregator/types';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';

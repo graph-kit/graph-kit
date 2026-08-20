@@ -33,13 +33,16 @@ export const canvas =
     const canvasEvents = createGraphEventHub(canvasEventRegistry);
 
     const { shapes, ...renderer } = createAnimatedShapes();
-    // the aggregator knows nothing of the graph event hub, so its two draw hooks are
-    // what republish the frame as the canvas events plugins actually subscribe to
-    const aggregator = createAggregator({
-      renderer,
-      onBeforeDraw: (ctx) => canvasEvents.emit('onBeforeDraw', ctx),
-      onDraw: (ctx) => canvasEvents.emit('onDraw', ctx),
-    });
+    const aggregator = createAggregator(renderer);
+
+    // the aggregator has no idea a graph is driving it, so its frame is republished onto
+    // the hub plugins actually subscribe to
+    aggregator.events.subscribe('onBeforeDraw', (ctx) =>
+      canvasEvents.emit('onBeforeDraw', ctx),
+    );
+    aggregator.events.subscribe('onDraw', (ctx) =>
+      canvasEvents.emit('onDraw', ctx),
+    );
 
     const graphUnderCursor: GraphUnderCursor = {
       coords: { x: 0, y: 0 },

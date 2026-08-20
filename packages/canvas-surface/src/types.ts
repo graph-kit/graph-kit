@@ -1,3 +1,8 @@
+import type { AggregatorControls } from '@canvas/primitives/aggregator/index';
+import type {
+  AnimatedShapeFactories,
+  ShapeRenderer,
+} from '@canvas/primitives/animation/index';
 import { ReadonlyEventHub } from '@core/events/createEventHub';
 import type { Coordinate, WorldRect } from '@core/utils/canvas/index';
 
@@ -13,6 +18,11 @@ export type { Coordinate, WorldRect };
 export type DrawContent = (ctx: CanvasRenderingContext2D) => void;
 
 export type DrawFns = {
+  /**
+   * @deprecated paint through {@link CanvasSurface.aggregator} instead. sets is the last
+   * consumer, because its clip composed section fills have no primitive to express them
+   * as canvas elements yet. this field goes the moment sets migrates.
+   */
   content: Ref<DrawContent>;
   backgroundPattern: Ref<DrawPattern>;
   /** holds the canvas on its background pattern alone, leaving content undrawn */
@@ -34,6 +44,15 @@ export type CanvasSurface = {
   visibleWorldRect: ComputedRef<WorldRect>;
   ref: CanvasRef;
   draw: DrawFns;
+  /** every canvas element this surface paints, and the hit test over them */
+  aggregator: AggregatorControls;
+  /**
+   * build the shapes fed into the aggregator. these animate themselves, so a schema
+   * change animates rather than snaps without any extra wiring.
+   */
+  shapes: AnimatedShapeFactories;
+  /** the frame lifecycle and timelines behind `shapes` */
+  renderer: ShapeRenderer;
   lifecycleEvents: ReadonlyEventHub<CanvasLifecycleEvents>;
   events: ReadonlyEventHub<CanvasDOMEvents>;
 };

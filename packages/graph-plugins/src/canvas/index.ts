@@ -1,6 +1,4 @@
-import { createAggregator } from '@canvas/primitives/aggregator/index';
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
-import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { CanvasSurface } from '@canvas/surface/types';
 import { createThemeController } from '@core/themes/index';
@@ -32,8 +30,7 @@ export const canvas =
     const canvasEventRegistry = createCanvasEventRegistry();
     const canvasEvents = createGraphEventHub(canvasEventRegistry);
 
-    const { shapes, ...renderer } = createAnimatedShapes();
-    const aggregator = createAggregator(renderer);
+    const { aggregator, shapes, renderer } = surface;
 
     // the aggregator has no idea a graph is driving it, so its frame is republished onto
     // the hub plugins actually subscribe to

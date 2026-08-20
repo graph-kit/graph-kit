@@ -1,3 +1,5 @@
+import { createAggregator } from '@canvas/primitives/aggregator/index';
+import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
 import { useElementSize } from '@vueuse/core';
@@ -47,7 +49,10 @@ export const useCanvasSurface = (): CanvasSurface => {
   */
   const canvasCssSize = { width: ref(0), height: ref(0) };
 
-  const drawContent = ref<DrawContent>(() => {});
+  const { shapes, ...renderer } = createAnimatedShapes();
+  const aggregator = createAggregator(renderer);
+
+  const drawContent = ref<DrawContent>(aggregator.draw);
   const drawBackgroundPattern = ref<DrawPattern>(() => () => {});
   const contentSuspended = ref(false);
 
@@ -143,6 +148,9 @@ export const useCanvasSurface = (): CanvasSurface => {
       backgroundPattern: drawBackgroundPattern,
       contentSuspended,
     },
+    aggregator,
+    shapes,
+    renderer,
     lifecycleEvents,
     events,
   };

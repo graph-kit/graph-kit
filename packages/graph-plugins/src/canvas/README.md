@@ -1,6 +1,6 @@
 # canvas
 
-Owns the drawing surface. Aggregates every shape plugins want rendered, runs the animation loop, tracks what sits under the cursor, and re-emits DOM mouse and keyboard events as graph-aware ones.
+Binds the graph to a drawing surface. Feeds every shape plugins want rendered into the surface's aggregator, tracks what sits under the cursor, and re-emits DOM mouse and keyboard events as graph-aware ones.
 
 | Export                | Dependencies | Optional dependencies |
 | --------------------- | ------------ | --------------------- |
@@ -12,7 +12,8 @@ Owns the drawing surface. Aggregates every shape plugins want rendered, runs the
 
 **Transit:** pan and zoom.
 
-The aggregator itself lives in `@canvas/primitives`, which knows nothing about graphs.
-This plugin owns an instance of it, republishes its two draw hooks as `onBeforeDraw` and
-`onDraw`, and layers the graph-specific parts on top: node paint priority, cursor
-resolution, and the hit test results reported as `graphUnderCursor`.
+The aggregator lives in `@canvas/primitives` and is owned by `@canvas/surface`, neither of
+which knows anything about graphs. This plugin takes the surface's instance, republishes
+its events as `onBeforeDraw` and `onDraw`, and layers the graph-specific parts on top:
+node paint priority, cursor resolution, and the hit test results reported as
+`graphUnderCursor`.

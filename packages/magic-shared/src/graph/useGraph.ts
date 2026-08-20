@@ -85,8 +85,6 @@ export const useGraph = (options: UseGraphOptions = {}) => {
 
   useGraphDevTools(graph);
 
-  canvasSurface.draw.content.value = graph.canvas.aggregator.draw;
-
   const vueActivePreset = useCreateGraphActivePreset(graph.theme);
   const vueNodesEdges = useNodesEdges(graph);
   const vueAdjacencyLists = useAdjacencyLists(graph.adjacencyLists);

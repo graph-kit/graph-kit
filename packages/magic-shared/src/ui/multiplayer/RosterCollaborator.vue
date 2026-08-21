@@ -6,15 +6,14 @@
     meetsFloor,
     rankOf,
   } from '@multiplayer/protocol/tiers';
-  import { useResizeObserver } from '@vueuse/core';
 
-  import { computed, ref, watch } from 'vue';
+  import { computed } from 'vue';
 
   import Dropdown from '../../components/dropdown/Dropdown.vue';
   import Icon from '../../components/icon/Icon.vue';
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
-  import Tooltip from '../../components/tooltip/Tooltip.vue';
+  import TruncatedText from '../../components/truncated-text/TruncatedText.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
   import DisplayNameEdit from './DisplayNameEdit.vue';
   import JumpToUser from './JumpToUser.vue';
@@ -34,23 +33,6 @@
   const props = defineProps<Props>();
 
   const isMe = computed(() => props.member.userId === room.value.me.id);
-
-  // TODO move to a dedicated TruncatedText component!
-  // https://github.com/graph-kit/graph-kit/issues/909
-  const displayNameElement = ref<HTMLSpanElement>();
-  const isTruncated = ref(false);
-
-  const measureTruncation = () => {
-    if (!displayNameElement.value) return;
-    isTruncated.value =
-      displayNameElement.value.scrollWidth >
-      displayNameElement.value.clientWidth;
-  };
-
-  useResizeObserver(displayNameElement, measureTruncation);
-
-  // an already-truncated name keeps the same box width when it changes, so the observer sees nothing
-  watch(() => props.member.displayName, measureTruncation, { flush: 'post' });
 
   const menuItems = computed(() =>
     [
@@ -76,15 +58,7 @@
       <HStack
         class="w-full hover:bg-gray-300 dark:hover:bg-gray-900 py-1 px-2 cursor-pointer justify-between rounded-md"
       >
-        <Tooltip :label="isTruncated ? member.displayName : undefined">
-          <template #trigger>
-            <span
-              ref="displayNameElement"
-              class="min-w-0 truncate"
-              >{{ member.displayName }}</span
-            >
-          </template>
-        </Tooltip>
+        <TruncatedText>{{ member.displayName }}</TruncatedText>
         <HStack
           gap="1"
           class="shrink-0"

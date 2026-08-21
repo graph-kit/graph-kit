@@ -19,6 +19,10 @@
       "types": "./dist/types/components/tooltip/Tooltip.vue.d.ts",
       "default": "./src/components/tooltip/Tooltip.vue"
     },
+    "./TruncatedText": {
+      "types": "./dist/types/components/truncated-text/TruncatedText.vue.d.ts",
+      "default": "./src/components/truncated-text/TruncatedText.vue"
+    },
     "./Icon": {
       "types": "./dist/types/components/icon/Icon.vue.d.ts",
       "default": "./src/components/icon/Icon.vue"

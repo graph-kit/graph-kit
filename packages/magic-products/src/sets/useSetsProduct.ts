@@ -65,6 +65,13 @@ export const useSetsProduct = () => {
     onAppearanceChanged: () => {},
     multiplayer: {
       bind: () => {},
+      // nothing to hold down: sets is not flagged multiplayer and has no state to write
+      tiers: {
+        host: {},
+        admin: {},
+        write: {},
+        read: {},
+      },
     },
   };
 

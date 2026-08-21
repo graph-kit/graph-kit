@@ -32,6 +32,7 @@
     admin:
       'Admins can edit, move anyone between experiences, and reassign or remove anyone ranked below them.',
     write: 'Writers can edit, but cannot move, reassign or remove anyone.',
+    read: 'Readers follow along and can select and pan, but cannot edit anything.',
   };
 </script>
 

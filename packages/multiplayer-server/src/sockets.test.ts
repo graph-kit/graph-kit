@@ -193,12 +193,30 @@ describe('room lifecycle', () => {
 });
 
 describe('product layer privilege', () => {
-  it('relays updates from a joiner, who arrives able to write', async () => {
+  it('drops updates from a joiner, who arrives read only', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
     const student = await connectClient();
     const joined = await joinRoom(student, roomId);
     if (!joined.joined) throw new Error('expected join to succeed');
+
+    const noRelay = expectNoEvent(host, 'docUpdated');
+    student.emit('docUpdate', {
+      productId: 'traversals',
+      update: addNodeUpdate('b'),
+    });
+    await noRelay;
+  });
+
+  it('relays updates from a joiner the host has assigned write', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoom(student, roomId);
+    if (!joined.joined) throw new Error('expected join to succeed');
+
+    host.emit('setTier', { userId: joined.userId, tier: 'write' });
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     const relayed = nextEvent(host, 'docUpdated');
     student.emit('docUpdate', {
@@ -286,7 +304,7 @@ describe('renaming', () => {
     const joined = await joinRoom(student, roomId);
     if (!joined.joined) throw new Error('expected join to succeed');
     await joinRoster;
-    expect(joined.data.roster[joined.userId]?.tier).toBe('write');
+    expect(joined.data.roster[joined.userId]?.tier).toBe('read');
 
     const renamed = nextEvent(host, 'rosterChanged');
     student.emit('setDisplayName', { displayName: 'Grace' });

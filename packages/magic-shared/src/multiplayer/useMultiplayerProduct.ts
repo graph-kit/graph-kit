@@ -8,6 +8,7 @@ import { useRosterPanel } from '../ui/multiplayer/useRosterPanel.ts';
 import { useProvidedMultiplayer } from './context.ts';
 import { ProductMultiplayer } from './types.ts';
 import { roomIdUrl } from './url.ts';
+import { useTierBehavior } from './useTierBehavior.ts';
 
 type MultiplayerProductOptions = {
   productId: ProductId;
@@ -37,6 +38,8 @@ export const useMultiplayerProduct = ({
 
   const { actions, room, events } = multiplayer;
   const binding = { productId, host };
+
+  useTierBehavior({ room, tiers: host.tiers });
 
   onMounted(async () => {
     if (room.value.connected) {

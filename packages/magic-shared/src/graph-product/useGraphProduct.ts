@@ -33,6 +33,15 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     multiplayer: {
       bind: (doc) => bindGraphToDoc(graph, doc, draggedNodes.isDragging),
       draggedElements: draggedNodes.elements,
+      tiers: {
+        host: {},
+        admin: {},
+        write: {},
+        read: {
+          enter: graph.readonly.enter,
+          exit: graph.readonly.exit,
+        },
+      },
     },
   };
 

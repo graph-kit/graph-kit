@@ -1,6 +1,7 @@
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
+import { Tier } from '@multiplayer/protocol/tiers';
 import { BasicColorMode } from '@vueuse/core';
 import * as Y from 'yjs';
 
@@ -68,6 +69,14 @@ export type MagicProductHost = {
   history?: HistoryField;
 };
 
+/** what a host does as the local user takes a tier on and gives it up */
+export type TierBehavior = {
+  /** the local user is now on this tier */
+  enter?: () => void;
+  /** the local user is no longer on this tier, whether reassigned or out of the room */
+  exit?: () => void;
+};
+
 /**
  * The mapping between what a host holds and the room's document, in both directions. The
  * only thing that knows either shape, which is what keeps the document out of the harness
@@ -90,6 +99,19 @@ export type MultiplayerHostField = {
    * rebind onto a different document.
    */
   bind: (doc: Y.Doc) => HostBinding | undefined;
+
+  /**
+   * What the host does about each tier, in one place, because the question a host has to
+   * answer is not "how do I lock down read" but "what does each of these mean for me".
+   *
+   * Exhaustive: a tier added to the protocol is a compile error at every host until it
+   * decides, rather than a permission that quietly does nothing. A tier a host has
+   * nothing to say about is an empty object, which is that decision written down.
+   *
+   * Enter runs after exit of the tier being left, and leaving the room exits without
+   * entering anything, since a tier is something only a room grants.
+   */
+  tiers: Record<Tier, TierBehavior>;
 
   /**
    * whatever the host is moving this instant, read as presence goes out rather than

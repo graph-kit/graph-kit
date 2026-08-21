@@ -60,6 +60,7 @@ export const getShapeTextProps = (
   };
 
   const drawTextArea = (ctx: CanvasRenderingContext2D) => {
+    if (isTextAreaActive(ctx, placedTextArea.id)) return;
     textAreaMatte.draw(ctx);
     drawText(ctx);
   };
@@ -70,12 +71,15 @@ export const getShapeTextProps = (
 
   const drawOverride =
     isNoMatte && drawShape
-      ? (ctx: CanvasRenderingContext2D) =>
-          drawWithNoMatte(ctx, drawShape, placedTextArea, dimensions, drawText)
+      ? (ctx: CanvasRenderingContext2D) => {
+          if (isTextAreaActive(ctx, placedTextArea.id)) return drawShape(ctx);
+          drawWithNoMatte(ctx, drawShape, placedTextArea, dimensions, drawText);
+        }
       : undefined;
 
   const drawTextAreaHole = isNoMatte
     ? (ctx: CanvasRenderingContext2D) => {
+        if (isTextAreaActive(ctx, placedTextArea.id)) return;
         ctx.fillStyle = 'black';
         ctx.fillRect(
           placedTextArea.at.x,

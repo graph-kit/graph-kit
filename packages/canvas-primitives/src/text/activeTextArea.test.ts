@@ -6,6 +6,7 @@ import { circle } from '../shapes/circle/index.ts';
 // measuring wants a real 2d context, and these tests are about paint, not metrics
 vi.mock('./getTextDimensions.ts', () => ({
   getTextDimensions: () => ({ width: 10, height: 10, ascent: 8, descent: 2 }),
+  getFontMetrics: () => ({ middleToBaseline: 3, ascent: 11, descent: 3 }),
 }));
 
 const recordingCtx = () => {
@@ -36,11 +37,11 @@ const recordingCtx = () => {
   };
 };
 
-const labelledCircle = (id: string) =>
+const labelledCircle = (id: string, color?: string) =>
   circle({
     at: { x: 0, y: 0 },
     radius: 10,
-    textArea: { id, textBlock: { content: 'A' } },
+    textArea: { id, color, textBlock: { content: 'A' } },
   });
 
 const startEdit = (id: string, ctx: CanvasRenderingContext2D) =>
@@ -51,6 +52,12 @@ const startEdit = (id: string, ctx: CanvasRenderingContext2D) =>
 
 const drawText = (id: string, ctx: CanvasRenderingContext2D) =>
   nullThrows(labelledCircle(id).drawText, 'labelled shape draws text')(ctx);
+
+const drawHole = (id: string, ctx: CanvasRenderingContext2D) =>
+  nullThrows(
+    labelledCircle(id, 'none').drawTextAreaHole,
+    'a no matte text area punches a hole',
+  )(ctx);
 
 // the input sits outside jsdom's all-zero bounding rects, so this reads as a click away
 const endEdit = () =>
@@ -95,6 +102,23 @@ describe('a text area being edited', () => {
     drawText('node-1', otherCanvas.ctx);
 
     expect(otherCanvas.wasCalled('fillText')).toBe(true);
+  });
+
+  it('punches its hole out of the shape when no edit is engaged', () => {
+    const { ctx, wasCalled } = recordingCtx();
+
+    drawHole('node-1', ctx);
+
+    expect(wasCalled('fillRect')).toBe(true);
+  });
+
+  it('stops punching its hole once an edit is engaged', () => {
+    const { ctx, wasCalled } = recordingCtx();
+
+    startEdit('node-1', ctx);
+    drawHole('node-1', ctx);
+
+    expect(wasCalled('fillRect')).toBe(false);
   });
 
   it('paints again once the edit ends', () => {

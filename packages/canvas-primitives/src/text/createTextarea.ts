@@ -4,8 +4,8 @@ import { isPointInBoundingBox } from '../helpers.ts';
 import type { BoundingBox } from '../types/utility.ts';
 import { clearActiveTextArea, setActiveTextArea } from './activeTextArea.ts';
 import type { PlacedTextArea } from './defaults.ts';
-import { getTextDimensions } from './getTextDimensions.ts';
-import { HORIZONTAL_TEXT_PADDING } from './text.ts';
+import { getFontMetrics } from './getTextDimensions.ts';
+import { HORIZONTAL_TEXT_PADDING, getTextAreaDimension } from './text.ts';
 import type { OnTextAreaBlur } from './types.ts';
 
 export const createTextarea = (
@@ -15,18 +15,38 @@ export const createTextarea = (
 ) => {
   const { id, at, textBlock, activeColor: bgColor } = textArea;
 
-  const { width, descent } = getTextDimensions(textBlock);
   const { clientX, clientY, zoom } = getClientCoordinates(at, ctx);
 
-  const { color: textColor, content, fontSize, fontWeight } = textBlock;
+  const {
+    color: textColor,
+    content,
+    fontSize,
+    fontWeight,
+    fontFamily,
+  } = textBlock;
+
+  const box = getTextAreaDimension(textBlock);
+
+  // the baseline `drawTextWithTextArea` paints on, measured down from the top
+  // of the text area. the input has to land its own baseline in the same place
+  const baselineFromBoxTop =
+    box.height / 2 +
+    box.descent / 4 +
+    getFontMetrics(textBlock).middleToBaseline;
+
+  // font metrics do not scale perfectly linearly, so take them at the size the
+  // input is actually rendered at rather than scaling the world size ones
+  const rendered = getFontMetrics({
+    fontSize: fontSize * zoom,
+    fontWeight,
+    fontFamily,
+  });
 
   const minWidth = fontSize * 2 * zoom;
   const horizontalPadding = HORIZONTAL_TEXT_PADDING * zoom;
 
-  const inputWidth = Math.round(
-    Math.max(width * zoom + horizontalPadding, minWidth),
-  );
-  const inputHeight = Math.round(fontSize * 2 * zoom);
+  const inputWidth = Math.round(box.width * zoom);
+  const inputHeight = Math.round(box.height * zoom);
 
   const input = document.createElement('textarea');
 
@@ -45,12 +65,16 @@ export const createTextarea = (
   input.style.padding = '0';
   input.style.margin = '0';
 
-  input.style.paddingTop = `${Math.round(descent * zoom)}px`;
+  input.style.paddingTop = `${baselineFromBoxTop * zoom - rendered.ascent}px`;
+
+  // pins the line box to the font box, so half leading is zero and the page's
+  // own line-height cannot walk the text off the baseline the canvas drew on
+  input.style.lineHeight = `${rendered.ascent + rendered.descent}px`;
 
   input.style.fontSize = `${fontSize * zoom}px`;
   input.style.color = textColor;
   input.style.backgroundColor = bgColor;
-  input.style.fontFamily = 'Arial';
+  input.style.fontFamily = fontFamily;
   input.style.textAlign = 'center';
   input.style.fontWeight = fontWeight;
   input.style.outline = 'none';

@@ -1,3 +1,4 @@
+import { getTargetCanvas } from '../offscreen.ts';
 import type { TextAreaId } from './types.ts';
 
 type ActiveTextArea = {
@@ -22,4 +23,4 @@ export const isTextAreaActive = (
   textAreaId: TextAreaId,
 ) =>
   activeTextArea?.textAreaId === textAreaId &&
-  activeTextArea.canvas === ctx.canvas;
+  activeTextArea.canvas === getTargetCanvas(ctx.canvas);

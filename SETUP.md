@@ -15,6 +15,20 @@ pnpm install
 
 This installs dependencies for every package in `packages/*`.
 
+## Editor setup (VSCode)
+
+The repo ships a `.vscode/settings.json` with the formatter and TypeScript SDK wired up, so those need no action.
+
+One setting worth turning off in your own `settings.json`:
+
+```json
+{
+  "editor.acceptSuggestionOnCommitCharacter": false
+}
+```
+
+By default VSCode treats `.` as a commit character, so typing a dot inside a string auto-accepts whatever suggestion happens to be highlighted. Dot-path tokens like `node.default.border.color` are common here, and the string gets silently mangled as you type it.
+
 ## Run the client
 
 ```sh

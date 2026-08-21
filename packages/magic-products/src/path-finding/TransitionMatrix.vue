@@ -3,85 +3,67 @@
   import Tooltip from '@magic/shared/Tooltip';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
+  import { GNode } from '@magic/shared/graph';
   import { useProvidedGraph } from '@magic/shared/graph-product';
 
   import { computed } from 'vue';
 
   import TransitionMatrixCell from './TransitionMatrixCell.vue';
+  import { useTransitionMatrixGrid } from './composables/useTransitionMatrixGrid.ts';
 
   const graph = useProvidedGraph();
 
-  const nodeIds = computed(() => graph.nodes.value.map((node) => node.id));
+  const { nodeIds, grid } = useTransitionMatrixGrid(graph);
 
-  const labelOf = (id: string) => graph.getNode(id).label;
-
-  const indexOfId = computed(() => {
-    const map = new Map<string, number>();
-    nodeIds.value.forEach((id, index) => map.set(id, index));
-    return map;
-  });
-
-  const edgeIdByPair = computed(() => {
-    const ids = new Map<string, string>();
-    graph.edges.value.forEach((edge) => {
-      ids.set(`${edge.source}->${edge.target}`, edge.id);
-      if (!graph.metadata.directed)
-        ids.set(`${edge.target}->${edge.source}`, edge.id);
-    });
-    return ids;
-  });
-
-  const edgeIdFor = (from: string, to: string) =>
-    edgeIdByPair.value.get(`${from}->${to}`);
-
-  const hasEdge = (from: string, to: string) => !!edgeIdFor(from, to);
-
-  const focusEdge = (from: string, to: string) => {
-    const edgeId = edgeIdFor(from, to);
-    if (edgeId) graph.focus.set([edgeId]);
-  };
-
-  const displayedNodeIds = computed(() =>
-    [...nodeIds.value].sort((a, b) => labelOf(a).localeCompare(labelOf(b))),
-  );
+  const labelOf = (id: GNode['id']) => graph.getNode(id).label;
 
   const matrixRows = computed(() =>
-    displayedNodeIds.value.map((fromId) => ({
+    nodeIds.value.map((fromId, fromIndex) => ({
       id: fromId,
-      cells: displayedNodeIds.value.map((toId) => ({
+      fromIndex,
+      cells: nodeIds.value.map((toId, toIndex) => ({
         id: toId,
-        edgeId: edgeIdFor(fromId, toId),
+        edge: grid.value[fromIndex][toIndex],
       })),
     })),
   );
 
-  const cellLabel = (fromId: string, toId: string) =>
+  const cellLabel = (fromId: GNode['id'], toId: GNode['id']) =>
     `${labelOf(fromId)}→${labelOf(toId)}`;
 
-  const cellText = (fromId: string, toId: string) => {
-    if (!hasEdge(fromId, toId)) return '';
-    const fromIndex = indexOfId.value.get(fromId)!;
-    const toIndex = indexOfId.value.get(toId)!;
+  const transitionMatrixIndexOf = computed(() => {
+    const map = new Map<string, number>();
+    graph.nodes.value.forEach((node, index) => map.set(node.id, index));
+    return map;
+  });
+
+  const cellText = (fromId: GNode['id'], toId: GNode['id']) => {
+    const fromIndex = transitionMatrixIndexOf.value.get(fromId)!;
+    const toIndex = transitionMatrixIndexOf.value.get(toId)!;
     return graph.transitionMatrix.value[fromIndex][toIndex].toFraction();
   };
 
-  const successorsOf = (id: string) =>
-    nodeIds.value.filter((otherId) => otherId !== id && hasEdge(id, otherId));
+  const focusEdge = (edgeId: string) => graph.focus.set([edgeId]);
 
-  const predecessorsOf = (id: string) =>
-    nodeIds.value.filter((otherId) => otherId !== id && hasEdge(otherId, id));
+  const focusFromState = (fromId: GNode['id'], fromIndex: number) => {
+    const edgeIds = grid.value[fromIndex]
+      .map((edge, toIndex) =>
+        edge && nodeIds.value[toIndex] !== fromId ? edge.id : undefined,
+      )
+      .filter((id): id is string => id !== undefined);
+    graph.focus.set([fromId, ...edgeIds]);
+  };
 
-  const focusFromState = (id: string) =>
-    graph.focus.set([
-      id,
-      ...successorsOf(id).map((otherId) => edgeIdFor(id, otherId)!),
-    ]);
-
-  const focusToState = (id: string) =>
-    graph.focus.set([
-      id,
-      ...predecessorsOf(id).map((otherId) => edgeIdFor(otherId, id)!),
-    ]);
+  const focusToState = (toId: GNode['id'], toIndex: number) => {
+    const edgeIds = grid.value
+      .map((row, fromIndex) =>
+        row[toIndex] && nodeIds.value[fromIndex] !== toId
+          ? row[toIndex]!.id
+          : undefined,
+      )
+      .filter((id): id is string => id !== undefined);
+    graph.focus.set([toId, ...edgeIds]);
+  };
 
   const density = computed(() => {
     const count = graph.nodes.value.length;
@@ -130,10 +112,10 @@
             <tr>
               <th :class="columnHeaderCellClass"></th>
               <th
-                v-for="toId in displayedNodeIds"
+                v-for="(toId, toIndex) in nodeIds"
                 :key="toId"
                 :class="columnHeaderCellClass"
-                @click="focusToState(toId)"
+                @click="focusToState(toId, toIndex)"
               >
                 <Node
                   :id="toId"
@@ -149,7 +131,7 @@
             >
               <th
                 :class="headerCellClass"
-                @click="focusFromState(row.id)"
+                @click="focusFromState(row.id, row.fromIndex)"
               >
                 <Node
                   :id="row.id"
@@ -158,11 +140,11 @@
               </th>
               <template
                 v-for="cell in row.cells"
-                :key="`${row.id}::${cell.edgeId ?? 'none'}`"
+                :key="`${row.id}::${cell.id}`"
               >
                 <TransitionMatrixCell
-                  v-if="cell.edgeId"
-                  :edge-id="cell.edgeId"
+                  v-if="cell.edge"
+                  :edge-id="cell.edge.id"
                   v-slot="{ color, cursor, setHovered }"
                 >
                   <Tooltip
@@ -173,7 +155,7 @@
                       <td
                         :class="dataCellClass"
                         :style="{ backgroundColor: color, cursor }"
-                        @click="focusEdge(row.id, cell.id)"
+                        @click="focusEdge(cell.edge.id)"
                         @mouseenter="setHovered(true)"
                         @mouseleave="setHovered(false)"
                       >

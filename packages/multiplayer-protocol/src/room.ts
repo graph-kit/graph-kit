@@ -37,23 +37,31 @@ export type DraggedElement = {
 };
 
 /**
- * higher frequency and lower stakes than the roster: productId is duplicated because
- * the roster answers "who is here" while presence answers "where exactly, right now".
- * cameraState and cursorPosition have no v1 consumer and are plumbing for later.
+ * What a user is doing inside one product right now. Scoped to the product channel it
+ * travels on, which is why nothing here names a productId, and persisted by the room so
+ * that entering a product hands over everyone's live state instead of leaving a client
+ * to wait for each peer to move before it learns they are there.
  */
-export type PresenceEntry = {
-  productId: ProductId;
+export type ProductPresence = {
   cursorPosition: Point | null;
   cameraState: CameraState | null;
   /**
    * in flight and deliberately not in the document: a drag settles into one committed
    * move, and replaying every frame of it would be a write per frame. plural because one
-   * gesture can carry a whole selection, and empty whenever nothing is being moved
+   * gesture can carry a whole selection, and null whenever nothing is being moved
    */
-  draggedElements: DraggedElement[];
+  drag: DraggedElement[] | null;
   /** the annotation tools are taking input, which is not the same as a stroke being in flight */
   isAnnotating: boolean;
 };
+
+/** what a user is presumed to be doing before they have sent a single signal */
+export const emptyProductPresence = (): ProductPresence => ({
+  cursorPosition: null,
+  cameraState: null,
+  drag: null,
+  isAnnotating: false,
+});
 
 export type RoomData = {
   hostId: UserId;

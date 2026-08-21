@@ -11,7 +11,7 @@
     <template #trigger>
       <HStack
         gap="1"
-        class="px-2 text-sm rounded-sm text-white bg-orange-500 hover:bg-orange-600"
+        class="px-2 text-sm rounded-sm text-white bg-orange-500"
       >
         Me
       </HStack>

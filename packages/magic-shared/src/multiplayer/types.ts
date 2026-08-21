@@ -5,8 +5,11 @@ import {
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
 import {
-  PresenceEntry,
+  CameraState,
+  DraggedElement,
+  Point,
   ProductId,
+  ProductPresence,
   RoomId,
   RosterEntry,
   UserId,
@@ -78,7 +81,19 @@ export type RoomControls = {
   moveUser: (targetId: UserId, productId: ProductId) => void;
   /** renaming mid session, which is what makes an unnamed join recoverable */
   setDisplayName: (displayName: string) => void;
-  updatePresence: (entry: PresenceEntry) => void;
+
+  /**
+   * Presence, one call per signal, each landing on the product this client is on. Split
+   * so a drag travels on its own cadence instead of waiting for a cursor to move.
+   */
+  presence: {
+    moveCursor: (position: Point | null) => void;
+    moveCamera: (camera: CameraState) => void;
+    setAnnotating: (isAnnotating: boolean) => void;
+    startDrag: (elements: DraggedElement[]) => void;
+    updateDrag: (elements: DraggedElement[]) => void;
+    endDrag: () => void;
+  };
 };
 
 export type RoomState =
@@ -87,7 +102,8 @@ export type RoomState =
       connected: true;
       id: RoomId;
       userIdToRosterEntry: Record<UserId, RosterEntry>;
-      userIdToPresence: Record<UserId, PresenceEntry>;
+      /** peers on the product this client is on, and only them */
+      userIdToPresence: Record<UserId, ProductPresence>;
       me: Me;
       controls: RoomControls;
     };

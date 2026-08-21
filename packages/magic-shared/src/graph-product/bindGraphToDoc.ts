@@ -409,25 +409,22 @@ export const bindGraphToDoc = (
     intoGraph(() => stream.stop());
   };
 
-  const applyPeerDrags: HostBinding['applyPeerDrags'] = (dragsByPeer) => {
-    for (const peerId of [...peerStreams.keys()]) {
-      if ((dragsByPeer[peerId]?.length ?? 0) === 0) stopPeerStream(peerId);
-    }
+  const applyPeerDrag: HostBinding['applyPeerDrag'] = (peerId, elements) => {
+    const moves = elements
+      // a node the local user has hold of stays where they are putting it, and one
+      // that is not on this graph yet arrives with the move that adds it. isNode
+      // rather than getNode, which throws on a node this client has already removed
+      .filter(({ id }) => !isDraggedLocally(id) && graph.isNode(id))
+      .map(({ id, position }) => ({ nodeId: id, update: position }));
+    if (moves.length === 0) return;
 
-    for (const [peerId, elements] of Object.entries(dragsByPeer)) {
-      const moves = elements
-        // a node the local user has hold of stays where they are putting it, and one
-        // that is not on this graph yet arrives with the move that adds it. isNode
-        // rather than getNode, which throws on a node this client has already removed
-        .filter(({ id }) => !isDraggedLocally(id) && graph.isNode(id))
-        .map(({ id, position }) => ({ nodeId: id, update: position }));
-      if (moves.length === 0) continue;
-
-      const stream = peerStreams.get(peerId) ?? graph.positions.createStream();
-      peerStreams.set(peerId, stream);
-      stream.setMany(moves);
-    }
+    const stream = peerStreams.get(peerId) ?? graph.positions.createStream();
+    peerStreams.set(peerId, stream);
+    stream.setMany(moves);
   };
+
+  const endPeerDrag: HostBinding['endPeerDrag'] = (peerId) =>
+    stopPeerStream(peerId);
 
   const unbind = () => {
     for (const peerId of [...peerStreams.keys()]) stopPeerStream(peerId);
@@ -460,6 +457,7 @@ export const bindGraphToDoc = (
     // after the seed, so undoing on a freshly opened product cannot empty the document
     history: createDocHistory(doc),
     unbind,
-    applyPeerDrags,
+    applyPeerDrag,
+    endPeerDrag,
   };
 };

@@ -3,8 +3,8 @@ import { assert } from '@core/utils/assert';
 import { type ProductId, manifests } from './index.ts';
 
 export function assertIsProductId(
-  id: string,
+  id: unknown,
   message = `"${id}" is not a product id`,
 ): asserts id is ProductId {
-  assert(id in manifests, message);
+  assert(typeof id === 'string' && id in manifests, message);
 }

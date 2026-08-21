@@ -6,6 +6,7 @@ import { DocUpdate } from '@multiplayer/protocol/doc';
 import {
   ClientToServerEvents,
   JoinResult,
+  ProductEntryState,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
 import { RoomMembership } from '@multiplayer/protocol/room';
@@ -101,7 +102,7 @@ const joinRoom = (socket: ClientSocket, roomId: string) =>
   });
 
 const enterProduct = (socket: ClientSocket, productId: string) =>
-  new Promise<DocUpdate | null>((resolve) => {
+  new Promise<ProductEntryState>((resolve) => {
     socket.emit('enterProduct', { productId }, resolve);
   });
 
@@ -113,12 +114,18 @@ const joinRoomAt = async (
 ) => {
   const result = await joinRoom(socket, roomId);
   if (!result.joined) throw new Error('expected join to succeed');
-  return { ...result, doc: await enterProduct(socket, productId) };
+  return { ...result, ...(await enterProduct(socket, productId)) };
 };
+
+/** short enough that a test can wait one out, long enough not to trip on scheduling */
+const STALE_AFTER_MS = 120;
 
 beforeEach(async () => {
   httpServer = createServer();
-  ioServer = createSocketServer(httpServer, { corsOrigins: ['*'] });
+  ioServer = createSocketServer(httpServer, {
+    corsOrigins: ['*'],
+    dragSweep: { staleAfterMs: STALE_AFTER_MS, sweepIntervalMs: 20 },
+  });
   await new Promise<void>((resolve) => httpServer.listen(0, resolve));
   port = (httpServer.address() as AddressInfo).port;
 });
@@ -409,5 +416,200 @@ describe('lazy document creation', () => {
 
     if (!doc) throw new Error('expected the lazily created document');
     expect(readNodes(doc)).toEqual({ seeded: { x: 9 } });
+  });
+});
+
+describe('presence scoping', () => {
+  const dragged = [{ id: 'n1', position: { x: 1, y: 2 } }];
+
+  it('keeps a cursor off a peer looking at a different product', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    await joinRoomAt(student, roomId, 'basic-trees');
+
+    // the host is on traversals, the student on basic-trees, so nothing should cross
+    const unseen = expectNoEvent(student, 'cursorMoved');
+    host.emit('moveCursor', { position: { x: 5, y: 5 } });
+    await unseen;
+  });
+
+  it('relays a cursor to a peer on the same product', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    await joinRoomAt(student, roomId, 'traversals');
+
+    const moved = nextEvent(student, 'cursorMoved');
+    host.emit('moveCursor', { position: { x: 5, y: 5 } });
+
+    expect((await moved).position).toEqual({ x: 5, y: 5 });
+  });
+
+  it('hands an arriving client what everyone on the product is already doing', async () => {
+    const host = await connectClient();
+    const { roomId, userId: hostId } = await startRoom(host);
+
+    host.emit('moveCursor', { position: { x: 7, y: 8 } });
+    host.emit('startDrag', { elements: dragged });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // no mouse has moved since this client arrived, and it still knows where the host is
+    const student = await connectClient();
+    const { presence } = await joinRoomAt(student, roomId, 'traversals');
+
+    expect(presence[hostId].cursorPosition).toEqual({ x: 7, y: 8 });
+    expect(presence[hostId].drag).toEqual(dragged);
+  });
+
+  it('announces an arrival to everyone already on the product', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    const arrived = nextEvent(host, 'peerEnteredProduct');
+    const joined = await joinRoomAt(student, roomId, 'traversals');
+
+    expect((await arrived).userId).toBe(joined.userId);
+  });
+
+  it('does not announce an arrival on a product nobody else is on', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    const unseen = expectNoEvent(host, 'peerEnteredProduct');
+    await joinRoomAt(student, roomId, 'basic-trees');
+    await unseen;
+  });
+
+  it('hands a later arrival a member who has never moved', async () => {
+    const host = await connectClient();
+    const { roomId, userId: hostId } = await startRoom(host);
+
+    // the host has sent no signal at all, and is still someone to know about
+    const student = await connectClient();
+    const { presence } = await joinRoomAt(student, roomId, 'traversals');
+
+    expect(presence[hostId]).toEqual({
+      cursorPosition: null,
+      cameraState: null,
+      drag: null,
+      isAnnotating: false,
+    });
+  });
+
+  it('leaves the arriving client out of its own entry payload', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    const joined = await joinRoomAt(student, roomId, 'traversals');
+    student.emit('moveCursor', { position: { x: 1, y: 1 } });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const again = await enterProduct(student, 'traversals');
+    expect(again.presence[joined.userId]).toBeUndefined();
+  });
+});
+
+describe('drag release', () => {
+  const dragged = [{ id: 'n1', position: { x: 1, y: 2 } }];
+
+  /** a room with two members looking at the same product, both mid conversation */
+  const roomOfTwo = async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoomAt(student, roomId, 'traversals');
+    return { host, student, roomId, studentId: joined.userId };
+  };
+
+  it('releases on a drop', async () => {
+    const { host, student } = await roomOfTwo();
+
+    student.emit('startDrag', { elements: dragged });
+    await nextEvent(host, 'dragStarted');
+
+    const ended = nextEvent(host, 'dragEnded');
+    student.emit('endDrag');
+    await ended;
+  });
+
+  it('releases when the dragger leaves the product', async () => {
+    const { host, student, studentId } = await roomOfTwo();
+
+    student.emit('startDrag', { elements: dragged });
+    await nextEvent(host, 'dragStarted');
+
+    const left = nextEvent(host, 'peerLeftProduct');
+    student.emit('leaveProduct', { productId: 'traversals' });
+
+    expect((await left).userId).toBe(studentId);
+  });
+
+  it('releases when the dragger navigates to another product', async () => {
+    const { host, student, studentId } = await roomOfTwo();
+
+    student.emit('startDrag', { elements: dragged });
+    await nextEvent(host, 'dragStarted');
+
+    const left = nextEvent(host, 'peerLeftProduct');
+    await enterProduct(student, 'basic-trees');
+
+    expect((await left).userId).toBe(studentId);
+  });
+
+  it('releases when the dragger disconnects', async () => {
+    const { host, student, studentId } = await roomOfTwo();
+
+    student.emit('startDrag', { elements: dragged });
+    await nextEvent(host, 'dragStarted');
+
+    const left = nextEvent(host, 'peerLeftProduct');
+    student.disconnect();
+
+    expect((await left).userId).toBe(studentId);
+  });
+
+  it('releases a drag nobody has touched, without waiting on the ping timeout', async () => {
+    const { host, student, studentId } = await roomOfTwo();
+
+    student.emit('startDrag', { elements: dragged });
+    await nextEvent(host, 'dragStarted');
+
+    // the socket is alive and simply says nothing more, which no departure would catch
+    const ended = await nextEvent(host, 'dragEnded', STALE_AFTER_MS * 8);
+    expect(ended.userId).toBe(studentId);
+  });
+
+  it('leaves a drag that is still being moved alone', async () => {
+    const { host, student } = await roomOfTwo();
+
+    student.emit('startDrag', { elements: dragged });
+    await nextEvent(host, 'dragStarted');
+
+    const keepAlive = setInterval(
+      () => student.emit('updateDrag', { elements: dragged }),
+      STALE_AFTER_MS / 4,
+    );
+    await expectNoEvent(host, 'dragEnded', STALE_AFTER_MS * 3);
+    clearInterval(keepAlive);
+  });
+
+  it('promotes a move for an already released drag back into a start', async () => {
+    const { host, student, studentId } = await roomOfTwo();
+
+    student.emit('startDrag', { elements: dragged });
+    await nextEvent(host, 'dragStarted');
+    await nextEvent(host, 'dragEnded', STALE_AFTER_MS * 8);
+
+    // the gesture never ended, so the next move has to put it back rather than vanish
+    const restarted = nextEvent(host, 'dragStarted');
+    student.emit('updateDrag', { elements: dragged });
+
+    expect((await restarted).userId).toBe(studentId);
   });
 });

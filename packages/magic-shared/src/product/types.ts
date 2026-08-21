@@ -1,5 +1,6 @@
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { Tier } from '@multiplayer/protocol/tiers';
 import { BasicColorMode } from '@vueuse/core';
@@ -27,6 +28,13 @@ export type TransitField = {
   decode: (payload: any) => void;
 };
 
+/** a host's drag, in the three moments the room cares about */
+export type HostDragEventMap = {
+  onDragStarted: (elements: DraggedElement[]) => void;
+  onDragMoved: (elements: DraggedElement[]) => void;
+  onDragEnded: () => void;
+};
+
 export type HistoryField = {
   canRedo: ComputedRef<boolean>;
   canUndo: ComputedRef<boolean>;
@@ -41,11 +49,13 @@ export type HostBinding = {
   /** stops mirroring, leaving the host's own state exactly as the document left it */
   unbind: () => void;
   /**
-   * Every peer's in flight move, whole rather than incremental: a peer missing from the
-   * record has stopped moving things, whether they dropped, left or were never dragging.
-   * Nothing here is written to the document, which the authoring peer commits itself.
+   * One peer's in flight move. Nothing here is written to the document, which the
+   * authoring peer commits itself. Can arrive for a peer already mid drag, since a drag
+   * the room released early is revived rather than abandoned.
    */
-  applyPeerDrags: (dragsByPeer: Record<UserId, DraggedElement[]>) => void;
+  applyPeerDrag: (peerId: UserId, elements: DraggedElement[]) => void;
+  /** they dropped, navigated, disconnected or were let go by the room */
+  endPeerDrag: (peerId: UserId) => void;
 };
 
 /**
@@ -114,10 +124,12 @@ export type MultiplayerHostField = {
   tiers: Record<Tier, TierBehavior>;
 
   /**
-   * whatever the host is moving this instant, read as presence goes out rather than
-   * pushed, since a drag only travels alongside the cursor that is causing it
+   * What the host is moving, as a lifecycle rather than a value to read. Pushed rather
+   * than pulled so a drag travels on its own signal instead of alongside the cursor that
+   * happens to be causing it, which is what lets the room tell a held element from a
+   * stale one. Absent for a host with nothing draggable.
    */
-  draggedElements?: () => DraggedElement[];
+  drag?: ReadonlyEventHub<HostDragEventMap>;
 };
 
 export type MagicProductOptions = {

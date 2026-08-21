@@ -98,9 +98,13 @@ export const useMagicProduct = (
   const nameTagElement: AggregatorTransformer = (agg) => {
     if (!magic.multiplayer?.room.state.value.connected) return agg;
     const roster = magic.multiplayer.room.state.value.userIdToRosterEntry;
+    // every entry here is a peer on this product, so nothing needs filtering out
     for (const [userId, p] of Object.entries(
       magic.multiplayer.room.state.value.userIdToPresence,
     )) {
+      // on the product but yet to move: they have no place to put a tag
+      if (!p.cursorPosition) continue;
+
       const textBlock: Required<TextBlock> = {
         ...TEXT_BLOCK_DEFAULTS,
         content: toDisplayedName(roster[userId].displayName),
@@ -113,7 +117,7 @@ export const useMagicProduct = (
         priority: Infinity,
         paintOnly: true,
         shape: rect({
-          at: p.cursorPosition ?? { x: 0, y: 0 },
+          at: p.cursorPosition,
           height: NAME_TAG_HEIGHT,
           width: getTextDimensions(textBlock).width + NAME_TAG_PADDING_X * 2,
           fillColor: tierColor[roster[userId].tier],

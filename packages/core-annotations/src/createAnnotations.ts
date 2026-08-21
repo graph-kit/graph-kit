@@ -209,12 +209,14 @@ export const createAnnotations = ({
     }),
   });
 
+  // brush weight is the width of a stroke, so half of it is the radius that matches it:
+  // the tip is the head of the trail, not a bead sitting on top of it
   const laserCursorElement = (): AnnotationCanvasElement => ({
     id: LASER_CURSOR_ID,
     priority: ANNOTATION_CURSOR_PRIORITY,
     shape: circle({
       at: surface.cursorCoordinates.value,
-      radius: brushWeight(),
+      radius: brushWeight() / 2,
       fillColor: color(),
     }),
   });

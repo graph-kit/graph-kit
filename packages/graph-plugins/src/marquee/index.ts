@@ -12,7 +12,12 @@ import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
 import { NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD } from '../node-drag/constants.ts';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../surface/setupCursor.ts';
 import { GraphUnderCursor } from '../surface/types.ts';
-import { MARQUEE_PLUGIN_ID, MARQUEE_SHAPE_ID } from './constants.ts';
+import {
+  MARQUEE_PLUGIN_ID,
+  MARQUEE_SHAPE_ID,
+  MIN_MARQUEE_EXTENT,
+} from './constants.ts';
+import { createCursorThemer } from './createCursorThemer.ts';
 import { createMarqueeEventRegistry } from './events.ts';
 import { getSelectionBox, getSurfaceArea } from './helpers.ts';
 import { createMarqueeThemeOverrides } from './themes.ts';
@@ -26,6 +31,9 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
 
   let marqueeBox: BoundingBox | undefined = undefined;
   let selectionBox: BoundingBox | undefined = undefined;
+
+  // latched, not live: a drag back to its own origin is zero sized again
+  let marqueeBoxHasMoved = false;
 
   /**
    * given a mouse event, engages or disengages the marquee box
@@ -45,6 +53,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       width: 0,
       height: 0,
     };
+    marqueeBoxHasMoved = false;
     marqueeEventHub.emit('onMarqueeBeginSelection', startingCoords);
   };
 
@@ -52,6 +61,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     if (!marqueeBox) return;
     const finalMarqueeBox = marqueeBox;
     marqueeBox = undefined;
+    marqueeBoxHasMoved = false;
     marqueeEventHub.emit('onMarqueeEndSelection', finalMarqueeBox);
   };
 
@@ -88,17 +98,28 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     const { x, y } = coords;
     marqueeBox.width = x - marqueeBox.at.x;
     marqueeBox.height = y - marqueeBox.at.y;
+
+    if (marqueeBox.width !== 0 || marqueeBox.height !== 0) {
+      marqueeBoxHasMoved = true;
+    }
+
     updateMarqueeSelectedItems(marqueeBox);
   };
 
   const getMarqueeBoxCanvasElement = (box: BoundingBox): CanvasElement => {
+    const { at, width, height } = normalizeBoundingBox(box);
+    const borderWidth = theme._resolveToken('marquee.drag.border.width');
+
     const shape = controls.surface.shapes.rect({
       id: MARQUEE_SHAPE_ID,
-      ...normalizeBoundingBox(box),
+      at,
+      // a zero extent paints nothing, so a dead straight drag collapses to a line
+      width: Math.max(width, borderWidth || MIN_MARQUEE_EXTENT),
+      height: Math.max(height, borderWidth || MIN_MARQUEE_EXTENT),
       fillColor: theme._resolveToken('marquee.drag.color'),
       stroke: {
         color: theme._resolveToken('marquee.drag.border.color'),
-        lineWidth: theme._resolveToken('marquee.drag.border.width'),
+        lineWidth: borderWidth,
       },
     });
 
@@ -110,13 +131,9 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   };
 
   const addMarqueeBoxToAggregator = (aggregator: Aggregator) => {
-    if (!marqueeBox) return aggregator;
+    if (!marqueeBox || !marqueeBoxHasMoved) return aggregator;
 
-    const { width, height } = marqueeBox;
-    if (width === 0 || height === 0) return aggregator;
-
-    const selectionBoxCanvasElement = getMarqueeBoxCanvasElement(marqueeBox);
-    aggregator.push(selectionBoxCanvasElement);
+    aggregator.push(getMarqueeBoxCanvasElement(marqueeBox));
     return aggregator;
   };
 
@@ -173,7 +190,15 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   controls.surface.aggregator.addTransformer(addSelectionBoxToAggregator);
   controls.surface.aggregator.addTransformer(addMarqueeBoxToAggregator);
 
+  const cursorTheme = createCursorThemer(
+    controls,
+    theme,
+    () => marqueeBoxHasMoved,
+  );
+
   const onEnable = () => {
+    cursorTheme.enable();
+
     controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
 
     controls.surface.events.elements.handle(
@@ -223,6 +248,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     events._internal.core.unsubscribe('onNodeMoveStream', updateSelectionBox);
 
     disengageMarqueeBox();
+    cursorTheme.disable();
   };
 
   const lifecycle = createLifecycle({

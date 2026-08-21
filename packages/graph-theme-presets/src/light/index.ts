@@ -88,6 +88,7 @@ export const light = {
     'marquee.drag.border.color': colors.BLUE_500,
     'marquee.drag.border.width': 1,
     'marquee.drag.color': colors.BLUE_300 + '15',
+    'marquee.drag.cursor': CURSOR.CROSSHAIR,
 
     'marquee.selection.border.color': colors.BLUE_700,
     'marquee.selection.border.width': 1,

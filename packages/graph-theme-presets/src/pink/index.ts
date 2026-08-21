@@ -88,6 +88,7 @@ export const pink = {
     'marquee.drag.border.color': colors.PINK_500,
     'marquee.drag.border.width': 1,
     'marquee.drag.color': colors.PINK_300 + '15',
+    'marquee.drag.cursor': CURSOR.CROSSHAIR,
 
     'marquee.selection.border.color': colors.PINK_700,
     'marquee.selection.border.width': 1,

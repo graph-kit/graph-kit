@@ -21,9 +21,14 @@ import {
   IN_PROGRESS_ANNOTATION_ID,
   LASER_CURSOR_ID,
   LASER_DECAY_MS,
-  LASER_TRAIL_LENGTH,
+  LASER_FADE_MS,
+  LASER_SEGMENT_LENGTH,
+  LASER_TRAIL_MAX_LENGTH,
+  LASER_TRAIL_MS,
 } from './constants.ts';
 import { createAnnotationsEventRegistry } from './events.ts';
+import type { TrailPoint } from './laserTrail.ts';
+import { appendResampled, trimOlderThan, trimToLength } from './laserTrail.ts';
 import type {
   Annotation,
   AnnotationCanvasElement,
@@ -57,6 +62,9 @@ export const createAnnotations = ({
   let strokePoints: Coordinate[] = [];
   let isDrawing = false;
   const erasedIds = new Set<string>();
+  // the laser keeps its own points: they carry a timestamp, and unlike a stroke in flight
+  // they are never committed to anything
+  let laserTrail: TrailPoint[] = [];
   let laserDecayInterval: ReturnType<typeof setInterval> | undefined;
   let lastMoveTime = Date.now();
 
@@ -119,11 +127,25 @@ export const createAnnotations = ({
     }
   };
 
+  /**
+   * while the pointer moves the trail holds a fixed span of motion, so its length is the
+   * distance just covered. once it stalls the span collapses on a curve rather than at a
+   * constant rate, which reads as the tail whipping after the cursor instead of a line
+   * being wound in
+   */
+  const trailWindow = (now: number) => {
+    const stalledFor = now - lastMoveTime;
+    if (stalledFor <= 0) return LASER_TRAIL_MS;
+
+    const fade = Math.min(1, stalledFor / LASER_FADE_MS);
+    return LASER_TRAIL_MS * (1 - fade * fade);
+  };
+
   const startDecayTimer = () => {
     if (laserDecayInterval) return;
     laserDecayInterval = setInterval(() => {
-      const stalled = Date.now() - lastMoveTime > LASER_DECAY_MS;
-      if (stalled && strokePoints.length >= 2) strokePoints.shift();
+      const now = Date.now();
+      trimOlderThan(laserTrail, now - trailWindow(now));
     }, LASER_DECAY_MS);
   };
 
@@ -137,6 +159,11 @@ export const createAnnotations = ({
     isDrawing = true;
     strokePoints = [coords];
     if (isErasing()) markErased(coords);
+    if (isLaserPointing()) {
+      lastMoveTime = Date.now();
+      laserTrail = [{ ...coords, at: lastMoveTime }];
+      startDecayTimer();
+    }
   };
 
   const extendStroke = (coords: Coordinate) => {
@@ -147,14 +174,18 @@ export const createAnnotations = ({
       return;
     }
 
-    strokePoints.push(coords);
-
     if (isLaserPointing()) {
-      if (strokePoints.length > LASER_TRAIL_LENGTH) strokePoints.shift();
-      startDecayTimer();
+      lastMoveTime = Date.now();
+      appendResampled(
+        laserTrail,
+        { ...coords, at: lastMoveTime },
+        LASER_SEGMENT_LENGTH,
+      );
+      trimToLength(laserTrail, LASER_TRAIL_MAX_LENGTH);
+      return;
     }
 
-    lastMoveTime = Date.now();
+    strokePoints.push(coords);
   };
 
   const endStroke = () => {
@@ -173,6 +204,7 @@ export const createAnnotations = ({
 
     // the laser leaves nothing behind, which is the whole point of it
     if (isLaserPointing()) {
+      laserTrail = [];
       stopDecayTimer();
       return;
     }
@@ -191,6 +223,7 @@ export const createAnnotations = ({
   const abortStroke = () => {
     isDrawing = false;
     strokePoints = [];
+    laserTrail = [];
     erasedIds.clear();
     stopDecayTimer();
   };
@@ -218,6 +251,17 @@ export const createAnnotations = ({
       at: surface.cursorCoordinates.value,
       radius: brushWeight() / 2,
       fillColor: color(),
+    }),
+  });
+
+  const laserTrailElement = (): AnnotationCanvasElement => ({
+    id: IN_PROGRESS_ANNOTATION_ID,
+    priority: ANNOTATION_IN_PROGRESS_PRIORITY,
+    shape: scribble({
+      type: 'draw',
+      points: laserTrail,
+      fillColor: color(),
+      brushWeight: brushWeight(),
     }),
   });
 
@@ -252,9 +296,14 @@ export const createAnnotations = ({
     if (!isActive()) return elements;
 
     if (isErasing()) elements.push(eraserCursorElement());
-    else if (isDrawing && strokePoints.length > 0) {
+    else if (isLaserPointing()) {
+      if (laserTrail.length > 0) elements.push(laserTrailElement());
+      // the trail is resampled, so its head sits up to a segment behind the pointer:
+      // the dot is what keeps the laser under the cursor while the trail catches up
+      elements.push(laserCursorElement());
+    } else if (isDrawing && strokePoints.length > 0) {
       elements.push(strokeInFlightElement());
-    } else if (isLaserPointing()) elements.push(laserCursorElement());
+    }
 
     return elements;
   };

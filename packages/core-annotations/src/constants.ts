@@ -10,11 +10,23 @@ export const ERASER_BRUSH_RADIUS = 10;
 /** alpha suffix marking an annotation the eraser is over but has not committed yet */
 export const ERASING_ALPHA = '50';
 
-/** how many points of the laser trail stay on screen behind the cursor */
-export const LASER_TRAIL_LENGTH = 10;
+/**
+ * how much of the pointer's recent motion the trail holds. an age rather than a size, so
+ * a fast drag draws a long tail and a slow one a short tail
+ */
+export const LASER_TRAIL_MS = 220;
 
-/** how long the trail holds a point once the cursor stops moving */
-export const LASER_DECAY_MS = 50;
+/** a ceiling on the tail, so a single violent flick cannot paint the whole canvas */
+export const LASER_TRAIL_MAX_LENGTH = 500;
+
+/** the size every segment of the trail is resampled to, so a fast drag is not choppy */
+export const LASER_SEGMENT_LENGTH = 4;
+
+/** how long the trail takes to whip away once the cursor stops moving */
+export const LASER_FADE_MS = 280;
+
+/** how often the trail is trimmed; a frame, so the tail slides rather than steps */
+export const LASER_DECAY_MS = 16;
 
 export const ERASER_OUTLINE_WIDTH = 2;
 

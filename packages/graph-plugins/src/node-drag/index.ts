@@ -5,6 +5,7 @@ import { devAssert, devWarning } from '@core/utils/debugging';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { createDragState } from '@graph/plugins-shared/drag';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
@@ -150,7 +151,7 @@ export const nodeDrag =
 
     const cursorTheme = createDragThemer(controls, dragState);
 
-    const enable = () => {
+    const onEnable = () => {
       controls.surface.events.elements.handle(
         'onMouseDown',
         beginDrag,
@@ -179,7 +180,7 @@ export const nodeDrag =
       cursorTheme.enable();
     };
 
-    const disable = () => {
+    const onDisable = () => {
       controls.surface.events.elements.unhandle('onMouseDown', beginDrag);
       controls.surface.events.elements.unhandle('onMouseUp', drop);
       controls.surface.events.elements.unhandle(
@@ -191,16 +192,18 @@ export const nodeDrag =
       drop();
     };
 
-    enable();
+    const lifecycle = createLifecycle({
+      onEnable,
+      onDisable,
+    });
+
+    lifecycle.enable();
 
     return {
       name: 'nodeDrag',
       controls: {
         events: nodeDragEventHub,
-        lifecycle: {
-          enable,
-          disable,
-        },
+        lifecycle,
       },
     };
   };

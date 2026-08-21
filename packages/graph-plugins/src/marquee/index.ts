@@ -5,6 +5,7 @@ import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
@@ -157,7 +158,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   controls.surface.aggregator.transformers.push(addSelectionBoxToAggregator);
   controls.surface.aggregator.transformers.push(addMarqueeBoxToAggregator);
 
-  const enable = () => {
+  const onEnable = () => {
     controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
 
     controls.surface.events.elements.handle(
@@ -187,7 +188,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     events._internal.core.subscribe('onNodeMoveStream', updateSelectionBox);
   };
 
-  const disable = () => {
+  const onDisable = () => {
     controls.focus.events.unsubscribe('onFocusChange', updateSelectionBox);
 
     controls.surface.events.elements.unhandle(
@@ -209,17 +210,19 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     disengageMarqueeBox();
   };
 
-  enable();
+  const lifecycle = createLifecycle({
+    onEnable,
+    onDisable,
+  });
+
+  lifecycle.enable();
 
   return {
     name: 'marquee',
     controls: {
       events: marqueeEventHub,
       theme,
-      lifecycle: {
-        enable,
-        disable,
-      },
+      lifecycle,
     },
   };
 };

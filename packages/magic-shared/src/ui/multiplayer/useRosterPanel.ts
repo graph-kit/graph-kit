@@ -1,6 +1,6 @@
 import { ReadonlyEventHub } from '@core/events/createEventHub';
 
-import { ComputedRef, computed, onUnmounted } from 'vue';
+import { ComputedRef, onUnmounted } from 'vue';
 
 import {
   ComponentControls,
@@ -12,14 +12,6 @@ import { RoomState } from '../../multiplayer/types.ts';
 import RosterPanel from './RosterPanel.vue';
 
 const ROSTER_PANEL_SLOT_ID = 'product/roster-panel';
-
-export type RosterPanelControls = {
-  show: () => void;
-  hide: () => void;
-  setHighlight: (v: boolean) => void;
-  isShown: ComputedRef<boolean>;
-};
-
 type RosterPanelOptions = {
   room: ComputedRef<RoomState>;
   events: ReadonlyEventHub<MultiplayerEventMap>;

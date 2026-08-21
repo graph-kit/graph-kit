@@ -56,7 +56,7 @@ describe('createRoom', () => {
 });
 
 describe('membership', () => {
-  it('admits new joiners at write', () => {
+  it('admits new joiners at read', () => {
     const room = seedRoom();
     const entry = addMember(room, {
       userId: 'user-2',
@@ -64,8 +64,8 @@ describe('membership', () => {
       productId: 'traversals',
     });
 
-    expect(entry.tier).toBe('write');
-    expect(canWriteProduct(room, 'user-2')).toBe(true);
+    expect(entry.tier).toBe('read');
+    expect(canWriteProduct(room, 'user-2')).toBe(false);
     expect(canRunRoomCommand(room, 'user-2')).toBe(false);
   });
 
@@ -107,11 +107,19 @@ describe('setTier', () => {
     expect(canRunRoomCommand(room, 'user-2')).toBe(true);
   });
 
-  it('refuses a write user trying to promote themselves', () => {
+  it('refuses a member trying to promote themselves', () => {
     const room = roomWithStudent();
 
     expect(setTier(room, 'user-2', 'user-2', 'admin')).toBe(false);
-    expect(room.data.roster['user-2']?.tier).toBe('write');
+    expect(room.data.roster['user-2']?.tier).toBe('read');
+  });
+
+  it('grants product writes on promotion out of read', () => {
+    const room = roomWithStudent();
+    expect(canWriteProduct(room, 'user-2')).toBe(false);
+
+    expect(setTier(room, 'host-1', 'user-2', 'write')).toBe(true);
+    expect(canWriteProduct(room, 'user-2')).toBe(true);
   });
 
   it('refuses demoting the host', () => {

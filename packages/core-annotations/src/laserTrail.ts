@@ -3,6 +3,9 @@ import type { Coordinate } from '@canvas/primitives/types/utility';
 /** a point of the trail, carrying the moment the pointer was there */
 export type TrailPoint = Coordinate & { at: number };
 
+/** the most points one pointer sample can plant, however far it jumped */
+const MAX_RESAMPLE_STEPS = 256;
+
 const distance = (a: Coordinate, b: Coordinate) =>
   Math.hypot(b.x - a.x, b.y - a.y);
 
@@ -24,6 +27,8 @@ export const trailLength = (trail: TrailPoint[]) => {
  * trail is made of segments of one size no matter how far the pointer jumped between two
  * samples. a fast drag samples sparsely, and without this the trail is a handful of long
  * chords that read as choppy and vanish a whole limb at a time when they decay.
+ *
+ * returns whether the sample was far enough to plant anything.
  */
 export const appendResampled = (
   trail: TrailPoint[],
@@ -33,16 +38,26 @@ export const appendResampled = (
   const last = trail.at(-1);
   if (!last) {
     trail.push(to);
-    return;
+    return true;
   }
 
   const span = distance(last, to);
-  if (span < spacing) return;
+  if (span < spacing) return false;
 
-  const steps = Math.floor(span / spacing);
+  // a jump can be arbitrarily long: a wheel zoom under a held button moves the pointer
+  // across the whole world in one sample, and every point past the cap is trimmed off
+  // again on the same call, so widening the segments is cheaper than planting them
+  const wanted = Math.floor(span / spacing);
+  const steps = Math.min(wanted, MAX_RESAMPLE_STEPS);
+  // unclamped the walk stops on the last whole segment, short of `to`; clamped it has to
+  // reach `to`, so the segments widen instead of multiplying
+  const reach = steps < wanted ? 1 : (steps * spacing) / span;
+
   for (let step = 1; step <= steps; step++) {
-    trail.push(lerp(last, to, (step * spacing) / span));
+    trail.push(lerp(last, to, (step / steps) * reach));
   }
+
+  return true;
 };
 
 /**

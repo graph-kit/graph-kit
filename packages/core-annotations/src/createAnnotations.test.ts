@@ -57,6 +57,41 @@ describe('annotations', () => {
     expect(changes).toEqual([]);
   });
 
+  it('eats the laser trail once the cursor stops moving', () => {
+    vi.useFakeTimers();
+    const { annotations } = setup();
+    annotations.setMode('laser');
+    const trailPainted = () =>
+      annotations
+        .canvasElements()
+        .filter(({ id }) => id.startsWith('annotation-laser-trail')).length;
+
+    annotations.beginStroke({ x: 0, y: 0 });
+    annotations.extendStroke({ x: 200, y: 0 });
+    expect(trailPainted()).toBeGreaterThan(0);
+
+    vi.advanceTimersByTime(1000);
+
+    expect(trailPainted()).toBe(0);
+    vi.useRealTimers();
+  });
+
+  it('holds the mode a stroke began in, so picking a tool mid stroke commits nothing', () => {
+    vi.useFakeTimers();
+    const { annotations, changes } = setup();
+    annotations.setMode('laser');
+
+    annotations.beginStroke({ x: 0, y: 0 });
+    annotations.extendStroke({ x: 50, y: 0 });
+    annotations.setMode('drawing');
+    annotations.endStroke();
+
+    expect(annotations.annotations()).toEqual([]);
+    expect(changes).toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
+    vi.useRealTimers();
+  });
+
   it('erases every annotation the eraser passes over', () => {
     const { annotations, changes } = setup();
     drawStroke(annotations);

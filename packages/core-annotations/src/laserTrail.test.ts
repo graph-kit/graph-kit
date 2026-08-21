@@ -90,13 +90,31 @@ describe('laser trail', () => {
     expect(trailLength(fast)).toBeGreaterThan(trailLength(slow) * 10);
   });
 
-  it('caps what a single violent flick can paint', () => {
+  it('caps what a single violent flick can paint, keeping the head', () => {
     const trail: TrailPoint[] = [{ x: 0, y: 0, at: 0 }];
 
     appendResampled(trail, { x: 4000, y: 0, at: 30 }, 4);
     trimToLength(trail, 500);
 
     expect(trailLength(trail)).toBeCloseTo(500);
+    expect(trail.at(-1)).toEqual({ x: 4000, y: 0, at: 30 });
+    expect(trail[0].x).toBeCloseTo(3500);
+  });
+
+  it('plants a bounded number of points however far the pointer jumped', () => {
+    const trail: TrailPoint[] = [{ x: 0, y: 0, at: 0 }];
+
+    appendResampled(trail, { x: 1_000_000, y: 0, at: 30 }, 4);
+
+    expect(trail.length).toBeLessThan(300);
+    expect(trail.at(-1)).toEqual({ x: 1_000_000, y: 0, at: 30 });
+  });
+
+  it('reports whether a sample was far enough to plant anything', () => {
+    const trail: TrailPoint[] = [{ x: 0, y: 0, at: 0 }];
+
+    expect(appendResampled(trail, { x: 1, y: 0, at: 5 }, 4)).toBe(false);
+    expect(appendResampled(trail, { x: 9, y: 0, at: 9 }, 4)).toBe(true);
   });
 
   it('splits the trail into runs that share their ends, so they paint as one', () => {
@@ -111,6 +129,22 @@ describe('laser trail', () => {
     expect(runs).toHaveLength(4);
     expect(runs[0][0]).toEqual(trail[0]);
     expect(runs.at(-1)?.at(-1)).toEqual(trail.at(-1));
+    runs.slice(1).forEach((run, i) => expect(run[0]).toEqual(runs[i].at(-1)));
+  });
+
+  it('keeps the runs joined when they do not divide evenly', () => {
+    const trail: TrailPoint[] = Array.from({ length: 8 }, (_, i) => ({
+      x: i,
+      y: 0,
+      at: i,
+    }));
+
+    const runs = taperRuns(trail, 6);
+
+    expect(runs.length).toBeGreaterThan(0);
+    expect(runs[0][0]).toEqual(trail[0]);
+    expect(runs.at(-1)?.at(-1)).toEqual(trail.at(-1));
+    runs.forEach((run) => expect(run.length).toBeGreaterThan(1));
     runs.slice(1).forEach((run, i) => expect(run[0]).toEqual(runs[i].at(-1)));
   });
 

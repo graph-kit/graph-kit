@@ -22,7 +22,10 @@ export const LASER_TRAIL_MAX_LENGTH = 500;
 /** the size every segment of the trail is resampled to, so a fast drag is not choppy */
 export const LASER_SEGMENT_LENGTH = 4;
 
-/** how long the trail takes to whip away once the cursor stops moving */
+/**
+ * shapes how sharply the trail is eaten once the cursor stops moving. the tail accelerates
+ * as it goes, so the trail is gone well before this many milliseconds are up
+ */
 export const LASER_FADE_MS = 280;
 
 /** how often the trail is trimmed; a frame, so the tail slides rather than steps */

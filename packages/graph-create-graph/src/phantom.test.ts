@@ -14,7 +14,7 @@ import { createGraphTransit } from './graph-transit.ts';
 
 // phantom only reaches for the aggregator and the theme layer, so the rest of the real
 // surface plugin (a live surface, hit testing) is not worth standing up here. the
-// aggregator itself is the real one, so a render pass sorts by priority like production
+// aggregator itself is the real one, so the priority sort runs like production
 const rendererStub = {
   beginFrame: () => {},
   endFrame: () => {},

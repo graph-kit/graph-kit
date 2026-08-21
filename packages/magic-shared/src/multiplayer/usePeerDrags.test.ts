@@ -82,10 +82,13 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
   const paintOnlyIds = (ids: string[]) => {
     seeded = ids;
     aggregator.draw({} as CanvasRenderingContext2D);
-    return aggregator
-      .aggregator()
-      .filter(({ paintOnly }) => paintOnly)
-      .map(({ id }) => id);
+    const drawn = aggregator.aggregator();
+
+    // half the assertions below expect nothing held, which an empty pipeline would
+    // satisfy on its own
+    expect(drawn.map(({ id }) => id)).toEqual(ids);
+
+    return drawn.filter(({ paintOnly }) => paintOnly).map(({ id }) => id);
   };
 
   return { events, applied, ended, paintOnlyIds };

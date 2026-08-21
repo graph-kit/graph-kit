@@ -24,6 +24,17 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
 
   const theme = createThemeController(createMarqueeThemeOverrides());
 
+  /*
+    the drag box is an unreliable place to hang a cursor: the pointer rides its
+    moving corner, where the boundary hit test is a coin flip, and while width or
+    height is still zero there is no element in the aggregator to carry one at
+    all. canvas.cursor resolves ahead of the element lookup, so it holds for the
+    whole drag regardless
+  */
+  const cursorLayer = controls.surface.theme.createLayer(
+    `${MARQUEE_PLUGIN_ID}/cursor`,
+  );
+
   let marqueeBox: BoundingBox | undefined = undefined;
   let selectionBox: BoundingBox | undefined = undefined;
 
@@ -109,6 +120,14 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     };
   };
 
+  /*
+    mousedown engages the box before the pointer has moved, so an engaged box is
+    not yet a drag. either axis alone counts: a dead straight drag leaves the
+    other at zero, and requiring both would drop the cursor mid gesture
+  */
+  const hasMarqueeBoxMoved = () =>
+    !!marqueeBox && (marqueeBox.width !== 0 || marqueeBox.height !== 0);
+
   const addMarqueeBoxToAggregator = (aggregator: Aggregator) => {
     if (!marqueeBox) return aggregator;
 
@@ -174,6 +193,12 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   controls.surface.aggregator.transformers.push(addMarqueeBoxToAggregator);
 
   const onEnable = () => {
+    cursorLayer.set('canvas.cursor', () =>
+      hasMarqueeBoxMoved()
+        ? theme._resolveToken('marquee.drag.cursor')
+        : undefined,
+    );
+
     controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
 
     controls.surface.events.elements.handle(
@@ -223,6 +248,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     events._internal.core.unsubscribe('onNodeMoveStream', updateSelectionBox);
 
     disengageMarqueeBox();
+    cursorLayer.removeAll();
   };
 
   const lifecycle = createLifecycle({

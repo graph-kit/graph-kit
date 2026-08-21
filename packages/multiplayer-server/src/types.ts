@@ -20,6 +20,8 @@ export type MemberSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 export type MemberConnection = {
   evict: (by: RosterEntry) => void;
   moveTo: (productId: ProductId, by: RosterEntry) => void;
+  /** stands up, keeping the socket, so a proven claim can sit down in its place */
+  releaseSeat: () => void;
 };
 
 /** everything shared by every connection, held for the life of the server */

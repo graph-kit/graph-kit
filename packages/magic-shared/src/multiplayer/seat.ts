@@ -1,8 +1,8 @@
 import {
-  clearSessionStorage,
-  readSessionStorage,
-  writeSessionStorage,
-} from '@core/utils/sessionStorage';
+  clearLocalStorage,
+  readLocalStorage,
+  writeLocalStorage,
+} from '@core/utils/localStorage';
 import { RoomId, Seat } from '@multiplayer/protocol/room';
 
 /**
@@ -12,13 +12,16 @@ import { RoomId, Seat } from '@multiplayer/protocol/room';
 const seatKey = (roomId: RoomId) => `multiplayer-seat-${roomId}`;
 
 /**
- * Session storage rather than local: a seat belongs to the tab holding it. Two tabs on
- * one room are two people, and the server refuses a claim on a seat that is still live,
- * so sharing the store between them would cost the second tab a silent re-seat every
- * time. It survives what reconnecting is actually for, which is a refresh or a sleep.
+ * Local storage rather than session: a seat belongs to the person, not to the tab that
+ * happened to open it, and closing a tab is the most ordinary way there is to end up
+ * reconnecting. Session storage cannot survive that, which made a reopened tab a
+ * stranger to a seat that was still being held for it.
+ *
+ * Two tabs therefore read the same seat, and both will claim it. That is settled at the
+ * server, where the token proves the claim and the newer tab takes the seat over.
  */
 export const readSeat = (roomId: RoomId): Seat | undefined => {
-  const stored = readSessionStorage(seatKey(roomId));
+  const stored = readLocalStorage(seatKey(roomId));
   if (!stored) return;
 
   try {
@@ -35,7 +38,6 @@ export const readSeat = (roomId: RoomId): Seat | undefined => {
 };
 
 export const writeSeat = (roomId: RoomId, seat: Seat) =>
-  writeSessionStorage(seatKey(roomId), JSON.stringify(seat));
+  writeLocalStorage(seatKey(roomId), JSON.stringify(seat));
 
-export const clearSeat = (roomId: RoomId) =>
-  clearSessionStorage(seatKey(roomId));
+export const clearSeat = (roomId: RoomId) => clearLocalStorage(seatKey(roomId));

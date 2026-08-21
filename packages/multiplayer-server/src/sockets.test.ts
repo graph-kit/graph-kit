@@ -314,20 +314,50 @@ describe('seats', () => {
     await kicked;
   });
 
-  // the roster travels to everyone, so every member knows every id in it
-  it('refuses a claim on a seat somebody is still sitting in', async () => {
+  // two tabs on one room read the same stored seat, and both claim it
+  it('hands a live seat to a newer claim, turning the older one out', async () => {
     const host = await connectClient();
     const membership = await startRoom(host);
 
-    const impostor = await connectClient();
+    const newerTab = await connectClient();
+    const taken = nextEvent(host, 'seatTaken');
     const result = await joinRoomOrThrow(
-      impostor,
+      newerTab,
       membership.roomId,
       seatOf(membership),
     );
 
-    expect(result.userId).not.toBe(membership.userId);
+    await taken;
+    expect(result.userId).toBe(membership.userId);
     expect(result.data.hostId).toBe(membership.userId);
+    // one seat, not two: a takeover moves somebody rather than admitting them
+    expect(Object.keys(result.data.roster)).toEqual([membership.userId]);
+  });
+
+  // the loser keeps its socket, and must be holding nothing the winner now owns
+  it('leaves a turned out tab unable to act as the seat it lost', async () => {
+    const host = await connectClient();
+    const membership = await startRoom(host);
+    const student = await connectClient();
+    await joinRoomAt(student, membership.roomId, 'traversals');
+
+    const newerTab = await connectClient();
+    const taken = nextEvent(host, 'seatTaken');
+    await joinRoomOrThrow(newerTab, membership.roomId, seatOf(membership));
+    await taken;
+
+    // the old tab dropping must not mark the seat away or unseat the tab holding it
+    const rosterUpdated = expectNoEvent(student, 'rosterChanged');
+    host.disconnect();
+    await rosterUpdated;
+
+    // and the winner still holds everything the seat carried
+    const relayed = nextEvent(student, 'docUpdated');
+    newerTab.emit('docUpdate', {
+      productId: 'traversals',
+      update: addNodeUpdate('b'),
+    });
+    await relayed;
   });
 
   it('refuses a claim carrying the wrong token', async () => {

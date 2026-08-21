@@ -19,6 +19,11 @@ export type MultiplayerEventMap = {
    */
   onKicked: (kickedBy: RosterEntry) => void;
   /**
+   * this session moved to another tab, which is the same person rather than a departure.
+   * the seat carries on without this client, which is why it is not a room left
+   */
+  onSeatTaken: () => void;
+  /**
    * the room itself ended, which nobody in it chose. carries why, since a host closing
    * the session and a room timing out around people who are still sitting in it read as
    * completely different things to the person it happens to
@@ -61,6 +66,7 @@ export const createMultiplayerEventRegistry = (): MultiplayerEventRegistry => ({
   onRoomJoined: new Set(),
   onRoomLeft: new Set(),
   onKicked: new Set(),
+  onSeatTaken: new Set(),
   onRoomDisbanded: new Set(),
   onPendingStarted: new Set(),
   onPendingEnded: new Set(),

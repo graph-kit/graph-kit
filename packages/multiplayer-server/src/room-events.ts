@@ -79,6 +79,11 @@ export const registerRoomEvents = (connection: Connection) => {
     seat: Seat | undefined,
   ) => {
     if (seat && reclaimSeat(current, seat)) {
+      // the seat can still have a socket in it, which the token says is this same person
+      // on a newer tab. theirs to take, so the older one stands up before they sit down
+      if (userId() !== seat.userId) {
+        connections.get(seat.userId)?.releaseSeat();
+      }
       claimSeat(seat.userId);
       // a rename made while they were gone is theirs, and the roster never heard it
       setMemberDisplayName(current, seat.userId, displayName);

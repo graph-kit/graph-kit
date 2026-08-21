@@ -33,10 +33,10 @@ export type ClientToServerEvents = {
   ) => void;
 
   /**
-   * A seat is claimed rather than requested: the server admits the claim only for a seat
-   * that exists, matches the token and has nobody sitting in it, and quietly seats the
-   * arrival somewhere new otherwise. A client cannot know which of those happened before
-   * it asks, so both cases answer with the same result and the identity it must adopt.
+   * A seat is claimed rather than requested: a claim that names a real seat and carries
+   * its token is honoured, taking the seat back off any socket still in it, and one that
+   * cannot be proven is quietly seated somewhere new instead. A client cannot know which
+   * of those it is before asking, so both answer with the identity it must adopt.
    */
   joinRoom: (
     options: RoomEntryOptions & { roomId: RoomId; seat?: Seat },
@@ -173,6 +173,13 @@ export type ServerToClientEvents = {
    * still resolve a user id into a person.
    */
   kicked: (options: { by: RosterEntry }) => void;
+
+  /**
+   * Somebody proved this seat is theirs and took it, which in practice is always the same
+   * person on a newer tab. Distinct from a kick: nobody did this to them, and the seat
+   * they are losing is one they still hold everywhere it is written down.
+   */
+  seatTaken: () => void;
 
   /**
    * The room is gone and every seat in it with it. A union rather than a flag so a third

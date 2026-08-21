@@ -50,16 +50,17 @@ export const markDisconnected = (room: Room, userId: UserId): void => {
 };
 
 /**
- * Sitting back down. Refused for a seat that is still occupied as well as for one that
- * cannot be proven: the live case is somebody claiming a seat out from under its owner,
- * which a second tab does by accident and anybody holding a leaked token does on purpose.
+ * Sitting back down. The token is the whole test, and a seat that still has somebody in
+ * it is no exception: only one client can hold a token, so a live claim is that same
+ * person arriving on a newer tab, and the seat is theirs to take back. Whoever was in it
+ * is moved out by the caller, which is the only part of this a room cannot do alone.
  */
 export const reclaimSeat = (
   room: Room,
   seat: Seat,
 ): RosterEntry | undefined => {
   const entry = room.data.roster[seat.userId];
-  if (!entry || entry.connected) return;
+  if (!entry) return;
   if (room.seatTokens[seat.userId] !== seat.token) return;
 
   entry.connected = true;

@@ -125,16 +125,21 @@ export const createMultiplayer = ({
   };
 
   /**
-   * The room is over for this client, however it ended. The socket goes with it: one left
-   * open in no room holds an idle server awake on its heartbeat alone, and reconnects
-   * forever if it drops, for a room there is no way back into.
+   * Out of the room, keeping whatever is written down about the seat. The socket goes:
+   * one left open in no room holds an idle server awake on its heartbeat alone, and
+   * reconnects forever if it drops, for a room there is no way back into.
    */
-  const releaseRoom = () => {
-    const currentRoomId = membership.value?.roomId;
-    if (currentRoomId) clearSeat(currentRoomId);
+  const abandonRoom = () => {
     roomIdUrl.strip();
     closeSocket();
     reset();
+  };
+
+  /** the same, for the endings that spend the seat rather than pass it on */
+  const releaseRoom = () => {
+    const currentRoomId = membership.value?.roomId;
+    if (currentRoomId) clearSeat(currentRoomId);
+    abandonRoom();
   };
 
   const reset = () => {
@@ -286,6 +291,18 @@ export const createMultiplayer = ({
       releaseRoom();
       events.emit('onRoomDisbanded', reason);
     });
+    // the seat is gone but not spent: it belongs to the tab that took it, and clearing
+    // what is stored here would strand them the next time they had to reconnect
+    activeSocket.on('seatTaken', () => {
+      // TODO tell the user rather than the console, once there is a toast component
+      // https://github.com/graph-kit/graph-kit/issues/783
+      console.warn(
+        'multiplayer: this session was taken over by another tab on the same room',
+      );
+      abandonRoom();
+      events.emit('onSeatTaken');
+    });
+
     // the same teardown a disband gets, except this one is worth announcing: the room
     // carried on without them, so silence would read as the session having ended
     activeSocket.on('kicked', ({ by }) => {

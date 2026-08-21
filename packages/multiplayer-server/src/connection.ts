@@ -160,8 +160,10 @@ export const createConnection = (
   };
 
   /**
-   * Taking over a seat this socket has proven is its own. The index moves with it, or the
-   * room commands aimed at the reclaimed id would go on reaching a socket that is gone.
+   * Moves this connection onto another seat, index entry and all, or the room commands
+   * aimed at either id would go on reaching the socket that used to answer for it. Both
+   * halves of a takeover come through here: the arrival takes the seat it proved, and
+   * whoever was in it is moved off onto a placeholder.
    */
   const claimSeat = (nextUserId: UserId) => {
     const member = connections.get(currentUserId);
@@ -170,8 +172,20 @@ export const createConnection = (
     if (member) connections.set(currentUserId, member);
   };
 
+  /**
+   * Standing up for somebody who proved the seat is theirs, which is only ever the same
+   * person on a newer tab. The socket lives on with an identity that owns nothing, so
+   * that when it does drop it settles none of what now belongs to the tab that took over.
+   */
+  const releaseSeat = () => {
+    leaveRoomChannels();
+    socket.emit('seatTaken');
+    claimSeat(randomUUID());
+  };
+
   connections.set(currentUserId, {
     evict,
+    releaseSeat,
     moveTo: (productId, by) => socket.emit('movedToProduct', { productId, by }),
   });
 

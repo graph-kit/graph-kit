@@ -34,6 +34,12 @@
 
   const isMe = computed(() => props.member.userId === room.value.me.id);
 
+  const disconnectedTooltip = computed(() =>
+    props.member.connected
+      ? undefined
+      : `${props.member.displayName} is disconnected`,
+  );
+
   const menuItems = computed(() =>
     [
       { component: DisplayNameEdit, predicate: isMe.value },
@@ -58,7 +64,13 @@
       <HStack
         class="w-full hover:bg-gray-300 dark:hover:bg-gray-900 py-1 px-2 cursor-pointer justify-between rounded-md"
       >
-        <TruncatedText>{{ member.displayName }}</TruncatedText>
+        <TruncatedText
+          :class="{ 'opacity-50': !member.connected }"
+          :tooltip="disconnectedTooltip"
+          side="left"
+        >
+          {{ member.displayName }}
+        </TruncatedText>
         <HStack
           gap="1"
           class="shrink-0"

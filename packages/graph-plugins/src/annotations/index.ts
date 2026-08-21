@@ -3,6 +3,7 @@ import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
 import { GraphUnderCursor } from '../surface/types.ts';
@@ -31,8 +32,6 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   const cursorLayer = controls.surface.theme.createLayer(
     ANNOTATION_THEME_LAYER_ID,
   );
-
-  let enabled = true;
 
   const beginStroke = (
     { coords, event }: ElementMouseEvent,
@@ -75,7 +74,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   const captureSnapshot = () => controls.history?.captureSnapshot();
 
   const activate = () => {
-    if (!enabled) return;
+    if (!lifecycle.isEnabled()) return;
     engine.activate();
 
     cursorLayer.set('canvas.cursor', () => engine.cursor());
@@ -113,6 +112,14 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     else activate();
   };
 
+  const lifecycle = createLifecycle({
+    // enabling only restores the ability to activate, the tools stay put away until asked
+    onEnable: () => {},
+    onDisable: deactivate,
+  });
+
+  lifecycle.enable();
+
   engine.events.subscribe('onAnnotationsChanged', captureSnapshot);
 
   return {
@@ -128,15 +135,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
       deactivate,
       toggle,
       theme,
-      lifecycle: {
-        enable: () => {
-          enabled = true;
-        },
-        disable: () => {
-          enabled = false;
-          deactivate();
-        },
-      },
+      lifecycle,
     },
   };
 };

@@ -6,7 +6,7 @@ import type { LooseGraphPlugin } from './internals/loose.ts';
 export type { GraphPlugin } from './internals/plugin.ts';
 
 /** Wraps a plugin's controls with lifecycle methods (enable/disable). */
-export type { WithLifecycle } from './internals/lifecycle.ts';
+export type { WithLifecycle } from '../lifecycle/createLifecycle.ts';
 
 export type { WithEvents } from './internals/events.ts';
 

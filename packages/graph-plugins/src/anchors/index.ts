@@ -5,6 +5,7 @@ import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { CoreNode } from '@graph/primitives/types';
 import { DeepReadonly } from 'ts-essentials';
 
@@ -333,7 +334,7 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
     if (anchorDragState.isDragging()) consume();
   };
 
-  const enable = () => {
+  const onEnable = () => {
     events.handle(
       'onNodesRemoved',
       clearAnchorStateIfParentRemoved,
@@ -403,7 +404,7 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
     dragCursorTheme.enable();
   };
 
-  const disable = () => {
+  const onDisable = () => {
     events.unhandle('onNodesRemoved', clearAnchorStateIfParentRemoved);
     events._internal.core.unhandle('onNodeMoveStreamStart', clearAnchorState);
     controls.surface.events.elements.unhandle(
@@ -435,16 +436,18 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
     dragCursorTheme.disable();
   };
 
-  enable();
+  const lifecycle = createLifecycle({
+    onEnable,
+    onDisable,
+  });
+
+  lifecycle.enable();
 
   return {
     name: 'anchors',
     controls: {
       events: anchorsEventHub,
-      lifecycle: {
-        enable,
-        disable,
-      },
+      lifecycle,
       theme,
     },
   };

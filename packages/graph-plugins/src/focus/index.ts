@@ -2,6 +2,7 @@ import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { ElementRemovalPayload } from '@graph/primitives/transactions/types';
 import { DeepReadonly } from 'ts-essentials';
 
@@ -104,7 +105,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
 
   const isFocused = (id: string) => focusedElementIds.has(id);
 
-  const enable = () => {
+  const onEnable = () => {
     // focus a node when clicked, or clear focus if background is clicked
     controls.surface.events.elements.handle(
       'onMouseDown',
@@ -123,7 +124,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
     events.subscribe('onElementsRemoved', clearRemovedElementsFromFocus);
   };
 
-  const disable = () => {
+  const onDisable = () => {
     controls.surface.events.elements.unhandle('onMouseDown', handleMouseDown);
     controls.surface.events.dom.unsubscribe(
       'onMouseDown',
@@ -134,7 +135,12 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
     clearFocus();
   };
 
-  enable();
+  const lifecycle = createLifecycle({
+    onEnable,
+    onDisable,
+  });
+
+  lifecycle.enable();
 
   const theme = createThemeController(createFocusThemeOverrides());
 
@@ -152,10 +158,7 @@ export const focus: FocusPlugin = ({ controls, events, getters }) => {
         ...theme,
         detectors: createFocusDetectors(isFocused, theme._resolveToken),
       },
-      lifecycle: {
-        enable,
-        disable,
-      },
+      lifecycle,
     },
     onAfterInit: () => {
       const weightLayer = theme.createLayer(

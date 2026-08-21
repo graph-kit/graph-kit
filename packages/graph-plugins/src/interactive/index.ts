@@ -3,6 +3,7 @@ import { nullThrows } from '@core/utils/assert';
 import { getCtx } from '@core/utils/canvas/index';
 import { isTypingTarget } from '@core/utils/keyboard';
 import { getValue } from '@core/utils/maybeGetter/index';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import Fraction from 'fraction.js';
 
 import { INTERACTIVE_PLUGIN_ID } from './constants.ts';
@@ -150,7 +151,7 @@ export const interactive =
       captureHistorySnapshot();
     };
 
-    const enable = () => {
+    const onEnable = () => {
       controls.surface.events.elements.subscribe(
         'onMouseDown',
         handleEdgeTextArea,
@@ -167,7 +168,7 @@ export const interactive =
       controls.surface.events.dom.subscribe('onKeyDown', removeFocusedElements);
     };
 
-    const disable = () => {
+    const onDisable = () => {
       controls.surface.events.elements.unsubscribe(
         'onMouseDown',
         handleEdgeTextArea,
@@ -183,15 +184,17 @@ export const interactive =
       );
     };
 
-    enable();
+    const lifecycle = createLifecycle({
+      onEnable,
+      onDisable,
+    });
+
+    lifecycle.enable();
 
     return {
       name: 'interactive',
       controls: {
-        lifecycle: {
-          enable,
-          disable,
-        },
+        lifecycle,
       },
     };
   };

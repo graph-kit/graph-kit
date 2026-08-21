@@ -1,4 +1,5 @@
 import { createEventHub } from '@core/events/createEventHub';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 
 import { MAX_HISTORY, PLUGINS_EXCLUDED_FROM_HISTORY } from './constants.ts';
 import { createHistoryEventRegistry } from './events.ts';
@@ -25,8 +26,18 @@ export const history: HistoryPlugin = ({ finalTransit }) => {
   const snapshots: string[] = [];
   /** index of the snapshot the graph is currently sitting at */
   let cursor = -1;
-  let enabled = true;
   let capturePending = false;
+
+  const lifecycle = createLifecycle({
+    // toggling changes what canUndo and canRedo answer, so it goes out as a history
+    // change too. consumers that cache those answers off the event (graph-vue) would
+    // otherwise keep offering an undo that no longer does anything.
+    onEnable: () => historyEventHub.emit('onHistoryChanged'),
+    // records already held survive, they are just unreachable until re-enabled
+    onDisable: () => historyEventHub.emit('onHistoryChanged'),
+  });
+
+  lifecycle.enable();
 
   const withoutExcludedPlugins = (payload: Record<string, unknown>) => {
     const result = { ...payload };
@@ -60,7 +71,7 @@ export const history: HistoryPlugin = ({ finalTransit }) => {
   };
 
   const captureSnapshot = () => {
-    if (!enabled || capturePending) return;
+    if (!lifecycle.isEnabled() || capturePending) return;
     capturePending = true;
     // one gesture routinely touches several plugins, each of which asks for a snapshot.
     // deferring to the end of the tick collapses them into a single record by
@@ -93,8 +104,8 @@ export const history: HistoryPlugin = ({ finalTransit }) => {
     return true;
   };
 
-  const canUndo = () => enabled && cursor > 0;
-  const canRedo = () => enabled && cursor < snapshots.length - 1;
+  const canUndo = () => lifecycle.isEnabled() && cursor > 0;
+  const canRedo = () => lifecycle.isEnabled() && cursor < snapshots.length - 1;
 
   const undo = () => {
     if (!canUndo()) return;
@@ -133,22 +144,7 @@ export const history: HistoryPlugin = ({ finalTransit }) => {
       clear,
       recordCount: () => snapshots.length,
       events: historyEventHub,
-      lifecycle: {
-        // toggling changes what canUndo and canRedo answer, so it goes out as a history
-        // change too. consumers that cache those answers off the event (graph-vue) would
-        // otherwise keep offering an undo that no longer does anything.
-        enable: () => {
-          if (enabled) return;
-          enabled = true;
-          historyEventHub.emit('onHistoryChanged');
-        },
-        // records already held survive, they are just unreachable until re-enabled
-        disable: () => {
-          if (!enabled) return;
-          enabled = false;
-          historyEventHub.emit('onHistoryChanged');
-        },
-      },
+      lifecycle,
     },
   };
 };

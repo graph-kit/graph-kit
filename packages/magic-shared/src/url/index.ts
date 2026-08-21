@@ -32,12 +32,16 @@ const requireQuery = (param: string) =>
   nullThrows(query, `url: touched "${param}" before the query was captured`);
 
 /**
- * the captured query as a url suffix, for building hrefs. empty on the server, where
- * there is no query to carry, so a link can be rendered before capture rather than throw.
+ * The captured query as a url suffix, for building hrefs, with anything in `extra`
+ * merged over it for a link that has to carry what the current url does not. Empty on
+ * the server, where there is no query to carry, so a link can be rendered before capture
+ * rather than throw.
  */
-export const queryString = () => {
-  const search = query?.toString();
-  return search ? `?${search}` : '';
+export const queryString = (extra: Record<string, string> = {}) => {
+  const search = new URLSearchParams(query ?? undefined);
+  for (const [param, value] of Object.entries(extra)) search.set(param, value);
+  const rendered = search.toString();
+  return rendered ? `?${rendered}` : '';
 };
 
 export const queryParam = (param: string) => requireQuery(param).get(param);

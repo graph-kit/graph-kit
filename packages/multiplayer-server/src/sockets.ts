@@ -8,6 +8,7 @@ import {
 } from '@multiplayer/protocol/events';
 import {
   ProductId,
+  ProductPresence,
   RoomId,
   RosterEntry,
   UserId,
@@ -21,14 +22,22 @@ import {
   applyProductDocUpdate,
   canRunRoomCommand,
   canWriteProduct,
+  clearDrag,
+  clearPresence,
   createRoom,
   createRoomStore,
   encodeProductDoc,
   encodeProductDocDiff,
+  ensurePresence,
+  expireStaleDrags,
+  hasDrag,
   isHost,
+  presenceIn,
   removeMember,
+  setDrag,
   setMemberDisplayName,
   setMemberProduct,
+  setPresence,
   setTier,
 } from './rooms.ts';
 
@@ -39,6 +48,21 @@ import {
  */
 const productChannel = (roomId: RoomId, productId: ProductId): string =>
   `${roomId}:${productId}`;
+
+/**
+ * How long a drag may go untouched before the room releases it. The backstop for a client
+ * that stopped talking without dropping, which the ping timeout alone would leave holding
+ * nodes for twice as long. Deliberately above any pause a real gesture takes: a drag that
+ * does trip it is revived by its owner's next move, see the `updateDrag` handler.
+ */
+const DRAG_STALE_MS = 5_000;
+const DRAG_SWEEP_INTERVAL_MS = 1_000;
+
+/** overridable so a test can watch a drag go stale without waiting out a real one */
+export type DragSweepOptions = {
+  staleAfterMs?: number;
+  sweepIntervalMs?: number;
+};
 
 /**
  * what a room command aimed at one member needs from that member's own connection, whose
@@ -62,7 +86,7 @@ const joinResultFor = (
 
 export const createSocketServer = (
   httpServer: HttpServer,
-  options: { corsOrigins: string[] },
+  options: { corsOrigins: string[]; dragSweep?: DragSweepOptions },
 ): Server<ClientToServerEvents, ServerToClientEvents> => {
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(
     httpServer,
@@ -78,6 +102,29 @@ export const createSocketServer = (
 
   const rooms = createRoomStore();
 
+  /**
+   * Releases drags whose owner has gone quiet, across every room. Announced with `io`
+   * rather than a relay because there is no socket behind an expiry, which also means
+   * the owner hears its own release: harmless, since a client ignores peer events for
+   * its own id, and it is what lets a stalled client notice it has been let go.
+   */
+  const staleAfterMs = options.dragSweep?.staleAfterMs ?? DRAG_STALE_MS;
+  const sweepIntervalMs =
+    options.dragSweep?.sweepIntervalMs ?? DRAG_SWEEP_INTERVAL_MS;
+
+  const sweepStaleDrags = () => {
+    const now = Date.now();
+    for (const [roomId, room] of rooms.entries()) {
+      const expired = expireStaleDrags(room, now, staleAfterMs);
+      for (const { productId, userId } of expired) {
+        io.to(productChannel(roomId, productId)).emit('dragEnded', { userId });
+      }
+    }
+  };
+
+  // unref'd: sweeping is never a reason for the process to stay alive
+  setInterval(sweepStaleDrags, sweepIntervalMs).unref();
+
   const connections = new Map<UserId, MemberConnection>();
 
   io.on('connection', (socket) => {
@@ -87,7 +134,7 @@ export const createSocketServer = (
     const currentRoom = () =>
       currentRoomId === null ? undefined : rooms.get(currentRoomId);
 
-    /** room wide: roster, presence and disband concern everyone regardless of product */
+    /** room wide: roster and disband concern everyone regardless of product */
     const relayToRoom = <Event extends keyof ServerToClientEvents>(
       event: Event,
       ...args: Parameters<ServerToClientEvents[Event]>
@@ -112,13 +159,71 @@ export const createSocketServer = (
     // no "leave every channel but the room" primitive
     let currentProductId: ProductId | null = null;
 
+    /**
+     * Announces to a product rather than relaying from this socket, because departures
+     * are sent on paths where this connection is already gone or on its way out.
+     */
+    const announceToProduct = <Event extends keyof ServerToClientEvents>(
+      productId: ProductId,
+      event: Event,
+      ...args: Parameters<ServerToClientEvents[Event]>
+    ) => {
+      if (currentRoomId === null) return;
+      io.to(productChannel(currentRoomId, productId)).emit(event, ...args);
+    };
+
+    /**
+     * Drops everything this member was doing on the product and says so there. Every way
+     * of leaving one goes through here, which is what makes drag release total.
+     */
+    const leaveProductChannel = (productId: ProductId) => {
+      if (currentRoomId === null) return;
+
+      const room = currentRoom();
+      if (room) {
+        clearPresence(room, productId, userId);
+        announceToProduct(productId, 'peerLeftProduct', { userId });
+      }
+
+      socket.leave(productChannel(currentRoomId, productId));
+      if (currentProductId === productId) currentProductId = null;
+    };
+
     const enterProductChannel = (productId: ProductId) => {
       if (currentRoomId === null) return;
-      if (currentProductId !== null) {
-        socket.leave(productChannel(currentRoomId, currentProductId));
-      }
+      if (currentProductId !== null) leaveProductChannel(currentProductId);
       currentProductId = productId;
       socket.join(productChannel(currentRoomId, productId));
+
+      const room = currentRoom();
+      if (!room) return;
+
+      // recorded before it is announced, so the next arrival is handed this member too
+      // rather than having to wait for them to move
+      const presence = ensurePresence(room, productId, userId);
+      relayToProduct(productId, 'peerEnteredProduct', { userId, presence });
+    };
+
+    /**
+     * The room and product a presence signal belongs to. Absent for a socket on neither,
+     * whose signals are dropped rather than kept for a product it might enter later.
+     */
+    const presenceTarget = () => {
+      const room = currentRoom();
+      if (!room || currentProductId === null) return;
+      return { room, productId: currentProductId };
+    };
+
+    /** everyone else on the product, since a client tracks peers and never itself */
+    const peerPresenceIn = (room: Room, productId: ProductId) => {
+      const peers: Record<UserId, ProductPresence> = {};
+      for (const [peerId, entry] of Object.entries(
+        presenceIn(room, productId),
+      )) {
+        if (peerId === userId) continue;
+        peers[peerId] = entry;
+      }
+      return peers;
     };
 
     const broadcastRoster = (room: Room) => {
@@ -133,10 +238,8 @@ export const createSocketServer = (
      */
     const evict = (by: RosterEntry) => {
       if (currentRoomId === null) return;
+      if (currentProductId !== null) leaveProductChannel(currentProductId);
       socket.leave(currentRoomId);
-      if (currentProductId !== null) {
-        socket.leave(productChannel(currentRoomId, currentProductId));
-      }
       currentRoomId = null;
       currentProductId = null;
       socket.emit('kicked', { by });
@@ -200,12 +303,21 @@ export const createSocketServer = (
       const room = currentRoom();
       // the same quiet answer syncDoc gives, since an empty product and no room at all
       // leave the client with the same nothing to apply
-      if (!room) return callback(null);
+      if (!room) return callback({ doc: null, presence: {} });
 
       enterProductChannel(productId);
       setMemberProduct(room, userId, productId);
-      callback(encodeProductDoc(room, productId));
+      callback({
+        doc: encodeProductDoc(room, productId),
+        // read after entering, so a peer who left as this call landed is already gone
+        presence: peerPresenceIn(room, productId),
+      });
       broadcastRoster(room);
+    });
+
+    socket.on('leaveProduct', ({ productId }) => {
+      if (currentProductId !== productId) return;
+      leaveProductChannel(productId);
     });
 
     socket.on('docUpdate', ({ productId, update }) => {
@@ -264,8 +376,63 @@ export const createSocketServer = (
       broadcastRoster(room);
     });
 
-    socket.on('updatePresence', (entry) => {
-      relayToRoom('presenceChanged', { userId, entry });
+    socket.on('moveCursor', ({ position }) => {
+      const target = presenceTarget();
+      if (!target) return;
+      setPresence(target.room, target.productId, userId, {
+        cursorPosition: position,
+      });
+      relayToProduct(target.productId, 'cursorMoved', { userId, position });
+    });
+
+    socket.on('moveCamera', ({ camera }) => {
+      const target = presenceTarget();
+      if (!target) return;
+      setPresence(target.room, target.productId, userId, {
+        cameraState: camera,
+      });
+      relayToProduct(target.productId, 'cameraMoved', { userId, camera });
+    });
+
+    socket.on('setAnnotating', ({ isAnnotating }) => {
+      const target = presenceTarget();
+      if (!target) return;
+      setPresence(target.room, target.productId, userId, { isAnnotating });
+      relayToProduct(target.productId, 'annotatingChanged', {
+        userId,
+        isAnnotating,
+      });
+    });
+
+    socket.on('startDrag', ({ elements }) => {
+      const target = presenceTarget();
+      if (!target) return;
+      setDrag(target.room, target.productId, userId, elements, Date.now());
+      relayToProduct(target.productId, 'dragStarted', { userId, elements });
+    });
+
+    socket.on('updateDrag', ({ elements }) => {
+      const target = presenceTarget();
+      if (!target) return;
+
+      // a move for a drag the room has no record of is one the sweep released early.
+      // promoting it back to a start costs peers a blink, where dropping it would leave
+      // the elements unheld for the rest of a gesture that is still very much happening
+      const reviving = !hasDrag(target.room, target.productId, userId);
+      setDrag(target.room, target.productId, userId, elements, Date.now());
+
+      if (reviving) {
+        relayToProduct(target.productId, 'dragStarted', { userId, elements });
+        return;
+      }
+      relayToProduct(target.productId, 'dragMoved', { userId, elements });
+    });
+
+    socket.on('endDrag', () => {
+      const target = presenceTarget();
+      if (!target) return;
+      clearDrag(target.room, target.productId, userId);
+      relayToProduct(target.productId, 'dragEnded', { userId });
     });
 
     socket.on('disconnect', () => {
@@ -273,6 +440,10 @@ export const createSocketServer = (
 
       const room = currentRoom();
       if (!room || currentRoomId === null) return;
+
+      // ahead of the disband check: a host leaving takes the room with it, but everyone
+      // else's release has to land while there is still a product to announce it on
+      if (currentProductId !== null) leaveProductChannel(currentProductId);
 
       if (isHost(room, userId)) {
         io.to(currentRoomId).emit('roomDisbanded');

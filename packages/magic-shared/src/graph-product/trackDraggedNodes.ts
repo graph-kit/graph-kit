@@ -1,15 +1,17 @@
+import { createEventHub } from '@core/events/createEventHub';
 import { DraggedElement } from '@multiplayer/protocol/room';
 
 import { Graph } from '../graph/types.ts';
+import { HostDragEventMap } from '../product/types.ts';
 
 /**
- * Every node a drag is carrying, which is the whole selection when one was grabbed out
- * of a marquee. Positions are read on demand rather than accumulated: only the live one
+ * Turns the graph's node drag into the three moments the room cares about. Positions are
+ * read at the moment each one is announced rather than accumulated: only the live one
  * matters, and it is already in the store.
  */
 export type DraggedNodes = {
   /** for the wire */
-  elements: () => DraggedElement[];
+  events: ReturnType<typeof createEventHub<HostDragEventMap>>;
   /** for deciding whose move wins on a node two people have hold of */
   isDragging: (nodeId: string) => boolean;
 };
@@ -17,20 +19,38 @@ export type DraggedNodes = {
 export const trackDraggedNodes = (graph: Graph): DraggedNodes => {
   let draggedNodeIds = new Set<string>();
 
+  const events = createEventHub<HostDragEventMap>({
+    onDragStarted: new Set(),
+    onDragMoved: new Set(),
+    onDragEnded: new Set(),
+  });
+
+  const elementsAt = (nodeIds: Iterable<string>): DraggedElement[] => {
+    const elements: DraggedElement[] = [];
+    for (const nodeId of nodeIds) {
+      const { x, y } = graph.positions.get(nodeId);
+      elements.push({ id: nodeId, position: { x, y } });
+    }
+    return elements;
+  };
+
   graph.nodeDrag.events.subscribe('onNodeDragStart', (nodes) => {
     draggedNodeIds = new Set(nodes.map((node) => node.id));
+    events.emit('onDragStarted', elementsAt(draggedNodeIds));
+  });
+
+  graph.nodeDrag.events.subscribe('onNodeDragMove', () => {
+    if (draggedNodeIds.size === 0) return;
+    events.emit('onDragMoved', elementsAt(draggedNodeIds));
   });
 
   graph.nodeDrag.events.subscribe('onNodeDrop', () => {
     draggedNodeIds = new Set();
+    events.emit('onDragEnded');
   });
 
   return {
-    elements: () =>
-      [...draggedNodeIds].map((nodeId) => {
-        const { x, y } = graph.positions.get(nodeId);
-        return { id: nodeId, position: { x, y } };
-      }),
+    events,
     isDragging: (nodeId) => draggedNodeIds.has(nodeId),
   };
 };

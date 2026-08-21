@@ -1,12 +1,13 @@
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { DocUpdate, toDocUpdate } from '@multiplayer/protocol/doc';
-import { JoinResult } from '@multiplayer/protocol/events';
+import { JoinResult, ProductEntryState } from '@multiplayer/protocol/events';
 import {
-  PresenceEntry,
   ProductId,
+  ProductPresence,
   RoomMembership,
   UserId,
+  emptyProductPresence,
 } from '@multiplayer/protocol/room';
 import { DEFAULT_TIER } from '@multiplayer/protocol/tiers';
 import { io as connect } from 'socket.io-client';
@@ -41,7 +42,8 @@ export const createMultiplayer = ({
   const events = createEventHub(createMultiplayerEventRegistry());
 
   const membership = ref<RoomMembership | null>(null);
-  const presence = ref<Record<UserId, PresenceEntry>>({});
+  /** peers on the mounted product only, seeded on entry and cleared on the way out */
+  const presence = ref<Record<UserId, ProductPresence>>({});
 
   const mountedProduct = shallowRef<{
     productId: ProductId;
@@ -65,7 +67,18 @@ export const createMultiplayer = ({
       requireSocket().emit('moveUser', { userId: targetId, productId }),
     setDisplayName: (displayName) =>
       requireSocket().emit('setDisplayName', { displayName }),
-    updatePresence: (entry) => requireSocket().emit('updatePresence', entry),
+
+    presence: {
+      moveCursor: (position) =>
+        requireSocket().emit('moveCursor', { position }),
+      moveCamera: (camera) => requireSocket().emit('moveCamera', { camera }),
+      setAnnotating: (isAnnotating) =>
+        requireSocket().emit('setAnnotating', { isAnnotating }),
+      startDrag: (elements) => requireSocket().emit('startDrag', { elements }),
+      updateDrag: (elements) =>
+        requireSocket().emit('updateDrag', { elements }),
+      endDrag: () => requireSocket().emit('endDrag'),
+    },
   };
 
   const room = computed<RoomState>(() => {
@@ -109,6 +122,12 @@ export const createMultiplayer = ({
     mounted.unbind?.();
     mounted.doc.destroy();
     mountedProduct.value = null;
+
+    // presence is the product's, not the room's, so it goes with it. telling the room is
+    // what releases anything this client was still dragging when it unmounted
+    presence.value = {};
+    if (inRoom.value)
+      socket?.emit('leaveProduct', { productId: mounted.productId });
   };
 
   /**
@@ -140,10 +159,64 @@ export const createMultiplayer = ({
       // roster update may land in the gap between a kick or a disband
       if (!membership.value) return;
       membership.value.data = data;
+
+      // backstop: a peerLeftProduct that never landed would otherwise strand a peer on
+      // screen forever, holding whatever they were dragging when they went
+      for (const peerId of Object.keys(presence.value)) {
+        if (data.roster[peerId]) continue;
+        delete presence.value[peerId];
+        events.emit('onPeerLeftProduct', peerId);
+      }
     });
 
-    activeSocket.on('presenceChanged', ({ userId: peerId, entry }) => {
-      presence.value[peerId] = entry;
+    /** a signal can be the first thing heard from a peer, so the entry is made on demand */
+    const peerPresence = (peerId: UserId) =>
+      (presence.value[peerId] ??= emptyProductPresence());
+
+    activeSocket.on('cursorMoved', ({ userId: peerId, position }) => {
+      peerPresence(peerId).cursorPosition = position;
+      events.emit('onPeerCursorMoved', peerId, position);
+    });
+
+    activeSocket.on('cameraMoved', ({ userId: peerId, camera }) => {
+      peerPresence(peerId).cameraState = camera;
+      events.emit('onPeerCameraMoved', peerId, camera);
+    });
+
+    activeSocket.on('annotatingChanged', ({ userId: peerId, isAnnotating }) => {
+      peerPresence(peerId).isAnnotating = isAnnotating;
+      events.emit('onPeerAnnotatingChanged', peerId, isAnnotating);
+    });
+
+    activeSocket.on('dragStarted', ({ userId: peerId, elements }) => {
+      peerPresence(peerId).drag = elements;
+      events.emit('onPeerDragStarted', peerId, elements);
+    });
+
+    activeSocket.on('dragMoved', ({ userId: peerId, elements }) => {
+      peerPresence(peerId).drag = elements;
+      events.emit('onPeerDragMoved', peerId, elements);
+    });
+
+    activeSocket.on('dragEnded', ({ userId: peerId }) => {
+      // the sweep announces to the whole product, this client included, and a release of
+      // our own drag is the local drag plugin's business rather than a peer event
+      if (peerId === membership.value?.userId) return;
+      peerPresence(peerId).drag = null;
+      events.emit('onPeerDragEnded', peerId);
+    });
+
+    activeSocket.on(
+      'peerEnteredProduct',
+      ({ userId: peerId, presence: entry }) => {
+        presence.value[peerId] = entry;
+        events.emit('onPeerEnteredProduct', peerId);
+      },
+    );
+
+    activeSocket.on('peerLeftProduct', ({ userId: peerId }) => {
+      delete presence.value[peerId];
+      events.emit('onPeerLeftProduct', peerId);
     });
 
     activeSocket.on('docUpdated', ({ productId, update }) => {
@@ -222,7 +295,7 @@ export const createMultiplayer = ({
   const adoptRoomProduct = async ({ productId, host }: ProductBinding) => {
     events.emit('onPendingStarted');
     try {
-      const update = await requestFromServer<DocUpdate | null>((respond) =>
+      const state = await requestFromServer<ProductEntryState>((respond) =>
         requireSocket()
           .timeout(ACK_TIMEOUT_MS)
           .emit('enterProduct', { productId }, respond),
@@ -231,8 +304,14 @@ export const createMultiplayer = ({
       openProduct({ productId, host }, (doc) => {
         // absent when nobody in the room has opened this product yet, which leaves the
         // document empty and makes this product seed it instead
-        if (update) Y.applyUpdate(doc, toDocUpdate(update), REMOTE_ORIGIN);
+        if (state.doc)
+          Y.applyUpdate(doc, toDocUpdate(state.doc), REMOTE_ORIGIN);
       });
+
+      // what everyone on the product is already doing, so a peer sitting perfectly still
+      // is on screen from the first frame rather than once they happen to move
+      presence.value = state.presence;
+      events.emit('onPresenceSeeded');
     } finally {
       events.emit('onPendingEnded');
     }

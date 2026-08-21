@@ -1,7 +1,10 @@
 import { DocStateVector, DocUpdate } from './doc.ts';
 import {
-  PresenceEntry,
+  CameraState,
+  DraggedElement,
+  Point,
   ProductId,
+  ProductPresence,
   RoomData,
   RoomId,
   RoomMembership,
@@ -40,8 +43,15 @@ export type ClientToServerEvents = {
    */
   enterProduct: (
     options: { productId: ProductId },
-    callback: (doc: DocUpdate | null) => void,
+    callback: (state: ProductEntryState) => void,
   ) => void;
+
+  /**
+   * Unmounting a product without leaving the room. The server cannot derive this, and
+   * without it a departed member keeps their presence, and any drag, on a product they
+   * are no longer looking at.
+   */
+  leaveProduct: (options: { productId: ProductId }) => void;
 
   /**
    * One product's local changes. Merged into the server's copy and relayed, with no
@@ -69,8 +79,33 @@ export type ClientToServerEvents = {
   kickUser: (options: { userId: UserId }) => void;
   moveUser: (options: { userId: UserId; productId: ProductId }) => void;
 
-  /** ungated and high frequency, deliberately off the command path */
-  updatePresence: (entry: PresenceEntry) => void;
+  /**
+   * Presence, one event per signal. All ungated, all high frequency, all deliberately
+   * off the command path, and all scoped to the product channel: what a user is doing
+   * means nothing to somebody looking at a different product.
+   */
+  moveCursor: (options: { position: Point | null }) => void;
+  moveCamera: (options: { camera: CameraState }) => void;
+  setAnnotating: (options: { isAnnotating: boolean }) => void;
+
+  /**
+   * A drag as a lifecycle rather than a field that empties, so peers can listen for the
+   * moment one begins and ends instead of diffing for it. `updateDrag` for a user with
+   * no drag on record is promoted to a start, which is what lets the staleness sweep
+   * release a drag without the gesture being lost for good if it guessed early.
+   */
+  startDrag: (options: { elements: DraggedElement[] }) => void;
+  updateDrag: (options: { elements: DraggedElement[] }) => void;
+  endDrag: () => void;
+};
+
+/**
+ * Everything a product needs on arrival: the document to adopt, absent when nobody has
+ * opened this product in the room yet, and what everyone already on it is doing.
+ */
+export type ProductEntryState = {
+  doc: DocUpdate | null;
+  presence: Record<UserId, ProductPresence>;
 };
 
 export type ServerToClientEvents = {
@@ -78,7 +113,38 @@ export type ServerToClientEvents = {
   docUpdated: (options: { productId: ProductId; update: DocUpdate }) => void;
 
   rosterChanged: (data: RoomData) => void;
-  presenceChanged: (options: { userId: UserId; entry: PresenceEntry }) => void;
+
+  /** presence, mirroring the client signals one for one */
+  cursorMoved: (options: { userId: UserId; position: Point | null }) => void;
+  cameraMoved: (options: { userId: UserId; camera: CameraState }) => void;
+  annotatingChanged: (options: {
+    userId: UserId;
+    isAnnotating: boolean;
+  }) => void;
+
+  dragStarted: (options: {
+    userId: UserId;
+    elements: DraggedElement[];
+  }) => void;
+  dragMoved: (options: { userId: UserId; elements: DraggedElement[] }) => void;
+  dragEnded: (options: { userId: UserId }) => void;
+
+  /**
+   * this user is on the product now. announced rather than left to be inferred from
+   * their first signal, so somebody who has arrived and not moved yet is still known
+   * to be here. carries their presence for symmetry with the entry payload, which is
+   * empty on a first arrival and is whatever the room kept for them otherwise
+   */
+  peerEnteredProduct: (options: {
+    userId: UserId;
+    presence: ProductPresence;
+  }) => void;
+
+  /**
+   * this user is no longer on the product, whether they navigated, disconnected or were
+   * kicked. the one signal that clears a peer wholesale, drag included
+   */
+  peerLeftProduct: (options: { userId: UserId }) => void;
 
   /**
    * Sent to the one member being moved, never the room. Carries a productId and never a

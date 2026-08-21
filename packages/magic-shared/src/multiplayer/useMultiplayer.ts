@@ -39,12 +39,9 @@ export const useMultiplayer = ({
 
   usePeerDrags({ binding, multiplayer: product, surface: host.surface });
 
-  // the surface is all presence needs, so every host broadcasts it rather than only the
-  // ones backed by a graph
   if (product) {
     usePresenceBroadcast({
       surface: host.surface,
-      productId,
       multiplayer: product,
       host: host.multiplayer,
       annotations: host.annotations,

@@ -1,9 +1,8 @@
-import { nullThrows } from '@core/utils/assert';
 import {
   createMultiplayer,
   provideMultiplayer,
 } from '@magic/shared/multiplayer';
-import { manifests } from '@magic/shared/product';
+import { assertIsProductId } from '@magic/shared/product/manifests/isValidProductId';
 import { navigateToProduct } from '@magic/shared/ui';
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -13,11 +12,8 @@ export default defineNuxtPlugin((nuxtApp) => {
   const multiplayer = createMultiplayer({
     serverUrl,
     onMovedToProduct: (productId) => {
-      const manifest = nullThrows(
-        manifests[productId as keyof typeof manifests],
-        `could not find product manifest with productId ${productId}`,
-      );
-      navigateToProduct(manifest);
+      assertIsProductId(productId);
+      navigateToProduct(productId);
     },
   });
 

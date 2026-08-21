@@ -4,11 +4,14 @@ import {
   toDocUpdate,
 } from '@multiplayer/protocol/doc';
 import {
+  DraggedElement,
   ProductId,
+  ProductPresence,
   RoomData,
   RoomId,
   RosterEntry,
   UserId,
+  emptyProductPresence,
 } from '@multiplayer/protocol/room';
 import {
   AssignableTier,
@@ -21,11 +24,33 @@ import {
 } from '@multiplayer/protocol/tiers';
 import * as Y from 'yjs';
 
+/**
+ * everything one product in a room holds: the state everyone shares, and what each
+ * member is doing in it right now. presence lives here rather than on the room because
+ * it means nothing to a member looking at a different product
+ */
+export type ProductRoom = {
+  doc: Y.Doc;
+  presence: Record<UserId, ProductPresence>;
+  /** server only, never on the wire: what {@link expireStaleDrags} reads */
+  dragTouchedAt: Record<UserId, number>;
+};
+
 export type Room = {
   data: RoomData;
-  /** one document per product, so a room can hold several without them interfering */
-  products: Record<ProductId, Y.Doc>;
+  /** one entry per product, so a room can hold several without them interfering */
+  products: Record<ProductId, ProductRoom>;
 };
+
+const createProductRoom = (doc: Y.Doc): ProductRoom => ({
+  doc,
+  presence: {},
+  dragTouchedAt: {},
+});
+
+/** created on first reach, so a product nobody has opened yet costs nothing */
+const productIn = (room: Room, productId: ProductId): ProductRoom =>
+  (room.products[productId] ??= createProductRoom(new Y.Doc()));
 
 export const createRoom = (options: {
   hostId: UserId;
@@ -47,7 +72,7 @@ export const createRoom = (options: {
   // only the product the host was looking at is seeded, every other product's document is
   // created lazily on its first update so no product needs a declarable empty state
   products: {
-    [options.productId]: docFromUpdate(options.doc),
+    [options.productId]: createProductRoom(docFromUpdate(options.doc)),
   },
 });
 
@@ -100,9 +125,9 @@ export const encodeProductDoc = (
   room: Room,
   productId: ProductId,
 ): DocUpdate | null => {
-  const doc = room.products[productId];
-  if (!doc) return null;
-  return Y.encodeStateAsUpdate(doc);
+  const product = room.products[productId];
+  if (!product) return null;
+  return Y.encodeStateAsUpdate(product.doc);
 };
 
 /** only what the client is missing, which is what makes a reconnect cheap */
@@ -111,9 +136,9 @@ export const encodeProductDocDiff = (
   productId: ProductId,
   stateVector: DocStateVector,
 ): DocUpdate | null => {
-  const doc = room.products[productId];
-  if (!doc) return null;
-  return Y.encodeStateAsUpdate(doc, toDocUpdate(stateVector));
+  const product = room.products[productId];
+  if (!product) return null;
+  return Y.encodeStateAsUpdate(product.doc, toDocUpdate(stateVector));
 };
 
 /**
@@ -126,8 +151,7 @@ export const applyProductDocUpdate = (
   productId: ProductId,
   update: DocUpdate,
 ): void => {
-  const doc = (room.products[productId] ??= new Y.Doc());
-  Y.applyUpdate(doc, toDocUpdate(update));
+  Y.applyUpdate(productIn(room, productId).doc, toDocUpdate(update));
 };
 
 /** ungated: a display name authorizes nothing */
@@ -169,6 +193,112 @@ export const setTier = (
   return true;
 };
 
+/** what everyone on a product is doing, for a client that has just arrived on it */
+export const presenceIn = (
+  room: Room,
+  productId: ProductId,
+): Record<UserId, ProductPresence> => room.products[productId]?.presence ?? {};
+
+/**
+ * Makes sure the room knows this member is on the product, whether or not they have sent
+ * a signal yet. Without it a member who arrives and sits still is indistinguishable from
+ * one who is not here at all, both to the peers already on the product and to whoever
+ * arrives next.
+ */
+export const ensurePresence = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+): ProductPresence =>
+  (productIn(room, productId).presence[userId] ??= emptyProductPresence());
+
+/**
+ * Merges one signal into a member's presence, seeding an entry for a member the product
+ * has not heard from yet. Partial because each signal owns exactly one field and must
+ * leave the rest of what the room knows alone.
+ */
+export const setPresence = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+  patch: Partial<ProductPresence>,
+): void => {
+  const product = productIn(room, productId);
+  const entry = (product.presence[userId] ??= emptyProductPresence());
+  Object.assign(entry, patch);
+};
+
+/** the drag alone, so the sweep can release one without forgetting where a member is */
+export const setDrag = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+  elements: DraggedElement[],
+  now: number,
+): void => {
+  setPresence(room, productId, userId, { drag: elements });
+  productIn(room, productId).dragTouchedAt[userId] = now;
+};
+
+export const clearDrag = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+): void => {
+  const product = room.products[productId];
+  if (!product) return;
+  const entry = product.presence[userId];
+  if (entry) entry.drag = null;
+  delete product.dragTouchedAt[userId];
+};
+
+/**
+ * @returns whether the server already knows about a drag for this member, which is what
+ * separates a move that continues a gesture from one that has to revive it
+ */
+export const hasDrag = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+): boolean => room.products[productId]?.presence[userId]?.drag != null;
+
+/** everything one member was doing on a product, for a departure of any kind */
+export const clearPresence = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+): void => {
+  const product = room.products[productId];
+  if (!product) return;
+  delete product.presence[userId];
+  delete product.dragTouchedAt[userId];
+};
+
+export type ExpiredDrag = { productId: ProductId; userId: UserId };
+
+/**
+ * Releases every drag nobody has touched lately, which is the backstop for a client that
+ * stopped talking without dropping. A live drag is touched on every move, so this only
+ * reaches one whose owner has gone quiet.
+ *
+ * @returns what it released, since each one has to be announced on its own product
+ */
+export const expireStaleDrags = (
+  room: Room,
+  now: number,
+  staleAfterMs: number,
+): ExpiredDrag[] => {
+  const expired: ExpiredDrag[] = [];
+  for (const [productId, product] of Object.entries(room.products)) {
+    for (const [userId, touchedAt] of Object.entries(product.dragTouchedAt)) {
+      if (now - touchedAt <= staleAfterMs) continue;
+      clearDrag(room, productId, userId);
+      expired.push({ productId, userId });
+    }
+  }
+  return expired;
+};
+
 /** every live room, held in memory: a redeploy drops all of them, by design */
 export type RoomStore = {
   get: (roomId: RoomId) => Room | undefined;
@@ -176,6 +306,8 @@ export type RoomStore = {
   /** disband retains nothing */
   delete: (roomId: RoomId) => void;
   has: (roomId: RoomId) => boolean;
+  /** every room at once, which only the drag sweep has a use for */
+  entries: () => [RoomId, Room][];
 };
 
 export const createRoomStore = (): RoomStore => {
@@ -190,5 +322,6 @@ export const createRoomStore = (): RoomStore => {
       roomIdToRoom.delete(roomId);
     },
     has: (roomId) => roomIdToRoom.has(roomId),
+    entries: () => [...roomIdToRoom.entries()],
   };
 };

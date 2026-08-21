@@ -147,6 +147,8 @@ export const nodeDrag =
           update: (pos) => ({ x: pos.x + dx, y: pos.y + dy }),
         })),
       );
+
+      nodeDragEventHub.emit('onNodeDragMove', nodes);
     };
 
     const cursorTheme = createDragThemer(controls, dragState);

@@ -26,6 +26,7 @@ const seedDoc = () => {
 const seedRoom = (): Room =>
   createRoom({
     hostId: 'host-1',
+    hostToken: 'host-token',
     displayName: 'Professor',
     productId: 'traversals',
     doc: Y.encodeStateAsUpdate(seedDoc()),
@@ -61,8 +62,8 @@ describe('membership', () => {
     const room = seedRoom();
     const entry = addMember(room, {
       userId: 'user-2',
+      token: 'user-2-token',
       displayName: 'Student',
-      productId: 'traversals',
     });
 
     expect(entry.tier).toBe('read');
@@ -81,8 +82,8 @@ describe('membership', () => {
     const room = seedRoom();
     addMember(room, {
       userId: 'user-2',
+      token: 'user-2-token',
       displayName: 'Student',
-      productId: 'traversals',
     });
     removeMember(room, 'user-2');
 
@@ -95,8 +96,8 @@ describe('setTier', () => {
     const room = seedRoom();
     addMember(room, {
       userId: 'user-2',
+      token: 'user-2-token',
       displayName: 'Student',
-      productId: 'traversals',
     });
     return room;
   };
@@ -184,6 +185,7 @@ describe('applyProductDocUpdate', () => {
     const roomFromSeed = () =>
       createRoom({
         hostId: 'host-1',
+        hostToken: 'host-token',
         displayName: 'Professor',
         productId: 'traversals',
         doc: seed,

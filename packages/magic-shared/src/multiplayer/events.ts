@@ -1,4 +1,5 @@
 import { EventMapToEventRegistry } from '@core/events/types';
+import { DisbandReason } from '@multiplayer/protocol/events';
 import {
   CameraState,
   DraggedElement,
@@ -17,6 +18,12 @@ export type MultiplayerEventMap = {
    * did it, which the roster cannot answer afterwards since the room is already gone
    */
   onKicked: (kickedBy: RosterEntry) => void;
+  /**
+   * the room itself ended, which nobody in it chose. carries why, since a host closing
+   * the session and a room timing out around people who are still sitting in it read as
+   * completely different things to the person it happens to
+   */
+  onRoomDisbanded: (reason: DisbandReason) => void;
   /** bracket the wait for room state that is mid flight */
   onPendingStarted: () => void;
   onPendingEnded: () => void;
@@ -54,6 +61,7 @@ export const createMultiplayerEventRegistry = (): MultiplayerEventRegistry => ({
   onRoomJoined: new Set(),
   onRoomLeft: new Set(),
   onKicked: new Set(),
+  onRoomDisbanded: new Set(),
   onPendingStarted: new Set(),
   onPendingEnded: new Set(),
   onPeerCursorMoved: new Set(),

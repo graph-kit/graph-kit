@@ -1,4 +1,10 @@
-import { ProductId, RosterEntry, UserId } from '@multiplayer/protocol/room';
+import {
+  ProductId,
+  RosterEntry,
+  Seat,
+  SeatToken,
+  UserId,
+} from '@multiplayer/protocol/room';
 import {
   AssignableTier,
   DEFAULT_TIER,
@@ -13,21 +19,51 @@ import { Room } from './rooms.ts';
 
 export const addMember = (
   room: Room,
-  options: { userId: UserId; displayName: string },
+  options: { userId: UserId; token: SeatToken; displayName: string },
 ): RosterEntry => {
   const entry: RosterEntry = {
     userId: options.userId,
     displayName: options.displayName,
     tier: DEFAULT_TIER,
     productId: null,
+    connected: true,
   };
   room.data.roster[options.userId] = entry;
+  room.seatTokens[options.userId] = options.token;
   return entry;
 };
 
 /** roster removal only; a non host leaving never disbands anything */
 export const removeMember = (room: Room, userId: UserId): void => {
   delete room.data.roster[userId];
+  delete room.seatTokens[userId];
+};
+
+/**
+ * The seat stays, its owner does not. Everything that makes them who they are to the rest
+ * of the room is left untouched, which is the entire point: this is what they come back to.
+ */
+export const markDisconnected = (room: Room, userId: UserId): void => {
+  const entry = room.data.roster[userId];
+  if (!entry) return;
+  entry.connected = false;
+};
+
+/**
+ * Sitting back down. Refused for a seat that is still occupied as well as for one that
+ * cannot be proven: the live case is somebody claiming a seat out from under its owner,
+ * which a second tab does by accident and anybody holding a leaked token does on purpose.
+ */
+export const reclaimSeat = (
+  room: Room,
+  seat: Seat,
+): RosterEntry | undefined => {
+  const entry = room.data.roster[seat.userId];
+  if (!entry || entry.connected) return;
+  if (room.seatTokens[seat.userId] !== seat.token) return;
+
+  entry.connected = true;
+  return entry;
 };
 
 /** host is a singleton set at room creation and never reassigned */

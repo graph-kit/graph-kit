@@ -21,6 +21,7 @@
   import MeBadge from './MeBadge.vue';
   import MoveUser from './MoveUser.vue';
   import ProductBadge from './ProductBadge.vue';
+  import ReconnectingBadge from './ReconnectingBadge.vue';
   import TierBadge from './TierBadge.vue';
   import TierEdit from './TierEdit.vue';
 
@@ -58,12 +59,15 @@
       <HStack
         class="w-full hover:bg-gray-300 dark:hover:bg-gray-900 py-1 px-2 cursor-pointer justify-between rounded-md"
       >
-        <TruncatedText>{{ member.displayName }}</TruncatedText>
+        <TruncatedText :class="{ 'opacity-50': !member.connected }">
+          {{ member.displayName }}
+        </TruncatedText>
         <HStack
           gap="1"
           class="shrink-0"
         >
           <MeBadge v-if="isMe" />
+          <ReconnectingBadge v-else-if="!member.connected" />
           <ProductBadge
             v-else-if="member.productId"
             :product-id="member.productId"

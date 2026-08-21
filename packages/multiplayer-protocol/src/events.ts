@@ -9,6 +9,7 @@ import {
   RoomId,
   RoomMembership,
   RosterEntry,
+  Seat,
   UserId,
 } from './room.ts';
 import { AssignableTier } from './tiers.ts';
@@ -31,10 +32,23 @@ export type ClientToServerEvents = {
     callback: (membership: RoomMembership) => void,
   ) => void;
 
+  /**
+   * A seat is claimed rather than requested: the server admits the claim only for a seat
+   * that exists, matches the token and has nobody sitting in it, and quietly seats the
+   * arrival somewhere new otherwise. A client cannot know which of those happened before
+   * it asks, so both cases answer with the same result and the identity it must adopt.
+   */
   joinRoom: (
-    options: RoomEntryOptions & { roomId: RoomId },
+    options: RoomEntryOptions & { roomId: RoomId; seat?: Seat },
     callback: (result: JoinResult) => void,
   ) => void;
+
+  /**
+   * Departure that was chosen, which a dropped connection is not. Without it the server
+   * cannot tell somebody who is done with a room from somebody whose train went into a
+   * tunnel, and would have to guess which of the two should keep their seat.
+   */
+  leaveRoom: () => void;
 
   /**
    * Reports that this user navigated, which the server cannot derive. Separate from
@@ -159,5 +173,17 @@ export type ServerToClientEvents = {
    * still resolve a user id into a person.
    */
   kicked: (options: { by: RosterEntry }) => void;
-  roomDisbanded: () => void;
+
+  /**
+   * The room is gone and every seat in it with it. A union rather than a flag so a third
+   * cause has to be answered for at the handler instead of falling through as a host
+   * leaving, which is the one a client would otherwise assume.
+   */
+  roomDisbanded: (options: { reason: DisbandReason }) => void;
 };
+
+/**
+ * `hostLeft` is chosen and immediate; `inactivity` is the room timing out, which can
+ * happen to members who are still connected and simply idle
+ */
+export type DisbandReason = 'hostLeft' | 'inactivity';

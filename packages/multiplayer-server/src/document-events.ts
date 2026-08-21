@@ -11,7 +11,7 @@ export const registerDocumentEvents = ({
 }: Connection) => {
   socket.on('docUpdate', ({ productId, update }) => {
     const current = room();
-    if (!current || !canWriteProduct(current, userId)) return;
+    if (!current || !canWriteProduct(current, userId())) return;
 
     applyProductDocUpdate(current, productId, update);
     relayToProduct(productId, 'docUpdated', { productId, update });

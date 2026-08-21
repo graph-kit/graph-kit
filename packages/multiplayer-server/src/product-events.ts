@@ -22,7 +22,7 @@ export const registerProductEvents = ({
     if (!current) return callback({ doc: null, presence: {} });
 
     enterProduct(target);
-    setMemberProduct(current, userId, target);
+    setMemberProduct(current, userId(), target);
     callback({
       doc: encodeProductDoc(current, target),
       // read after entering, so a peer who left as this call landed is already gone

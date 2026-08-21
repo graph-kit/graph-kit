@@ -60,9 +60,13 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     if (surfaceArea < 100) return;
     const targetedItems: string[] = [];
 
-    for (const { id, shape } of controls.surface.aggregator.aggregator()) {
-      // the aggregator carries overlays too, including marquee's own box
+    for (const {
+      id,
+      shape,
+      paintOnly,
+    } of controls.surface.aggregator.aggregator()) {
       if (!controls.isNode(id) && !controls.isEdge(id)) continue;
+      if (paintOnly) continue;
       const inSelectionBox = shape.overlapsBox(box);
       if (inSelectionBox) targetedItems.push(id);
     }
@@ -116,6 +120,19 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     return aggregator;
   };
 
+  // the box only offers up what the pointer could still reach on its own, and a paint
+  // only node is out of reach however it came to be selected
+  const selectableFocusedNodeIds = () => {
+    const focusedIds = new Set(
+      controls.focus.focusedNodes().map(({ id }) => id),
+    );
+    const selectable: string[] = [];
+    for (const { id, paintOnly } of controls.surface.aggregator.aggregator()) {
+      if (!paintOnly && focusedIds.has(id)) selectable.push(id);
+    }
+    return selectable;
+  };
+
   const getSelectionBoxSchema = (box: BoundingBox): CanvasElement => {
     const id = 'selection-box';
     const shape = controls.surface.shapes.rect({
@@ -133,9 +150,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       shape,
       priority: 3,
       data: {
-        [NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD]: controls.focus
-          .focusedNodes()
-          .map((n) => n.id),
+        [NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD]: selectableFocusedNodeIds(),
         [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: theme._resolveToken(
           'marquee.selection.cursor',
         ),

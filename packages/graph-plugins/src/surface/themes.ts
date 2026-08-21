@@ -1,4 +1,4 @@
-import type { FontWeight } from '@canvas/primitives/text/types';
+import type { FontFamily, FontWeight } from '@canvas/primitives/text/types';
 import type { ElementsUnderCursor } from '@canvas/surface/events/index';
 import { Coordinate } from '@canvas/surface/types';
 import {
@@ -18,6 +18,7 @@ type TextStyleValues = {
   textSize: number;
   textColor: Color;
   textFontWeight: FontWeight;
+  textFontFamily: FontFamily;
 };
 
 type NodeStyleValues = TextStyleValues & {
@@ -65,6 +66,7 @@ export type SurfaceThemes = {
   'node.default.text.size': NodeThemeValues['textSize'];
   'node.default.text.color': NodeThemeValues['textColor'];
   'node.default.text.fontWeight': NodeThemeValues['textFontWeight'];
+  'node.default.text.fontFamily': NodeThemeValues['textFontFamily'];
   'node.default.size': NodeThemeValues['size'];
   'node.default.border.width': NodeThemeValues['borderWidth'];
   'node.default.border.color': NodeThemeValues['borderColor'];
@@ -75,6 +77,7 @@ export type SurfaceThemes = {
   'node.hover.text.size': NodeThemeValues['textSize'];
   'node.hover.text.color': NodeThemeValues['textColor'];
   'node.hover.text.fontWeight': NodeThemeValues['textFontWeight'];
+  'node.hover.text.fontFamily': NodeThemeValues['textFontFamily'];
   'node.hover.size': NodeThemeValues['size'];
   'node.hover.border.width': NodeThemeValues['borderWidth'];
   'node.hover.border.color': NodeThemeValues['borderColor'];
@@ -85,6 +88,7 @@ export type SurfaceThemes = {
   'edge.default.text.size': EdgeThemeValues['textSize'];
   'edge.default.text.color': EdgeThemeValues['textColor'];
   'edge.default.text.fontWeight': EdgeThemeValues['textFontWeight'];
+  'edge.default.text.fontFamily': EdgeThemeValues['textFontFamily'];
   'edge.default.color': EdgeThemeValues['color'];
   'edge.default.width': EdgeThemeValues['width'];
   'edge.default.cursor': EdgeThemeValues['cursor'];
@@ -93,6 +97,7 @@ export type SurfaceThemes = {
   'edge.hover.text.size': EdgeThemeValues['textSize'];
   'edge.hover.text.color': EdgeThemeValues['textColor'];
   'edge.hover.text.fontWeight': EdgeThemeValues['textFontWeight'];
+  'edge.hover.text.fontFamily': EdgeThemeValues['textFontFamily'];
   'edge.hover.color': EdgeThemeValues['color'];
   'edge.hover.width': EdgeThemeValues['width'];
   'edge.hover.cursor': EdgeThemeValues['cursor'];
@@ -142,6 +147,10 @@ export const createSurfaceDetectors = (
           hovered(node.id)
             ? resolveToken('node.hover.text.fontWeight', node)
             : undefined,
+        'node.text.fontFamily': (node) =>
+          hovered(node.id)
+            ? resolveToken('node.hover.text.fontFamily', node)
+            : undefined,
       },
       edge: {
         'edge.color': (edge) =>
@@ -168,6 +177,10 @@ export const createSurfaceDetectors = (
           hovered(edge.id)
             ? resolveToken('edge.hover.text.fontWeight', edge)
             : undefined,
+        'edge.text.fontFamily': (edge) =>
+          hovered(edge.id)
+            ? resolveToken('edge.hover.text.fontFamily', edge)
+            : undefined,
       },
     },
     default: {
@@ -187,6 +200,8 @@ export const createSurfaceDetectors = (
           resolveToken('node.default.text.color', node),
         'node.text.fontWeight': (node) =>
           resolveToken('node.default.text.fontWeight', node),
+        'node.text.fontFamily': (node) =>
+          resolveToken('node.default.text.fontFamily', node),
       },
       edge: {
         'edge.color': (edge) => resolveToken('edge.default.color', edge),
@@ -200,6 +215,8 @@ export const createSurfaceDetectors = (
           resolveToken('edge.default.text.color', edge),
         'edge.text.fontWeight': (edge) =>
           resolveToken('edge.default.text.fontWeight', edge),
+        'edge.text.fontFamily': (edge) =>
+          resolveToken('edge.default.text.fontFamily', edge),
       },
     },
   };
@@ -211,6 +228,7 @@ export const createSurfaceThemeOverrides =
     'node.default.text.size': [],
     'node.default.text.color': [],
     'node.default.text.fontWeight': [],
+    'node.default.text.fontFamily': [],
     'node.default.size': [],
     'node.default.border.width': [],
     'node.default.border.color': [],
@@ -221,6 +239,7 @@ export const createSurfaceThemeOverrides =
     'node.hover.text.size': [],
     'node.hover.text.color': [],
     'node.hover.text.fontWeight': [],
+    'node.hover.text.fontFamily': [],
     'node.hover.size': [],
     'node.hover.border.width': [],
     'node.hover.border.color': [],
@@ -231,6 +250,7 @@ export const createSurfaceThemeOverrides =
     'edge.default.text.size': [],
     'edge.default.text.color': [],
     'edge.default.text.fontWeight': [],
+    'edge.default.text.fontFamily': [],
     'edge.default.color': [],
     'edge.default.width': [],
     'edge.default.cursor': [],
@@ -239,6 +259,7 @@ export const createSurfaceThemeOverrides =
     'edge.hover.text.size': [],
     'edge.hover.text.color': [],
     'edge.hover.text.fontWeight': [],
+    'edge.hover.text.fontFamily': [],
     'edge.hover.color': [],
     'edge.hover.width': [],
     'edge.hover.cursor': [],

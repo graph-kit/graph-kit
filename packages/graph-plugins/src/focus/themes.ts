@@ -8,6 +8,7 @@ export type FocusThemes = {
   'node.focus.text.size': NodeThemeValues['textSize'];
   'node.focus.text.color': NodeThemeValues['textColor'];
   'node.focus.text.fontWeight': NodeThemeValues['textFontWeight'];
+  'node.focus.text.fontFamily': NodeThemeValues['textFontFamily'];
   'node.focus.size': NodeThemeValues['size'];
   'node.focus.border.width': NodeThemeValues['borderWidth'];
   'node.focus.border.color': NodeThemeValues['borderColor'];
@@ -17,6 +18,7 @@ export type FocusThemes = {
   'edge.focus.text.size': EdgeThemeValues['textSize'];
   'edge.focus.text.color': EdgeThemeValues['textColor'];
   'edge.focus.text.fontWeight': EdgeThemeValues['textFontWeight'];
+  'edge.focus.text.fontFamily': EdgeThemeValues['textFontFamily'];
   'edge.focus.color': EdgeThemeValues['color'];
   'edge.focus.width': EdgeThemeValues['width'];
   'edge.focus.cursor': EdgeThemeValues['cursor'];
@@ -60,6 +62,10 @@ export const createFocusDetectors = (
         isFocused(node.id)
           ? resolveToken('node.focus.text.fontWeight', node)
           : undefined,
+      'node.text.fontFamily': (node) =>
+        isFocused(node.id)
+          ? resolveToken('node.focus.text.fontFamily', node)
+          : undefined,
     },
     edge: {
       'edge.color': (edge) =>
@@ -86,6 +92,10 @@ export const createFocusDetectors = (
         isFocused(edge.id)
           ? resolveToken('edge.focus.text.fontWeight', edge)
           : undefined,
+      'edge.text.fontFamily': (edge) =>
+        isFocused(edge.id)
+          ? resolveToken('edge.focus.text.fontFamily', edge)
+          : undefined,
     },
   },
 });
@@ -95,6 +105,7 @@ export const createFocusThemeOverrides = (): ThemeOverrides<FocusThemes> => ({
   'node.focus.text.size': [],
   'node.focus.text.color': [],
   'node.focus.text.fontWeight': [],
+  'node.focus.text.fontFamily': [],
   'node.focus.size': [],
   'node.focus.border.width': [],
   'node.focus.border.color': [],
@@ -104,6 +115,7 @@ export const createFocusThemeOverrides = (): ThemeOverrides<FocusThemes> => ({
   'edge.focus.text.size': [],
   'edge.focus.text.color': [],
   'edge.focus.text.fontWeight': [],
+  'edge.focus.text.fontFamily': [],
   'edge.focus.color': [],
   'edge.focus.width': [],
   'edge.focus.cursor': [],

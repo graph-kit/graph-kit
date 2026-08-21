@@ -16,6 +16,7 @@ export const createNodeStyleResolver =
         fontSize: resolveToken('node.text.size', node),
         color: resolveToken('node.text.color', node),
         fontWeight: resolveToken('node.text.fontWeight', node),
+        fontFamily: resolveToken('node.text.fontFamily', node),
       },
     }) as const;
 
@@ -30,5 +31,6 @@ export const createEdgeStyleResolver =
         fontSize: resolveToken('edge.text.size', edge),
         color: resolveToken('edge.text.color', edge),
         fontWeight: resolveToken('edge.text.fontWeight', edge),
+        fontFamily: resolveToken('edge.text.fontFamily', edge),
       },
     }) as const;

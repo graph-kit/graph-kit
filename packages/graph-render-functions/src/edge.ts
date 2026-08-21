@@ -108,6 +108,7 @@ export const createEdgeRenderFunction: CreateEdgeRenderFunction = ({
     const labelled = layout?.labelled ?? true;
     const textArea: TextArea | undefined = getValue(labelled, edge)
       ? {
+          id: edge.id,
           color: 'none',
           activeColor: labelTextInputColor(edge),
           textBlock: styles.text,

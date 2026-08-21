@@ -6,7 +6,7 @@ import type { TextArea, TextBlock } from './types.ts';
 
 export const TEXTAREA_DEFAULTS = {
   activeColor: 'white',
-} as const satisfies Omit<TextArea, 'textBlock'>;
+} as const satisfies Omit<TextArea, 'textBlock' | 'id'>;
 
 export const TEXT_BLOCK_DEFAULTS = {
   fontSize: 12,
@@ -20,6 +20,7 @@ export const TEXT_BLOCK_DEFAULTS = {
  * absence is itself the instruction to paint no matte
  */
 export type TextAreaWithDefaults = {
+  id: TextArea['id'];
   textBlock: Required<TextBlock>;
   color?: TextArea['color'];
   activeColor: string;
@@ -29,6 +30,7 @@ export type TextAreaWithDefaults = {
 export type PlacedTextArea = TextAreaWithDefaults & AnchorPoint;
 
 const getTextAreaWithDefaults = (textArea: TextArea): TextAreaWithDefaults => ({
+  id: textArea.id,
   textBlock: {
     ...TEXT_BLOCK_DEFAULTS,
     ...textArea.textBlock,

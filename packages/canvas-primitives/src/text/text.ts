@@ -3,6 +3,7 @@ import type { DeepReadonly } from 'ts-essentials';
 import { rect } from '../shapes/rect/index.ts';
 import type { ShapeTextProps } from '../types/index.ts';
 import type { Coordinate } from '../types/utility.ts';
+import { isTextAreaActive } from './activeTextArea.ts';
 import { createTextarea } from './createTextarea.ts';
 import type { PlacedTextArea, TextAreaWithDefaults } from './defaults.ts';
 import { drawWithNoMatte } from './drawWithNoMatte.ts';
@@ -49,7 +50,14 @@ export const getShapeTextProps = (
     fillColor: isNoMatte ? undefined : placedTextArea.color,
   });
 
-  const drawText = drawTextWithTextArea(placedTextArea, dimensions);
+  const drawCommittedText = drawTextWithTextArea(placedTextArea, dimensions);
+
+  // an engaged text area is painted by the html input sitting over it, whose
+  // content and width are both ahead of what the shape was built from
+  const drawText = (ctx: CanvasRenderingContext2D) => {
+    if (isTextAreaActive(ctx, placedTextArea.id)) return;
+    drawCommittedText(ctx);
+  };
 
   const drawTextArea = (ctx: CanvasRenderingContext2D) => {
     textAreaMatte.draw(ctx);

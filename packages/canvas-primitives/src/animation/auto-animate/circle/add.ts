@@ -13,6 +13,7 @@ export const circleAdd: Timeline<'circle'> = {
       properties: {
         radius: 0,
         textArea: (ta) => ({
+          id: ta.id,
           color: tinycolor(ta.color).setAlpha(0).toRgbString(),
           activeColor: ta.activeColor,
           textBlock: {

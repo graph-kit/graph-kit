@@ -112,8 +112,10 @@ export const useMagicProduct = (
         color: 'white',
       };
 
+      const nameTagId = userId + '_nameTag';
+
       const el: CanvasElement = {
-        id: userId + '_nameTag',
+        id: nameTagId,
         priority: Infinity,
         paintOnly: true,
         shape: rect({
@@ -122,7 +124,7 @@ export const useMagicProduct = (
           width: getTextDimensions(textBlock).width + NAME_TAG_PADDING_X * 2,
           fillColor: tierColor[roster[userId].tier],
           borderRadius: 5,
-          textArea: { textBlock },
+          textArea: { id: nameTagId, textBlock },
         }),
       };
       agg.push(el);

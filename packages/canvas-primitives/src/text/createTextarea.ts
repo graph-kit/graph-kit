@@ -2,6 +2,7 @@ import { getClientCoordinates } from '@core/utils/canvas/index';
 
 import { isPointInBoundingBox } from '../helpers.ts';
 import type { BoundingBox } from '../types/utility.ts';
+import { clearActiveTextArea, setActiveTextArea } from './activeTextArea.ts';
 import type { PlacedTextArea } from './defaults.ts';
 import { getTextDimensions } from './getTextDimensions.ts';
 import { HORIZONTAL_TEXT_PADDING } from './text.ts';
@@ -12,15 +13,18 @@ export const createTextarea = (
   onTextAreaBlur: OnTextAreaBlur,
   textArea: PlacedTextArea,
 ) => {
-  const { at, textBlock, activeColor: bgColor } = textArea;
+  const { id, at, textBlock, activeColor: bgColor } = textArea;
 
   const { width, descent } = getTextDimensions(textBlock);
   const { clientX, clientY, zoom } = getClientCoordinates(at, ctx);
 
   const { color: textColor, content, fontSize, fontWeight } = textBlock;
 
+  const minWidth = fontSize * 2 * zoom;
+  const horizontalPadding = HORIZONTAL_TEXT_PADDING * zoom;
+
   const inputWidth = Math.round(
-    Math.max(fontSize * 2, width + HORIZONTAL_TEXT_PADDING) * zoom,
+    Math.max(width * zoom + horizontalPadding, minWidth),
   );
   const inputHeight = Math.round(fontSize * 2 * zoom);
 
@@ -29,8 +33,8 @@ export const createTextarea = (
   input.style.position = 'absolute';
   input.style.left = `${clientX}px`;
   input.style.top = `${clientY}px`;
-  input.style.width = `${Math.round(inputWidth)}px`;
-  input.style.height = `${Math.round(inputHeight)}px`;
+  input.style.width = `${inputWidth}px`;
+  input.style.height = `${inputHeight}px`;
   input.style.zIndex = '1000';
 
   input.style.resize = 'none';
@@ -59,7 +63,14 @@ export const createTextarea = (
 
   const adjustSize = () => {
     const currentWidth = parseFloat(input.style.width);
-    const newWidth = Math.max(input.scrollWidth, fontSize * 2);
+
+    // scrollWidth never reports less than the width already set, so collapse before measuring
+    input.style.width = '0px';
+    const contentWidth = input.scrollWidth;
+
+    const newWidth = Math.round(
+      Math.max(contentWidth + horizontalPadding, minWidth),
+    );
 
     const deltaWidth = newWidth - currentWidth;
     input.style.left = `${parseFloat(input.style.left) - deltaWidth / 2}px`;
@@ -71,6 +82,7 @@ export const createTextarea = (
 
   const removeInput = () => {
     input.onblur = null;
+    clearActiveTextArea(id);
     onTextAreaBlur(input.value);
     document.removeEventListener('mousedown', handleMouseDown);
     document.removeEventListener('wheel', removeInput);
@@ -111,6 +123,8 @@ export const createTextarea = (
 
   document.addEventListener('mousedown', handleMouseDown);
   document.addEventListener('wheel', removeInput, { passive: true });
+
+  setActiveTextArea({ canvas: ctx.canvas, textAreaId: id });
 
   document.body.appendChild(input);
   setTimeout(() => {

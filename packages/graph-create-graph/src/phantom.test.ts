@@ -1,5 +1,7 @@
-import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
-import { CanvasElement } from '@canvas/primitives/aggregator/types';
+import {
+  AggregatorControls,
+  createAggregator,
+} from '@canvas/primitives/aggregator/index';
 import { createThemeController } from '@core/themes/index';
 import { core } from '@graph/core/index';
 import { phantom } from '@graph/plugins/phantom/index';
@@ -11,24 +13,29 @@ import { foldPlugins } from './fold-plugins.ts';
 import { createGraphTransit } from './graph-transit.ts';
 
 // phantom only reaches for the aggregator and the theme layer, so the rest of the real
-// surface plugin (a live surface, a renderer, hit testing) is not worth standing up here
-const createSurfaceStub = (transformers: AggregatorTransformer[]) => () => ({
+// surface plugin (a live surface, hit testing) is not worth standing up here. the
+// aggregator itself is the real one, so a render pass sorts by priority like production
+const rendererStub = {
+  beginFrame: () => {},
+  endFrame: () => {},
+  drawGroup: () => {},
+};
+
+const createSurfaceStub = (aggregator: AggregatorControls) => () => ({
   name: 'surface',
   controls: {
-    aggregator: {
-      addTransformer: (fn: AggregatorTransformer) => transformers.push(fn),
-    },
+    aggregator,
     theme: createThemeController(createSurfaceThemeOverrides()),
   },
 });
 
 const setup = () => {
   const coreGraph = core({});
-  const transformers: AggregatorTransformer[] = [];
+  const aggregator = createAggregator(rendererStub);
 
   const folded = foldPlugins(
     coreGraph,
-    [createSurfaceStub(transformers), phantom] as any,
+    [createSurfaceStub(aggregator), phantom] as any,
     { '': { surface: {} } },
     () => '',
   );
@@ -60,11 +67,10 @@ const setup = () => {
     transit,
     positions: coreGraph.controls.positions,
     phantom: folded.controls.phantom as PhantomControls,
-    render: () =>
-      transformers.reduce<CanvasElement[]>(
-        (elements, transform) => transform(elements),
-        [],
-      ),
+    render: () => {
+      aggregator.draw({} as CanvasRenderingContext2D);
+      return aggregator.aggregator();
+    },
   };
 };
 
@@ -262,11 +268,12 @@ describe('phantom', () => {
 
       const drawn = graph.render();
 
-      expect(idsOf(drawn)).toEqual(['pn1', 'pn2', 'pe1']);
+      // paint order, so the edge leads on its lower priority
+      expect(idsOf(drawn)).toEqual(['pe1', 'pn1', 'pn2']);
       expect(drawn.map((element) => element.shape)).toMatchObject([
-        { drew: 'node' },
-        { drew: 'node' },
         { drew: 'edge' },
+        { drew: 'node' },
+        { drew: 'node' },
       ]);
     });
 

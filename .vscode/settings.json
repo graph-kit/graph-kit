@@ -63,7 +63,8 @@
     "unshifts",
     "unvalidated",
     "usetoast",
-    "Warshall"
+    "Warshall",
+    "xsmall"
   ],
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",

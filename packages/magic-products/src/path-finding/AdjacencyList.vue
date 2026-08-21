@@ -101,7 +101,7 @@
       <span
         v-else
         class="font-bold text-lg"
-        >No nodes to display an adjacency list</span
+        >Add Nodes For Adjacency List</span
       >
     </div>
   </Well>

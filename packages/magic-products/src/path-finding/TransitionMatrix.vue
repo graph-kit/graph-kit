@@ -78,7 +78,6 @@
 
   type CellSize = 'xsmall' | 'small' | 'medium' | 'large';
 
-  // TODO: handle overflow with component: https://github.com/graph-kit/graph-kit/issues/909
   const cellSizeConfig: Record<
     CellSize,
     { headerClass: string; dataClass: string; nodeScale: number }
@@ -212,7 +211,7 @@
     <span
       v-else
       class="font-bold text-lg"
-      >No nodes to display a transition matrix</span
+      >Add Nodes For Transition Matrix</span
     >
   </Well>
 </template>

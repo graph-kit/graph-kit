@@ -17,6 +17,7 @@ import {
   MARQUEE_SHAPE_ID,
   MIN_MARQUEE_EXTENT,
 } from './constants.ts';
+import { createCursorThemer } from './createCursorThemer.ts';
 import { createMarqueeEventRegistry } from './events.ts';
 import { getSelectionBox, getSurfaceArea } from './helpers.ts';
 import { createMarqueeThemeOverrides } from './themes.ts';
@@ -27,12 +28,6 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   const marqueeEventHub = createEventHub(marqueeEventRegistry);
 
   const theme = createThemeController(createMarqueeThemeOverrides());
-
-  // canvas.cursor, not element data: the pointer rides the box's corner, right on
-  // the hit test boundary
-  const cursorLayer = controls.surface.theme.createLayer(
-    `${MARQUEE_PLUGIN_ID}/cursor`,
-  );
 
   let marqueeBox: BoundingBox | undefined = undefined;
   let selectionBox: BoundingBox | undefined = undefined;
@@ -195,12 +190,14 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   controls.surface.aggregator.transformers.push(addSelectionBoxToAggregator);
   controls.surface.aggregator.transformers.push(addMarqueeBoxToAggregator);
 
+  const cursorTheme = createCursorThemer(
+    controls,
+    theme,
+    () => marqueeBoxHasMoved,
+  );
+
   const onEnable = () => {
-    cursorLayer.set('canvas.cursor', () =>
-      marqueeBoxHasMoved
-        ? theme._resolveToken('marquee.drag.cursor')
-        : undefined,
-    );
+    cursorTheme.enable();
 
     controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
 
@@ -251,7 +248,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     events._internal.core.unsubscribe('onNodeMoveStream', updateSelectionBox);
 
     disengageMarqueeBox();
-    cursorLayer.removeAll();
+    cursorTheme.disable();
   };
 
   const lifecycle = createLifecycle({

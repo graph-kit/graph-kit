@@ -22,6 +22,8 @@ export type AggregatorControls = {
    * unregisters a {@link AggregatorTransformer | transformer}, leaving the order of the
    * remaining ones untouched. a no-op if it was never added
    *
+   * ℹ️ removes a single registration, so a transformer added twice must be removed twice
+   *
    * @param fn the same function reference that was handed to {@link AggregatorControls.addTransformer | addTransformer}
    * @example removeTransformer(myTransformer)
    */
@@ -40,7 +42,9 @@ export const createAggregator = (
   const transformers: AggregatorTransformer[] = [];
 
   const updateAggregator = () => {
-    const resolvedCanvasElements = transformers.reduce<Aggregator>(
+    // snapshot: a transformer that adds or removes one mid pass would otherwise
+    // shift the indicies out from under the reduce
+    const resolvedCanvasElements = [...transformers].reduce<Aggregator>(
       (acc, fn) => fn(acc),
       [],
     );

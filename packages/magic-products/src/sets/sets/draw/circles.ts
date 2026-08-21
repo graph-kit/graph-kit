@@ -30,6 +30,7 @@ export const drawSetDefinitionCircle = (
       lineWidth: OUTLINE_WIDTH,
     },
     textArea: {
+      id: setDefinition.id,
       textBlock: {
         content: setDefinition.label,
         fontSize: LABEL_FONT_SIZE,

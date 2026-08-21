@@ -17,9 +17,20 @@ export type TextBlock = {
 };
 
 /**
+ * identifies a {@link TextArea} across however many shapes are built from it.
+ * consumers are free to rebuild a shape whenever they like, so this is the
+ * only thread tying the text area being edited to the one about to be painted
+ */
+export type TextAreaId = string;
+
+/**
  * a box that wraps some text without an {@link AnchorPoint}
  */
 export type TextArea = {
+  /**
+   * unique identifier for this text area
+   */
+  id: TextAreaId;
   /**
    * the text areas inner text
    */

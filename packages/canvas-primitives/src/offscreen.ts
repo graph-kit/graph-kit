@@ -25,6 +25,16 @@ const createScratchCtx = () => {
 const scratchByDepth: CanvasRenderingContext2D[] = [];
 let depth = 0;
 
+const targetByScratch = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+
+/**
+ * the canvas a draw is ultimately for. a scratch pass hands its own canvas to
+ * everything drawing into it, so anything asking which surface it is painting
+ * for has to be told the one being composited onto
+ */
+export const getTargetCanvas = (canvas: HTMLCanvasElement) =>
+  targetByScratch.get(canvas) ?? canvas;
+
 const prepare = (
   scratch: CanvasRenderingContext2D,
   ctx: CanvasRenderingContext2D,
@@ -43,6 +53,8 @@ const prepare = (
   // the previous user may have left this mid punch
   scratch.globalCompositeOperation = 'source-over';
   scratch.setTransform(ctx.getTransform());
+
+  targetByScratch.set(scratch.canvas, getTargetCanvas(ctx.canvas));
 };
 
 /**

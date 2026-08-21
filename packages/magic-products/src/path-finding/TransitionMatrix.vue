@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { nullThrows } from '@core/utils/assert';
   import Node from '@magic/shared/Node';
   import Tooltip from '@magic/shared/Tooltip';
   import VStack from '@magic/shared/VStack';
@@ -18,18 +19,18 @@
   const labelOf = (id: GNode['id']) => graph.getNode(id).label;
 
   const matrixRows = computed(() =>
-    nodeIds.value.map((fromId, fromIndex) => ({
-      id: fromId,
-      fromIndex,
-      cells: nodeIds.value.map((toId, toIndex) => ({
-        id: toId,
-        edge: grid.value[fromIndex][toIndex],
+    nodeIds.value.map((sourceId, sourceIndex) => ({
+      id: sourceId,
+      fromIndex: sourceIndex,
+      cells: nodeIds.value.map((targetId, targetIndex) => ({
+        id: targetId,
+        edge: grid.value[sourceIndex][targetIndex],
       })),
     })),
   );
 
-  const cellLabel = (fromId: GNode['id'], toId: GNode['id']) =>
-    `${labelOf(fromId)}→${labelOf(toId)}`;
+  const cellLabel = (sourceId: GNode['id'], targetId: GNode['id']) =>
+    `${labelOf(sourceId)}→${labelOf(targetId)}`;
 
   const transitionMatrixIndexOf = computed(() => {
     const map = new Map<string, number>();
@@ -37,69 +38,100 @@
     return map;
   });
 
-  const cellText = (fromId: GNode['id'], toId: GNode['id']) => {
-    const fromIndex = transitionMatrixIndexOf.value.get(fromId)!;
-    const toIndex = transitionMatrixIndexOf.value.get(toId)!;
-    return graph.transitionMatrix.value[fromIndex][toIndex].toFraction();
+  const cellText = (sourceId: GNode['id'], targetId: GNode['id']) => {
+    const targetIndex = nullThrows(
+      transitionMatrixIndexOf.value.get(targetId),
+      `no matrix index for node ${targetId}`,
+    );
+    const sourceIndex = nullThrows(
+      transitionMatrixIndexOf.value.get(sourceId),
+      `no matrix index for node ${sourceId}`,
+    );
+    return graph.transitionMatrix.value[sourceIndex][targetIndex].toFraction();
   };
 
   const focusEdge = (edgeId: string) => graph.focus.set([edgeId]);
 
-  const focusFromState = (fromId: GNode['id'], fromIndex: number) => {
-    const edgeIds = grid.value[fromIndex]
-      .map((edge, toIndex) =>
-        edge && nodeIds.value[toIndex] !== fromId ? edge.id : undefined,
+  const focusSourceNodeAndOutboundEdges = (
+    sourceId: GNode['id'],
+    sourceIndex: number,
+  ) => {
+    const edgeIds = grid.value[sourceIndex]
+      .map((edge, targetIndex) =>
+        edge && nodeIds.value[targetIndex] !== sourceId ? edge.id : undefined,
       )
-      .filter((id): id is string => id !== undefined);
-    graph.focus.set([fromId, ...edgeIds]);
+      .filter((id) => id !== undefined);
+    graph.focus.set([sourceId, ...edgeIds]);
   };
 
-  const focusToState = (toId: GNode['id'], toIndex: number) => {
+  const focusTargetNodeAndInboundEdges = (
+    targetId: GNode['id'],
+    targetIndex: number,
+  ) => {
     const edgeIds = grid.value
-      .map((row, fromIndex) =>
-        row[toIndex] && nodeIds.value[fromIndex] !== toId
-          ? row[toIndex]!.id
+      .map((row, sourceIndex) =>
+        row[targetIndex] && nodeIds.value[sourceIndex] !== targetId
+          ? row[targetIndex].id
           : undefined,
       )
-      .filter((id): id is string => id !== undefined);
-    graph.focus.set([toId, ...edgeIds]);
+      .filter((id) => id !== undefined);
+    graph.focus.set([targetId, ...edgeIds]);
+  };
+
+  type CellSize = 'xsmall' | 'small' | 'medium' | 'large';
+
+  // TODO: handle overflow with component: https://github.com/graph-kit/graph-kit/issues/909
+  const cellSizeConfig: Record<
+    CellSize,
+    { headerClass: string; dataClass: string; nodeScale: number }
+  > = {
+    xsmall: {
+      headerClass: 'size-6 text-xs',
+      dataClass: 'size-6 max-w-6 text-xs',
+      nodeScale: 0.325,
+    },
+    small: {
+      headerClass: 'size-8 text-sm',
+      dataClass: 'size-8 max-w-8 text-sm',
+      nodeScale: 0.5,
+    },
+    medium: {
+      headerClass: 'size-10',
+      dataClass: 'size-10 max-w-10',
+      nodeScale: 0.625,
+    },
+    large: {
+      headerClass: 'size-12',
+      dataClass: 'size-12 max-w-12',
+      nodeScale: 0.75,
+    },
   };
 
   const density = computed(() => {
     const count = graph.nodes.value.length;
-    if (count > 12) return { cellSize: 6, nodeScale: 0.325 };
-    if (count > 7) return { cellSize: 8, nodeScale: 0.5 };
-    if (count > 5) return { cellSize: 10, nodeScale: 0.625 };
-    return { cellSize: 12, nodeScale: 0.75 };
+    const cellSize: CellSize =
+      count > 12
+        ? 'xsmall'
+        : count > 7
+          ? 'small'
+          : count > 5
+            ? 'medium'
+            : 'large';
+    return cellSizeConfig[cellSize];
   });
 
-  // TODO: handle overflow with component: https://github.com/graph-kit/graph-kit/issues/909
-  const sizeClasses: Record<number, string> = {
-    6: 'size-6 text-xs',
-    8: 'size-8 text-sm',
-    10: 'size-10',
-    12: 'size-12',
-  };
-  const dataCellSizeClasses: Record<number, string> = {
-    6: 'size-6 max-w-6 text-xs',
-    8: 'size-8 max-w-8 text-sm',
-    10: 'size-10 max-w-10',
-    12: 'size-12 max-w-12',
-  };
-
-  const headerCellClass = computed(() => sizeClasses[density.value.cellSize]);
+  const headerCellClass = computed(() => density.value.headerClass);
   const columnHeaderCellClass = computed(
     () =>
-      // I don't like this being hard coded, suggestions welcome. I couldn't find a constant anywhere. could forego the feature if thats more practical
       `${headerCellClass.value} sticky top-0 z-10 bg-gray-200 dark:bg-gray-800`,
   );
   const emptyCellClass = computed(
     () =>
-      `${sizeClasses[density.value.cellSize]} rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
+      `${density.value.headerClass} rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
   );
   const dataCellClass = computed(
     () =>
-      `${dataCellSizeClasses[density.value.cellSize]} overflow-hidden rounded-sm text-center font-bold text-white tabular-nums`,
+      `${density.value.dataClass} overflow-hidden rounded-sm text-center font-bold text-white tabular-nums`,
   );
 </script>
 
@@ -115,7 +147,7 @@
                 v-for="(toId, toIndex) in nodeIds"
                 :key="toId"
                 :class="columnHeaderCellClass"
-                @click="focusToState(toId, toIndex)"
+                @click="focusTargetNodeAndInboundEdges(toId, toIndex)"
               >
                 <Node
                   :id="toId"
@@ -131,7 +163,7 @@
             >
               <th
                 :class="headerCellClass"
-                @click="focusFromState(row.id, row.fromIndex)"
+                @click="focusSourceNodeAndOutboundEdges(row.id, row.fromIndex)"
               >
                 <Node
                   :id="row.id"
@@ -145,7 +177,7 @@
                 <TransitionMatrixCell
                   v-if="cell.edge"
                   :edge-id="cell.edge.id"
-                  v-slot="{ color, cursor, setHovered }"
+                  v-slot="{ color, cursor }"
                 >
                   <Tooltip
                     :label="cellLabel(row.id, cell.id)"
@@ -156,8 +188,6 @@
                         :class="dataCellClass"
                         :style="{ backgroundColor: color, cursor }"
                         @click="focusEdge(cell.edge.id)"
-                        @mouseenter="setHovered(true)"
-                        @mouseleave="setHovered(false)"
                       >
                         <span class="block truncate">{{
                           cellText(row.id, cell.id)

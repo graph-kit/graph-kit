@@ -4,18 +4,18 @@ import { CURSOR } from '@core/utils/cursor';
 import { PluginThemes } from '@graph/plugins-shared/plugins';
 import { AnchorsPlugin } from '@graph/plugins/anchors/types';
 import { AnnotationsPlugin } from '@graph/plugins/annotations/types';
-import { CanvasPlugin } from '@graph/plugins/canvas/types';
 import { FocusPlugin } from '@graph/plugins/focus/types';
 import { MarqueePlugin } from '@graph/plugins/marquee/types';
+import { SurfacePlugin } from '@graph/plugins/surface/types';
 
 import { shared } from './shared.ts';
 
 type PinkPreset = PluginThemes<
-  [CanvasPlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin, AnnotationsPlugin]
+  [SurfacePlugin, FocusPlugin, MarqueePlugin, AnchorsPlugin, AnnotationsPlugin]
 >;
 
 export const pink = {
-  canvas: {
+  surface: {
     'canvas.color': colors.PINK_300,
     'canvas.cursor': CURSOR_FALLBACK,
     'canvas.patternColor': (alpha) => colors.PURPLE_200 + alpha,
@@ -24,6 +24,7 @@ export const pink = {
     'edge.default.cursor': shared.edge.cursor,
     'edge.default.text.color': shared.edge.text.color,
     'edge.default.text.content': shared.edge.text.content,
+    'edge.default.text.fontFamily': shared.edge.text.fontFamily,
     'edge.default.text.fontWeight': shared.edge.text.fontWeight,
     'edge.default.text.size': shared.edge.text.size,
     'edge.default.width': shared.edge.width,
@@ -32,6 +33,7 @@ export const pink = {
     'edge.hover.cursor': shared.edge.cursor,
     'edge.hover.text.color': shared.edge.text.color,
     'edge.hover.text.content': shared.edge.text.content,
+    'edge.hover.text.fontFamily': shared.edge.text.fontFamily,
     'edge.hover.text.fontWeight': shared.edge.text.fontWeight,
     'edge.hover.text.size': shared.edge.text.size,
     'edge.hover.width': shared.edge.width,
@@ -43,6 +45,7 @@ export const pink = {
     'node.default.size': shared.node.size,
     'node.default.text.color': shared.node.text.color,
     'node.default.text.content': shared.node.text.content,
+    'node.default.text.fontFamily': shared.node.text.fontFamily,
     'node.default.text.fontWeight': shared.node.text.fontWeight,
     'node.default.text.size': shared.node.text.size,
 
@@ -53,6 +56,7 @@ export const pink = {
     'node.hover.size': shared.node.size,
     'node.hover.text.color': shared.node.text.color,
     'node.hover.text.content': shared.node.text.content,
+    'node.hover.text.fontFamily': shared.node.text.fontFamily,
     'node.hover.text.fontWeight': shared.node.text.fontWeight,
     'node.hover.text.size': shared.node.text.size,
   },
@@ -61,6 +65,7 @@ export const pink = {
     'edge.focus.cursor': shared.edge.cursor,
     'edge.focus.text.color': colors.PURPLE_600,
     'edge.focus.text.content': shared.edge.text.content,
+    'edge.focus.text.fontFamily': shared.edge.text.fontFamily,
     'edge.focus.text.fontWeight': shared.edge.text.fontWeight,
     'edge.focus.text.size': shared.edge.text.size,
     'edge.focus.width': shared.edge.width,
@@ -72,6 +77,7 @@ export const pink = {
     'node.focus.size': shared.node.size,
     'node.focus.text.color': colors.PURPLE_900,
     'node.focus.text.content': shared.node.text.content,
+    'node.focus.text.fontFamily': shared.node.text.fontFamily,
     'node.focus.text.fontWeight': shared.node.text.fontWeight,
     'node.focus.text.size': shared.node.text.size,
   },
@@ -82,6 +88,7 @@ export const pink = {
     'marquee.drag.border.color': colors.PINK_500,
     'marquee.drag.border.width': 1,
     'marquee.drag.color': colors.PINK_300 + '15',
+    'marquee.drag.cursor': CURSOR.CROSSHAIR,
 
     'marquee.selection.border.color': colors.PINK_700,
     'marquee.selection.border.width': 1,

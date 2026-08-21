@@ -1,12 +1,12 @@
+import { Aggregator } from '@canvas/primitives/aggregator/types';
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
-import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '../canvas/aggregator/createAggregator.ts';
-import { Aggregator } from '../canvas/aggregator/types.ts';
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
-import { GraphUnderCursor } from '../canvas/types.ts';
+import { GraphUnderCursor } from '../surface/types.ts';
 import {
   ANNOTATION_HANDLER_PRIORITY,
   ANNOTATION_PLUGIN_ID,
@@ -24,19 +24,17 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   const theme = createThemeController(createAnnotationsThemeOverrides());
 
   const engine = createAnnotations({
-    surface: controls.canvas.surface,
+    surface: controls.surface,
     eraserOutlineColor: () =>
       theme._resolveToken('annotations.eraser.outline.color'),
   });
 
-  const cursorLayer = controls.canvas.theme.createLayer(
+  const cursorLayer = controls.surface.theme.createLayer(
     ANNOTATION_THEME_LAYER_ID,
   );
 
-  let enabled = true;
-
   const beginStroke = (
-    { coords, event }: CanvasGraphMouseEvent,
+    { coords, event }: ElementMouseEvent,
     consume: () => void,
   ) => {
     if (event.button !== MOUSE_BUTTONS.left) return;
@@ -66,38 +64,32 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   // not clickable and the tool cursors are not elements the pointer can land on
   const addAnnotationsToAggregator = (aggregator: Aggregator) => {
     for (const element of engine.canvasElements()) {
-      aggregator.push({
-        ...element,
-        data: {
-          ...element.data,
-          [CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY]: true,
-        },
-      });
+      aggregator.push({ ...element, paintOnly: true });
     }
     return aggregator;
   };
 
-  controls.canvas.aggregator.transformers.push(addAnnotationsToAggregator);
+  controls.surface.aggregator.addTransformer(addAnnotationsToAggregator);
 
   const captureSnapshot = () => controls.history?.captureSnapshot();
 
   const activate = () => {
-    if (!enabled) return;
+    if (!lifecycle.isEnabled()) return;
     engine.activate();
 
     cursorLayer.set('canvas.cursor', () => engine.cursor());
 
-    const { events } = controls.canvas;
+    const { elements } = controls.surface.events;
     const priority = ANNOTATION_HANDLER_PRIORITY;
-    events.handle('onMouseDown', beginStroke, ANNOTATION_PLUGIN_ID, priority);
-    events.handle(
-      'onGraphUnderCursorChange',
+    elements.handle('onMouseDown', beginStroke, ANNOTATION_PLUGIN_ID, priority);
+    controls.surface.events.elements.handle(
+      'onElementsUnderCursorChange',
       extendStroke,
       ANNOTATION_PLUGIN_ID,
       priority,
     );
-    events.handle('onMouseUp', endStroke, ANNOTATION_PLUGIN_ID, priority);
-    events.handle('onClick', swallowClick, ANNOTATION_PLUGIN_ID, priority);
+    elements.handle('onMouseUp', endStroke, ANNOTATION_PLUGIN_ID, priority);
+    elements.handle('onClick', swallowClick, ANNOTATION_PLUGIN_ID, priority);
   };
 
   const deactivate = () => {
@@ -105,17 +97,28 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
     cursorLayer.removeAll();
 
-    const { events } = controls.canvas;
-    events.unhandle('onMouseDown', beginStroke);
-    events.unhandle('onGraphUnderCursorChange', extendStroke);
-    events.unhandle('onMouseUp', endStroke);
-    events.unhandle('onClick', swallowClick);
+    const { elements } = controls.surface.events;
+    elements.unhandle('onMouseDown', beginStroke);
+    controls.surface.events.elements.unhandle(
+      'onElementsUnderCursorChange',
+      extendStroke,
+    );
+    elements.unhandle('onMouseUp', endStroke);
+    elements.unhandle('onClick', swallowClick);
   };
 
   const toggle = () => {
     if (engine.isActive()) deactivate();
     else activate();
   };
+
+  const lifecycle = createLifecycle({
+    // enabling only restores the ability to activate, the tools stay put away until asked
+    onEnable: () => {},
+    onDisable: deactivate,
+  });
+
+  lifecycle.enable();
 
   engine.events.subscribe('onAnnotationsChanged', captureSnapshot);
 
@@ -132,15 +135,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
       deactivate,
       toggle,
       theme,
-      lifecycle: {
-        enable: () => {
-          enabled = true;
-        },
-        disable: () => {
-          enabled = false;
-          deactivate();
-        },
-      },
+      lifecycle,
     },
   };
 };

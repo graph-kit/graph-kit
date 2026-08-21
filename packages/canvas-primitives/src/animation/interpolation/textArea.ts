@@ -57,6 +57,7 @@ export const interpolateTextArea: InterpolationFunction<
     const { textBlock } = fallback;
 
     return {
+      id: fallback.id,
       textBlock: {
         ...textBlock,
         color: textColor(progress),

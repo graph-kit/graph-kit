@@ -15,4 +15,4 @@ export const HISTORY_PLUGIN_ID = 'plugins/history';
  * TODO this belongs on the plugin rather than in a list here. a plugin should declare
  * whether the state it owns is history relevant alongside its transit controls.
  */
-export const PLUGINS_EXCLUDED_FROM_HISTORY: string[] = ['canvas'];
+export const PLUGINS_EXCLUDED_FROM_HISTORY: string[] = ['surface'];

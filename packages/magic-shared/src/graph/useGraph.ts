@@ -1,12 +1,9 @@
-import { useCanvasSurface } from '@canvas/surface/index';
-import { CanvasSurface } from '@canvas/surface/types';
 import { CoreOptions } from '@graph/core/options';
 import { createGraph } from '@graph/create-graph/index';
 import { adjacencyLists } from '@graph/plugins/adjacency-lists/index';
 import { anchors } from '@graph/plugins/anchors/index';
 import { animation } from '@graph/plugins/animation/index';
 import { annotations } from '@graph/plugins/annotations/index';
-import { canvas } from '@graph/plugins/canvas/index';
 import { characteristics } from '@graph/plugins/characteristics/index';
 import { focus } from '@graph/plugins/focus/index';
 import { history } from '@graph/plugins/history/index';
@@ -20,6 +17,8 @@ import { NodeDragOptions } from '@graph/plugins/node-drag/options';
 import { nodeLabel } from '@graph/plugins/node-label/index';
 import { createPhantomAwareEdgeRenderFunction } from '@graph/plugins/phantom/createPhantomAwareEdgeRenderFunction';
 import { phantom } from '@graph/plugins/phantom/index';
+import { readonly } from '@graph/plugins/readonly/index';
+import { surface } from '@graph/plugins/surface/index';
 import { transitionMatrix } from '@graph/plugins/transition-matrix/index';
 import { dark } from '@graph/theme-presets/dark/index';
 import { light } from '@graph/theme-presets/light/index';
@@ -42,10 +41,8 @@ export type UseGraphOptions = {
   minimumSpanningTrees?: Partial<MinimumSpanningTreesOptions>;
 };
 
-const graphPlugins = (
-  options: UseGraphOptions & { canvasSurface: CanvasSurface },
-) => [
-  canvas(options.canvasSurface),
+const graphPlugins = (options: UseGraphOptions) => [
+  surface,
   history,
   focus,
   marquee,
@@ -60,11 +57,10 @@ const graphPlugins = (
   animation,
   phantom,
   minimumSpanningTrees(options.minimumSpanningTrees ?? {}),
+  readonly,
 ];
 
-const createGraphWithPlugins = (
-  options: UseGraphOptions & { canvasSurface: CanvasSurface },
-) => {
+const createGraphWithPlugins = (options: UseGraphOptions) => {
   const graph = createGraph({
     coreOptions: options.core ?? {},
     plugins: graphPlugins(options),
@@ -79,13 +75,9 @@ const createGraphWithPlugins = (
 };
 
 export const useGraph = (options: UseGraphOptions = {}) => {
-  const canvasSurface = useCanvasSurface();
-
-  const graph = createGraphWithPlugins({ ...options, canvasSurface });
+  const graph = createGraphWithPlugins(options);
 
   useGraphDevTools(graph);
-
-  canvasSurface.draw.content.value = graph.canvas.aggregator.draw;
 
   const vueActivePreset = useCreateGraphActivePreset(graph.theme);
   const vueNodesEdges = useNodesEdges(graph);

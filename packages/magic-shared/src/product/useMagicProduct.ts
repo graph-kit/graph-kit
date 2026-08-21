@@ -1,3 +1,12 @@
+import {
+  AggregatorTransformer,
+  CanvasElement,
+} from '@canvas/primitives/aggregator/types';
+import { rect } from '@canvas/primitives/shapes/rect/index';
+import { TEXT_BLOCK_DEFAULTS } from '@canvas/primitives/text/defaults';
+import { getTextDimensions } from '@canvas/primitives/text/getTextDimensions';
+import type { TextBlock } from '@canvas/primitives/text/types';
+
 import { onMounted } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
@@ -12,6 +21,7 @@ import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
+import { tierColor } from '../ui/multiplayer/tier.ts';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
 import { resolveProductFlags } from './flags.ts';
@@ -19,6 +29,16 @@ import { useProductHistory } from './internals/useProductHistory.ts';
 import { useProductLocalStorage } from './internals/useProductLocalStorage.ts';
 import { manifests } from './manifests/index.ts';
 import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
+
+const NAME_TAG_HEIGHT = 20;
+const NAME_TAG_PADDING_X = 8;
+const NAME_TAG_MAX_CHARS = 10;
+const NAME_TAG_TRUNCATED_CHARS = 8;
+
+const toDisplayedName = (name: string) =>
+  name.length > NAME_TAG_MAX_CHARS
+    ? `${name.slice(0, NAME_TAG_TRUNCATED_CHARS)}...`
+    : name;
 
 export const useMagicProduct = (
   host: MagicProductHost,
@@ -74,6 +94,47 @@ export const useMagicProduct = (
     localStorage,
     multiplayer,
   };
+
+  const nameTagElement: AggregatorTransformer = (agg) => {
+    if (!magic.multiplayer?.room.state.value.connected) return agg;
+    const roster = magic.multiplayer.room.state.value.userIdToRosterEntry;
+    // every entry here is a peer on this product, so nothing needs filtering out
+    for (const [userId, p] of Object.entries(
+      magic.multiplayer.room.state.value.userIdToPresence,
+    )) {
+      // on the product but yet to move: they have no place to put a tag
+      if (!p.cursorPosition) continue;
+
+      const textBlock: Required<TextBlock> = {
+        ...TEXT_BLOCK_DEFAULTS,
+        content: toDisplayedName(roster[userId].displayName),
+        fontWeight: 'bold',
+        color: 'white',
+      };
+
+      const nameTagId = userId + '_nameTag';
+
+      const el: CanvasElement = {
+        id: nameTagId,
+        priority: Infinity,
+        paintOnly: true,
+        shape: rect({
+          at: p.cursorPosition,
+          height: NAME_TAG_HEIGHT,
+          width: getTextDimensions(textBlock).width + NAME_TAG_PADDING_X * 2,
+          fillColor: tierColor[roster[userId].tier],
+          borderRadius: 5,
+          textArea: { id: nameTagId, textBlock },
+        }),
+      };
+      agg.push(el);
+    }
+    return agg;
+  };
+
+  if (multiplayer) {
+    magic.surface.aggregator.addTransformer(nameTagElement);
+  }
 
   if (magic.lensChips) {
     magic.componentSlots.add({

@@ -1,53 +1,59 @@
-import { AnnotationsControls } from '@core/annotations/index';
 import { CanvasSurface } from '@canvas/surface/types';
-import { Point } from '@multiplayer/protocol/room';
+import { AnnotationsControls } from '@core/annotations/index';
 
-import { ProductId } from '../product/manifests/index.ts';
+import { watch } from 'vue';
+
 import { MultiplayerHostField } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
 
+/**
+ * Sends what this user is doing, one signal at a time. Each has its own trigger, so a
+ * drag no longer rides out alongside whatever the cursor happens to be doing, and a
+ * signal nothing changed about is never resent.
+ */
 export const usePresenceBroadcast = (options: {
   surface: CanvasSurface;
-  productId: ProductId;
   multiplayer: ProductMultiplayer;
   host: MultiplayerHostField;
   annotations?: AnnotationsControls;
 }) => {
-  const { surface, productId, multiplayer, host, annotations } = options;
+  const { surface, multiplayer, host, annotations } = options;
 
-  let cursorPosition: Point | null = null;
-
-  const broadcast = () => {
+  const presence = () => {
     const room = multiplayer.room.state.value;
     if (!room.connected) return;
+    return room.controls.presence;
+  };
 
-    const camera = surface.camera.state;
+  surface.events.canvas.subscribe('onMouseMove', (event) => {
+    presence()?.moveCursor(surface.toWorldCoordinates(event));
+  });
 
-    room.controls.updatePresence({
-      productId,
-      cursorPosition,
-      cameraState: {
+  const camera = surface.camera.state;
+  watch(
+    () => [camera.panX.value, camera.panY.value, camera.zoom.value],
+    () =>
+      presence()?.moveCamera({
         panX: camera.panX.value,
         panY: camera.panY.value,
         zoom: camera.zoom.value,
-      },
-      draggedElements: host.draggedElements?.() ?? [],
-      isAnnotating: annotations?.isActive() ?? false,
-    });
-  };
-
-  const broadcastFromCursor = (ev: MouseEvent) => {
-    cursorPosition = surface.toWorldCoordinates(ev);
-    broadcast();
-  };
-
-  surface.events.subscribe('onMouseMove', broadcastFromCursor);
-  // a drop that ends without the cursor moving again still has to tell the room the
-  // drag is over, since an empty list is the only thing that ends one
-  surface.events.subscribe('onMouseUp', broadcastFromCursor);
+      }),
+  );
 
   // the tools toggle from a keystroke or a button press, neither of which moves the
   // cursor, so nothing else would carry the change out to the room
-  annotations?.events.subscribe('onActivated', broadcast);
-  annotations?.events.subscribe('onDeactivated', broadcast);
+  annotations?.events.subscribe('onActivated', () =>
+    presence()?.setAnnotating(true),
+  );
+  annotations?.events.subscribe('onDeactivated', () =>
+    presence()?.setAnnotating(false),
+  );
+
+  host.drag?.subscribe('onDragStarted', (elements) =>
+    presence()?.startDrag(elements),
+  );
+  host.drag?.subscribe('onDragMoved', (elements) =>
+    presence()?.updateDrag(elements),
+  );
+  host.drag?.subscribe('onDragEnded', () => presence()?.endDrag());
 };

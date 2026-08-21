@@ -9,7 +9,7 @@ export const createLabelThemer = (
   controls: PluginOptions<PhantomPlugin>['controls'],
   label: ({ id }: { id: string }) => string | undefined,
 ) => {
-  const canvas = controls.canvas.theme.createLayer(layerId);
+  const canvas = controls.surface.theme.createLayer(layerId);
   const focus = controls.focus?.theme.createLayer(layerId);
 
   const enable = () => {

@@ -6,7 +6,7 @@
   import ProductCard from '@magic/shared/ProductCard';
   import Well from '@magic/shared/Well';
   import { ExplainerText } from '@magic/shared/explainer';
-  import { navigateToProduct } from '@magic/shared/ui/index';
+  import { productHref } from '@magic/shared/ui/index';
   import { mdiArrowRight } from '@mdi/js';
 
   import { useWelcomeScene } from './useWelcomeScene.ts';
@@ -27,7 +27,8 @@
         "
       />
       <Button
-        @click="navigateToProduct(activeProduct)"
+        as="a"
+        :href="productHref(activeProduct)"
         class="gap-2 px-5"
       >
         Open

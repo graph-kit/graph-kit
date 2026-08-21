@@ -1,17 +1,23 @@
+import { Aggregator, CanvasElement } from '@canvas/primitives/aggregator/types';
 import { normalizeBoundingBox } from '@canvas/primitives/helpers';
 import type { BoundingBox, Coordinate } from '@canvas/primitives/types/utility';
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import { createGraphEventHub } from '@graph/primitives/events';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
-import { Aggregator, CanvasElement } from '../canvas/aggregator/types.ts';
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../canvas/setupCanvasCursor.ts';
-import { GraphUnderCursor } from '../canvas/types.ts';
 import { NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD } from '../node-drag/constants.ts';
-import { MARQUEE_PLUGIN_ID, MARQUEE_SHAPE_ID } from './constants.ts';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../surface/setupCursor.ts';
+import { GraphUnderCursor } from '../surface/types.ts';
+import {
+  MARQUEE_PLUGIN_ID,
+  MARQUEE_SHAPE_ID,
+  MIN_MARQUEE_EXTENT,
+} from './constants.ts';
+import { createCursorThemer } from './createCursorThemer.ts';
 import { createMarqueeEventRegistry } from './events.ts';
 import { getSelectionBox, getSurfaceArea } from './helpers.ts';
 import { createMarqueeThemeOverrides } from './themes.ts';
@@ -19,12 +25,15 @@ import { MarqueePlugin } from './types.ts';
 
 export const marquee: MarqueePlugin = ({ controls, events }) => {
   const marqueeEventRegistry = createMarqueeEventRegistry();
-  const marqueeEventHub = createGraphEventHub(marqueeEventRegistry);
+  const marqueeEventHub = createEventHub(marqueeEventRegistry);
 
   const theme = createThemeController(createMarqueeThemeOverrides());
 
   let marqueeBox: BoundingBox | undefined = undefined;
   let selectionBox: BoundingBox | undefined = undefined;
+
+  // latched, not live: a drag back to its own origin is zero sized again
+  let marqueeBoxHasMoved = false;
 
   /**
    * given a mouse event, engages or disengages the marquee box
@@ -33,7 +42,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     topElement,
     coords,
     event,
-  }: CanvasGraphMouseEvent) => {
+  }: ElementMouseEvent) => {
     if (event.button !== MOUSE_BUTTONS.left) return;
     if (!topElement) engageMarqueeBox(coords);
   };
@@ -44,6 +53,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       width: 0,
       height: 0,
     };
+    marqueeBoxHasMoved = false;
     marqueeEventHub.emit('onMarqueeBeginSelection', startingCoords);
   };
 
@@ -51,6 +61,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     if (!marqueeBox) return;
     const finalMarqueeBox = marqueeBox;
     marqueeBox = undefined;
+    marqueeBoxHasMoved = false;
     marqueeEventHub.emit('onMarqueeEndSelection', finalMarqueeBox);
   };
 
@@ -59,9 +70,13 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     if (surfaceArea < 100) return;
     const targetedItems: string[] = [];
 
-    for (const { id, shape } of controls.canvas.aggregator.aggregator()) {
-      // the aggregator carries overlays too, including marquee's own box
+    for (const {
+      id,
+      shape,
+      paintOnly,
+    } of controls.surface.aggregator.aggregator()) {
       if (!controls.isNode(id) && !controls.isEdge(id)) continue;
+      if (paintOnly) continue;
       const inSelectionBox = shape.overlapsBox(box);
       if (inSelectionBox) targetedItems.push(id);
     }
@@ -83,17 +98,28 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     const { x, y } = coords;
     marqueeBox.width = x - marqueeBox.at.x;
     marqueeBox.height = y - marqueeBox.at.y;
+
+    if (marqueeBox.width !== 0 || marqueeBox.height !== 0) {
+      marqueeBoxHasMoved = true;
+    }
+
     updateMarqueeSelectedItems(marqueeBox);
   };
 
   const getMarqueeBoxCanvasElement = (box: BoundingBox): CanvasElement => {
-    const shape = controls.canvas.shapes.rect({
+    const { at, width, height } = normalizeBoundingBox(box);
+    const borderWidth = theme._resolveToken('marquee.drag.border.width');
+
+    const shape = controls.surface.shapes.rect({
       id: MARQUEE_SHAPE_ID,
-      ...normalizeBoundingBox(box),
+      at,
+      // a zero extent paints nothing, so a dead straight drag collapses to a line
+      width: Math.max(width, borderWidth || MIN_MARQUEE_EXTENT),
+      height: Math.max(height, borderWidth || MIN_MARQUEE_EXTENT),
       fillColor: theme._resolveToken('marquee.drag.color'),
       stroke: {
         color: theme._resolveToken('marquee.drag.border.color'),
-        lineWidth: theme._resolveToken('marquee.drag.border.width'),
+        lineWidth: borderWidth,
       },
     });
 
@@ -105,19 +131,28 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   };
 
   const addMarqueeBoxToAggregator = (aggregator: Aggregator) => {
-    if (!marqueeBox) return aggregator;
+    if (!marqueeBox || !marqueeBoxHasMoved) return aggregator;
 
-    const { width, height } = marqueeBox;
-    if (width === 0 || height === 0) return aggregator;
-
-    const selectionBoxCanvasElement = getMarqueeBoxCanvasElement(marqueeBox);
-    aggregator.push(selectionBoxCanvasElement);
+    aggregator.push(getMarqueeBoxCanvasElement(marqueeBox));
     return aggregator;
+  };
+
+  // the box only offers up what the pointer could still reach on its own, and a paint
+  // only node is out of reach however it came to be selected
+  const selectableFocusedNodeIds = () => {
+    const focusedIds = new Set(
+      controls.focus.focusedNodes().map(({ id }) => id),
+    );
+    const selectable: string[] = [];
+    for (const { id, paintOnly } of controls.surface.aggregator.aggregator()) {
+      if (!paintOnly && focusedIds.has(id)) selectable.push(id);
+    }
+    return selectable;
   };
 
   const getSelectionBoxSchema = (box: BoundingBox): CanvasElement => {
     const id = 'selection-box';
-    const shape = controls.canvas.shapes.rect({
+    const shape = controls.surface.shapes.rect({
       id,
       ...box,
       fillColor: theme._resolveToken('marquee.selection.color'),
@@ -132,9 +167,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       shape,
       priority: 3,
       data: {
-        [NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD]: controls.focus
-          .focusedNodes()
-          .map((n) => n.id),
+        [NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD]: selectableFocusedNodeIds(),
         [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: theme._resolveToken(
           'marquee.selection.cursor',
         ),
@@ -154,31 +187,39 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     return aggregator;
   };
 
-  controls.canvas.aggregator.transformers.push(addSelectionBoxToAggregator);
-  controls.canvas.aggregator.transformers.push(addMarqueeBoxToAggregator);
+  controls.surface.aggregator.addTransformer(addSelectionBoxToAggregator);
+  controls.surface.aggregator.addTransformer(addMarqueeBoxToAggregator);
 
-  const enable = () => {
+  const cursorTheme = createCursorThemer(
+    controls,
+    theme,
+    () => marqueeBoxHasMoved,
+  );
+
+  const onEnable = () => {
+    cursorTheme.enable();
+
     controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
 
-    controls.canvas.events.handle(
+    controls.surface.events.elements.handle(
       'onMouseDown',
       handleMarqueeEngagement,
       MARQUEE_PLUGIN_ID,
     );
-    controls.canvas.events.handle(
+    controls.surface.events.elements.handle(
       'onMouseUp',
       disengageMarqueeBox,
       MARQUEE_PLUGIN_ID,
     );
-    controls.canvas.events.handle(
+    controls.surface.events.elements.handle(
       'onContextMenu',
       disengageMarqueeBox,
       MARQUEE_PLUGIN_ID,
     );
 
     // if mouse is held down, resize the marquee box around the cursor position
-    controls.canvas.events.handle(
-      'onGraphUnderCursorChange',
+    controls.surface.events.elements.handle(
+      'onElementsUnderCursorChange',
       setMarqueeBoxDimensions,
       MARQUEE_PLUGIN_ID,
       { before: [ANCHOR_PLUGIN_ID] },
@@ -187,30 +228,42 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     events._internal.core.subscribe('onNodeMoveStream', updateSelectionBox);
   };
 
-  const disable = () => {
+  const onDisable = () => {
     controls.focus.events.unsubscribe('onFocusChange', updateSelectionBox);
 
-    controls.canvas.events.unhandle('onMouseDown', handleMarqueeEngagement);
-    controls.canvas.events.unhandle('onMouseUp', disengageMarqueeBox);
-    controls.canvas.events.unhandle('onContextMenu', disengageMarqueeBox);
-    controls.canvas.events.unhandle('onMouseMove', setMarqueeBoxDimensions);
+    controls.surface.events.elements.unhandle(
+      'onMouseDown',
+      handleMarqueeEngagement,
+    );
+    controls.surface.events.elements.unhandle('onMouseUp', disengageMarqueeBox);
+    controls.surface.events.elements.unhandle(
+      'onContextMenu',
+      disengageMarqueeBox,
+    );
+    controls.surface.events.elements.unhandle(
+      'onMouseMove',
+      setMarqueeBoxDimensions,
+    );
 
     events._internal.core.unsubscribe('onNodeMoveStream', updateSelectionBox);
 
     disengageMarqueeBox();
+    cursorTheme.disable();
   };
 
-  enable();
+  const lifecycle = createLifecycle({
+    onEnable,
+    onDisable,
+  });
+
+  lifecycle.enable();
 
   return {
     name: 'marquee',
     controls: {
       events: marqueeEventHub,
       theme,
-      lifecycle: {
-        enable,
-        disable,
-      },
+      lifecycle,
     },
   };
 };

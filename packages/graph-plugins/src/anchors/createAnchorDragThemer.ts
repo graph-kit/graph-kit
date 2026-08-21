@@ -10,7 +10,7 @@ export const createAnchorDragThemer = (
   controls: Parameters<AnchorsPlugin>[0]['controls'],
   dragState: DragStateControls<NodeAnchor>,
 ) => {
-  const canvas = controls.canvas.theme.createLayer(layerId);
+  const canvas = controls.surface.theme.createLayer(layerId);
   const focus = controls.focus?.theme.createLayer(layerId);
 
   const globalGrabbing = () =>

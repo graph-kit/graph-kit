@@ -1,37 +1,20 @@
 <script setup lang="ts">
   import {
     TooltipContent,
-    type TooltipContentProps,
     TooltipPortal,
     TooltipProvider,
     TooltipRoot,
     TooltipTrigger,
   } from 'reka-ui';
 
-  import {
-    type HTMLAttributes,
-    computed,
-    normalizeClass,
-    useAttrs,
-    useSlots,
-  } from 'vue';
+  import { computed, normalizeClass, useAttrs, useSlots } from 'vue';
 
   import { cn } from '../../cn.ts';
+  import { type TooltipProps } from './types.ts';
 
   defineOptions({ inheritAttrs: false });
 
-  interface Props {
-    /**
-     * required, plain-text description used for the accessible name/description.
-     * always what screen readers announce, regardless of what's slotted visually.
-     */
-    label: string | undefined;
-    side?: TooltipContentProps['side'];
-    class?: HTMLAttributes['class'];
-    delay?: number;
-  }
-
-  const props = withDefaults(defineProps<Props>(), {
+  const props = withDefaults(defineProps<TooltipProps>(), {
     side: 'top',
     delay: 0,
   });

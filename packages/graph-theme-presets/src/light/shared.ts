@@ -1,11 +1,12 @@
-import { CURSOR } from '@core/utils/cursor';
 import colors from '@core/utils/colors';
+import { CURSOR } from '@core/utils/cursor';
 
 const sharedText = {
   content: '?',
   size: 24,
   color: colors.GRAY_900,
   fontWeight: 'bold',
+  fontFamily: 'Arial',
 } as const;
 
 export const shared = {

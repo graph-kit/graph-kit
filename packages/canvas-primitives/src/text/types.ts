@@ -6,6 +6,12 @@ import type { AnchorPoint } from '../types/schema.ts';
 export type FontWeight = 'lighter' | 'normal' | 'bold' | 'bolder';
 
 /**
+ * a css font-family list, which is what canvas parses out of `ctx.font`. a
+ * name it cannot resolve is accepted and silently falls back at paint time
+ */
+export type FontFamily = string;
+
+/**
  * the text content for {@link TextArea}
  */
 export type TextBlock = {
@@ -13,13 +19,24 @@ export type TextBlock = {
   fontSize?: number;
   fontWeight?: FontWeight;
   color?: string;
-  fontFamily?: string;
+  fontFamily?: FontFamily;
 };
+
+/**
+ * identifies a {@link TextArea} across however many shapes are built from it.
+ * consumers are free to rebuild a shape whenever they like, so this is the
+ * only thread tying the text area being edited to the one about to be painted
+ */
+export type TextAreaId = string;
 
 /**
  * a box that wraps some text without an {@link AnchorPoint}
  */
 export type TextArea = {
+  /**
+   * unique identifier for this text area
+   */
+  id: TextAreaId;
   /**
    * the text areas inner text
    */

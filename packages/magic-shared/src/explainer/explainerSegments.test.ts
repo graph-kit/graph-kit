@@ -23,7 +23,8 @@ const { explainerSegments } = await import('./explainerSegments.ts');
 const graph = {
   isNode: (id: string): boolean => id.startsWith('node-'),
   isEdge: (id: string): boolean => id.startsWith('edge-'),
-  getEdge: (id: string) => ({ id, source: 'node-a', target: 'node-b' }) as GEdge,
+  getEdge: (id: string) =>
+    ({ id, source: 'node-a', target: 'node-b' }) as GEdge,
   theme: {
     createThemer: () => ({
       activate: vi.fn(),

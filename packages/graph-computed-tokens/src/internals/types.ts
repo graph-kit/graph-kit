@@ -1,4 +1,4 @@
-import type { FontWeight } from '@canvas/primitives/text/types';
+import type { FontFamily, FontWeight } from '@canvas/primitives/text/types';
 import { CursorFallback } from '@core/themes/index';
 import { Color } from '@core/utils/colors';
 import { Cursor } from '@core/utils/cursor';
@@ -14,6 +14,7 @@ export type NodeComputedTokens = {
   'node.text.size': number;
   'node.text.color': Color;
   'node.text.fontWeight': FontWeight;
+  'node.text.fontFamily': FontFamily;
 };
 
 export type EdgeComputedTokens = {
@@ -24,6 +25,7 @@ export type EdgeComputedTokens = {
   'edge.text.size': number;
   'edge.text.color': Color;
   'edge.text.fontWeight': FontWeight;
+  'edge.text.fontFamily': FontFamily;
 };
 
 /**

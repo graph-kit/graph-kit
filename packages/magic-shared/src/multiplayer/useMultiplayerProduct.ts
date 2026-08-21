@@ -1,14 +1,14 @@
 import { onMounted, onUnmounted } from 'vue';
 
-// the harness ProductId, a literal union of manifest keys, not the protocol's plain
-// string: the server routes by an id it need not enumerate, the client enumerates it
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { ProductId, manifests } from '../product/manifests/index.ts';
 import { MultiplayerHostField } from '../product/types.ts';
+import { useJoinSessionBanner } from '../ui/multiplayer/useJoinSessionBanner.ts';
 import { useRosterPanel } from '../ui/multiplayer/useRosterPanel.ts';
 import { useProvidedMultiplayer } from './context.ts';
 import { ProductMultiplayer } from './types.ts';
 import { roomIdUrl } from './url.ts';
+import { useTierBehavior } from './useTierBehavior.ts';
 
 type MultiplayerProductOptions = {
   productId: ProductId;
@@ -39,6 +39,8 @@ export const useMultiplayerProduct = ({
   const { actions, room, events } = multiplayer;
   const binding = { productId, host };
 
+  useTierBehavior({ room, tiers: host.tiers });
+
   onMounted(async () => {
     if (room.value.connected) {
       await actions.product.enter(binding);
@@ -67,6 +69,7 @@ export const useMultiplayerProduct = ({
     events,
     ui: {
       rosterPanel: useRosterPanel({ room, events, componentSlots }),
+      joinBanner: useJoinSessionBanner({ componentSlots, events }),
     },
   };
 };

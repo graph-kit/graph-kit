@@ -24,7 +24,7 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
   if (!flags.annotations) graph.annotations.lifecycle.disable();
 
   const host: MagicProductHost = {
-    surface: graph.canvas.surface,
+    surface: graph.surface,
     transit: graph.transit,
     annotations: flags.annotations ? graph.annotations : undefined,
     history: flags.history ? graph.history : undefined,
@@ -32,7 +32,16 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
       (graph.theme.activePresetName.value = color),
     multiplayer: {
       bind: (doc) => bindGraphToDoc(graph, doc, draggedNodes.isDragging),
-      draggedElements: draggedNodes.elements,
+      drag: draggedNodes.events,
+      tiers: {
+        host: {},
+        admin: {},
+        write: {},
+        read: {
+          enter: graph.readonly.enter,
+          exit: graph.readonly.exit,
+        },
+      },
     },
   };
 

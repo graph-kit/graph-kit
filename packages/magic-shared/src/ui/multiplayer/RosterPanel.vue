@@ -5,11 +5,12 @@
 
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';
+  import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
+  import CloseButton from './CloseButton.vue';
   import CopySessionCode from './CopySessionCode.vue';
-  import RosterCloseButton from './RosterCloseButton.vue';
   import RosterCollaborator from './RosterCollaborator.vue';
 
   const { room, multiplayer } = useConnectedMultiplayer();
@@ -26,15 +27,19 @@
 <template>
   <Well class="w-80 p-3">
     <VStack class="font-bold">
-      <div class="text-2xl text-center">
-        Collaborators ({{ roster.length }})
-      </div>
+      <HStack class="self-center">
+        <!-- <Icon
+          :size="30"
+          :path="mdiAccountMultiple"
+        /> -->
+        <span class="text-2xl"> Collaborators ({{ roster.length }}) </span>
+      </HStack>
 
-      <RosterCloseButton />
+      <CloseButton @closed="multiplayer.ui.rosterPanel.hide" />
 
       <VStack
         gap="0"
-        class="text-lg"
+        class="text-lg max-h-72 overflow-auto"
       >
         <RosterCollaborator
           v-for="(member, userId) in roster"

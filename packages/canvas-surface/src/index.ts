@@ -1,4 +1,7 @@
+import { createAggregator } from '@canvas/primitives/aggregator/index';
+import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { createEventHub } from '@core/events/createEventHub';
+import { nullThrows } from '@core/utils/assert';
 import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
 import { useElementSize } from '@vueuse/core';
 
@@ -6,10 +9,15 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { type DrawPattern, useBackgroundPattern } from './backgroundPattern.ts';
 import { useCamera } from './camera/index.ts';
+import { CANVAS_MISSING } from './constants.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
 import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
-import { useDOMEvents } from './domEvents.ts';
-import { createCanvasLifecycleEventRegistry } from './events.ts';
+import {
+  createCanvasBoundEvents,
+  createCanvasLifecycleEventRegistry,
+  createDocumentBoundEvents,
+  createElementsUnderCursor,
+} from './events/index.ts';
 import type { CanvasSurface, DrawContent } from './types.ts';
 
 const REPAINT_FPS = 60;
@@ -27,8 +35,8 @@ const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
  * sizes the canvas's backing store to its layout box at the current device
  * pixel ratio, handing back that box in css pixels
  */
-const sizeCanvas = (canvas: HTMLCanvasElement | undefined) => {
-  if (!canvas) throw new Error('Canvas not found in DOM. Check ref link.');
+const sizeCanvas = (canvasRef: HTMLCanvasElement | undefined) => {
+  const canvas = nullThrows(canvasRef, CANVAS_MISSING);
 
   const dpr = getDevicePixelRatio();
   const rect = canvas.getBoundingClientRect();
@@ -47,7 +55,10 @@ export const useCanvasSurface = (): CanvasSurface => {
   */
   const canvasCssSize = { width: ref(0), height: ref(0) };
 
-  const drawContent = ref<DrawContent>(() => {});
+  const { shapes, ...renderer } = createAnimatedShapes();
+  const aggregator = createAggregator(renderer);
+
+  const drawContent = ref<DrawContent>(aggregator.draw);
   const drawBackgroundPattern = ref<DrawPattern>(() => () => {});
   const contentSuspended = ref(false);
 
@@ -97,16 +108,28 @@ export const useCanvasSurface = (): CanvasSurface => {
 
   onBeforeUnmount(() => {
     lifecycleEvents.emit('onBeforeUnmount');
+    if (repaintFrame !== undefined) cancelAnimationFrame(repaintFrame);
+    ctx = undefined;
   });
 
   watch([canvasBoxSize.width, canvasBoxSize.height], resizeCanvas);
 
-  const { events, cleanup: cleanupDOMEvents } = useDOMEvents(canvas);
+  const canvasEvents = createCanvasBoundEvents(canvas, lifecycleEvents);
+  const domEvents = createDocumentBoundEvents(lifecycleEvents);
 
-  const { cleanup: cleanupCamera, ...camera } = useCamera(canvas, events);
+  const camera = useCamera(canvas, canvasEvents, domEvents);
   const { worldCoordinates: cursorCoordinates, toWorldCoordinates } =
-    useWorldCoordinates(camera.state, events);
+    useWorldCoordinates(camera.state, canvasEvents);
   const visibleWorldRect = useVisibleWorldRect(camera.state, canvasCssSize);
+
+  const { events: elementEvents, elementsUnderCursor } =
+    createElementsUnderCursor({
+      aggregator,
+      cursorCoordinates,
+      toWorldCoordinates,
+      canvasEvents,
+      domEvents,
+    });
 
   const pattern = useBackgroundPattern(
     camera.state,
@@ -131,19 +154,21 @@ export const useCanvasSurface = (): CanvasSurface => {
     visibleWorldRect,
     ref: {
       canvasRef: (ref) => (canvas.value = ref),
-      cleanup: (ref) => {
-        cleanupCamera();
-        cleanupDOMEvents(ref);
-        if (repaintFrame !== undefined) cancelAnimationFrame(repaintFrame);
-        ctx = undefined;
-      },
     },
     draw: {
       content: drawContent,
       backgroundPattern: drawBackgroundPattern,
       contentSuspended,
     },
-    lifecycleEvents,
-    events,
+    aggregator,
+    shapes,
+    renderer,
+    elementsUnderCursor,
+    events: {
+      canvas: canvasEvents,
+      dom: domEvents,
+      elements: elementEvents,
+      lifecycle: lifecycleEvents,
+    },
   };
 };

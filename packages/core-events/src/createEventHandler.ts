@@ -3,44 +3,36 @@ import type { AnyFunction } from 'ts-essentials';
 import { getSortedByPriority } from './getSortedByPriority.ts';
 import { GenericEventMap } from './types.ts';
 
-export type HandlerPriority<HandlerId extends string = string> = {
+export type HandlerPriority = {
   /** all registered handlers that we you want to yield to */
-  before: readonly HandlerId[];
+  before: readonly string[];
 };
 
 export type WithConsume<Callback extends AnyFunction> = (
   ...args: [...Parameters<Callback>, consume: () => void]
 ) => ReturnType<Callback>;
 
-type HandlerData<Callback extends AnyFunction, HandlerId extends string> = {
-  id: HandlerId | undefined;
-  priority: HandlerPriority<HandlerId>;
+type HandlerData<Callback extends AnyFunction> = {
+  id: string | undefined;
+  priority: HandlerPriority;
   callback: WithConsume<Callback>;
 };
 
-type HandlerRecord<
-  EventMap extends GenericEventMap,
-  HandlerId extends string,
-> = {
-  [EventName in keyof EventMap]?: HandlerData<EventMap[EventName], HandlerId>[];
+type HandlerRecord<EventMap extends GenericEventMap> = {
+  [EventName in keyof EventMap]?: HandlerData<EventMap[EventName]>[];
 };
 
-export const createEventHandler = <
-  EventMap extends GenericEventMap,
-  HandlerId extends string = string,
->() => {
-  const allHandlers: HandlerRecord<EventMap, HandlerId> = {};
+export const createEventHandler = <EventMap extends GenericEventMap>() => {
+  const allHandlers: HandlerRecord<EventMap> = {};
   return {
     handle: <EventName extends keyof EventMap>(
       eventName: EventName,
       eventCallback: WithConsume<EventMap[EventName]>,
-      handlerId: HandlerId,
-      priority: HandlerPriority<HandlerId> = { before: [] },
+      handlerId: string,
+      priority: HandlerPriority = { before: [] },
     ) => {
       const handlers = allHandlers[eventName] ?? [];
-
-      // TODO check for duplicate handler registrations
-      // https://github.com/graph-kit/graph-kit/issues/640
+      if (handlers.some(({ callback }) => callback === eventCallback)) return;
 
       allHandlers[eventName] = getSortedByPriority([
         ...handlers,

@@ -46,6 +46,36 @@ describe(createEventHandler, () => {
       fireHandlers('onClick', 1);
       expect(order).toEqual(['first', 'second']);
     });
+
+    it('registers a callback once no matter how many times it is handled', () => {
+      const cb = vi.fn();
+      handle('onClick', cb, TEST_HANDLER_ID);
+      handle('onClick', cb, TEST_HANDLER_ID);
+      fireHandlers('onClick', 1);
+      expect(cb).toHaveBeenCalledOnce();
+    });
+
+    it('keeps one callback on each event it was handled for', () => {
+      const cb = vi.fn();
+      handle('onClick', cb, TEST_HANDLER_ID);
+      handle('onHover', cb, TEST_HANDLER_ID);
+      fireHandlers('onClick', 1);
+      fireHandlers('onHover');
+      expect(cb).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps the priority the callback was first handled with', () => {
+      const order: string[] = [];
+      const late = () => order.push('late');
+      handle('onClick', late, 'late');
+      handle('onClick', () => order.push('early'), 'early', {
+        before: ['late'],
+      });
+      // the re-registration that would have put it first is the one dropped
+      handle('onClick', late, 'late', { before: ['early'] });
+      fireHandlers('onClick', 1);
+      expect(order).toEqual(['early', 'late']);
+    });
   });
 
   describe('unhandle', () => {

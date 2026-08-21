@@ -9,7 +9,7 @@ const useGraphElementExplainerHighlight = (
 ): ExplainerHighlight => {
   // proxy default color to focus color
   const themer = graph.theme.createThemer({
-    canvas: {
+    surface: {
       'node.default.border.color': (node) =>
         node.id === id
           ? graph.focus.theme._resolveToken('node.focus.border.color', { id })

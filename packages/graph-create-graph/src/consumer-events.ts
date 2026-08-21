@@ -1,3 +1,4 @@
+import { createEventHub } from '@core/events/createEventHub';
 import { EventMapToEventRegistry } from '@core/events/types';
 import { ConsumerEventMap, TransitEventMap } from '@graph/core/consumer-events';
 import {
@@ -9,7 +10,6 @@ import {
   EdgeWeightStoreControls,
 } from '@graph/core/weights/types';
 import { GraphActions } from '@graph/primitives/actions/types';
-import { createGraphEventHub } from '@graph/primitives/events';
 import {
   ElementAdditionPayload,
   ElementRemovalPayload,
@@ -36,14 +36,14 @@ const createConsumerEventRegistry =
 export type ConsumerEventHub = ReturnType<typeof createConsumerEventHub>;
 
 export const createConsumerEventHub = () =>
-  createGraphEventHub<ConsumerEventMap>(createConsumerEventRegistry());
+  createEventHub<ConsumerEventMap>(createConsumerEventRegistry());
 
 // kept off ConsumerEventMap on purpose — see TransitEventMap in
 // @graph/core/consumer-events. its own hub, exposed at events.transit.
 export type TransitEventHub = ReturnType<typeof createTransitEventHub>;
 
 export const createTransitEventHub = () =>
-  createGraphEventHub<TransitEventMap>({
+  createEventHub<TransitEventMap>({
     onEncoded: new Set(),
     onDecoded: new Set(),
   });

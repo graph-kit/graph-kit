@@ -53,6 +53,9 @@ importers:
 
   packages/canvas-primitives:
     dependencies:
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/utils':
         specifier: workspace:*
         version: link:../core-utils
@@ -100,6 +103,9 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
     devDependencies:
+      ts-essentials:
+        specifier: ^10.2.0
+        version: 10.2.1(typescript@6.0.3)
       vue:
         specifier: 'catalog:'
         version: 3.5.40(typescript@6.0.3)
@@ -232,6 +238,9 @@ importers:
 
   packages/graph-create-graph:
     dependencies:
+      '@canvas/primitives':
+        specifier: workspace:*
+        version: link:../canvas-primitives
       '@core/events':
         specifier: workspace:*
         version: link:../core-events
@@ -348,9 +357,6 @@ importers:
 
   packages/graph-primitives:
     dependencies:
-      '@core/events':
-        specifier: workspace:*
-        version: link:../core-events
       fraction.js:
         specifier: ^5.3.4
         version: 5.3.4
@@ -498,6 +504,9 @@ importers:
 
   packages/magic-shared:
     dependencies:
+      '@canvas/primitives':
+        specifier: workspace:*
+        version: link:../canvas-primitives
       '@canvas/surface':
         specifier: workspace:*
         version: link:../canvas-surface

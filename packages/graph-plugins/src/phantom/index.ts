@@ -1,8 +1,8 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { nullThrows } from '@core/utils/assert';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
-import { CanvasElement } from '../canvas/aggregator/types.ts';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../canvas/setupCanvasCursor.ts';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../surface/setupCursor.ts';
 import { createLabelThemer } from './createLabelThemer.ts';
 import {
   PhantomEdge,
@@ -77,7 +77,7 @@ export const phantom: PhantomPlugin = ({
   );
   labelThemer.enable();
 
-  controls.canvas.aggregator.transformers.push(render);
+  controls.surface.aggregator.addTransformer(render);
 
   const addNode = (node: PhantomNode) => {
     nodes.push(node);

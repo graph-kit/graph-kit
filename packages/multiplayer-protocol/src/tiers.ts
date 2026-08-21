@@ -1,17 +1,18 @@
-export const TIERS = ['host', 'admin', 'write'] as const;
+export const TIERS = ['host', 'admin', 'write', 'read'] as const;
 
 export type Tier = (typeof TIERS)[number];
 
 /** host is a singleton assigned only at room creation, so it is never a target of setTier */
-export const ASSIGNABLE_TIERS = ['admin', 'write'] as const;
+export const ASSIGNABLE_TIERS = ['admin', 'write', 'read'] as const;
 
 export type AssignableTier = (typeof ASSIGNABLE_TIERS)[number];
 
 // exhaustive so adding a tier forces every ordinal decision below to be revisited
 const tierToRank: Record<Tier, number> = {
-  host: 2,
-  admin: 1,
-  write: 0,
+  host: 3,
+  admin: 2,
+  write: 1,
+  read: 0,
 };
 
 /** higher outranks lower; the only thing tier comparisons are built on */
@@ -22,21 +23,20 @@ export const meetsFloor = (tier: Tier, floor: Tier): boolean =>
   rankOf(tier) >= rankOf(floor);
 
 /**
- * every product layer write, for every product, forever. no tier sits below it yet, so
- * this only rejects non members until read only mode lands
- * https://github.com/graph-kit/graph-kit/issues/883
+ * every product layer write, for every product, forever. read sits below it, so a member
+ * holding read is rejected here as well as a socket that never joined
  */
 export const PRODUCT_WRITE_FLOOR: Tier = 'write';
 
 /** moveUser and kickUser share this floor, setTier uses the ordinal rule instead */
 export const ROOM_COMMAND_FLOOR: Tier = 'admin';
 
-/** the lowest tier, so joining a room grants product writes */
-export const DEFAULT_TIER: Tier = 'write';
+/** the lowest tier, so joining a room grants a view and nothing else until assigned higher */
+export const DEFAULT_TIER: Tier = 'read';
 
-// three independent conditions. the floor is redundant while write is the lowest tier and
-// load bearing again the moment one sits below it, and without the host guard an admin
-// could demote the host and orphan disband-on-disconnect
+// three independent conditions. the floor is what stops a writer demoting anyone to read,
+// which the ordinal rule alone would allow, and without the host guard an admin could
+// demote the host and orphan disband-on-disconnect
 export const canSetTier = (
   callerTier: Tier,
   targetCurrentTier: Tier,

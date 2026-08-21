@@ -30,14 +30,14 @@ export const useSetsTheme = (magic: Magic) => {
   return computed<SetsTheme>(() => ({
     set: {
       outline: {
-        default: theme.value.canvas['node.default.border.color'],
+        default: theme.value.surface['node.default.border.color'],
         focused: theme.value.focus['node.focus.border.color'],
       },
-      label: theme.value.canvas['node.default.text.color'],
+      label: theme.value.surface['node.default.text.color'],
     },
     canvas: {
-      color: theme.value.canvas['canvas.color'],
-      patternColor: theme.value.canvas['canvas.patternColor'],
+      color: theme.value.surface['canvas.color'],
+      patternColor: theme.value.surface['canvas.patternColor'],
     },
   }));
 };

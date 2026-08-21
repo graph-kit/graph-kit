@@ -89,7 +89,9 @@ describe('annotations', () => {
     const annotations = createAnnotations({ surface: stubSurface() });
     const transitions: string[] = [];
     annotations.events.subscribe('onActivated', () => transitions.push('on'));
-    annotations.events.subscribe('onDeactivated', () => transitions.push('off'));
+    annotations.events.subscribe('onDeactivated', () =>
+      transitions.push('off'),
+    );
 
     // the second call of each pair is the no-op a caller cannot know it is making
     annotations.deactivate();

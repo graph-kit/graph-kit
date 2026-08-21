@@ -6,10 +6,10 @@ import {
 } from '@graph/plugins-shared/plugins';
 import { CoreNode } from '@graph/primitives/types';
 
-import { CanvasPlugin } from '../canvas/types.ts';
 import { FocusPlugin } from '../focus/types.ts';
 import { HistoryPlugin } from '../history/types.ts';
 import { MarqueePlugin } from '../marquee/types.ts';
+import { SurfacePlugin } from '../surface/types.ts';
 import { NodeDragEventMap } from './events.ts';
 
 export type NodeIdDragState = { nodeIds: string[] };
@@ -28,6 +28,6 @@ export type NodeDragPlugin = GraphPlugin<{
   name: 'nodeDrag';
   controls: WithLifecycle<NodeDragControls>;
   events: NodeDragEventMap;
-  dependsOn: [CanvasPlugin];
+  dependsOn: [SurfacePlugin];
   optionalDependsOn: [FocusPlugin, MarqueePlugin, HistoryPlugin];
 }>;

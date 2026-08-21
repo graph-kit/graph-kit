@@ -77,7 +77,7 @@ const createExcludedEdgeThemer = (graph: Graph) => {
     return tinycolor(resolveUnderneath()).setAlpha(0.25).toHex8String();
   };
   const themer = graph.theme.createThemer({
-    canvas: {
+    surface: {
       'edge.default.color': fadeExcluded,
       'edge.default.text.color': fadeExcluded,
       'edge.hover.color': fadeExcluded,

@@ -28,6 +28,7 @@ const TOKEN_VALUES = {
   'edge.text.size': 12,
   'edge.text.color': 'black',
   'edge.text.fontWeight': 'normal',
+  'edge.text.fontFamily': 'Arial',
   'node.size': 30,
   'node.color': 'black',
   'node.border.width': 2,
@@ -37,6 +38,7 @@ const TOKEN_VALUES = {
   'node.text.size': 12,
   'node.text.color': 'black',
   'node.text.fontWeight': 'normal',
+  'node.text.fontFamily': 'Arial',
 } as const;
 
 const resolveToken = ((token: keyof typeof TOKEN_VALUES) =>

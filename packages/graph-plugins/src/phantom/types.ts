@@ -3,8 +3,8 @@ import { GraphPlugin } from '@graph/plugins-shared/plugins';
 import { ElementRemovalPayload } from '@graph/primitives/transactions/types';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
-import { CanvasPlugin } from '../canvas/types.ts';
 import { FocusPlugin } from '../focus/types.ts';
+import { SurfacePlugin } from '../surface/types.ts';
 
 export type PhantomElements = {
   nodes: PhantomNode[];
@@ -80,6 +80,6 @@ export type PhantomEdge = CoreEdge & {
 export type PhantomPlugin = GraphPlugin<{
   name: 'phantom';
   controls: PhantomControls;
-  dependsOn: [CanvasPlugin];
+  dependsOn: [SurfacePlugin];
   optionalDependsOn: [FocusPlugin];
 }>;

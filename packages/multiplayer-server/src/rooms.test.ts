@@ -2,18 +2,19 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
 import {
-  Room,
-  addMember,
   applyProductDocUpdate,
-  canRunRoomCommand,
-  canWriteProduct,
-  createRoom,
   encodeProductDoc,
   encodeProductDocDiff,
+} from './documents.ts';
+import { Room, createRoom } from './rooms.ts';
+import {
+  addMember,
+  canRunRoomCommand,
+  canWriteProduct,
   isHost,
   removeMember,
   setTier,
-} from './rooms.ts';
+} from './roster.ts';
 
 /** a document holding one node, in the shape a graph product would write */
 const seedDoc = () => {
@@ -25,6 +26,7 @@ const seedDoc = () => {
 const seedRoom = (): Room =>
   createRoom({
     hostId: 'host-1',
+    hostToken: 'host-token',
     displayName: 'Professor',
     productId: 'traversals',
     doc: Y.encodeStateAsUpdate(seedDoc()),
@@ -56,16 +58,16 @@ describe('createRoom', () => {
 });
 
 describe('membership', () => {
-  it('admits new joiners at write', () => {
+  it('admits new joiners at read', () => {
     const room = seedRoom();
     const entry = addMember(room, {
       userId: 'user-2',
+      token: 'user-2-token',
       displayName: 'Student',
-      productId: 'traversals',
     });
 
-    expect(entry.tier).toBe('write');
-    expect(canWriteProduct(room, 'user-2')).toBe(true);
+    expect(entry.tier).toBe('read');
+    expect(canWriteProduct(room, 'user-2')).toBe(false);
     expect(canRunRoomCommand(room, 'user-2')).toBe(false);
   });
 
@@ -80,8 +82,8 @@ describe('membership', () => {
     const room = seedRoom();
     addMember(room, {
       userId: 'user-2',
+      token: 'user-2-token',
       displayName: 'Student',
-      productId: 'traversals',
     });
     removeMember(room, 'user-2');
 
@@ -94,8 +96,8 @@ describe('setTier', () => {
     const room = seedRoom();
     addMember(room, {
       userId: 'user-2',
+      token: 'user-2-token',
       displayName: 'Student',
-      productId: 'traversals',
     });
     return room;
   };
@@ -107,11 +109,19 @@ describe('setTier', () => {
     expect(canRunRoomCommand(room, 'user-2')).toBe(true);
   });
 
-  it('refuses a write user trying to promote themselves', () => {
+  it('refuses a member trying to promote themselves', () => {
     const room = roomWithStudent();
 
     expect(setTier(room, 'user-2', 'user-2', 'admin')).toBe(false);
-    expect(room.data.roster['user-2']?.tier).toBe('write');
+    expect(room.data.roster['user-2']?.tier).toBe('read');
+  });
+
+  it('grants product writes on promotion out of read', () => {
+    const room = roomWithStudent();
+    expect(canWriteProduct(room, 'user-2')).toBe(false);
+
+    expect(setTier(room, 'host-1', 'user-2', 'write')).toBe(true);
+    expect(canWriteProduct(room, 'user-2')).toBe(true);
   });
 
   it('refuses demoting the host', () => {
@@ -175,6 +185,7 @@ describe('applyProductDocUpdate', () => {
     const roomFromSeed = () =>
       createRoom({
         hostId: 'host-1',
+        hostToken: 'host-token',
         displayName: 'Professor',
         productId: 'traversals',
         doc: seed,

@@ -56,6 +56,7 @@ export const getTextDimensions = (text: Text) => {
 
   const ctx = getMeasureCtx();
   ctx.font = font;
+  ctx.textBaseline = 'middle';
   const metrics = ctx.measureText(content);
 
   const ascent = metrics.actualBoundingBoxAscent;
@@ -71,4 +72,54 @@ export const getTextDimensions = (text: Text) => {
   cache.set(key, dimensions);
 
   return dimensions;
+};
+
+/**
+ * the parts of a font's vertical layout that no content can change, all in px
+ * at the size asked for
+ */
+type FontMetrics = {
+  /**
+   * how far the alphabetic baseline sits below the em middle. canvas text is
+   * drawn off the middle and css lays lines out off the baseline, so this is
+   * what converts between the two
+   */
+  middleToBaseline: number;
+  /** the font box a css line box is built from, above the baseline */
+  ascent: number;
+  /** the font box a css line box is built from, below the baseline */
+  descent: number;
+};
+
+const fontMetricsCache = new Map<string, FontMetrics>();
+
+// the two baselines sit the same distance apart whatever the glyph
+const METRICS_PROBE = 'H';
+
+export const getFontMetrics = (font: Omit<Text, 'content'>): FontMetrics => {
+  const { fontSize, fontWeight, fontFamily } = font;
+
+  const key = `${fontWeight} ${fontSize}px ${fontFamily}`;
+
+  const cached = fontMetricsCache.get(key);
+  if (cached) return cached;
+
+  const ctx = getMeasureCtx();
+  ctx.font = key;
+
+  ctx.textBaseline = 'middle';
+  const fromMiddle = ctx.measureText(METRICS_PROBE).actualBoundingBoxAscent;
+
+  ctx.textBaseline = 'alphabetic';
+  const fromBaseline = ctx.measureText(METRICS_PROBE);
+
+  const metrics: FontMetrics = {
+    middleToBaseline: fromBaseline.actualBoundingBoxAscent - fromMiddle,
+    ascent: fromBaseline.fontBoundingBoxAscent,
+    descent: fromBaseline.fontBoundingBoxDescent,
+  };
+
+  fontMetricsCache.set(key, metrics);
+
+  return metrics;
 };

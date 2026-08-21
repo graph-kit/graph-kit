@@ -1,14 +1,15 @@
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { devAssert, devWarning } from '@core/utils/debugging';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { createDragState } from '@graph/plugins-shared/drag';
-import { createGraphEventHub } from '@graph/primitives/events';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
 import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
-import { GraphUnderCursor } from '../canvas/types.ts';
+import { GraphUnderCursor } from '../surface/types.ts';
 import {
   NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD,
   NODE_DRAG_PLUGIN_ID,
@@ -34,13 +35,13 @@ export const nodeDrag =
     };
 
     const nodeDragEventRegistry = createNodeDragEventRegistry();
-    const nodeDragEventHub = createGraphEventHub(nodeDragEventRegistry);
+    const nodeDragEventHub = createEventHub(nodeDragEventRegistry);
 
     const dragState = createDragState<NodeIdDragState>();
     let nodePositionStream: NodePositionStreamControls | undefined;
 
     const beginDrag = (
-      { topElement, coords, event }: CanvasGraphMouseEvent,
+      { topElement, coords, event }: ElementMouseEvent,
       consume: () => void,
     ) => {
       if (event.button !== MOUSE_BUTTONS.left) return;
@@ -146,12 +147,14 @@ export const nodeDrag =
           update: (pos) => ({ x: pos.x + dx, y: pos.y + dy }),
         })),
       );
+
+      nodeDragEventHub.emit('onNodeDragMove', nodes);
     };
 
     const cursorTheme = createDragThemer(controls, dragState);
 
-    const enable = () => {
-      controls.canvas.events.handle(
+    const onEnable = () => {
+      controls.surface.events.elements.handle(
         'onMouseDown',
         beginDrag,
         NODE_DRAG_PLUGIN_ID,
@@ -159,11 +162,16 @@ export const nodeDrag =
           before: [ANCHOR_PLUGIN_ID],
         },
       );
-      controls.canvas.events.handle('onMouseUp', drop, NODE_DRAG_PLUGIN_ID, {
-        before: [ANCHOR_PLUGIN_ID],
-      });
-      controls.canvas.events.handle(
-        'onGraphUnderCursorChange',
+      controls.surface.events.elements.handle(
+        'onMouseUp',
+        drop,
+        NODE_DRAG_PLUGIN_ID,
+        {
+          before: [ANCHOR_PLUGIN_ID],
+        },
+      );
+      controls.surface.events.elements.handle(
+        'onElementsUnderCursorChange',
         drag,
         NODE_DRAG_PLUGIN_ID,
         {
@@ -174,25 +182,30 @@ export const nodeDrag =
       cursorTheme.enable();
     };
 
-    const disable = () => {
-      controls.canvas.events.unhandle('onMouseDown', beginDrag);
-      controls.canvas.events.unhandle('onMouseUp', drop);
-      controls.canvas.events.unhandle('onGraphUnderCursorChange', drag);
+    const onDisable = () => {
+      controls.surface.events.elements.unhandle('onMouseDown', beginDrag);
+      controls.surface.events.elements.unhandle('onMouseUp', drop);
+      controls.surface.events.elements.unhandle(
+        'onElementsUnderCursorChange',
+        drag,
+      );
       events.unsubscribe('onElementsRemoved', abortDragOnTamper);
       cursorTheme.disable();
       drop();
     };
 
-    enable();
+    const lifecycle = createLifecycle({
+      onEnable,
+      onDisable,
+    });
+
+    lifecycle.enable();
 
     return {
       name: 'nodeDrag',
       controls: {
         events: nodeDragEventHub,
-        lifecycle: {
-          enable,
-          disable,
-        },
+        lifecycle,
       },
     };
   };

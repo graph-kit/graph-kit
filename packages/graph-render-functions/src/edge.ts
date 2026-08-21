@@ -28,10 +28,10 @@ const DEFAULT_PARALLEL_EDGE_SPACING_PX = 12;
 export const createDefaultEdgeRenderOptions = (
   source: EdgeRenderOptionsSource,
 ): DefaultEdgeRenderOptions => ({
-  shapes: source.canvas.shapes,
+  shapes: source.surface.shapes,
   resolveToken: source.resolveToken,
   directed: source.metadata.directed,
-  labelTextInputColor: () => source.canvas.theme._resolveToken('canvas.color'),
+  labelTextInputColor: () => source.surface.theme._resolveToken('canvas.color'),
 });
 
 export const createEdgeRenderFunction: CreateEdgeRenderFunction = ({
@@ -108,6 +108,7 @@ export const createEdgeRenderFunction: CreateEdgeRenderFunction = ({
     const labelled = layout?.labelled ?? true;
     const textArea: TextArea | undefined = getValue(labelled, edge)
       ? {
+          id: edge.id,
           color: 'none',
           activeColor: labelTextInputColor(edge),
           textBlock: styles.text,

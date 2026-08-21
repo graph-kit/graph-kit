@@ -4,8 +4,8 @@ import { AnimationPlugin } from './types.ts';
 export const animation: AnimationPlugin = ({ controls }) => {
   // TODO re-enable this when auto animation stabilizes
   const autoAnimate = () => () => {};
-  // controls.canvas.renderer.autoAnimate.captureFrame(() =>
-  //   controls.canvas.aggregator.draw(getCtx(controls.canvas.surface.canvas)),
+  // controls.surface.renderer.autoAnimate.captureFrame(() =>
+  //   controls.surface.aggregator.draw(getCtx(controls.surface.canvas)),
   // );
 
   // a capture window left open freezes every shape it snapshotted on its pre-mutation

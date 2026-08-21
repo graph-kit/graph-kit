@@ -135,7 +135,11 @@ describe('a shape given a fillColor', () => {
 const textBlock = { content: 'A' };
 
 const labelledCircle = (color?: string) =>
-  circle({ at, radius: 10, textArea: { color, textBlock } });
+  circle({
+    at,
+    radius: 10,
+    textArea: { id: 'labelled-circle', color, textBlock },
+  });
 
 const drawMatte = (shape: ReturnType<typeof labelledCircle>) => {
   const { ctx, wasCalled } = recordingCtx();

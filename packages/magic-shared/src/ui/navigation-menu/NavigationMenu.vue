@@ -9,7 +9,7 @@
   import { useProvidedMagic } from '../../product/context.ts';
   import { products } from '../../product/manifests/index.ts';
   import ProductCard from '../product-card/ProductCard.vue';
-  import { navigateToProduct } from './navigateToProduct.ts';
+  import { productHref } from './navigateToProduct.ts';
 
   const magic = useProvidedMagic();
 
@@ -36,7 +36,7 @@
       <MenuItem
         v-for="{ product, card } in displayedProducts"
         :key="product.id"
-        @click="navigateToProduct(product)"
+        :href="productHref(product)"
         class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
       >
         <ProductCard

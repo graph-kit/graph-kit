@@ -1,5 +1,6 @@
 import { createLabelGenerator } from '@core/utils/label';
 import { getValue } from '@core/utils/maybeGetter/index';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { reactiveMap } from '@reactive/primitives/index';
 
 import { UPPERCASE_ALPHABET } from './constants.ts';
@@ -40,10 +41,12 @@ export const nodeLabel: NodeLabelPlugin = ({
 
   const themer = createLabelThemer(controls, getNodeLabel);
 
-  const enable = themer.enable;
-  const disable = themer.disable;
+  const lifecycle = createLifecycle({
+    onEnable: themer.enable,
+    onDisable: themer.disable,
+  });
 
-  enable();
+  lifecycle.enable();
 
   return {
     name: 'nodeLabel',
@@ -102,10 +105,7 @@ export const nodeLabel: NodeLabelPlugin = ({
       get: getNodeLabel,
       set: (label) => setNodeLabels([label]),
       setMany: setNodeLabels,
-      lifecycle: {
-        enable,
-        disable,
-      },
+      lifecycle,
       _internal: {
         nodeIdToLabel,
       },

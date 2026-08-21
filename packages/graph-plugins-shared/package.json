@@ -11,6 +11,10 @@
       "types": "./dist/types/plugins/index.d.ts",
       "default": "./src/plugins/index.ts"
     },
+    "./lifecycle": {
+      "types": "./dist/types/lifecycle/index.d.ts",
+      "default": "./src/lifecycle/index.ts"
+    },
     "./drag": {
       "types": "./dist/types/drag/index.d.ts",
       "default": "./src/drag/index.ts"

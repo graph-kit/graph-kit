@@ -1,9 +1,11 @@
+import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { nullThrows } from '@core/utils/assert';
 import { getCtx } from '@core/utils/canvas/index';
+import { isTypingTarget } from '@core/utils/keyboard';
 import { getValue } from '@core/utils/maybeGetter/index';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import Fraction from 'fraction.js';
 
-import { CanvasGraphMouseEvent } from '../canvas/events.ts';
 import { INTERACTIVE_PLUGIN_ID } from './constants.ts';
 import { DEFAULT_INTERACTIVE_OPTIONS, InteractiveOptions } from './options.ts';
 import { InteractivePlugin } from './types.ts';
@@ -27,10 +29,7 @@ export const interactive =
 
     let lastClickTime = 0;
 
-    const handleNodeCreation = ({
-      coords,
-      topElement,
-    }: CanvasGraphMouseEvent) => {
+    const handleNodeCreation = ({ coords, topElement }: ElementMouseEvent) => {
       const ABOUT_A_FEW_HUNDRED_MS = 350;
       const timeDiff = Date.now() - lastClickTime;
       const closeEnoughInTime = timeDiff < ABOUT_A_FEW_HUNDRED_MS;
@@ -50,10 +49,7 @@ export const interactive =
       captureHistorySnapshot();
     };
 
-    const handleEdgeTextArea = ({
-      topElement,
-      coords,
-    }: CanvasGraphMouseEvent) => {
+    const handleEdgeTextArea = ({ topElement, coords }: ElementMouseEvent) => {
       if (
         !topElement ||
         !topElement.shape.textHitbox?.(coords) ||
@@ -62,7 +58,7 @@ export const interactive =
         return;
       }
 
-      const ctx = getCtx(controls.canvas.surface.canvas);
+      const ctx = getCtx(controls.surface.canvas);
 
       topElement.shape.startTextAreaEdit?.(ctx, (textAreaContent) => {
         const edge = nullThrows(
@@ -117,7 +113,7 @@ export const interactive =
     };
 
     const handleEdgeCreation = (sourceNode: { id: string }) => {
-      const { elements } = controls.canvas.graphUnderCursor;
+      const { elements } = controls.surface.elementsUnderCursor;
 
       const nodeUnderneathAnchor = elements.findLast((el) =>
         controls.isNode(el.id),
@@ -144,6 +140,9 @@ export const interactive =
     };
 
     const removeFocusedElements = (e: KeyboardEvent) => {
+      // the surface hands on every keystroke in the page, so a backspace aimed at an
+      // edge weight field or a product panel must not delete the graph out from under it
+      if (isTypingTarget(e)) return;
       if (e.key !== 'Backspace') return;
       finalActions.removeElements({
         nodes: controls.focus?.focusedNodes() ?? [],
@@ -152,9 +151,12 @@ export const interactive =
       captureHistorySnapshot();
     };
 
-    const enable = () => {
-      controls.canvas.events.subscribe('onMouseDown', handleEdgeTextArea);
-      controls.canvas.events.handle(
+    const onEnable = () => {
+      controls.surface.events.elements.subscribe(
+        'onMouseDown',
+        handleEdgeTextArea,
+      );
+      controls.surface.events.elements.handle(
         'onClick',
         handleNodeCreation,
         INTERACTIVE_PLUGIN_ID,
@@ -163,28 +165,36 @@ export const interactive =
         'onNodeAnchorDrop',
         handleEdgeCreation,
       );
-      controls.canvas.events.subscribe('onKeyDown', removeFocusedElements);
+      controls.surface.events.dom.subscribe('onKeyDown', removeFocusedElements);
     };
 
-    const disable = () => {
-      controls.canvas.events.unsubscribe('onMouseDown', handleEdgeTextArea);
-      controls.canvas.events.unhandle('onClick', handleNodeCreation);
+    const onDisable = () => {
+      controls.surface.events.elements.unsubscribe(
+        'onMouseDown',
+        handleEdgeTextArea,
+      );
+      controls.surface.events.elements.unhandle('onClick', handleNodeCreation);
       controls.anchors?.events.unsubscribe(
         'onNodeAnchorDrop',
         handleEdgeCreation,
       );
-      controls.canvas.events.unsubscribe('onKeyDown', removeFocusedElements);
+      controls.surface.events.dom.unsubscribe(
+        'onKeyDown',
+        removeFocusedElements,
+      );
     };
 
-    enable();
+    const lifecycle = createLifecycle({
+      onEnable,
+      onDisable,
+    });
+
+    lifecycle.enable();
 
     return {
       name: 'interactive',
       controls: {
-        lifecycle: {
-          enable,
-          disable,
-        },
+        lifecycle,
       },
     };
   };

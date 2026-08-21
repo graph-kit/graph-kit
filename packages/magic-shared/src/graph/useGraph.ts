@@ -17,6 +17,7 @@ import { NodeDragOptions } from '@graph/plugins/node-drag/options';
 import { nodeLabel } from '@graph/plugins/node-label/index';
 import { createPhantomAwareEdgeRenderFunction } from '@graph/plugins/phantom/createPhantomAwareEdgeRenderFunction';
 import { phantom } from '@graph/plugins/phantom/index';
+import { readonly } from '@graph/plugins/readonly/index';
 import { surface } from '@graph/plugins/surface/index';
 import { transitionMatrix } from '@graph/plugins/transition-matrix/index';
 import { dark } from '@graph/theme-presets/dark/index';
@@ -56,6 +57,7 @@ const graphPlugins = (options: UseGraphOptions) => [
   animation,
   phantom,
   minimumSpanningTrees(options.minimumSpanningTrees ?? {}),
+  readonly,
 ];
 
 const createGraphWithPlugins = (options: UseGraphOptions) => {

@@ -8,8 +8,26 @@ import { Aggregator, AggregatorTransformer, CanvasElement } from './types.ts';
 
 export type AggregatorControls = {
   aggregator: () => DeepReadonly<Aggregator>;
-  transformers: AggregatorTransformer[];
-  updateAggregator: () => void;
+  /**
+   * registers a {@link AggregatorTransformer | transformer} to run each render cycle
+   *
+   * ℹ️ transformers run in registration order, each handed the aggregator the previous
+   * one returned
+   *
+   * @param fn the transformer to add
+   * @example addTransformer((agg) => { agg.push(myElement); return agg })
+   */
+  addTransformer: (fn: AggregatorTransformer) => void;
+  /**
+   * unregisters a {@link AggregatorTransformer | transformer}, leaving the order of the
+   * remaining ones untouched. a no-op if it was never added
+   *
+   * ℹ️ removes a single registration, so a transformer added twice must be removed twice
+   *
+   * @param fn the same function reference that was handed to {@link AggregatorControls.addTransformer | addTransformer}
+   * @example removeTransformer(myTransformer)
+   */
+  removeTransformer: (fn: AggregatorTransformer) => void;
   getCanvasElementsAtCoordinate: (coords: Coordinate) => CanvasElement[];
   draw: (ctx: CanvasRenderingContext2D) => void;
   events: ReadonlyEventHub<AggregatorEventMap>;
@@ -24,7 +42,9 @@ export const createAggregator = (
   const transformers: AggregatorTransformer[] = [];
 
   const updateAggregator = () => {
-    const resolvedCanvasElements = transformers.reduce<Aggregator>(
+    // snapshot: a transformer that adds or removes one mid pass would otherwise
+    // shift the indicies out from under the reduce
+    const resolvedCanvasElements = [...transformers].reduce<Aggregator>(
       (acc, fn) => fn(acc),
       [],
     );
@@ -32,6 +52,15 @@ export const createAggregator = (
     aggregator = resolvedCanvasElements.toSorted(
       (a, b) => a.priority - b.priority,
     );
+  };
+
+  const addTransformer = (fn: AggregatorTransformer) => {
+    transformers.push(fn);
+  };
+
+  const removeTransformer = (fn: AggregatorTransformer) => {
+    const index = transformers.indexOf(fn);
+    if (index !== -1) transformers.splice(index, 1);
   };
 
   const groupByPriority = (elements: Aggregator): Map<number, Aggregator> => {
@@ -76,8 +105,8 @@ export const createAggregator = (
 
   return {
     aggregator: () => aggregator,
-    transformers,
-    updateAggregator,
+    addTransformer,
+    removeTransformer,
     getCanvasElementsAtCoordinate,
     draw,
     events,

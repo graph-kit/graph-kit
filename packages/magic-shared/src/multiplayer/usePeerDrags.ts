@@ -102,5 +102,5 @@ export const usePeerDrags = ({
     return aggregator;
   };
 
-  surface.aggregator.transformers.push(markPeerHeldElements);
+  surface.aggregator.addTransformer(markPeerHeldElements);
 };

@@ -15,7 +15,9 @@ import { createGraphTransit } from './graph-transit.ts';
 const createSurfaceStub = (transformers: AggregatorTransformer[]) => () => ({
   name: 'surface',
   controls: {
-    aggregator: { transformers },
+    aggregator: {
+      addTransformer: (fn: AggregatorTransformer) => transformers.push(fn),
+    },
     theme: createThemeController(createSurfaceThemeOverrides()),
   },
 });

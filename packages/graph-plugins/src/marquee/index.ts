@@ -170,8 +170,8 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     return aggregator;
   };
 
-  controls.surface.aggregator.transformers.push(addSelectionBoxToAggregator);
-  controls.surface.aggregator.transformers.push(addMarqueeBoxToAggregator);
+  controls.surface.aggregator.addTransformer(addSelectionBoxToAggregator);
+  controls.surface.aggregator.addTransformer(addMarqueeBoxToAggregator);
 
   const onEnable = () => {
     controls.focus.events.subscribe('onFocusChange', updateSelectionBox);

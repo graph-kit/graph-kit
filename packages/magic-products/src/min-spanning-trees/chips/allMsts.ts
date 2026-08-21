@@ -54,7 +54,7 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
     if (!removeEdges) return agg;
     return agg.filter((el) => !graph.isEdge(el.id));
   };
-  graph.surface.aggregator.transformers.push(removeNonPhantomEdges);
+  graph.surface.aggregator.addTransformer(removeNonPhantomEdges);
 
   const mstIndexToColor = (mstIndex: number) =>
     MST_COLORS[mstIndex % MST_COLORS.length];

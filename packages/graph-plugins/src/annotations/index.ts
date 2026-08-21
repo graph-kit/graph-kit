@@ -69,7 +69,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     return aggregator;
   };
 
-  controls.surface.aggregator.transformers.push(addAnnotationsToAggregator);
+  controls.surface.aggregator.addTransformer(addAnnotationsToAggregator);
 
   const captureSnapshot = () => controls.history?.captureSnapshot();
 

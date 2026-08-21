@@ -30,7 +30,9 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
 
   const transformers: AggregatorTransformer[] = [];
   const surface = {
-    aggregator: { transformers },
+    aggregator: {
+      addTransformer: (fn: AggregatorTransformer) => transformers.push(fn),
+    },
   } as unknown as CanvasSurface;
 
   const applied: string[] = [];

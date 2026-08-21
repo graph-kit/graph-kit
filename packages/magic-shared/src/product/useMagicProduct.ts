@@ -133,7 +133,7 @@ export const useMagicProduct = (
   };
 
   if (multiplayer) {
-    magic.surface.aggregator.transformers.push(nameTagElement);
+    magic.surface.aggregator.addTransformer(nameTagElement);
   }
 
   if (magic.lensChips) {

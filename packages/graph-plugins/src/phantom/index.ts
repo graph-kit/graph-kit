@@ -77,7 +77,7 @@ export const phantom: PhantomPlugin = ({
   );
   labelThemer.enable();
 
-  controls.surface.aggregator.transformers.push(render);
+  controls.surface.aggregator.addTransformer(render);
 
   const addNode = (node: PhantomNode) => {
     nodes.push(node);

@@ -122,8 +122,8 @@
 </script>
 
 <template>
-  <Well v-if="nodeIds.length > 0">
-    <VStack>
+  <Well>
+    <VStack v-if="nodeIds.length > 0">
       <div class="max-h-[50vh] max-w-[40vw] overflow-auto">
         <table class="table-fixed border-separate border-spacing-1">
           <thead>
@@ -196,5 +196,10 @@
         </table>
       </div>
     </VStack>
+    <span
+      v-else
+      class="font-bold text-lg"
+      >No nodes to display a transition matrix</span
+    >
   </Well>
 </template>

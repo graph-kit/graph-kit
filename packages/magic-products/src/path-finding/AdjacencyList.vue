@@ -1,28 +1,24 @@
 <script setup lang="ts">
-  import ToolTip from '@core/components/Tooltip';
   import { nullThrows } from '@core/utils/assert';
   import HStack from '@magic/shared/HStack';
+  import Icon from '@magic/shared/Icon';
   import Node from '@magic/shared/Node';
+  import ToolTip from '@magic/shared/Tooltip';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-product';
-
-  import { computed } from 'vue';
-
-  import AdjacencyListCell from './AdjacencyListCell.vue';
+  import { mdiArrowRight } from '@mdi/js';
 
   const graph = useProvidedGraph();
 
-  const adjacencyList = computed(() => graph.adjacencyLists.standard.value);
-
-  const nodeIds = computed(() => graph.nodes.value.map((node) => node.id));
+  const adjacencyList = graph.adjacencyLists.standard;
 
   const labelOf = (id: string) => graph.getNode(id).label;
 
-  const edgeIdBetween = (fromId: string, toId: string) =>
+  const edgeIdBetween = (sourceId: string, targetId: string) =>
     nullThrows(
-      graph.helpers.nodes.getEdgeBetween(fromId, toId),
-      `no edge between ${fromId} and ${toId}`,
+      graph.helpers.nodes.getEdgeBetween(sourceId, targetId),
+      `no edge between ${sourceId} and ${targetId}`,
     ).id;
 
   const focusNode = (id: string) => {
@@ -34,24 +30,27 @@
   const focusEdge = (edgeId: string, nodeId: string) =>
     graph.focus.set([edgeId, nodeId]);
 
-  const edgeWeightLabel = (fromId: string, edgeId: string, toId: string) =>
-    `${labelOf(fromId)}→${labelOf(toId)}: ${graph.getEdge(edgeId).weight.toFraction()}`;
+  const edgeWeightLabel = (
+    edgeId: string,
+    sourceId: string,
+    targetId: string,
+  ) =>
+    `Edge ${labelOf(sourceId)}${labelOf(targetId)} costs ${graph.getEdge(edgeId).weight.toFraction()}`;
 
-  const noSuccessorsLabel = (fromId: string) =>
-    `${labelOf(fromId)} doesn't point to any nodes`;
+  const noTargetsLabel = (sourceId: string) =>
+    `Node ${labelOf(sourceId)} doesn't have any outgoing edges`;
 </script>
 
 <template>
-  <Well v-if="nodeIds.length > 0">
-    <div class="max-h-[50vh] max-w-[40vw] overflow-auto">
-      <VStack class="gap-2">
+  <Well>
+    <div class="max-h-[50vh] max-w-97 overflow-auto">
+      <VStack v-if="graph.nodes.value.length > 0">
         <HStack
-          v-for="(successorIds, fromId) in adjacencyList"
+          v-for="(targetIds, fromId) in adjacencyList"
           :key="fromId"
-          class="items-center gap-2"
         >
           <div
-            class="shrink-0 cursor-pointer"
+            class="shrink-0"
             @click="focusNode(fromId)"
           >
             <Node
@@ -60,41 +59,38 @@
             />
           </div>
 
-          <span class="font-bold">&rarr;</span>
+          <Icon
+            :path="mdiArrowRight"
+            class="shrink-0"
+          ></Icon>
 
           <HStack
-            v-if="successorIds.length > 0"
-            class="flex-wrap items-center"
+            v-if="targetIds.length > 0"
+            class="flex-wrap"
           >
-            <AdjacencyListCell
-              v-for="targetId in successorIds"
+            <ToolTip
+              v-for="targetId in targetIds"
               :key="edgeIdBetween(fromId, targetId)"
-              :edge-id="edgeIdBetween(fromId, targetId)"
+              :label="
+                edgeWeightLabel(
+                  edgeIdBetween(fromId, targetId),
+                  fromId,
+                  targetId,
+                )
+              "
             >
-              <ToolTip
-                :label="
-                  edgeWeightLabel(
-                    fromId,
-                    edgeIdBetween(fromId, targetId),
-                    targetId,
-                  )
-                "
-              >
-                <template #trigger>
-                  <Node
-                    @click="
-                      focusEdge(edgeIdBetween(fromId, targetId), targetId)
-                    "
-                    :id="targetId"
-                    :scale="0.75"
-                  />
-                </template>
-              </ToolTip>
-            </AdjacencyListCell>
+              <template #trigger>
+                <Node
+                  @click="focusEdge(edgeIdBetween(fromId, targetId), targetId)"
+                  :id="targetId"
+                  :scale="0.75"
+                />
+              </template>
+            </ToolTip>
           </HStack>
           <ToolTip
             v-else
-            :label="noSuccessorsLabel(fromId)"
+            :label="noTargetsLabel(fromId)"
           >
             <template #trigger>
               <span class="font-bold text-lg">None</span>
@@ -102,6 +98,11 @@
           </ToolTip>
         </HStack>
       </VStack>
+      <span
+        v-else
+        class="font-bold text-lg"
+        >No nodes to display an adjacency list</span
+      >
     </div>
   </Well>
 </template>

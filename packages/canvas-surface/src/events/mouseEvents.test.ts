@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createApp, defineComponent, h, nextTick } from 'vue';
 
@@ -7,14 +7,24 @@ import { useCanvasSurface } from '../index.ts';
 import type { ElementEvents } from './index.ts';
 
 // jsdom has no 2d context, and the surface resolves one on mount before anything else runs
-HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
-  resetTransform: vi.fn(),
-  clearRect: vi.fn(),
-  setTransform: vi.fn(),
-  fillRect: vi.fn(),
-  createPattern: vi.fn(),
-  drawImage: vi.fn(),
-})) as any;
+HTMLCanvasElement.prototype.getContext = vi.fn(function (this: HTMLCanvasElement) {
+  return {
+    canvas: this,
+    resetTransform: vi.fn(),
+    clearRect: vi.fn(),
+    setTransform: vi.fn(),
+    fillRect: vi.fn(),
+    createPattern: vi.fn(),
+    drawImage: vi.fn(),
+  };
+}) as any;
+
+const mounted: (() => void)[] = [];
+
+// the surface keeps a requestAnimationFrame repaint loop alive until it unmounts
+afterEach(() => {
+  for (const unmount of mounted.splice(0)) unmount();
+});
 
 /**
  * the real composable inside a real component tree, because what is under test is the
@@ -39,7 +49,12 @@ const mountSurface = async () => {
 
   const host = document.createElement('div');
   document.body.appendChild(host);
-  createApp(Parent).mount(host);
+  const app = createApp(Parent);
+  app.mount(host);
+  mounted.push(() => {
+    app.unmount();
+    host.remove();
+  });
   await nextTick();
 
   return { surface, canvas: host.querySelector('canvas')! };

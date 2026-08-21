@@ -1,12 +1,13 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
   import {
+    mdiAccountMultiple,
     mdiAccountMultiplePlus,
+    mdiBillboard,
     mdiBroadcast,
+    mdiClose,
     mdiCloseNetworkOutline,
     mdiExitRun,
-    mdiEyeOffOutline,
-    mdiEyeOutline,
     mdiHumanGreetingProximity,
     mdiKeyboardOutline,
   } from '@mdi/js';
@@ -91,16 +92,29 @@
 
   const room = computed(() => multiplayer.value.room.state.value);
 
-  const rosterPanel = computed(() => multiplayer.value.ui.rosterPanel);
+  const ui = computed(() => multiplayer.value.ui);
 
   const rosterToggle = computed(() =>
-    rosterPanel.value.isShown.value
-      ? { text: 'Hide Collaborators', icon: mdiEyeOffOutline }
-      : { text: 'Show Collaborators', icon: mdiEyeOutline },
+    ui.value.rosterPanel.isShown.value
+      ? { text: 'Hide Collaborators', icon: mdiClose }
+      : { text: 'Show Collaborators', icon: mdiAccountMultiple },
+  );
+
+  const joinBannerToggle = computed(() =>
+    ui.value.joinBanner.isShown.value
+      ? { text: 'Hide Join Banner', icon: mdiClose }
+      : { text: 'Show Join Banner', icon: mdiBillboard },
   );
 
   const toggleRoster = () => {
-    const panel = rosterPanel.value;
+    const panel = ui.value.rosterPanel;
+    panel.setHighlight(false);
+    if (panel.isShown.value) return panel.hide();
+    panel.show();
+  };
+
+  const toggleJoinBanner = () => {
+    const panel = ui.value.joinBanner;
     panel.setHighlight(false);
     if (panel.isShown.value) return panel.hide();
     panel.show();
@@ -136,11 +150,19 @@
     >
       <MenuItem
         @click="toggleRoster"
-        @mouseenter="rosterPanel.setHighlight(true)"
-        @mouseleave="rosterPanel.setHighlight(false)"
+        @mouseenter="ui.rosterPanel.setHighlight(true)"
+        @mouseleave="ui.rosterPanel.setHighlight(false)"
         :icon="rosterToggle.icon"
       >
         {{ rosterToggle.text }}
+      </MenuItem>
+      <MenuItem
+        @click="toggleJoinBanner"
+        @mouseenter="ui.joinBanner.setHighlight(true)"
+        @mouseleave="ui.joinBanner.setHighlight(false)"
+        :icon="joinBannerToggle.icon"
+      >
+        {{ joinBannerToggle.text }}
       </MenuItem>
       <MenuItem
         @click="multiplayer.room.leave"

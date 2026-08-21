@@ -14,10 +14,10 @@ import {
 import { AssignableTier, Tier } from '@multiplayer/protocol/tiers';
 import { Socket } from 'socket.io-client';
 
-import { ComputedRef, Ref } from 'vue';
+import { ComputedRef } from 'vue';
 
+import { ComponentControls } from '../component-slot/useComponent.ts';
 import { MultiplayerHostField } from '../product/types.ts';
-import { RosterPanelControls } from '../ui/multiplayer/useRosterPanel.ts';
 import { MultiplayerEventMap } from './events.ts';
 
 export type MultiplayerSocket = Socket<
@@ -60,7 +60,8 @@ export type ProductMultiplayer = {
 
   /** the chrome a room brings with it, which lives and dies with the room */
   ui: {
-    rosterPanel: RosterPanelControls;
+    rosterPanel: ComponentControls;
+    joinBanner: ComponentControls;
   };
 };
 

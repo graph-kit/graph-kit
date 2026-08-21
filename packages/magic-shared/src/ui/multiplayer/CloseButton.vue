@@ -4,17 +4,18 @@
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';
   import Tooltip from '../../components/tooltip/Tooltip.vue';
-  import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
 
-  const { multiplayer } = useConnectedMultiplayer();
+  const emit = defineEmits<{
+    closed: [];
+  }>();
 </script>
 
 <template>
   <div>
-    <Tooltip label="Close Panel">
+    <Tooltip label="Close">
       <template #trigger>
         <Button
-          @click="multiplayer.ui.rosterPanel.hide"
+          @click="emit('closed')"
           class="absolute top-2 right-2 hover:dark:bg-red-600 hover:bg-red-600 hover:text-white p-1"
         >
           <Icon

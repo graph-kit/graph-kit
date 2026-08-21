@@ -50,8 +50,6 @@
     return graph.transitionMatrix.value[sourceIndex][targetIndex].toFraction();
   };
 
-  const focusEdge = (edgeId: string) => graph.focus.set([edgeId]);
-
   const focusSourceNodeAndOutboundEdges = (
     sourceId: GNode['id'],
     sourceIndex: number,
@@ -184,14 +182,17 @@
                     :delay="400"
                   >
                     <template #trigger>
-                      <td
-                        :class="dataCellClass"
-                        :style="{ backgroundColor: color, cursor }"
-                        @click="focusEdge(cell.edge.id)"
-                      >
-                        <span class="block truncate">{{
-                          cellText(row.id, cell.id)
-                        }}</span>
+                      <td class="p-0">
+                        <button
+                          type="button"
+                          :class="dataCellClass"
+                          :style="{ backgroundColor: color, cursor }"
+                          @click="graph.focus.set([cell.edge.id])"
+                        >
+                          <span class="block truncate">{{
+                            cellText(row.id, cell.id)
+                          }}</span>
+                        </button>
                       </td>
                     </template>
                   </Tooltip>

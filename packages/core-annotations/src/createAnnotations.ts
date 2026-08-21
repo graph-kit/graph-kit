@@ -23,12 +23,20 @@ import {
   LASER_DECAY_MS,
   LASER_FADE_MS,
   LASER_SEGMENT_LENGTH,
+  LASER_TAPER_MIN_SCALE,
+  LASER_TAPER_RUNS,
+  LASER_TRAIL_ID,
   LASER_TRAIL_MAX_LENGTH,
   LASER_TRAIL_MS,
 } from './constants.ts';
 import { createAnnotationsEventRegistry } from './events.ts';
 import type { TrailPoint } from './laserTrail.ts';
-import { appendResampled, trimOlderThan, trimToLength } from './laserTrail.ts';
+import {
+  appendResampled,
+  taperRuns,
+  trimOlderThan,
+  trimToLength,
+} from './laserTrail.ts';
 import type {
   Annotation,
   AnnotationCanvasElement,
@@ -254,16 +262,30 @@ export const createAnnotations = ({
     }),
   });
 
-  const laserTrailElement = (): AnnotationCanvasElement => ({
-    id: IN_PROGRESS_ANNOTATION_ID,
-    priority: ANNOTATION_IN_PROGRESS_PRIORITY,
-    shape: scribble({
-      type: 'draw',
-      points: laserTrail,
-      fillColor: color(),
-      brushWeight: brushWeight(),
-    }),
-  });
+  /**
+   * the trail is painted as a handful of runs at rising brush weights rather than one
+   * stroke of one weight, so it thins out towards the tail the way a flick of light does
+   */
+  const laserTrailElements = (): AnnotationCanvasElement[] => {
+    const runs = taperRuns(laserTrail, LASER_TAPER_RUNS);
+
+    return runs.map((points, run) => {
+      const towardsHead = (run + 1) / runs.length;
+      const scale =
+        LASER_TAPER_MIN_SCALE + (1 - LASER_TAPER_MIN_SCALE) * towardsHead;
+
+      return {
+        id: `${LASER_TRAIL_ID}-${run}`,
+        priority: ANNOTATION_IN_PROGRESS_PRIORITY,
+        shape: scribble({
+          type: 'draw',
+          points,
+          fillColor: color(),
+          brushWeight: Math.max(1, brushWeight() * scale),
+        }),
+      };
+    });
+  };
 
   const strokeInFlightElement = (): AnnotationCanvasElement => ({
     id: IN_PROGRESS_ANNOTATION_ID,
@@ -297,7 +319,7 @@ export const createAnnotations = ({
 
     if (isErasing()) elements.push(eraserCursorElement());
     else if (isLaserPointing()) {
-      if (laserTrail.length > 0) elements.push(laserTrailElement());
+      elements.push(...laserTrailElements());
       // the trail is resampled, so its head sits up to a segment behind the pointer:
       // the dot is what keeps the laser under the cursor while the trail catches up
       elements.push(laserCursorElement());

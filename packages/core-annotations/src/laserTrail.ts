@@ -98,3 +98,24 @@ export const trimToLength = (trail: TrailPoint[], maxLength: number) => {
     return;
   }
 };
+
+/**
+ * splits the trail into `count` runs from tail to head, each sharing a point with the next
+ * so the runs paint as one continuous stroke. drawn at rising brush weights, this is what
+ * tapers the trail into the cursor instead of ending it in a flat stub.
+ */
+export const taperRuns = (trail: TrailPoint[], count: number) => {
+  if (trail.length < 2) return [];
+
+  const runs: TrailPoint[][] = [];
+  const perRun = (trail.length - 1) / count;
+
+  for (let run = 0; run < count; run++) {
+    const from = Math.floor(run * perRun);
+    const to = Math.floor((run + 1) * perRun);
+    if (to - from < 1) continue;
+    runs.push(trail.slice(from, to + 1));
+  }
+
+  return runs;
+};

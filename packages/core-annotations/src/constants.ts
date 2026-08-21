@@ -28,6 +28,10 @@ export const LASER_FADE_MS = 280;
 /** how often the trail is trimmed; a frame, so the tail slides rather than steps */
 export const LASER_DECAY_MS = 16;
 
+/** how many runs the trail is drawn in to taper it, and how thin its tail run gets */
+export const LASER_TAPER_RUNS = 6;
+export const LASER_TAPER_MIN_SCALE = 0.2;
+
 export const ERASER_OUTLINE_WIDTH = 2;
 
 /**
@@ -40,4 +44,5 @@ export const ANNOTATION_CURSOR_PRIORITY = 5050;
 
 export const ERASER_CURSOR_ID = 'annotation-eraser-cursor';
 export const LASER_CURSOR_ID = 'annotation-laser-cursor';
+export const LASER_TRAIL_ID = 'annotation-laser-trail';
 export const IN_PROGRESS_ANNOTATION_ID = 'annotation-in-progress';

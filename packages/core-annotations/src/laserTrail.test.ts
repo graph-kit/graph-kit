@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TrailPoint } from './laserTrail.ts';
 import {
   appendResampled,
+  taperRuns,
   trailLength,
   trimOlderThan,
   trimToLength,
@@ -96,5 +97,24 @@ describe('laser trail', () => {
     trimToLength(trail, 500);
 
     expect(trailLength(trail)).toBeCloseTo(500);
+  });
+
+  it('splits the trail into runs that share their ends, so they paint as one', () => {
+    const trail: TrailPoint[] = Array.from({ length: 13 }, (_, i) => ({
+      x: i,
+      y: 0,
+      at: i,
+    }));
+
+    const runs = taperRuns(trail, 4);
+
+    expect(runs).toHaveLength(4);
+    expect(runs[0][0]).toEqual(trail[0]);
+    expect(runs.at(-1)?.at(-1)).toEqual(trail.at(-1));
+    runs.slice(1).forEach((run, i) => expect(run[0]).toEqual(runs[i].at(-1)));
+  });
+
+  it('has nothing to taper until the trail is a line', () => {
+    expect(taperRuns([{ x: 0, y: 0, at: 0 }], 6)).toEqual([]);
   });
 });

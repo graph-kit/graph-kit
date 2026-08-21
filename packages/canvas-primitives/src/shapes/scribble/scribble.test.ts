@@ -108,6 +108,36 @@ describe('scribble', () => {
       });
     });
 
+    describe('click scribble with duplicate points', () => {
+      // regression: a click with no movement can record 2+ coincident
+      // points (e.g. [{50,50}, {50,50}]) instead of a single point, which
+      // used to make the zero-length line segment invisible to hit tests (aka a speck)
+      const dot = scribble({
+        type: 'draw',
+        points: [
+          { x: 50, y: 50 },
+          { x: 50, y: 50 },
+        ],
+        brushWeight: 10,
+      });
+
+      it('hits the click point', () => {
+        expect(dot.hitbox({ x: 50, y: 50 })).toBe(true);
+      });
+
+      it('an eraser box overlapping the click point overlaps the scribble', () => {
+        expect(
+          dot.overlapsBox({ at: { x: 48, y: 48 }, width: 4, height: 4 }),
+        ).toBe(true);
+      });
+
+      it('an eraser box far from the click point does not overlap', () => {
+        expect(
+          dot.overlapsBox({ at: { x: 500, y: 500 }, width: 4, height: 4 }),
+        ).toBe(false);
+      });
+    });
+
     describe('multi-point draw scribble', () => {
       // horizontal path from (0,0) to (100,0) with brushWeight=10
       const path = scribble({

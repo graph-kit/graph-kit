@@ -55,6 +55,9 @@ export const lineOverlapsBox = (schema: LineSchemaWithDefaults) => {
 
     if (!inBoundingBox) return false;
 
+    // zero-length line (e.g. a scribble point recorded from a single click with no movement; aka a speck)
+    if (lineLength === 0) return true;
+
     const segmentBoundBoxes = Array.from({ length: numSegments }, (_, i) => {
       const segmentStartX = start.x + dx * segmentLength * i;
       const segmentStartY = start.y + dy * segmentLength * i;

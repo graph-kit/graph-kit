@@ -1,37 +1,22 @@
 <script setup lang="ts">
   import {
     TooltipContent,
-    type TooltipContentProps,
     TooltipPortal,
     TooltipProvider,
     TooltipRoot,
     TooltipTrigger,
   } from 'reka-ui';
 
-  import {
-    type HTMLAttributes,
-    computed,
-    normalizeClass,
-    useAttrs,
-    useSlots,
-  } from 'vue';
+  import { computed, normalizeClass, useAttrs, useSlots } from 'vue';
 
   import { cn } from '../../cn.ts';
+  import { type TooltipProps } from './types.ts';
 
   defineOptions({ inheritAttrs: false });
 
-  interface Props {
-    /**
-     * required, plain-text description used for the accessible name/description.
-     * always what screen readers announce, regardless of what's slotted visually.
-     */
-    label: string | undefined;
-    side?: TooltipContentProps['side'];
-    class?: HTMLAttributes['class'];
-  }
-
-  const props = withDefaults(defineProps<Props>(), {
+  const props = withDefaults(defineProps<TooltipProps>(), {
     side: 'top',
+    delay: 0,
   });
 
   /** stays true across the trigger, the tooltip, and the gap between them, unlike trigger mouseenter/mouseleave */
@@ -53,7 +38,7 @@
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="0">
+  <TooltipProvider :delay-duration="delay">
     <!-- with no content there is no grace area to close on pointer exit, so leaving the trigger has to -->
     <!-- closing on trigger click would punch a hole in `open` while the pointer is still on the trigger -->
     <!-- focus handed back by something closing, a menu returning it to its trigger or a

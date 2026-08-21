@@ -21,7 +21,6 @@
   import MeBadge from './MeBadge.vue';
   import MoveUser from './MoveUser.vue';
   import ProductBadge from './ProductBadge.vue';
-  import ReconnectingBadge from './ReconnectingBadge.vue';
   import TierBadge from './TierBadge.vue';
   import TierEdit from './TierEdit.vue';
 
@@ -34,6 +33,12 @@
   const props = defineProps<Props>();
 
   const isMe = computed(() => props.member.userId === room.value.me.id);
+
+  const disconnectedTooltip = computed(() =>
+    props.member.connected
+      ? undefined
+      : `${props.member.displayName} is disconnected`,
+  );
 
   const menuItems = computed(() =>
     [
@@ -59,7 +64,11 @@
       <HStack
         class="w-full hover:bg-gray-300 dark:hover:bg-gray-900 py-1 px-2 cursor-pointer justify-between rounded-md"
       >
-        <TruncatedText :class="{ 'opacity-50': !member.connected }">
+        <TruncatedText
+          :class="{ 'opacity-50': !member.connected }"
+          :tooltip="disconnectedTooltip"
+          side="left"
+        >
           {{ member.displayName }}
         </TruncatedText>
         <HStack
@@ -67,7 +76,6 @@
           class="shrink-0"
         >
           <MeBadge v-if="isMe" />
-          <ReconnectingBadge v-else-if="!member.connected" />
           <ProductBadge
             v-else-if="member.productId"
             :product-id="member.productId"

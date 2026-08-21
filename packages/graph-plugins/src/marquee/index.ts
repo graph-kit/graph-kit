@@ -12,7 +12,11 @@ import { ANCHOR_PLUGIN_ID } from '../anchors/constants.ts';
 import { NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD } from '../node-drag/constants.ts';
 import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../surface/setupCursor.ts';
 import { GraphUnderCursor } from '../surface/types.ts';
-import { MARQUEE_PLUGIN_ID, MARQUEE_SHAPE_ID } from './constants.ts';
+import {
+  MARQUEE_PLUGIN_ID,
+  MARQUEE_SHAPE_ID,
+  MIN_MARQUEE_EXTENT,
+} from './constants.ts';
 import { createMarqueeEventRegistry } from './events.ts';
 import { getSelectionBox, getSurfaceArea } from './helpers.ts';
 import { createMarqueeThemeOverrides } from './themes.ts';
@@ -24,19 +28,17 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
 
   const theme = createThemeController(createMarqueeThemeOverrides());
 
-  /*
-    the drag box is an unreliable place to hang a cursor: the pointer rides its
-    moving corner, where the boundary hit test is a coin flip, and while width or
-    height is still zero there is no element in the aggregator to carry one at
-    all. canvas.cursor resolves ahead of the element lookup, so it holds for the
-    whole drag regardless
-  */
+  // canvas.cursor, not element data: the pointer rides the box's corner, right on
+  // the hit test boundary
   const cursorLayer = controls.surface.theme.createLayer(
     `${MARQUEE_PLUGIN_ID}/cursor`,
   );
 
   let marqueeBox: BoundingBox | undefined = undefined;
   let selectionBox: BoundingBox | undefined = undefined;
+
+  // latched, not live: a drag back to its own origin is zero sized again
+  let marqueeBoxHasMoved = false;
 
   /**
    * given a mouse event, engages or disengages the marquee box
@@ -56,6 +58,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       width: 0,
       height: 0,
     };
+    marqueeBoxHasMoved = false;
     marqueeEventHub.emit('onMarqueeBeginSelection', startingCoords);
   };
 
@@ -63,6 +66,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     if (!marqueeBox) return;
     const finalMarqueeBox = marqueeBox;
     marqueeBox = undefined;
+    marqueeBoxHasMoved = false;
     marqueeEventHub.emit('onMarqueeEndSelection', finalMarqueeBox);
   };
 
@@ -99,17 +103,28 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     const { x, y } = coords;
     marqueeBox.width = x - marqueeBox.at.x;
     marqueeBox.height = y - marqueeBox.at.y;
+
+    if (marqueeBox.width !== 0 || marqueeBox.height !== 0) {
+      marqueeBoxHasMoved = true;
+    }
+
     updateMarqueeSelectedItems(marqueeBox);
   };
 
   const getMarqueeBoxCanvasElement = (box: BoundingBox): CanvasElement => {
+    const { at, width, height } = normalizeBoundingBox(box);
+    const borderWidth = theme._resolveToken('marquee.drag.border.width');
+
     const shape = controls.surface.shapes.rect({
       id: MARQUEE_SHAPE_ID,
-      ...normalizeBoundingBox(box),
+      at,
+      // a zero extent paints nothing, so a dead straight drag collapses to a line
+      width: Math.max(width, borderWidth || MIN_MARQUEE_EXTENT),
+      height: Math.max(height, borderWidth || MIN_MARQUEE_EXTENT),
       fillColor: theme._resolveToken('marquee.drag.color'),
       stroke: {
         color: theme._resolveToken('marquee.drag.border.color'),
-        lineWidth: theme._resolveToken('marquee.drag.border.width'),
+        lineWidth: borderWidth,
       },
     });
 
@@ -120,22 +135,10 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     };
   };
 
-  /*
-    mousedown engages the box before the pointer has moved, so an engaged box is
-    not yet a drag. either axis alone counts: a dead straight drag leaves the
-    other at zero, and requiring both would drop the cursor mid gesture
-  */
-  const hasMarqueeBoxMoved = () =>
-    !!marqueeBox && (marqueeBox.width !== 0 || marqueeBox.height !== 0);
-
   const addMarqueeBoxToAggregator = (aggregator: Aggregator) => {
-    if (!marqueeBox) return aggregator;
+    if (!marqueeBox || !marqueeBoxHasMoved) return aggregator;
 
-    const { width, height } = marqueeBox;
-    if (width === 0 || height === 0) return aggregator;
-
-    const selectionBoxCanvasElement = getMarqueeBoxCanvasElement(marqueeBox);
-    aggregator.push(selectionBoxCanvasElement);
+    aggregator.push(getMarqueeBoxCanvasElement(marqueeBox));
     return aggregator;
   };
 
@@ -194,7 +197,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
 
   const onEnable = () => {
     cursorLayer.set('canvas.cursor', () =>
-      hasMarqueeBoxMoved()
+      marqueeBoxHasMoved
         ? theme._resolveToken('marquee.drag.cursor')
         : undefined,
     );

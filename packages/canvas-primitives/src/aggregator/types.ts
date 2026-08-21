@@ -32,9 +32,14 @@ export type CanvasElement = {
    */
   shape: Shape;
   /**
-   * attached metadata. a handful of keys are reserved by the canvas itself, each declared as
-   * a constant alongside the code that reads it: `CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY` in
-   * `createAggregator` and `CANVAS_ELEMENT_CURSOR_FIELD_KEY` in `setupCanvasCursor`
+   * marks this element as paint only. it renders like any other, but
+   * `getCanvasElementsAtCoordinate` never returns it, so the pointer lands on whatever
+   * sits beneath it instead.
+   */
+  paintOnly?: boolean;
+  /**
+   * attached metadata. a handful of keys are reserved by the code that reads them, each declared
+   * as a constant alongside it: `CANVAS_ELEMENT_CURSOR_FIELD_KEY` in `setupCanvasCursor`
    */
   data?: Record<string, unknown>;
 };

@@ -3,7 +3,6 @@ import { DeepReadonly } from 'ts-essentials';
 
 import { ShapeRenderer } from '../animation/index.ts';
 import { Coordinate } from '../types/utility.ts';
-import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from './constants.ts';
 import { AggregatorEventMap, createAggregatorEventRegistry } from './events.ts';
 import { Aggregator, AggregatorTransformer, CanvasElement } from './types.ts';
 
@@ -66,14 +65,13 @@ export const createAggregator = (
    *
    * @param coords Point in canvas space to test against {@link CanvasElement.shape | element} hitboxes
    * @returns All canvas elements whose hitbox contains coords, ordered back-to-front by paint
-   * priority, excluding those flagged {@link CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY | paint only}
+   * priority, excluding those flagged {@link CanvasElement.paintOnly | paint only}
    * @example const els = getCanvasElementsAtCoordinate({ x: 200, y: 550 })
    * console.log(els) // [node, nodeAnchor] meaning nodeAnchor is above the node
    */
   const getCanvasElementsAtCoordinate = (coords: Coordinate) =>
     aggregator.filter(
-      ({ shape, data }) =>
-        !data?.[CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY] && shape.hitbox(coords),
+      ({ shape, paintOnly }) => !paintOnly && shape.hitbox(coords),
     );
 
   return {

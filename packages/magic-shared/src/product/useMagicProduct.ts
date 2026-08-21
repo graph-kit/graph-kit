@@ -111,6 +111,7 @@ export const useMagicProduct = (
       const el: CanvasElement = {
         id: userId + '_nameTag',
         priority: Infinity,
+        paintOnly: true,
         shape: rect({
           at: p.cursorPosition ?? { x: 0, y: 0 },
           height: NAME_TAG_HEIGHT,

@@ -1,4 +1,3 @@
-import { CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY } from '@canvas/primitives/aggregator/constants';
 import { Aggregator } from '@canvas/primitives/aggregator/types';
 import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createAnnotations } from '@core/annotations/index';
@@ -66,13 +65,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   // not clickable and the tool cursors are not elements the pointer can land on
   const addAnnotationsToAggregator = (aggregator: Aggregator) => {
     for (const element of engine.canvasElements()) {
-      aggregator.push({
-        ...element,
-        data: {
-          ...element.data,
-          [CANVAS_ELEMENT_PAINT_ONLY_FIELD_KEY]: true,
-        },
-      });
+      aggregator.push({ ...element, paintOnly: true });
     }
     return aggregator;
   };

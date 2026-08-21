@@ -2,18 +2,19 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
 import {
-  Room,
-  addMember,
   applyProductDocUpdate,
-  canRunRoomCommand,
-  canWriteProduct,
-  createRoom,
   encodeProductDoc,
   encodeProductDocDiff,
+} from './documents.ts';
+import { Room, createRoom } from './rooms.ts';
+import {
+  addMember,
+  canRunRoomCommand,
+  canWriteProduct,
   isHost,
   removeMember,
   setTier,
-} from './rooms.ts';
+} from './roster.ts';
 
 /** a document holding one node, in the shape a graph product would write */
 const seedDoc = () => {

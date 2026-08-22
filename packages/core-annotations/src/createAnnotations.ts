@@ -20,10 +20,24 @@ import {
   ERASING_ALPHA,
   IN_PROGRESS_ANNOTATION_ID,
   LASER_CURSOR_ID,
+  LASER_FADE_MS,
+  LASER_SEGMENT_LENGTH,
+  LASER_TAPER_MIN_SCALE,
+  LASER_TAPER_RUNS,
+  LASER_TRAIL_ID,
   LASER_TRAIL_LENGTH,
+  LASER_TRAIL_MAX_LENGTH,
+  LASER_TRAIL_MS,
+  LASER_TRIM_MS,
 } from './constants.ts';
 import { createAnnotationsEventRegistry } from './events.ts';
-import { laserTrail } from './laserTrail.ts';
+import type { TrailPoint } from './laserTrail.ts';
+import {
+  appendResampled,
+  taperRuns,
+  trimOlderThan,
+  trimToLength,
+} from './laserTrail.ts';
 import type {
   Annotation,
   AnnotationCanvasElement,
@@ -61,10 +75,21 @@ export const createAnnotations = ({
   // stroke can name the annotation it is going to become before it becomes one
   let strokeId = '';
   const erasedIds = new Set<string>();
+  // the laser keeps its own points: they carry a timestamp, and unlike a stroke in flight
+  // they are never committed to anything
+  let laserTrail: TrailPoint[] = [];
+  let laserDecayInterval: ReturnType<typeof setInterval> | undefined;
   let lastMoveTime = Date.now();
 
   const isErasing = () => mode() === 'erasing';
   const isLaserPointing = () => mode() === 'laser';
+
+  // a stroke keeps the mode it began in: `setMode` is public, and a tool picked mid stroke
+  // used to leave the laser committing its first point as an annotation and its decay
+  // timer running for the life of the page
+  let strokeMode: AnnotationMode = mode();
+  const isErasingStroke = () => strokeMode === 'erasing';
+  const isLaserStroke = () => strokeMode === 'laser';
 
   const emitChange = (added: Annotation[], removedIds: string[]) => {
     if (added.length === 0 && removedIds.length === 0) return;
@@ -122,15 +147,37 @@ export const createAnnotations = ({
     }
   };
 
-  /** the laser keeps every point it was given and shows only the live tail of them */
-  const visibleStrokePoints = () =>
-    isLaserPointing()
-      ? laserTrail(strokePoints, Date.now() - lastMoveTime)
-      : strokePoints;
+  /**
+   * while the pointer moves the trail holds a fixed span of motion, so its length is the
+   * distance just covered. once it stalls the span collapses on a curve rather than at a
+   * constant rate, which reads as the tail whipping after the cursor instead of a line
+   * being wound in
+   */
+  const trailWindow = (now: number) => {
+    const stalledFor = now - lastMoveTime;
+    if (stalledFor <= 0) return LASER_TRAIL_MS;
+
+    const fade = Math.min(1, stalledFor / LASER_FADE_MS);
+    return LASER_TRAIL_MS * (1 - fade * fade);
+  };
+
+  const startDecayTimer = () => {
+    if (laserDecayInterval) return;
+    laserDecayInterval = setInterval(() => {
+      const now = Date.now();
+      trimOlderThan(laserTrail, now - trailWindow(now));
+    }, LASER_TRIM_MS);
+  };
+
+  const stopDecayTimer = () => {
+    if (!laserDecayInterval) return;
+    clearInterval(laserDecayInterval);
+    laserDecayInterval = undefined;
+  };
 
   const inFlightStroke = (): InFlightStroke => ({
     id: strokeId,
-    mode: isLaserPointing() ? 'laser' : 'drawing',
+    mode: isLaserStroke() ? 'laser' : 'drawing',
     points: [...strokePoints],
     fillColor: color(),
     brushWeight: brushWeight(),
@@ -138,39 +185,63 @@ export const createAnnotations = ({
 
   const beginStroke = (coords: Coordinate) => {
     isDrawing = true;
+    strokeMode = mode();
     strokeId = generateId();
     strokePoints = [coords];
     lastMoveTime = Date.now();
 
-    if (isErasing()) {
+    if (isErasingStroke()) {
       markErased(coords);
       return;
     }
+
+    if (isLaserStroke()) {
+      laserTrail = [{ ...coords, at: lastMoveTime }];
+      startDecayTimer();
+    }
+
     events.emit('onStrokeBegan', inFlightStroke());
   };
 
   const extendStroke = (coords: Coordinate) => {
     if (!isDrawing) return;
 
-    if (isErasing()) {
+    if (isErasingStroke()) {
       markErased(coords);
       return;
     }
 
+    if (isLaserStroke()) {
+      const now = Date.now();
+      // jitter under the resample spacing plants nothing, and counting it as movement
+      // would hold the fade off forever
+      const moved = appendResampled(
+        laserTrail,
+        { ...coords, at: now },
+        LASER_SEGMENT_LENGTH,
+      );
+      if (moved) lastMoveTime = now;
+      trimToLength(laserTrail, LASER_TRAIL_MAX_LENGTH);
+    } else {
+      lastMoveTime = Date.now();
+    }
+
+    // what peers are sent is points and no timestamps, so their copy of a laser is held
+    // by size and bled off against their own clock
     strokePoints.push(coords);
-    if (isLaserPointing() && strokePoints.length > LASER_TRAIL_LENGTH) {
+    if (isLaserStroke() && strokePoints.length > LASER_TRAIL_LENGTH) {
       strokePoints.shift();
     }
 
-    lastMoveTime = Date.now();
     events.emit('onStrokeExtended', [coords]);
   };
 
   const endStroke = () => {
     if (!isDrawing) return;
     isDrawing = false;
+    stopDecayTimer();
 
-    if (isErasing()) {
+    if (isErasingStroke()) {
       const ids = [...erasedIds];
       erasedIds.clear();
       remove(ids);
@@ -181,7 +252,10 @@ export const createAnnotations = ({
     const id = strokeId;
     strokePoints = [];
 
-    if (!isLaserPointing()) {
+    // the laser leaves nothing behind, which is the whole point of it
+    laserTrail = [];
+
+    if (!isLaserStroke()) {
       add([
         {
           id,
@@ -199,11 +273,13 @@ export const createAnnotations = ({
   const abortStroke = () => {
     // announced even though nothing commits: a stroke abandoned mid flight is still a
     // stroke that stopped, and whoever was shown it has to be told to drop it
-    const wasDrawingStroke = isDrawing && !isErasing();
+    const wasDrawingStroke = isDrawing && !isErasingStroke();
 
     isDrawing = false;
     strokePoints = [];
+    laserTrail = [];
     erasedIds.clear();
+    stopDecayTimer();
 
     if (wasDrawingStroke) events.emit('onStrokeEnded');
   };
@@ -222,22 +298,49 @@ export const createAnnotations = ({
     }),
   });
 
+  // brush weight is the width of a stroke, so half of it is the radius that matches it:
+  // the tip is the head of the trail, not a bead sitting on top of it
   const laserCursorElement = (): AnnotationCanvasElement => ({
     id: LASER_CURSOR_ID,
     priority: ANNOTATION_CURSOR_PRIORITY,
     shape: circle({
       at: surface.cursorCoordinates.value,
-      radius: brushWeight(),
+      radius: brushWeight() / 2,
       fillColor: color(),
     }),
   });
+
+  /**
+   * the trail is painted as a handful of runs at rising brush weights rather than one
+   * stroke of one weight, so it thins out towards the tail the way a flick of light does
+   */
+  const laserTrailElements = (): AnnotationCanvasElement[] => {
+    const runs = taperRuns(laserTrail, LASER_TAPER_RUNS);
+
+    return runs.map((points, run) => {
+      const towardsHead = (run + 1) / runs.length;
+      const scale =
+        LASER_TAPER_MIN_SCALE + (1 - LASER_TAPER_MIN_SCALE) * towardsHead;
+
+      return {
+        id: `${LASER_TRAIL_ID}-${run}`,
+        priority: ANNOTATION_IN_PROGRESS_PRIORITY,
+        shape: scribble({
+          type: 'draw',
+          points,
+          fillColor: color(),
+          brushWeight: Math.max(1, brushWeight() * scale),
+        }),
+      };
+    });
+  };
 
   const strokeInFlightElement = (): AnnotationCanvasElement => ({
     id: IN_PROGRESS_ANNOTATION_ID,
     priority: ANNOTATION_IN_PROGRESS_PRIORITY,
     shape: scribble({
       type: 'draw',
-      points: visibleStrokePoints(),
+      points: strokePoints,
       fillColor: color(),
       brushWeight: brushWeight(),
     }),
@@ -262,10 +365,18 @@ export const createAnnotations = ({
     // they outlive the session that drew them, and a peer's arrive without one
     if (!isActive()) return elements;
 
-    if (isErasing()) elements.push(eraserCursorElement());
-    else if (isDrawing && visibleStrokePoints().length > 0) {
+    const isPlainStroke = !isErasingStroke() && !isLaserStroke();
+    if (isDrawing && isPlainStroke && strokePoints.length > 0) {
       elements.push(strokeInFlightElement());
-    } else if (isLaserPointing()) elements.push(laserCursorElement());
+    }
+
+    elements.push(...laserTrailElements());
+
+    // the cursor follows the mode rather than the stroke: it is what the next stroke will
+    // be, and the trail is resampled, so its head sits up to a segment behind the pointer
+    // and the dot is what keeps the laser under the cursor while the trail catches up
+    if (isErasing()) elements.push(eraserCursorElement());
+    else if (isLaserPointing()) elements.push(laserCursorElement());
 
     return elements;
   };

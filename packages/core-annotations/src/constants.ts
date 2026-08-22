@@ -10,11 +10,39 @@ export const ERASER_BRUSH_RADIUS = 10;
 /** alpha suffix marking an annotation the eraser is over but has not committed yet */
 export const ERASING_ALPHA = '50';
 
-/** how many points of the laser trail stay on screen behind the cursor */
+/**
+ * how much of the pointer's recent motion the trail holds. an age rather than a size, so
+ * a fast drag draws a long tail and a slow one a short tail
+ */
+export const LASER_TRAIL_MS = 220;
+
+/** a ceiling on the tail, so a single violent flick cannot paint the whole canvas */
+export const LASER_TRAIL_MAX_LENGTH = 500;
+
+/** the size every segment of the trail is resampled to, so a fast drag is not choppy */
+export const LASER_SEGMENT_LENGTH = 4;
+
+/**
+ * shapes how sharply the trail is eaten once the cursor stops moving. the tail accelerates
+ * as it goes, so the trail is gone well before this many milliseconds are up
+ */
+export const LASER_FADE_MS = 280;
+
+/** how often the trail is trimmed; a frame, so the tail slides rather than steps */
+export const LASER_TRIM_MS = 16;
+
+/**
+ * how many points of a peer's laser stay on screen behind their cursor. a received stroke
+ * carries points and no timestamps, so it is held by size rather than by motion
+ */
 export const LASER_TRAIL_LENGTH = 10;
 
-/** how long the trail holds a point once the cursor stops moving */
+/** how long a peer's trail holds a point once their cursor stops moving */
 export const LASER_DECAY_MS = 50;
+
+/** how many runs the trail is drawn in to taper it, and how thin its tail run gets */
+export const LASER_TAPER_RUNS = 6;
+export const LASER_TAPER_MIN_SCALE = 0.2;
 
 export const ERASER_OUTLINE_WIDTH = 2;
 
@@ -28,4 +56,5 @@ export const ANNOTATION_CURSOR_PRIORITY = 5050;
 
 export const ERASER_CURSOR_ID = 'annotation-eraser-cursor';
 export const LASER_CURSOR_ID = 'annotation-laser-cursor';
+export const LASER_TRAIL_ID = 'annotation-laser-trail';
 export const IN_PROGRESS_ANNOTATION_ID = 'annotation-in-progress';

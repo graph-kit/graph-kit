@@ -1,6 +1,6 @@
 import colors from '@core/utils/colors';
 
-export const DEFAULT_BRUSH_WEIGHT = 3;
+export const DEFAULT_BRUSH_WEIGHT = 6;
 export const DEFAULT_COLOR = colors.RED_600;
 
 export const ANNOTATION_MODES = ['drawing', 'erasing', 'laser'] as const;

@@ -1,7 +1,9 @@
 import { EventMapToEventRegistry } from '@core/events/types';
+import { DisbandReason } from '@multiplayer/protocol/events';
 import {
   CameraState,
   DraggedElement,
+  PeerStroke,
   Point,
   RosterEntry,
   UserId,
@@ -17,6 +19,17 @@ export type MultiplayerEventMap = {
    * did it, which the roster cannot answer afterwards since the room is already gone
    */
   onKicked: (kickedBy: RosterEntry) => void;
+  /**
+   * this session moved to another tab, which is the same person rather than a departure.
+   * the seat carries on without this client, which is why it is not a room left
+   */
+  onSeatTaken: () => void;
+  /**
+   * the room itself ended, which nobody in it chose. carries why, since a host closing
+   * the session and a room timing out around people who are still sitting in it read as
+   * completely different things to the person it happens to
+   */
+  onRoomDisbanded: (reason: DisbandReason) => void;
   /** bracket the wait for room state that is mid flight */
   onPendingStarted: () => void;
   onPendingEnded: () => void;
@@ -39,6 +52,15 @@ export type MultiplayerEventMap = {
   onPeerDragMoved: (userId: UserId, elements: DraggedElement[]) => void;
   onPeerDragEnded: (userId: UserId) => void;
 
+  /**
+   * A peer's annotation as it is drawn, and the only signal a laser ever produces. Ended
+   * arrives whether the stroke committed, was abandoned, or went stale on the server, so
+   * a subscriber clears rather than expecting something to have landed in the document.
+   */
+  onPeerStrokeStarted: (userId: UserId, stroke: PeerStroke) => void;
+  onPeerStrokeExtended: (userId: UserId, points: Point[]) => void;
+  onPeerStrokeEnded: (userId: UserId) => void;
+
   /** a peer is on the product, before they have done anything on it */
   onPeerEnteredProduct: (userId: UserId) => void;
   /** a peer is off the product entirely, whether they navigated, dropped or were kicked */
@@ -54,6 +76,8 @@ export const createMultiplayerEventRegistry = (): MultiplayerEventRegistry => ({
   onRoomJoined: new Set(),
   onRoomLeft: new Set(),
   onKicked: new Set(),
+  onSeatTaken: new Set(),
+  onRoomDisbanded: new Set(),
   onPendingStarted: new Set(),
   onPendingEnded: new Set(),
   onPeerCursorMoved: new Set(),
@@ -62,6 +86,9 @@ export const createMultiplayerEventRegistry = (): MultiplayerEventRegistry => ({
   onPeerDragStarted: new Set(),
   onPeerDragMoved: new Set(),
   onPeerDragEnded: new Set(),
+  onPeerStrokeStarted: new Set(),
+  onPeerStrokeExtended: new Set(),
+  onPeerStrokeEnded: new Set(),
   onPeerEnteredProduct: new Set(),
   onPeerLeftProduct: new Set(),
   onPresenceSeeded: new Set(),

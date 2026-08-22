@@ -52,6 +52,10 @@
       "types": "./dist/types/components/tooltip/Tooltip.vue.d.ts",
       "default": "./src/components/tooltip/Tooltip.vue"
     },
+    "./TruncatedText": {
+      "types": "./dist/types/components/truncated-text/TruncatedText.vue.d.ts",
+      "default": "./src/components/truncated-text/TruncatedText.vue"
+    },
     "./Dropdown": {
       "types": "./dist/types/components/dropdown/Dropdown.vue.d.ts",
       "default": "./src/components/dropdown/Dropdown.vue"
@@ -143,6 +147,14 @@
     "./url": {
       "types": "./dist/types/url/index.d.ts",
       "default": "./src/url/index.ts"
+    },
+    "./Toaster": {
+      "types": "./dist/types/ui/toast/Toaster.vue.d.ts",
+      "default": "./src/ui/toast/Toaster.vue"
+    },
+    "./toast": {
+      "types": "./dist/types/ui/toast/index.d.ts",
+      "default": "./src/ui/toast/index.ts"
     },
     "./*": {
       "types": "./dist/types/*.d.ts",

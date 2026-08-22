@@ -43,3 +43,14 @@ export const writeLocalStorage = (key: string, value: string) => {
     devWarning(`[core] could not write "${key}" to localStorage`, error);
   }
 };
+
+/** drops a key, for the values that only last as long as what they describe is true */
+export const clearLocalStorage = (key: string) => {
+  const store = getStore();
+  if (!store) return;
+  try {
+    store.removeItem(key);
+  } catch (error) {
+    devWarning(`[core] could not clear "${key}" from localStorage`, error);
+  }
+};

@@ -7,6 +7,7 @@ import {
 import {
   CameraState,
   DraggedElement,
+  PeerStroke,
   Point,
   ProductId,
   ProductPresence,
@@ -56,6 +57,11 @@ export type ProductMultiplayer = {
     start: () => Promise<RoomId>;
     join: (options: { roomId: RoomId }) => Promise<JoinResult>;
     leave: () => void;
+    /**
+     * the user holds a tier below what writing takes, so everything that would
+     * write stands down. false outside a room, since a tier is only a room's to grant
+     */
+    isReadonly: ComputedRef<boolean>;
   };
 
   /** room lifecycle, for anything that should only exist while a room does */
@@ -93,6 +99,10 @@ export type RoomControls = {
     startDrag: (elements: DraggedElement[]) => void;
     updateDrag: (elements: DraggedElement[]) => void;
     endDrag: () => void;
+    startStroke: (stroke: PeerStroke) => void;
+    /** only the points added since the last call, never the whole stroke */
+    extendStroke: (points: Point[]) => void;
+    endStroke: () => void;
   };
 };
 

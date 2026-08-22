@@ -6,6 +6,12 @@ import type { AnchorPoint } from '../types/schema.ts';
 export type FontWeight = 'lighter' | 'normal' | 'bold' | 'bolder';
 
 /**
+ * a css font-family list, which is what canvas parses out of `ctx.font`. a
+ * name it cannot resolve is accepted and silently falls back at paint time
+ */
+export type FontFamily = string;
+
+/**
  * the text content for {@link TextArea}
  */
 export type TextBlock = {
@@ -13,7 +19,7 @@ export type TextBlock = {
   fontSize?: number;
   fontWeight?: FontWeight;
   color?: string;
-  fontFamily?: string;
+  fontFamily?: FontFamily;
 };
 
 /**

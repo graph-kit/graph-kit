@@ -6,6 +6,7 @@ const sharedText = {
   size: 24,
   color: colors.GRAY_900,
   fontWeight: 'bold',
+  fontFamily: 'Arial',
 } as const;
 
 export const shared = {

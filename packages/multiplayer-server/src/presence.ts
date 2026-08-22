@@ -1,10 +1,13 @@
 import {
   DraggedElement,
+  PeerStroke,
+  Point,
   ProductId,
   ProductPresence,
   UserId,
   emptyProductPresence,
 } from '@multiplayer/protocol/room';
+import { appendStrokePoints } from '@multiplayer/protocol/stroke';
 
 import { Room, productIn } from './rooms.ts';
 
@@ -54,6 +57,44 @@ export const clearDrag = (
   const entry = product.presence[userId];
   if (entry) entry.drag = null;
   delete product.dragTouchedAt[userId];
+};
+
+export const setStroke = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+  stroke: PeerStroke,
+): void => {
+  setPresence(room, productId, userId, { stroke });
+};
+
+/**
+ * @returns whether there was a stroke to extend. a delta for a stroke the room has no
+ * record of is dropped rather than promoted to a start the way a drag move is: there is no
+ * id, colour or weight in a delta to revive one with, and the next stroke starts clean
+ */
+export const extendStroke = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+  points: Point[],
+): boolean => {
+  const stroke = room.products[productId]?.presence[userId]?.stroke;
+  if (!stroke) return false;
+
+  appendStrokePoints(stroke, points);
+  return true;
+};
+
+export const clearStroke = (
+  room: Room,
+  productId: ProductId,
+  userId: UserId,
+): void => {
+  const product = room.products[productId];
+  if (!product) return;
+  const entry = product.presence[userId];
+  if (entry) entry.stroke = null;
 };
 
 /** what separates a move continuing a gesture from one that has to revive it */

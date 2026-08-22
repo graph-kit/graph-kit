@@ -2,6 +2,7 @@ import { DocStateVector, DocUpdate } from './doc.ts';
 import {
   CameraState,
   DraggedElement,
+  PeerStroke,
   Point,
   ProductId,
   ProductPresence,
@@ -9,6 +10,7 @@ import {
   RoomId,
   RoomMembership,
   RosterEntry,
+  Seat,
   UserId,
 } from './room.ts';
 import { AssignableTier } from './tiers.ts';
@@ -31,10 +33,23 @@ export type ClientToServerEvents = {
     callback: (membership: RoomMembership) => void,
   ) => void;
 
+  /**
+   * A seat is claimed rather than requested: a claim that names a real seat and carries
+   * its token is honoured, taking the seat back off any socket still in it, and one that
+   * cannot be proven is quietly seated somewhere new instead. A client cannot know which
+   * of those it is before asking, so both answer with the identity it must adopt.
+   */
   joinRoom: (
-    options: RoomEntryOptions & { roomId: RoomId },
+    options: RoomEntryOptions & { roomId: RoomId; seat?: Seat },
     callback: (result: JoinResult) => void,
   ) => void;
+
+  /**
+   * Departure that was chosen, which a dropped connection is not. Without it the server
+   * cannot tell somebody who is done with a room from somebody whose train went into a
+   * tunnel, and would have to guess which of the two should keep their seat.
+   */
+  leaveRoom: () => void;
 
   /**
    * Reports that this user navigated, which the server cannot derive. Separate from
@@ -97,6 +112,19 @@ export type ClientToServerEvents = {
   startDrag: (options: { elements: DraggedElement[] }) => void;
   updateDrag: (options: { elements: DraggedElement[] }) => void;
   endDrag: () => void;
+
+  /**
+   * An annotation as it is drawn, so a stroke arrives while it is being made rather than
+   * all at once when it commits, and so the laser arrives at all: it commits to nothing,
+   * which makes this the only channel it has.
+   *
+   * `extendStroke` carries only the points added since the last one. Resending the whole
+   * stroke every move would cost the square of its length, and the room already holds the
+   * accumulation for anybody arriving late.
+   */
+  startStroke: (options: { stroke: PeerStroke }) => void;
+  extendStroke: (options: { points: Point[] }) => void;
+  endStroke: () => void;
 };
 
 /**
@@ -129,6 +157,10 @@ export type ServerToClientEvents = {
   dragMoved: (options: { userId: UserId; elements: DraggedElement[] }) => void;
   dragEnded: (options: { userId: UserId }) => void;
 
+  strokeStarted: (options: { userId: UserId; stroke: PeerStroke }) => void;
+  strokeExtended: (options: { userId: UserId; points: Point[] }) => void;
+  strokeEnded: (options: { userId: UserId }) => void;
+
   /**
    * this user is on the product now. announced rather than left to be inferred from
    * their first signal, so somebody who has arrived and not moved yet is still known
@@ -159,5 +191,24 @@ export type ServerToClientEvents = {
    * still resolve a user id into a person.
    */
   kicked: (options: { by: RosterEntry }) => void;
-  roomDisbanded: () => void;
+
+  /**
+   * Somebody proved this seat is theirs and took it, which in practice is always the same
+   * person on a newer tab. Distinct from a kick: nobody did this to them, and the seat
+   * they are losing is one they still hold everywhere it is written down.
+   */
+  seatTaken: () => void;
+
+  /**
+   * The room is gone and every seat in it with it. A union rather than a flag so a third
+   * cause has to be answered for at the handler instead of falling through as a host
+   * leaving, which is the one a client would otherwise assume.
+   */
+  roomDisbanded: (options: { reason: DisbandReason }) => void;
 };
+
+/**
+ * `hostLeft` is chosen and immediate; `inactivity` is the room timing out, which can
+ * happen to members who are still connected and simply idle
+ */
+export type DisbandReason = 'hostLeft' | 'inactivity';

@@ -11,8 +11,21 @@
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
   import Tooltip from '../tooltip/Tooltip.vue';
+  import { type TruncatedTextProps } from './types.ts';
 
   defineOptions({ inheritAttrs: false });
+
+  const props = defineProps<TruncatedTextProps>();
+
+  /**
+   * everything except what the tooltip is going to say, which is the one part this
+   * component works out for itself. passed on as a whole so that a tooltip prop added
+   * later arrives here without this file naming it
+   */
+  const tooltipOptions = computed(() => {
+    const { tooltip: _content, ...options } = props;
+    return options;
+  });
 
   const attrs = useAttrs();
 
@@ -52,7 +65,10 @@
 </script>
 
 <template>
-  <Tooltip :label="isTruncated ? text : undefined">
+  <Tooltip
+    v-bind="tooltipOptions"
+    :label="props.tooltip ?? (isTruncated ? text : undefined)"
+  >
     <template #trigger>
       <span
         ref="textElement"

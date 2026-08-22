@@ -2,8 +2,25 @@ import { Tier } from './tiers.ts';
 
 export type RoomId = string;
 
-/** fresh per connection in v1, deliberately not durable, see the identity model */
+/**
+ * a seat in a room rather than a connection to the server: it outlives the socket that
+ * minted it, so a member who drops and comes back is the same person to everyone else
+ */
 export type UserId = string;
+
+/**
+ * What reclaims a seat after a drop. Minted with the seat, handed only to the socket that
+ * owns it, and deliberately not the userId: the roster travels to every member, so an id
+ * everyone can read would let any of them sit down in the host's seat the moment it
+ * emptied.
+ */
+export type SeatToken = string;
+
+/** the pair a client keeps to prove a seat is its own, and all it keeps */
+export type Seat = {
+  userId: UserId;
+  token: SeatToken;
+};
 
 /**
  * a plain string on the wire: the server routes by it without needing the client's
@@ -17,6 +34,12 @@ export type RosterEntry = {
   tier: Tier;
   /** null between joining a room and mounting the first product */
   productId: ProductId | null;
+  /**
+   * whether a socket is behind this seat right now. false is a member who dropped and may
+   * yet reclaim it, which is why the entry outlives the connection: their tier, their name
+   * and the host's authority all have to be here when they come back
+   */
+  connected: boolean;
 };
 
 export type Point = { x: number; y: number };
@@ -37,6 +60,19 @@ export type DraggedElement = {
 };
 
 /**
+ * a stroke somebody is drawing right now, ahead of the document write it settles into.
+ * carries the id it will commit under, so the committed annotation replaces the live one
+ * by identity rather than by whichever channel happens to land first.
+ */
+export type PeerStroke = {
+  id: string;
+  mode: 'drawing' | 'laser';
+  points: Point[];
+  fillColor: string;
+  brushWeight: number;
+};
+
+/**
  * What a user is doing inside one product right now. Scoped to the product channel it
  * travels on, which is why nothing here names a productId, and persisted by the room so
  * that entering a product hands over everyone's live state instead of leaving a client
@@ -51,6 +87,12 @@ export type ProductPresence = {
    * gesture can carry a whole selection, and null whenever nothing is being moved
    */
   drag: DraggedElement[] | null;
+  /**
+   * in flight for the same reason a drag is: a drawing settles into one committed
+   * annotation, and a laser settles into nothing at all, so neither belongs in the
+   * document while it is still being made
+   */
+  stroke: PeerStroke | null;
   /** the annotation tools are taking input, which is not the same as a stroke being in flight */
   isAnnotating: boolean;
 };
@@ -60,6 +102,7 @@ export const emptyProductPresence = (): ProductPresence => ({
   cursorPosition: null,
   cameraState: null,
   drag: null,
+  stroke: null,
   isAnnotating: false,
 });
 
@@ -71,10 +114,12 @@ export type RoomData = {
 /**
  * who you are and which room you are in, identical whether you opened the room or
  * joined one. named because every path that puts a client in a room hands back exactly
- * this, and a client holding one of the three without the others is a broken state
+ * this, and a client holding one of the four without the others is a broken state
  */
 export type RoomMembership = {
   roomId: RoomId;
   userId: UserId;
   data: RoomData;
+  /** the answer to who this client is, so a stale claim is corrected by using it */
+  seatToken: SeatToken;
 };

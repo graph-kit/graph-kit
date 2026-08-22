@@ -18,6 +18,7 @@ import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
+import { ToastControls } from '../ui/toast/types.ts';
 import { ProductFlagOptions, ProductFlags } from './flags.ts';
 import { LocalStorageControls } from './internals/useProductLocalStorage.ts';
 import { ProductId } from './manifests/index.ts';
@@ -150,6 +151,8 @@ export type Magic = {
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
   debug: DebugControls;
+  /** the app wide toast queue, which every product shares, see {@link ToastControls} */
+  toast: ToastControls;
   surface: CanvasSurface;
   transit?: TransitField;
   history?: HistoryField;

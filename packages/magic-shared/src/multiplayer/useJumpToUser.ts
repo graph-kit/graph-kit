@@ -1,21 +1,9 @@
 import { CanvasSurface } from '@canvas/surface/types';
-import { UserId } from '@multiplayer/protocol/room';
 
-import { onMounted } from 'vue';
+import { onUnmounted } from 'vue';
 
 import { ProductMultiplayer } from './types.ts';
-
-/**
- * A jump at someone in another experience outlives the click that started it, since the
- * surface it has to move is the one that has not mounted yet. Module scope because the
- * navigation in between unmounts anything narrower.
- */
-let pendingUserId: UserId | null = null;
-
-/** for a jump that has to navigate first, claimed by the experience it lands on */
-export const requestJump = (userId: UserId) => {
-  pendingUserId = userId;
-};
+import { jumpUserIdUrl } from './url.ts';
 
 type JumpToUserOptions = {
   surface: CanvasSurface;
@@ -23,15 +11,27 @@ type JumpToUserOptions = {
 };
 
 /**
- * Finishes a jump that had to navigate to get here. Their presence is read on arrival
- * rather than carried along, so the camera lands where they are looking now instead of
- * where they were when the jump was asked for.
+ * Finishes a jump that had to navigate to get here, which is the whole jump whenever it
+ * crossed experiences: the surface it has to move is the one that had not mounted yet.
+ *
+ * The camera waits on presence landing rather than reading it at mount, since entering
+ * the product is a round trip and nobody is in the presence map until it answers. Their
+ * camera is read at that point rather than carried along, so it lands where they are
+ * looking now instead of where they were when the jump was asked for.
  */
 export const useJumpToUser = ({ surface, multiplayer }: JumpToUserOptions) => {
-  onMounted(() => {
-    const userId = pendingUserId;
-    pendingUserId = null;
-    if (userId === null) return;
+  const userId = jumpUserIdUrl.read();
+
+  // stripped before anything renders, or every link built off this url would carry the
+  // jump along and re-run it on arrival
+  jumpUserIdUrl.strip();
+
+  if (userId === null) return;
+
+  const land = () => {
+    // the first seed is the arrival; a later one is a reconnect, which has no business
+    // pulling the camera off wherever the user has since moved it
+    multiplayer.events.unsubscribe('onPresenceSeeded', land);
 
     const room = multiplayer.room.state.value;
     if (!room.connected) return;
@@ -40,5 +40,9 @@ export const useJumpToUser = ({ surface, multiplayer }: JumpToUserOptions) => {
     if (!camera) return;
 
     surface.camera.actions.moveTo(camera);
-  });
+  };
+
+  multiplayer.events.subscribe('onPresenceSeeded', land);
+
+  onUnmounted(() => multiplayer.events.unsubscribe('onPresenceSeeded', land));
 };

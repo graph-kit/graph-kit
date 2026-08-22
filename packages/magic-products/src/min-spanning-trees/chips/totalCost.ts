@@ -48,8 +48,10 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
   return {
     name: () => `Total Cost: ${totalMstCost.value.toFraction()}`,
     tooltipLabel: () => {
-      const decimal = fractionDecimalHint(totalMstCost.value);
-      return decimal ? `${decimal}: ${costExplanation}` : costExplanation;
+      const fractionNeedsDecimal = fractionDecimalHint(totalMstCost.value);
+      return fractionNeedsDecimal
+        ? `${fractionNeedsDecimal}: ${costExplanation}`
+        : costExplanation;
     },
     lens: {
       id: 'total-mst-cost',

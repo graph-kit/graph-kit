@@ -23,14 +23,9 @@ export const fractionExplainerSegment = (raw: string): ExplainerSegment => {
   return {
     id: crypto.randomUUID(),
     text: fraction.toFraction(),
-    // integers approximate to themselves, so they stay plain text with nothing to hover
     highlight: decimal
       ? {
           tooltipLabel: decimal,
-          // a fraction is part of the sentence, not a control, so every button
-          // background the explainer's default styling paints has to be undone
-          classes:
-            'px-0 bg-transparent hover:bg-transparent active:bg-transparent dark:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent',
         }
       : undefined,
   };

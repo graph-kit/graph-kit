@@ -34,10 +34,17 @@ const requireQuery = (param: string) =>
 /**
  * the captured query as a url suffix, for building hrefs. empty on the server, where
  * there is no query to carry, so a link can be rendered before capture rather than throw.
+ * extra params are for anything the link itself is saying rather than carrying along.
  */
-export const queryString = () => {
-  const search = query?.toString();
-  return search ? `?${search}` : '';
+export const queryString = (extraParams: Record<string, string> = {}) => {
+  // copied rather than edited, since the captured query describes this page and a link
+  // to another one is not allowed to rewrite it
+  const search = new URLSearchParams(query ?? undefined);
+  for (const [param, value] of Object.entries(extraParams)) {
+    search.set(param, value);
+  }
+  const result = search.toString();
+  return result ? `?${result}` : '';
 };
 
 export const queryParam = (param: string) => requireQuery(param).get(param);

@@ -19,9 +19,17 @@
       "types": "./dist/types/components/tooltip/Tooltip.vue.d.ts",
       "default": "./src/components/tooltip/Tooltip.vue"
     },
+    "./Tooltip/types": {
+      "types": "./dist/types/components/tooltip/types.d.ts",
+      "default": "./src/components/tooltip/types.ts"
+    },
     "./TruncatedText": {
       "types": "./dist/types/components/truncated-text/TruncatedText.vue.d.ts",
       "default": "./src/components/truncated-text/TruncatedText.vue"
+    },
+    "./TruncatedText/types": {
+      "types": "./dist/types/components/truncated-text/types.d.ts",
+      "default": "./src/components/truncated-text/types.ts"
     },
     "./Icon": {
       "types": "./dist/types/components/icon/Icon.vue.d.ts",
@@ -70,6 +78,18 @@
     "./VStack": {
       "types": "./dist/types/components/layout/VStack.vue.d.ts",
       "default": "./src/components/layout/VStack.vue"
+    },
+    "./Toast": {
+      "types": "./dist/types/components/toast/Toast.vue.d.ts",
+      "default": "./src/components/toast/Toast.vue"
+    },
+    "./Toast/types": {
+      "types": "./dist/types/components/toast/types.d.ts",
+      "default": "./src/components/toast/types.ts"
+    },
+    "./Toaster": {
+      "types": "./dist/types/components/toast/Toaster.vue.d.ts",
+      "default": "./src/components/toast/Toaster.vue"
     },
     "./*": {
       "types": "./dist/types/*.d.ts",

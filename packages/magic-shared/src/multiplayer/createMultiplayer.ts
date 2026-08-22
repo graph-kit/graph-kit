@@ -5,10 +5,12 @@ import { JoinResult, ProductEntryState } from '@multiplayer/protocol/events';
 import {
   ProductId,
   ProductPresence,
+  RoomId,
   RoomMembership,
   UserId,
   emptyProductPresence,
 } from '@multiplayer/protocol/room';
+import { appendStrokePoints } from '@multiplayer/protocol/stroke';
 import { DEFAULT_TIER } from '@multiplayer/protocol/tiers';
 import { io as connect } from 'socket.io-client';
 import * as Y from 'yjs';
@@ -17,6 +19,7 @@ import { computed, ref, shallowRef } from 'vue';
 
 import { REMOTE_ORIGIN, getDisplayName } from './constants.ts';
 import { createMultiplayerEventRegistry } from './events.ts';
+import { clearSeat, readSeat, writeSeat } from './seat.ts';
 import {
   MultiplayerControls,
   MultiplayerSocket,
@@ -78,6 +81,10 @@ export const createMultiplayer = ({
       updateDrag: (elements) =>
         requireSocket().emit('updateDrag', { elements }),
       endDrag: () => requireSocket().emit('endDrag'),
+      startStroke: (stroke) => requireSocket().emit('startStroke', { stroke }),
+      extendStroke: (points) =>
+        requireSocket().emit('extendStroke', { points }),
+      endStroke: () => requireSocket().emit('endStroke'),
     },
   };
 
@@ -101,10 +108,43 @@ export const createMultiplayer = ({
     };
   });
 
+  /**
+   * Membership and the seat that proves it, which are never taken on separately: the
+   * server is free to answer a claim by seating this client somewhere new, so what came
+   * back is always what gets held rather than what was asked for.
+   */
+  const rememberMembership = (next: RoomMembership) => {
+    membership.value = next;
+    writeSeat(next.roomId, { userId: next.userId, token: next.seatToken });
+  };
+
   /** the one way room state is taken on, whether the room was opened or joined */
   const adoptMembership = (next: RoomMembership) => {
-    membership.value = next;
+    rememberMembership(next);
     events.emit('onRoomJoined');
+  };
+
+  const closeSocket = () => {
+    socket?.disconnect();
+    socket = null;
+  };
+
+  /**
+   * Out of the room, keeping whatever is written down about the seat. The socket goes:
+   * one left open in no room holds an idle server awake on its heartbeat alone, and
+   * reconnects forever if it drops, for a room there is no way back into.
+   */
+  const abandonRoom = () => {
+    roomIdUrl.strip();
+    closeSocket();
+    reset();
+  };
+
+  /** the same, for the endings that spend the seat rather than pass it on */
+  const releaseRoom = () => {
+    const currentRoomId = membership.value?.roomId;
+    if (currentRoomId) clearSeat(currentRoomId);
+    abandonRoom();
   };
 
   const reset = () => {
@@ -206,6 +246,28 @@ export const createMultiplayer = ({
       events.emit('onPeerDragEnded', peerId);
     });
 
+    activeSocket.on('strokeStarted', ({ userId: peerId, stroke }) => {
+      peerPresence(peerId).stroke = stroke;
+      events.emit('onPeerStrokeStarted', peerId, stroke);
+    });
+
+    activeSocket.on('strokeExtended', ({ userId: peerId, points }) => {
+      const { stroke } = peerPresence(peerId);
+      // a delta for a stroke this client never saw start has nothing to append to
+      if (!stroke) return;
+
+      appendStrokePoints(stroke, points);
+      events.emit('onPeerStrokeExtended', peerId, points);
+    });
+
+    activeSocket.on('strokeEnded', ({ userId: peerId }) => {
+      // the sweep announces to the whole product, this client included, and the end of our
+      // own stroke is the annotation engine's business rather than a peer event
+      if (peerId === membership.value?.userId) return;
+      peerPresence(peerId).stroke = null;
+      events.emit('onPeerStrokeEnded', peerId);
+    });
+
     activeSocket.on(
       'peerEnteredProduct',
       ({ userId: peerId, presence: entry }) => {
@@ -227,36 +289,54 @@ export const createMultiplayer = ({
       Y.applyUpdate(mounted.doc, toDocUpdate(update), REMOTE_ORIGIN);
     });
 
-    // a reconnect can have missed updates entirely, so it asks for the difference
-    // between what the room holds and what this document already has
+    // a reconnect is a different socket, and the room has never heard of it. nothing
+    // this client sends counts until the seat is claimed back, so that goes first and
+    // everything the product needs follows from it
     activeSocket.on('connect', () => {
-      const mounted = mountedProduct.value;
-      if (mounted === null || !inRoom.value) return;
-      const { productId, doc } = mounted;
-      activeSocket.emit(
-        'syncDoc',
-        { productId, stateVector: Y.encodeStateVector(doc) },
-        (update) => {
-          if (!update) return;
-          Y.applyUpdate(doc, toDocUpdate(update), REMOTE_ORIGIN);
-        },
-      );
+      const current = membership.value;
+      if (!current) return;
+      // an answer that never lands leaves membership alone on purpose: the transport
+      // reconnects on its own, and the next connect is another go at the same claim
+      reclaimRoom(activeSocket, current.roomId).catch((err) => {
+        console.warn(
+          'multiplayer: could not reclaim the seat on reconnect',
+          err,
+        );
+      });
     });
 
-    // the room is gone, so the id in the url is dead. strip it and carry on locally,
-    // with no error state: the same quiet fallback a bad id gets on the way in
-    activeSocket.on('roomDisbanded', () => {
-      roomIdUrl.strip();
-      reset();
+    // the room is gone, so the id in the url and the seat behind it are both dead. no
+    // error state: the same quiet fallback a bad id gets on the way in
+    activeSocket.on('roomDisbanded', ({ reason }) => {
+      // TODO tell the user rather than the console, once there is a toast component
+      // https://github.com/graph-kit/graph-kit/issues/783
+      if (reason === 'inactivity') {
+        console.warn(
+          'multiplayer: the room closed after going quiet for too long',
+        );
+      }
+      releaseRoom();
+      events.emit('onRoomDisbanded', reason);
     });
+    // the seat is gone but not spent: it belongs to the tab that took it, and clearing
+    // what is stored here would strand them the next time they had to reconnect
+    activeSocket.on('seatTaken', () => {
+      // TODO tell the user rather than the console, once there is a toast component
+      // https://github.com/graph-kit/graph-kit/issues/783
+      console.warn(
+        'multiplayer: this session was taken over by another tab on the same room',
+      );
+      abandonRoom();
+      events.emit('onSeatTaken');
+    });
+
     // the same teardown a disband gets, except this one is worth announcing: the room
     // carried on without them, so silence would read as the session having ended
     activeSocket.on('kicked', ({ by }) => {
       // TODO tell the user rather than the console, once there is a toast component
       // https://github.com/graph-kit/graph-kit/issues/783
       console.warn(`multiplayer: removed from the room by ${by.displayName}`);
-      roomIdUrl.strip();
-      reset();
+      releaseRoom();
       events.emit('onKicked', by);
     });
 
@@ -275,6 +355,71 @@ export const createMultiplayer = ({
     new Promise<Answer>((resolve, reject) => {
       send((error, answer) => (error ? reject(error) : resolve(answer)));
     });
+
+  /** the claim, sent on every join alike: the server decides whether it is honoured */
+  const requestJoin = (activeSocket: MultiplayerSocket, roomId: RoomId) =>
+    requestFromServer<JoinResult>((respond) =>
+      activeSocket.timeout(ACK_TIMEOUT_MS).emit(
+        'joinRoom',
+        {
+          roomId,
+          displayName: getDisplayName(),
+          seat: readSeat(roomId),
+        },
+        respond,
+      ),
+    );
+
+  /**
+   * Sitting back down after a drop, in the order the server needs it: the seat first,
+   * since a write from a socket with no roster entry is refused, then the product, then
+   * the document. Deliberately not the arrival path: that opens a fresh document, and
+   * anything edited while this client was away lives only in the one already on screen.
+   */
+  const reclaimRoom = async (
+    activeSocket: MultiplayerSocket,
+    roomId: RoomId,
+  ) => {
+    const result = await requestJoin(activeSocket, roomId);
+
+    // the room ended while this client was away, which is the one refusal there is
+    if (!result.joined) {
+      releaseRoom();
+      return;
+    }
+
+    rememberMembership(result);
+
+    const mounted = mountedProduct.value;
+    if (!mounted) return;
+    const { productId, doc } = mounted;
+
+    // puts this client back on the product and hands back what everyone there is doing,
+    // both of which the room dropped along with the socket
+    const state = await requestFromServer<ProductEntryState>((respond) =>
+      activeSocket
+        .timeout(ACK_TIMEOUT_MS)
+        .emit('enterProduct', { productId }, respond),
+    );
+    presence.value = state.presence;
+    events.emit('onPresenceSeeded');
+
+    // merged both ways rather than replaced. what the room moved on to is asked for as a
+    // diff, and this document is pushed whole, because edits made while disconnected were
+    // refused as they happened and the room has never seen them
+    activeSocket.emit(
+      'syncDoc',
+      { productId, stateVector: Y.encodeStateVector(doc) },
+      (update) => {
+        if (!update) return;
+        Y.applyUpdate(doc, toDocUpdate(update), REMOTE_ORIGIN);
+      },
+    );
+    activeSocket.emit('docUpdate', {
+      productId,
+      update: Y.encodeStateAsUpdate(doc),
+    });
+  };
 
   const ensureSocket = () => {
     if (socket) return socket;
@@ -342,16 +487,16 @@ export const createMultiplayer = ({
     join: async ({ roomId, productId, host }) => {
       const activeSocket = ensureSocket();
       events.emit('onPendingStarted');
-      const result = await requestFromServer<JoinResult>((respond) =>
-        activeSocket
-          .timeout(ACK_TIMEOUT_MS)
-          .emit('joinRoom', { roomId, displayName: getDisplayName() }, respond),
-      ).finally(() => events.emit('onPendingEnded'));
+      const result = await requestJoin(activeSocket, roomId).finally(() =>
+        events.emit('onPendingEnded'),
+      );
 
       // the only refusal the server has is a room it cannot find, which makes the id
-      // dead rather than unlucky. a request that never came back leaves it in the url
+      // dead rather than unlucky, and any seat held in it dead with it. a request that
+      // never came back leaves both alone
       if (!result.joined) {
         console.warn(`multiplayer: no room to join under the id "${roomId}"`);
+        clearSeat(roomId);
         roomIdUrl.strip();
         return result;
       }
@@ -363,11 +508,10 @@ export const createMultiplayer = ({
       return result;
     },
 
+    // the one departure that spends the seat, which is what separates it from a drop
     leave: () => {
-      socket?.disconnect();
-      socket = null;
-      reset();
-      roomIdUrl.strip();
+      socket?.emit('leaveRoom');
+      releaseRoom();
     },
   };
 

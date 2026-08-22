@@ -29,7 +29,7 @@ export const useLensState = (
 
   watch(activeLens, (newLens, oldLens) => {
     if (oldLens) {
-      oldLens.deactivate();
+      oldLens.deactivate?.();
 
       // cleans up lens defined component slots with explicit IDs provided
       const oldLensComponentIds = (
@@ -47,7 +47,7 @@ export const useLensState = (
       }
     }
     if (newLens) {
-      newLens.activate();
+      newLens.activate?.();
       const components = newLens.components;
       if (components) {
         const lensComponentSlots = components.map((component, i) => ({

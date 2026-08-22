@@ -102,15 +102,13 @@ export const createGraph = <
   // could be built (see [5] in plugins/internals/plugin.ts)
   folded.resolveFinalRenderFunctions(renderFunctions);
 
-  const { transformers } = castControls.surface.aggregator;
-
   const transformer: AggregatorTransformer = (agg) => {
     agg.push(...controls.nodes().map(nodeCanvasElement));
     agg.push(...controls.edges().map(edgeCanvasElement));
     return agg;
   };
 
-  transformers.push(transformer);
+  castControls.surface.aggregator.addTransformer(transformer);
 
   type GraphTransitControls = GraphTransit<
     Prettify<ExtractTransitPayload<NoInfer<TPlugins>>>

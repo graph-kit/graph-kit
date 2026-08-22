@@ -16,7 +16,10 @@ export const useProductShortcuts = (magic: Magic) => {
       ? {
           id: 'product/toggle-annotations',
           key: 'a',
-          callback: magic.annotations.toggle,
+          callback: () => {
+            if (magic.multiplayer?.room.isReadonly.value) return;
+            magic.annotations?.toggle();
+          },
         }
       : undefined,
     {

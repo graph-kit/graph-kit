@@ -45,15 +45,60 @@ type DocAnnotation = {
 };
 
 /**
- * Marks writes this binding makes into the document, so its own observer skips them.
+ * Marks writes this binding makes into the document, so this binding skips them when
+ * they come back around as a transaction.
  * Distinct from the connection's remote origin, which decides what goes on the wire.
  */
 const BINDING_ORIGIN = Symbol('graph-product/binding');
+
+/**
+ * The same, for a write that tidies the document rather than carrying an edit of this
+ * user's. Kept apart so undo, which tracks BINDING_ORIGIN, cannot reverse it: a client
+ * clearing up after somebody else's removal has nothing to put back.
+ */
+const RECONCILE_ORIGIN = Symbol('graph-product/reconcile');
+
+/**
+ * The keys one transaction touched. The reconcile is scoped to these rather than run
+ * over the whole document, so a change to one element cannot reach any other: a node
+ * someone is dragging right now is ahead of the document by design, and a full diff
+ * reads that as a move to undo.
+ */
+type DocChanges = {
+  nodeIds: Set<string>;
+  edgeIds: Set<string>;
+  annotationIds: Set<string>;
+};
 
 const readNodes = (doc: Y.Doc) => doc.getMap<DocNode>('nodes');
 const readEdges = (doc: Y.Doc) => doc.getMap<DocEdge>('edges');
 const readAnnotations = (doc: Y.Doc) =>
   doc.getMap<DocAnnotation>('annotations');
+
+/** yjs keys its changed map by a supertype no concrete Y.Map is assignable to */
+type ChangedType = Parameters<Y.Transaction['changed']['get']>[0];
+
+/** yjs records a null key for a change to the type itself, which a map never has */
+const changedKeys = <T>(
+  transaction: Y.Transaction,
+  map: Y.Map<T>,
+): Set<string> => {
+  const changed = transaction.changed.get(map as unknown as ChangedType);
+  if (!changed) return new Set();
+  return new Set(
+    [...changed].filter((key): key is string => typeof key === 'string'),
+  );
+};
+
+/** the changed keys still in the map, paired with what they now hold */
+const presentEntries = <T>(map: Y.Map<T>, ids: Set<string>): [string, T][] => {
+  const entries: [string, T][] = [];
+  for (const id of ids) {
+    const value = map.get(id);
+    if (value !== undefined) entries.push([id, value]);
+  }
+  return entries;
+};
 
 const annotationToDoc = ({
   points,
@@ -68,12 +113,13 @@ const annotationFromDoc = (
 
 const nodeFromGraph = (graph: Graph, nodeId: string): DocNode => {
   const { x, y } = graph.positions.get(nodeId);
-  return { x, y, label: graph.getNode(nodeId)?.label ?? '?' };
+  return { x, y, label: graph.getNode(nodeId).label };
 };
 
+/** getEdge throws on an id the graph no longer holds rather than answering undefined */
 const edgeFromGraph = (graph: Graph, edgeId: string): DocEdge | undefined => {
+  if (!graph.isEdge(edgeId)) return undefined;
   const edge = graph.getEdge(edgeId);
-  if (!edge) return undefined;
   return {
     source: edge.source,
     target: edge.target,
@@ -144,9 +190,9 @@ export const bindGraphToDoc = (
   // always observes the flag the apply that triggered it set
   let applyingFromDoc = false;
 
-  const intoDoc = (write: () => void) => {
+  const intoDoc = (write: () => void, origin: symbol = BINDING_ORIGIN) => {
     if (applyingFromDoc) return;
-    doc.transact(write, BINDING_ORIGIN);
+    doc.transact(write, origin);
   };
 
   const intoGraph = (apply: () => void) => {
@@ -225,30 +271,39 @@ export const bindGraphToDoc = (
 
   // one action on this side for one change on the other, so the receiver derives the
   // same consequences the author's own action did
-  const applyDocChange = () => {
-    intoGraph(() => {
-      const graphNodeIds = new Set(graph.nodes.value.map((node) => node.id));
-      const graphEdgeIds = new Set(graph.edges.value.map((edge) => edge.id));
+  const applyDocChange = ({ nodeIds, edgeIds, annotationIds }: DocChanges) => {
+    /** edges the graph took with a removed node that the document is still holding */
+    let orphanedEdgeIds: string[] = [];
 
-      const removedNodeIds = [...graphNodeIds].filter((id) => !nodes.has(id));
-      const removedEdgeIds = [...graphEdgeIds].filter((id) => !edges.has(id));
+    intoGraph(() => {
+      const removedNodeIds = [...nodeIds].filter(
+        (id) => !nodes.has(id) && graph.isNode(id),
+      );
+      const removedEdgeIds = [...edgeIds].filter(
+        (id) => !edges.has(id) && graph.isEdge(id),
+      );
       // removals first, since an action that replaced an element shows up as both
       if (removedNodeIds.length > 0 || removedEdgeIds.length > 0) {
-        graph.actions.removeElements({
+        const removed = graph.actions.removeElements({
           nodes: removedNodeIds.map((id) => ({ id })),
           edges: removedEdgeIds.map((id) => ({ id })),
         });
+        orphanedEdgeIds = removed.removedEdgeIds.filter((id) => edges.has(id));
       }
 
-      const addedNodes = [...nodes.entries()]
-        .filter(([id]) => !graphNodeIds.has(id))
+      const changedNodes = presentEntries(nodes, nodeIds);
+      const changedEdges = presentEntries(edges, edgeIds);
+
+      const addedNodes = changedNodes
+        .filter(([id]) => !graph.isNode(id))
         .map(([id, node]) => ({
           id,
           label: node.label,
           position: { x: node.x, y: node.y },
         }));
-      const addedEdges = [...edges.entries()]
-        .filter(([id]) => !graphEdgeIds.has(id))
+      // after the nodes, since removing one cascades to the edges that name it
+      const addedEdges = changedEdges
+        .filter(([id]) => !graph.isEdge(id))
         .map(([id, edge]) => ({
           id,
           source: edge.source,
@@ -259,8 +314,10 @@ export const bindGraphToDoc = (
         graph.actions.addElements({ nodes: addedNodes, edges: addedEdges });
       }
 
-      const moved = [...nodes.entries()]
-        .filter(([id]) => graph.nodes.value.some((node) => node.id === id))
+      const moved = changedNodes
+        // a node someone still has hold of is ahead of the document on purpose, and the
+        // gesture's own commit is what will settle it
+        .filter(([id]) => graph.isNode(id) && !isHeld(id))
         .filter(([id, node]) => {
           const position = graph.positions.get(id);
           return position.x !== node.x || position.y !== node.y;
@@ -271,8 +328,11 @@ export const bindGraphToDoc = (
         }));
       if (moved.length > 0) graph.positions.setMany(moved);
 
-      const relabeled = [...nodes.entries()]
-        .filter(([id, node]) => graph.getNode(id)?.label !== node.label)
+      const relabeled = changedNodes
+        .filter(
+          ([id, node]) =>
+            graph.isNode(id) && graph.getNode(id).label !== node.label,
+        )
         .map(([id, node]) => ({ nodeId: id, label: node.label }));
       if (relabeled.length > 0) graph.nodeLabel.setMany(relabeled);
 
@@ -280,35 +340,61 @@ export const bindGraphToDoc = (
         graph.annotations.annotations().map(({ id }) => id),
       );
       // by id alone: a stroke is only ever drawn or erased, never edited
-      const removedAnnotationIds = [...localAnnotationIds].filter(
-        (id) => !annotations.has(id),
+      const removedAnnotationIds = [...annotationIds].filter(
+        (id) => !annotations.has(id) && localAnnotationIds.has(id),
       );
       if (removedAnnotationIds.length > 0) {
         graph.annotations.remove(removedAnnotationIds);
       }
 
-      const addedAnnotations = [...annotations.entries()]
+      const addedAnnotations = presentEntries(annotations, annotationIds)
         .filter(([id]) => !localAnnotationIds.has(id))
         .map(([id, annotation]) => annotationFromDoc(id, annotation));
       if (addedAnnotations.length > 0) graph.annotations.add(addedAnnotations);
 
-      const reweighted = [...edges.entries()]
-        .filter(([id, edge]) => {
-          const live = graph.getEdge(id);
-          return live !== undefined && live.weight.toString() !== edge.weight;
-        })
+      const reweighted = changedEdges
+        .filter(
+          ([id, edge]) =>
+            graph.isEdge(id) &&
+            graph.getEdge(id).weight.toString() !== edge.weight,
+        )
         .map(([id, edge]) => ({
           edgeId: id,
           update: new Fraction(edge.weight),
         }));
       if (reweighted.length > 0) graph.weights.setMany(reweighted);
     });
+
+    // an edge drawn against a node someone else was removing at the same time is one
+    // no graph can hold: every client drops it, so the document has to be told
+    if (orphanedEdgeIds.length > 0) {
+      intoDoc(() => {
+        for (const edgeId of orphanedEdgeIds) edges.delete(edgeId);
+      }, RECONCILE_ORIGIN);
+    }
   };
 
+  // one transaction is one change, where a per map observer would split it into as many
+  // applies as it touched maps and leave the order yjs walked them deciding whether a
+  // node exists by the time the edge naming it arrives
+  //
   // the document is the source for everything except what this binding just wrote
-  const onDocChanged = (_: unknown, transaction: Y.Transaction) => {
-    if (transaction.origin === BINDING_ORIGIN) return;
-    applyDocChange();
+  const onTransaction = (transaction: Y.Transaction) => {
+    if (
+      transaction.origin === BINDING_ORIGIN ||
+      transaction.origin === RECONCILE_ORIGIN
+    ) {
+      return;
+    }
+    const changes: DocChanges = {
+      nodeIds: changedKeys(transaction, nodes),
+      edgeIds: changedKeys(transaction, edges),
+      annotationIds: changedKeys(transaction, annotations),
+    };
+    const touched =
+      changes.nodeIds.size + changes.edgeIds.size + changes.annotationIds.size;
+    if (touched === 0) return;
+    applyDocChange(changes);
   };
 
   const onElementsAdded: GraphSubscriber<'onElementsAdded'> = ({
@@ -377,9 +463,7 @@ export const bindGraphToDoc = (
   // subscription driven rather than watcher driven: the suppression flag only holds
   // because graph events emit synchronously
   const subscribe = () => {
-    nodes.observe(onDocChanged);
-    edges.observe(onDocChanged);
-    annotations.observe(onDocChanged);
+    doc.on('afterTransaction', onTransaction);
     graph.annotations.events.subscribe(
       'onAnnotationsChanged',
       onAnnotationsChanged,
@@ -398,7 +482,21 @@ export const bindGraphToDoc = (
 
   // one per peer, since two people dragging at once are two continuous moves and
   // neither belongs in the other's commit
-  const peerStreams = new Map<UserId, NodePositionStreamControls>();
+  type PeerStream = {
+    controls: NodePositionStreamControls;
+    /** what this peer has hold of, so a document change can leave those nodes alone */
+    nodeIds: Set<string>;
+  };
+  const peerStreams = new Map<UserId, PeerStream>();
+
+  /**
+   * Whether a gesture owns this node right now, whether it is this user's drag or a
+   * peer's. A held node's live position runs ahead of the document until the gesture
+   * commits, so reconciling it to what the document last saw is always wrong.
+   */
+  const isHeld = (nodeId: string) =>
+    isDraggedLocally(nodeId) ||
+    [...peerStreams.values()].some((stream) => stream.nodeIds.has(nodeId));
 
   const stopPeerStream = (peerId: UserId) => {
     const stream = peerStreams.get(peerId);
@@ -406,7 +504,7 @@ export const bindGraphToDoc = (
     peerStreams.delete(peerId);
     // stopping commits what the stream touched, and the authoring peer is already
     // sending that same move through the document
-    intoGraph(() => stream.stop());
+    intoGraph(() => stream.controls.stop());
   };
 
   const applyPeerDrag: HostBinding['applyPeerDrag'] = (peerId, elements) => {
@@ -418,9 +516,13 @@ export const bindGraphToDoc = (
       .map(({ id, position }) => ({ nodeId: id, update: position }));
     if (moves.length === 0) return;
 
-    const stream = peerStreams.get(peerId) ?? graph.positions.createStream();
+    const stream = peerStreams.get(peerId) ?? {
+      controls: graph.positions.createStream(),
+      nodeIds: new Set<string>(),
+    };
     peerStreams.set(peerId, stream);
-    stream.setMany(moves);
+    for (const { nodeId } of moves) stream.nodeIds.add(nodeId);
+    stream.controls.setMany(moves);
   };
 
   const endPeerDrag: HostBinding['endPeerDrag'] = (peerId) =>
@@ -428,9 +530,7 @@ export const bindGraphToDoc = (
 
   const unbind = () => {
     for (const peerId of [...peerStreams.keys()]) stopPeerStream(peerId);
-    nodes.unobserve(onDocChanged);
-    edges.unobserve(onDocChanged);
-    annotations.unobserve(onDocChanged);
+    doc.off('afterTransaction', onTransaction);
     graph.annotations.events.unsubscribe(
       'onAnnotationsChanged',
       onAnnotationsChanged,

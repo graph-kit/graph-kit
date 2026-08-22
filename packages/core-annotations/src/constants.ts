@@ -1,6 +1,6 @@
 import colors from '@core/utils/colors';
 
-export const DEFAULT_BRUSH_WEIGHT = 3;
+export const DEFAULT_BRUSH_WEIGHT = 6;
 export const DEFAULT_COLOR = colors.RED_600;
 
 export const ANNOTATION_MODES = ['drawing', 'erasing', 'laser'] as const;
@@ -29,7 +29,16 @@ export const LASER_SEGMENT_LENGTH = 4;
 export const LASER_FADE_MS = 280;
 
 /** how often the trail is trimmed; a frame, so the tail slides rather than steps */
-export const LASER_DECAY_MS = 16;
+export const LASER_TRIM_MS = 16;
+
+/**
+ * how many points of a peer's laser stay on screen behind their cursor. a received stroke
+ * carries points and no timestamps, so it is held by size rather than by motion
+ */
+export const LASER_TRAIL_LENGTH = 10;
+
+/** how long a peer's trail holds a point once their cursor stops moving */
+export const LASER_DECAY_MS = 50;
 
 /** how many runs the trail is drawn in to taper it, and how thin its tail run gets */
 export const LASER_TAPER_RUNS = 6;

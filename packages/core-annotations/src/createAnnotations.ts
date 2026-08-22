@@ -20,14 +20,15 @@ import {
   ERASING_ALPHA,
   IN_PROGRESS_ANNOTATION_ID,
   LASER_CURSOR_ID,
-  LASER_DECAY_MS,
   LASER_FADE_MS,
   LASER_SEGMENT_LENGTH,
   LASER_TAPER_MIN_SCALE,
   LASER_TAPER_RUNS,
   LASER_TRAIL_ID,
+  LASER_TRAIL_LENGTH,
   LASER_TRAIL_MAX_LENGTH,
   LASER_TRAIL_MS,
+  LASER_TRIM_MS,
 } from './constants.ts';
 import { createAnnotationsEventRegistry } from './events.ts';
 import type { TrailPoint } from './laserTrail.ts';
@@ -43,6 +44,7 @@ import type {
   AnnotationMode,
   AnnotationsControls,
   CreateAnnotationsOptions,
+  InFlightStroke,
 } from './types.ts';
 
 /**
@@ -69,6 +71,9 @@ export const createAnnotations = ({
   // the stroke in flight, read only by the draw pass, which reruns every frame regardless
   let strokePoints: Coordinate[] = [];
   let isDrawing = false;
+  // minted at the start of the stroke rather than at the end, so whoever is watching the
+  // stroke can name the annotation it is going to become before it becomes one
+  let strokeId = '';
   const erasedIds = new Set<string>();
   // the laser keeps its own points: they carry a timestamp, and unlike a stroke in flight
   // they are never committed to anything
@@ -161,7 +166,7 @@ export const createAnnotations = ({
     laserDecayInterval = setInterval(() => {
       const now = Date.now();
       trimOlderThan(laserTrail, now - trailWindow(now));
-    }, LASER_DECAY_MS);
+    }, LASER_TRIM_MS);
   };
 
   const stopDecayTimer = () => {
@@ -170,16 +175,32 @@ export const createAnnotations = ({
     laserDecayInterval = undefined;
   };
 
+  const inFlightStroke = (): InFlightStroke => ({
+    id: strokeId,
+    mode: isLaserStroke() ? 'laser' : 'drawing',
+    points: [...strokePoints],
+    fillColor: color(),
+    brushWeight: brushWeight(),
+  });
+
   const beginStroke = (coords: Coordinate) => {
     isDrawing = true;
     strokeMode = mode();
+    strokeId = generateId();
     strokePoints = [coords];
-    if (isErasingStroke()) markErased(coords);
+    lastMoveTime = Date.now();
+
+    if (isErasingStroke()) {
+      markErased(coords);
+      return;
+    }
+
     if (isLaserStroke()) {
-      lastMoveTime = Date.now();
       laserTrail = [{ ...coords, at: lastMoveTime }];
       startDecayTimer();
     }
+
+    events.emit('onStrokeBegan', inFlightStroke());
   };
 
   const extendStroke = (coords: Coordinate) => {
@@ -201,10 +222,18 @@ export const createAnnotations = ({
       );
       if (moved) lastMoveTime = now;
       trimToLength(laserTrail, LASER_TRAIL_MAX_LENGTH);
-      return;
+    } else {
+      lastMoveTime = Date.now();
     }
 
+    // what peers are sent is points and no timestamps, so their copy of a laser is held
+    // by size and bled off against their own clock
     strokePoints.push(coords);
+    if (isLaserStroke() && strokePoints.length > LASER_TRAIL_LENGTH) {
+      strokePoints.shift();
+    }
+
+    events.emit('onStrokeExtended', [coords]);
   };
 
   const endStroke = () => {
@@ -220,31 +249,39 @@ export const createAnnotations = ({
     }
 
     const points = strokePoints;
+    const id = strokeId;
     strokePoints = [];
 
     // the laser leaves nothing behind, which is the whole point of it
-    if (isLaserStroke()) {
-      laserTrail = [];
-      return;
+    laserTrail = [];
+
+    if (!isLaserStroke()) {
+      add([
+        {
+          id,
+          type: 'draw',
+          points,
+          fillColor: color(),
+          brushWeight: brushWeight(),
+        },
+      ]);
     }
 
-    add([
-      {
-        id: generateId(),
-        type: 'draw',
-        points,
-        fillColor: color(),
-        brushWeight: brushWeight(),
-      },
-    ]);
+    events.emit('onStrokeEnded');
   };
 
   const abortStroke = () => {
+    // announced even though nothing commits: a stroke abandoned mid flight is still a
+    // stroke that stopped, and whoever was shown it has to be told to drop it
+    const wasDrawingStroke = isDrawing && !isErasingStroke();
+
     isDrawing = false;
     strokePoints = [];
     laserTrail = [];
     erasedIds.clear();
     stopDecayTimer();
+
+    if (wasDrawingStroke) events.emit('onStrokeEnded');
   };
 
   const eraserCursorElement = (): AnnotationCanvasElement => ({

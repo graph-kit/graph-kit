@@ -12,6 +12,7 @@
       history: false,
       localStorage: false,
       annotations: false,
+      linkSharing: false,
     },
     core: {
       weighted: false,

@@ -23,6 +23,7 @@
   import ProductBadge from './ProductBadge.vue';
   import TierBadge from './TierBadge.vue';
   import TierEdit from './TierEdit.vue';
+  import { assignableTiersFor } from './tier.ts';
 
   interface Props {
     member: RosterEntry;
@@ -34,11 +35,22 @@
 
   const isMe = computed(() => props.member.userId === room.value.me.id);
 
+  const disconnectedTooltip = computed(() =>
+    props.member.connected
+      ? undefined
+      : `${props.member.displayName} is disconnected`,
+  );
+
   const menuItems = computed(() =>
     [
       { component: DisplayNameEdit, predicate: isMe.value },
       { component: JumpToUser, predicate: !isMe.value },
-      { component: TierEdit, predicate: room.value.me.isHost && !isMe.value },
+      {
+        component: TierEdit,
+        predicate:
+          !isMe.value &&
+          assignableTiersFor(room.value.me.tier, props.member.tier).length > 0,
+      },
       {
         component: MoveUser,
         predicate:
@@ -58,7 +70,13 @@
       <HStack
         class="w-full hover:bg-gray-300 dark:hover:bg-gray-900 py-1 px-2 cursor-pointer justify-between rounded-md"
       >
-        <TruncatedText>{{ member.displayName }}</TruncatedText>
+        <TruncatedText
+          :class="{ 'opacity-50': !member.connected }"
+          :tooltip="disconnectedTooltip"
+          side="left"
+        >
+          {{ member.displayName }}
+        </TruncatedText>
         <HStack
           gap="1"
           class="shrink-0"

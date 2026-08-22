@@ -20,6 +20,8 @@ export type MemberSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 export type MemberConnection = {
   evict: (by: RosterEntry) => void;
   moveTo: (productId: ProductId, by: RosterEntry) => void;
+  /** stands up, keeping the socket, so a proven claim can sit down in its place */
+  releaseSeat: () => void;
 };
 
 /** everything shared by every connection, held for the life of the server */
@@ -29,7 +31,12 @@ export type ServerContext = {
   connections: Map<UserId, MemberConnection>;
 };
 
-export type PresenceTarget = { room: Room; productId: ProductId };
+/** the room, product and member one presence signal belongs to */
+export type PresenceTarget = {
+  room: Room;
+  productId: ProductId;
+  userId: UserId;
+};
 
 export type Relay<Event extends keyof ServerToClientEvents> = Parameters<
   ServerToClientEvents[Event]
@@ -39,16 +46,25 @@ export type Relay<Event extends keyof ServerToClientEvents> = Parameters<
 export type Connection = {
   server: ServerContext;
   socket: MemberSocket;
-  userId: UserId;
+  /**
+   * a getter rather than a value: reclaiming a seat replaces it, and an event registry
+   * that read it once at wiring time would spend the rest of the connection answering
+   * for somebody who is no longer here
+   */
+  userId: () => UserId;
 
   roomId: () => RoomId | null;
   room: () => Room | undefined;
   productId: () => ProductId | null;
 
   joinRoom: (roomId: RoomId) => void;
+  /** takes on a seat proven to belong to this socket, index and all */
+  claimSeat: (userId: UserId) => void;
   enterProduct: (productId: ProductId) => void;
   /** clears presence there and says so, which is what releases their drag */
   leaveProduct: (productId: ProductId) => void;
+  /** a live socket in no room, which is what both a kick and a leave end at */
+  leaveRoomChannels: () => void;
 
   relayToRoom: <Event extends keyof ServerToClientEvents>(
     event: Event,

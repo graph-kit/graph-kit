@@ -321,10 +321,8 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
     return aggregator;
   };
 
-  controls.surface.aggregator.transformers.push(insertAnchorsIntoAggregator);
-  controls.surface.aggregator.transformers.push(
-    insertLinkPreviewIntoAggregator,
-  );
+  controls.surface.aggregator.addTransformer(insertAnchorsIntoAggregator);
+  controls.surface.aggregator.addTransformer(insertLinkPreviewIntoAggregator);
 
   const consumeOnElementHoverEvent = (
     _: DeepReadonly<CanvasElement> | undefined,

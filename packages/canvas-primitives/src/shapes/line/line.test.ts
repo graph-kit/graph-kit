@@ -144,5 +144,60 @@ describe('line', () => {
         expect(l.hitbox({ x: 0, y: 100 })).toBe(false);
       });
     });
+
+    describe('zero-length line', () => {
+      // start === end, e.g. a scribble segment from a stationary click (aka a speck)
+      const l = line({
+        start: { x: 50, y: 50 },
+        end: { x: 50, y: 50 },
+        lineWidth: 10,
+      });
+
+      it('hits the point itself', () => {
+        expect(l.hitbox({ x: 50, y: 50 })).toBe(true);
+      });
+
+      it('misses far outside', () => {
+        expect(l.hitbox({ x: 500, y: 500 })).toBe(false);
+      });
+    });
+  });
+
+  describe('overlapsBox', () => {
+    it('a box overlapping the middle of a line returns true', () => {
+      const l = line({
+        start: { x: 0, y: 0 },
+        end: { x: 100, y: 0 },
+        lineWidth: 10,
+      });
+      expect(
+        l.overlapsBox({ at: { x: 45, y: -5 }, width: 10, height: 10 }),
+      ).toBe(true);
+    });
+
+    it('a box overlapping a zero-length line returns true', () => {
+      // regression: previously lineLength === 0 made dx/dy/numSegments NaN,
+      // so Array.from({ length: NaN }) produced no segments and overlapsBox
+      // always returned false, no matter how precisely the box overlapped
+      const l = line({
+        start: { x: 50, y: 50 },
+        end: { x: 50, y: 50 },
+        lineWidth: 10,
+      });
+      expect(l.overlapsBox({ at: { x: 48, y: 48 }, width: 4, height: 4 })).toBe(
+        true,
+      );
+    });
+
+    it('a box far from a zero-length line returns false', () => {
+      const l = line({
+        start: { x: 50, y: 50 },
+        end: { x: 50, y: 50 },
+        lineWidth: 10,
+      });
+      expect(
+        l.overlapsBox({ at: { x: 500, y: 500 }, width: 4, height: 4 }),
+      ).toBe(false);
+    });
   });
 });

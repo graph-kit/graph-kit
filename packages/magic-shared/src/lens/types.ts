@@ -11,7 +11,7 @@ export type Lens = {
   /** Component slots this lens renders into the GUI. */
   components?: PartiallyPartial<ComponentSlot, 'id'>[];
   /** Applies whatever this lens does when it becomes active. Not restricted to theming, can be any side effect in the spirit of a lens. */
-  activate: () => void;
+  activate?: () => void;
   /** Reverses everything activate did, restoring prior state when the lens becomes inactive. */
-  deactivate: () => void;
+  deactivate?: () => void;
 };

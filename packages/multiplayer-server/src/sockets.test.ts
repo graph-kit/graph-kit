@@ -9,11 +9,16 @@ import {
   ProductEntryState,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
-import { RoomMembership } from '@multiplayer/protocol/room';
+import {
+  RoomMembership,
+  Seat,
+  emptyProductPresence,
+} from '@multiplayer/protocol/room';
 import { Socket, io as connect } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
+import { RoomSweepOptions } from './room-sweep.ts';
 import { createSocketServer } from './sockets.ts';
 
 type ClientSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -96,10 +101,27 @@ const startRoom = (socket: ClientSocket) =>
     );
   });
 
-const joinRoom = (socket: ClientSocket, roomId: string) =>
+const joinRoom = (socket: ClientSocket, roomId: string, seat?: Seat) =>
   new Promise<JoinResult>((resolve) => {
-    socket.emit('joinRoom', { roomId, displayName: 'Student' }, resolve);
+    socket.emit('joinRoom', { roomId, displayName: 'Student', seat }, resolve);
   });
+
+/** what a client keeps out of an admission, and all it needs to sit back down */
+const seatOf = (membership: RoomMembership): Seat => ({
+  userId: membership.userId,
+  token: membership.seatToken,
+});
+
+/** a join that must succeed, since a dead room is never what these are testing */
+const joinRoomOrThrow = async (
+  socket: ClientSocket,
+  roomId: string,
+  seat?: Seat,
+) => {
+  const result = await joinRoom(socket, roomId, seat);
+  if (!result.joined) throw new Error('expected join to succeed');
+  return result;
+};
 
 const enterProduct = (socket: ClientSocket, productId: string) =>
   new Promise<ProductEntryState>((resolve) => {
@@ -120,24 +142,35 @@ const joinRoomAt = async (
 /** short enough that a test can wait one out, long enough not to trip on scheduling */
 const STALE_AFTER_MS = 120;
 
-beforeEach(async () => {
+/** far longer than any test takes, so only the tests that want it see a room expire */
+const NEVER_INACTIVE: RoomSweepOptions = {
+  inactiveAfterMs: 60_000,
+  sweepIntervalMs: 20,
+};
+
+const startServer = async (roomSweep: RoomSweepOptions = NEVER_INACTIVE) => {
   httpServer = createServer();
   ioServer = createSocketServer(httpServer, {
     corsOrigins: ['*'],
     dragSweep: { staleAfterMs: STALE_AFTER_MS, sweepIntervalMs: 20 },
+    roomSweep,
   });
   await new Promise<void>((resolve) => httpServer.listen(0, resolve));
   port = (httpServer.address() as AddressInfo).port;
-});
+};
 
-afterEach(async () => {
+const stopServer = async () => {
   for (const socket of openSockets) socket.disconnect();
   openSockets.length = 0;
   ioServer.close();
   await new Promise<void>((resolve) => {
     httpServer.close(() => resolve());
   });
-});
+};
+
+beforeEach(() => startServer());
+
+afterEach(() => stopServer());
 
 describe('room lifecycle', () => {
   it('hands a joiner the host seeded document on the product it enters', async () => {
@@ -176,26 +209,257 @@ describe('room lifecycle', () => {
     expect(result.joined).toBe(true);
   });
 
-  it('disbands the room when the host disconnects', async () => {
+  // a blip is not a decision: the room outlives the connection that opened it
+  it('keeps the room when the host disconnects', async () => {
+    const host = await connectClient();
+    const membership = await startRoom(host);
+    const student = await connectClient();
+    await joinRoom(student, membership.roomId);
+
+    const stillAlive = expectNoEvent(student, 'roomDisbanded');
+    host.disconnect();
+    await stillAlive;
+  });
+
+  it('holds the seat of a member who drops, marked as away', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joinRoster = nextEvent(host, 'rosterChanged');
+    const joined = await joinRoomOrThrow(student, roomId);
+    await joinRoster;
+
+    const rosterUpdated = nextEvent(host, 'rosterChanged');
+    student.disconnect();
+    const roster = (await rosterUpdated).roster;
+
+    expect(roster[joined.userId]).toMatchObject({
+      displayName: 'Student',
+      connected: false,
+    });
+  });
+
+  it('disbands the room when the host leaves on purpose', async () => {
     const host = await connectClient();
     const { roomId } = await startRoom(host);
     const student = await connectClient();
     await joinRoom(student, roomId);
 
     const disbanded = nextEvent(student, 'roomDisbanded');
-    host.disconnect();
-    await expect(disbanded).resolves.toBeUndefined();
+    host.emit('leaveRoom');
+    expect(await disbanded).toEqual({ reason: 'hostLeft' });
   });
 
-  it('does not disband when a non host disconnects', async () => {
+  it('spends the seat of a member who leaves on purpose', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joinRoster = nextEvent(host, 'rosterChanged');
+    const joined = await joinRoomOrThrow(student, roomId);
+    await joinRoster;
+
+    const rosterUpdated = nextEvent(host, 'rosterChanged');
+    student.emit('leaveRoom');
+    const roster = (await rosterUpdated).roster;
+
+    expect(roster[joined.userId]).toBeUndefined();
+  });
+});
+
+describe('seats', () => {
+  it('hands a returning member back the same identity and tier', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoomOrThrow(student, roomId);
+
+    host.emit('setTier', { userId: joined.userId, tier: 'write' });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    student.disconnect();
+
+    const returning = await connectClient();
+    const back = await joinRoomOrThrow(returning, roomId, seatOf(joined));
+
+    expect(back.userId).toBe(joined.userId);
+    expect(back.data.roster[joined.userId]).toMatchObject({
+      tier: 'write',
+      connected: true,
+    });
+
+    // the tier is only real if it still buys what it bought before
+    const relayed = nextEvent(host, 'docUpdated');
+    returning.emit('docUpdate', {
+      productId: 'traversals',
+      update: addNodeUpdate('b'),
+    });
+    expect(readNodes((await relayed).update)).toEqual({ b: { x: 9 } });
+  });
+
+  it('returns a reconnecting host to their own room, still hosting', async () => {
+    const host = await connectClient();
+    const membership = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoomOrThrow(student, membership.roomId);
+    host.disconnect();
+
+    const returning = await connectClient();
+    const back = await joinRoomOrThrow(
+      returning,
+      membership.roomId,
+      seatOf(membership),
+    );
+
+    expect(back.userId).toBe(membership.userId);
+    expect(back.data.hostId).toBe(membership.userId);
+
+    // hosting is an authority, not a label, so it is tested as one
+    const kicked = nextEvent(student, 'kicked');
+    returning.emit('kickUser', { userId: joined.userId });
+    await kicked;
+  });
+
+  // two tabs on one room read the same stored seat, and both claim it
+  it('hands a live seat to a newer claim, turning the older one out', async () => {
+    const host = await connectClient();
+    const membership = await startRoom(host);
+
+    const newerTab = await connectClient();
+    const taken = nextEvent(host, 'seatTaken');
+    const result = await joinRoomOrThrow(
+      newerTab,
+      membership.roomId,
+      seatOf(membership),
+    );
+
+    await taken;
+    expect(result.userId).toBe(membership.userId);
+    expect(result.data.hostId).toBe(membership.userId);
+    // one seat, not two: a takeover moves somebody rather than admitting them
+    expect(Object.keys(result.data.roster)).toEqual([membership.userId]);
+  });
+
+  // the loser keeps its socket, and must be holding nothing the winner now owns
+  it('leaves a turned out tab unable to act as the seat it lost', async () => {
+    const host = await connectClient();
+    const membership = await startRoom(host);
+    const student = await connectClient();
+    await joinRoomAt(student, membership.roomId, 'traversals');
+
+    const newerTab = await connectClient();
+    const taken = nextEvent(host, 'seatTaken');
+    await joinRoomOrThrow(newerTab, membership.roomId, seatOf(membership));
+    await taken;
+
+    // the old tab dropping must not mark the seat away or unseat the tab holding it
+    const rosterUpdated = expectNoEvent(student, 'rosterChanged');
+    host.disconnect();
+    await rosterUpdated;
+
+    // and the winner still holds everything the seat carried
+    const relayed = nextEvent(student, 'docUpdated');
+    newerTab.emit('docUpdate', {
+      productId: 'traversals',
+      update: addNodeUpdate('b'),
+    });
+    await relayed;
+  });
+
+  it('refuses a claim carrying the wrong token', async () => {
+    const host = await connectClient();
+    const membership = await startRoom(host);
+    host.disconnect();
+
+    const impostor = await connectClient();
+    const result = await joinRoomOrThrow(impostor, membership.roomId, {
+      userId: membership.userId,
+      token: 'not-the-token',
+    });
+
+    expect(result.userId).not.toBe(membership.userId);
+  });
+
+  // the client cannot know its claim is stale until it makes it, so this is the answer
+  it('seats a claim it cannot place rather than refusing the join', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    const result = await joinRoomOrThrow(student, roomId, {
+      userId: 'nobody',
+      token: 'nothing',
+    });
+
+    expect(result.userId).not.toBe('nobody');
+    expect(result.data.roster[result.userId]).toMatchObject({ tier: 'read' });
+  });
+
+  it('leaves a kicked member nothing to reclaim', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoomOrThrow(student, roomId);
+
+    host.emit('kickUser', { userId: joined.userId });
+    await nextEvent(student, 'kicked');
+
+    const returning = await connectClient();
+    const back = await joinRoomOrThrow(returning, roomId, seatOf(joined));
+
+    expect(back.userId).not.toBe(joined.userId);
+    expect(back.data.roster[joined.userId]).toBeUndefined();
+  });
+});
+
+describe('room inactivity', () => {
+  /** long enough to send something inside, short enough for a test to wait one out */
+  const INACTIVE_AFTER_MS = 200;
+
+  const startImpatientServer = async () => {
+    await stopServer();
+    await startServer({
+      inactiveAfterMs: INACTIVE_AFTER_MS,
+      sweepIntervalMs: 20,
+    });
+  };
+
+  it('disbands a room that went quiet, telling whoever is still in it', async () => {
+    await startImpatientServer();
     const host = await connectClient();
     const { roomId } = await startRoom(host);
     const student = await connectClient();
     await joinRoom(student, roomId);
 
-    const stillAlive = expectNoEvent(host, 'roomDisbanded');
-    student.disconnect();
+    const disbanded = nextEvent(
+      student,
+      'roomDisbanded',
+      INACTIVE_AFTER_MS * 4,
+    );
+    expect(await disbanded).toEqual({ reason: 'inactivity' });
+
+    // and the code dies with it, which is what a stale claim eventually runs into
+    const late = await connectClient();
+    expect(await joinRoom(late, roomId)).toEqual({ joined: false });
+  });
+
+  // the weakest signal there is, and the one that has to count: somebody is right there
+  it('holds a room open on nothing more than a moving cursor', async () => {
+    await startImpatientServer();
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    await joinRoomAt(student, roomId, 'traversals');
+
+    const stillAlive = expectNoEvent(
+      student,
+      'roomDisbanded',
+      INACTIVE_AFTER_MS * 3,
+    );
+    const nudging = setInterval(
+      () => student.emit('moveCursor', { position: { x: 1, y: 1 } }),
+      INACTIVE_AFTER_MS / 4,
+    );
     await stillAlive;
+    clearInterval(nudging);
   });
 });
 
@@ -493,12 +757,7 @@ describe('presence scoping', () => {
     const student = await connectClient();
     const { presence } = await joinRoomAt(student, roomId, 'traversals');
 
-    expect(presence[hostId]).toEqual({
-      cursorPosition: null,
-      cameraState: null,
-      drag: null,
-      isAnnotating: false,
-    });
+    expect(presence[hostId]).toEqual(emptyProductPresence());
   });
 
   it('leaves the arriving client out of its own entry payload', async () => {
@@ -611,5 +870,99 @@ describe('drag release', () => {
     student.emit('updateDrag', { elements: dragged });
 
     expect((await restarted).userId).toBe(studentId);
+  });
+});
+
+describe('live strokes', () => {
+  const stroke = {
+    id: 'stroke-1',
+    mode: 'drawing' as const,
+    points: [{ x: 0, y: 0 }],
+    fillColor: '#ff0000',
+    brushWeight: 6,
+  };
+
+  const roomOfTwo = async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoomAt(student, roomId, 'traversals');
+    return { host, student, roomId, studentId: joined.userId };
+  };
+
+  it('relays a stroke as it is drawn rather than when it commits', async () => {
+    const { host, student, studentId } = await roomOfTwo();
+
+    const started = nextEvent(host, 'strokeStarted');
+    student.emit('startStroke', { stroke });
+    expect(await started).toEqual({ userId: studentId, stroke });
+
+    const extended = nextEvent(host, 'strokeExtended');
+    student.emit('extendStroke', { points: [{ x: 1, y: 0 }] });
+    expect(await extended).toEqual({
+      userId: studentId,
+      points: [{ x: 1, y: 0 }],
+    });
+
+    const ended = nextEvent(host, 'strokeEnded');
+    student.emit('endStroke');
+    expect((await ended).userId).toBe(studentId);
+  });
+
+  it('hands a later arrival a stroke that is still being drawn', async () => {
+    const { host, student, roomId } = await roomOfTwo();
+
+    student.emit('startStroke', { stroke });
+    await nextEvent(host, 'strokeStarted');
+    student.emit('extendStroke', { points: [{ x: 1, y: 0 }] });
+    await nextEvent(host, 'strokeExtended');
+
+    const latecomer = await connectClient();
+    const { presence } = await joinRoomAt(latecomer, roomId, 'traversals');
+
+    const [entry] = Object.values(presence).filter(({ stroke }) => stroke);
+    expect(entry.stroke).toMatchObject({
+      id: stroke.id,
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
+    });
+  });
+
+  it('drops a delta for a stroke it has no record of', async () => {
+    const { host, student } = await roomOfTwo();
+
+    // nothing named an id, a colour or a weight, so there is nothing to paint it as
+    student.emit('extendStroke', { points: [{ x: 1, y: 0 }] });
+
+    await expectNoEvent(host, 'strokeExtended', STALE_AFTER_MS);
+  });
+
+  it('clears a stroke when whoever was drawing it disconnects', async () => {
+    const { host, student, studentId, roomId } = await roomOfTwo();
+
+    student.emit('startStroke', { stroke });
+    await nextEvent(host, 'strokeStarted');
+
+    const left = nextEvent(host, 'peerLeftProduct');
+    student.disconnect();
+    expect((await left).userId).toBe(studentId);
+
+    // gone from the room's copy too, so the next arrival is not handed a phantom
+    const latecomer = await connectClient();
+    const { presence } = await joinRoomAt(latecomer, roomId, 'traversals');
+    expect(Object.values(presence).every(({ stroke }) => !stroke)).toBe(true);
+  });
+
+  it('leaves a laser held still on screen, since it sends nothing while held', async () => {
+    const { host, student } = await roomOfTwo();
+
+    student.emit('startStroke', { stroke: { ...stroke, mode: 'laser' } });
+    await nextEvent(host, 'strokeStarted');
+
+    // pointing at the thing being talked about is the ordinary case, and a sweep would
+    // take it off everyone's canvas mid sentence with no delta to bring it back
+    await expectNoEvent(host, 'strokeEnded', STALE_AFTER_MS * 4);
   });
 });

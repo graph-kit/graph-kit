@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ERASER_BRUSH_RADIUS } from './constants.ts';
 import { createAnnotations } from './createAnnotations.ts';
 import type { AnnotationsChange } from './events.ts';
+import type { InFlightStroke } from './types.ts';
 
 /** only the cursor is read off the surface, and only to paint the tool under it */
 const stubSurface = () =>
@@ -175,5 +176,123 @@ describe('annotations', () => {
 
     expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();
+  });
+});
+
+/** what a host relaying the stroke sees, in the order it sees it */
+const watchStroke = (annotations: ReturnType<typeof createAnnotations>) => {
+  const began: InFlightStroke[] = [];
+  const extended: (readonly { x: number; y: number }[])[] = [];
+  let endedCount = 0;
+
+  annotations.events.subscribe('onStrokeBegan', (stroke) => began.push(stroke));
+  annotations.events.subscribe('onStrokeExtended', (points) =>
+    extended.push(points),
+  );
+  annotations.events.subscribe('onStrokeEnded', () => (endedCount += 1));
+
+  return { began, extended, ended: () => endedCount };
+};
+
+describe('the stroke in flight', () => {
+  it('names the annotation it will become before it becomes one', () => {
+    const { annotations } = setup();
+    const stroke = watchStroke(annotations);
+
+    drawStroke(annotations);
+
+    const [committed] = annotations.annotations();
+    expect(stroke.began).toHaveLength(1);
+    expect(stroke.began[0].id).toBe(committed.id);
+  });
+
+  it('reports the mode, color and weight the stroke is being drawn with', () => {
+    const { annotations } = setup();
+    annotations.setColor('#00ff00');
+    annotations.setBrushWeight(4);
+    const stroke = watchStroke(annotations);
+
+    annotations.beginStroke({ x: 1, y: 2 });
+
+    expect(stroke.began[0]).toMatchObject({
+      mode: 'drawing',
+      points: [{ x: 1, y: 2 }],
+      fillColor: '#00ff00',
+      brushWeight: 4,
+    });
+  });
+
+  it('carries only the points added since the last report', () => {
+    const { annotations } = setup();
+    const stroke = watchStroke(annotations);
+
+    annotations.beginStroke({ x: 0, y: 0 });
+    annotations.extendStroke({ x: 1, y: 0 });
+    annotations.extendStroke({ x: 2, y: 0 });
+
+    expect(stroke.extended).toEqual([[{ x: 1, y: 0 }], [{ x: 2, y: 0 }]]);
+  });
+
+  it('announces the laser, which has no other way to be seen', () => {
+    const { annotations } = setup();
+    annotations.setMode('laser');
+    const stroke = watchStroke(annotations);
+
+    drawStroke(annotations);
+
+    expect(stroke.began[0]).toMatchObject({ mode: 'laser' });
+    expect(stroke.ended()).toBe(1);
+    expect(annotations.annotations()).toEqual([]);
+  });
+
+  it('commits before it calls the stroke over', () => {
+    const { annotations } = setup();
+    let committedWhenEnded: string[] = [];
+    annotations.events.subscribe('onStrokeEnded', () => {
+      committedWhenEnded = annotations.annotations().map(({ id }) => id);
+    });
+
+    drawStroke(annotations);
+
+    // a host relaying both hands over what replaces the live stroke before it says to
+    // drop it, which is what keeps the handoff from blinking
+    expect(committedWhenEnded).toEqual(
+      annotations.annotations().map(({ id }) => id),
+    );
+    expect(committedWhenEnded).toHaveLength(1);
+  });
+
+  it('says nothing about an erase, which draws nothing on the way', () => {
+    const { annotations } = setup();
+    drawStroke(annotations);
+
+    annotations.setMode('erasing');
+    const stroke = watchStroke(annotations);
+    drawStroke(annotations);
+
+    expect(stroke.began).toEqual([]);
+    expect(stroke.extended).toEqual([]);
+    expect(stroke.ended()).toBe(0);
+  });
+
+  it('calls an abandoned stroke over, so nothing is left holding it', () => {
+    const { annotations } = setup();
+    const stroke = watchStroke(annotations);
+
+    annotations.beginStroke({ x: 0, y: 0 });
+    annotations.extendStroke({ x: 5, y: 0 });
+    annotations.deactivate();
+
+    expect(stroke.ended()).toBe(1);
+    expect(annotations.annotations()).toEqual([]);
+  });
+
+  it('does not call a stroke over when there was none in flight', () => {
+    const { annotations } = setup();
+    const stroke = watchStroke(annotations);
+
+    annotations.deactivate();
+
+    expect(stroke.ended()).toBe(0);
   });
 });

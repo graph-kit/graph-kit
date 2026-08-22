@@ -4,6 +4,7 @@ import {
   ProductPresence,
   RoomData,
   RoomId,
+  SeatToken,
   UserId,
 } from '@multiplayer/protocol/room';
 import * as Y from 'yjs';
@@ -19,6 +20,13 @@ export type ProductRoom = {
 export type Room = {
   data: RoomData;
   products: Record<ProductId, ProductRoom>;
+  /**
+   * server only, never on the wire: the roster travels to every member, and a token
+   * anyone can read reclaims nothing
+   */
+  seatTokens: Record<UserId, SeatToken>;
+  /** server only: when this room last heard anything, which is what the sweep expires on */
+  lastActiveAt: number;
 };
 
 const createProductRoom = (doc: Y.Doc): ProductRoom => ({
@@ -33,6 +41,7 @@ export const productIn = (room: Room, productId: ProductId): ProductRoom =>
 
 export const createRoom = (options: {
   hostId: UserId;
+  hostToken: SeatToken;
   displayName: string;
   productId: ProductId;
   doc: DocUpdate;
@@ -45,6 +54,7 @@ export const createRoom = (options: {
         displayName: options.displayName,
         tier: 'host',
         productId: options.productId,
+        connected: true,
       },
     },
   },
@@ -52,6 +62,8 @@ export const createRoom = (options: {
   products: {
     [options.productId]: createProductRoom(docFromUpdate(options.doc)),
   },
+  seatTokens: { [options.hostId]: options.hostToken },
+  lastActiveAt: Date.now(),
 });
 
 const docFromUpdate = (update: DocUpdate): Y.Doc => {

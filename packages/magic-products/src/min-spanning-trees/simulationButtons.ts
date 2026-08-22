@@ -1,7 +1,6 @@
+import { nullThrows } from '@core/utils/assert';
 import { GraphSimulationButtonOption } from '@magic/shared/graph-product';
 import { useFocusedNode } from '@magic/shared/utilities';
-
-import { watch } from 'vue';
 
 import {
   useKruskalsSimulation,
@@ -14,18 +13,17 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
 
   const node = useFocusedNode(graph);
 
-  watch(node, (newFocusedNode) => {
-    startNodeId.value = newFocusedNode?.id;
-  });
-
   const noNodes = () => graph.nodes.value.length === 0;
 
   return [
     {
       definition: prims,
+      beforeStarting: () => {
+        startNodeId.value = nullThrows(node.value?.id, 'no start node');
+      },
       disabled: () => {
         if (noNodes()) return 'No nodes in graph';
-        if (!startNodeId.value) return 'Click a node to start from';
+        if (!node.value) return 'Click a node to start from';
         return false;
       },
     },

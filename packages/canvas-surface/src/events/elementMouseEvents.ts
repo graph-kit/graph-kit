@@ -34,7 +34,7 @@ export const createElementMouseEventRegistry =
 
 type EmitElementMouseEventsOptions = {
   emit: EventHub<ElementEvents>['emit'];
-  aggregator: Pick<AggregatorControls, 'getCanvasElementsAtCoordinate'>;
+  aggregator: Pick<AggregatorControls, 'elementsAt'>;
   toWorldCoordinates: (ev: MouseEvent) => Coordinate;
   canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>;
   domEvents: Pick<ReadonlyEventHub<DocumentBoundEvents>, 'subscribe'>;
@@ -49,7 +49,7 @@ export const emitElementMouseEvents = ({
 }: EmitElementMouseEventsOptions) => {
   const elementMouseEvent = (event: MouseEvent): ElementMouseEvent => {
     const coords = toWorldCoordinates(event);
-    const elements = aggregator.getCanvasElementsAtCoordinate(coords);
+    const elements = aggregator.elementsAt(coords);
 
     return { coords, elements, topElement: elements.at(-1), event };
   };

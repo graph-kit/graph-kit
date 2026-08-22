@@ -42,7 +42,14 @@ export type CanvasSurface = {
   visibleWorldRect: ComputedRef<WorldRect>;
   ref: CanvasRef;
   draw: DrawFns;
-  /** every canvas element this surface paints, and the hit test over them */
+  /**
+   * every canvas element this surface paints, the hit test over them, and the pipeline
+   * that decides what they are.
+   *
+   * ℹ️ painting is not on this surface. the frame is driven by the render loop through
+   * `draw.content`, so a consumer registers a transformer and lets the next frame pick
+   * it up rather than reaching for the brush itself
+   */
   aggregator: AggregatorControls;
   /**
    * build the shapes fed into the aggregator. these animate themselves, so a schema

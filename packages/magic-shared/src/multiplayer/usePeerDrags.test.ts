@@ -1,5 +1,4 @@
 import {
-  Aggregator,
   AggregatorTransformer,
   CanvasElement,
 } from '@canvas/primitives/aggregator/types';
@@ -70,11 +69,11 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
 
   /** what the transformer leaves behind, which is what the pointer is tested against */
   const paintOnlyIds = (ids: string[]) => {
-    const aggregator: Aggregator = ids.map(
+    const elements: CanvasElement[] = ids.map(
       (id) => ({ id, priority: 1, shape: {} }) as unknown as CanvasElement,
     );
-    for (const transform of transformers) transform(aggregator);
-    return aggregator.filter(({ paintOnly }) => paintOnly).map(({ id }) => id);
+    for (const transform of transformers) transform(elements);
+    return elements.filter(({ paintOnly }) => paintOnly).map(({ id }) => id);
   };
 
   return { events, applied, ended, paintOnlyIds };

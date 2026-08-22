@@ -91,9 +91,7 @@ describe('surface mouse events', () => {
 
   it('carries the elements under the point the event landed on', async () => {
     const { surface, canvas } = await mountSurface();
-    surface.aggregator.getCanvasElementsAtCoordinate = () => [
-      { id: 'under-cursor' } as any,
-    ];
+    surface.aggregator.elementsAt = () => [{ id: 'under-cursor' } as any];
 
     const callback = vi.fn();
     surface.events.elements.subscribe('onClick', callback);

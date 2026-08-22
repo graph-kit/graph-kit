@@ -7,7 +7,9 @@ import { useCanvasSurface } from '../index.ts';
 import type { ElementEvents } from './index.ts';
 
 // jsdom has no 2d context, and the surface resolves one on mount before anything else runs
-HTMLCanvasElement.prototype.getContext = vi.fn(function (this: HTMLCanvasElement) {
+HTMLCanvasElement.prototype.getContext = vi.fn(function (
+  this: HTMLCanvasElement,
+) {
   return {
     canvas: this,
     resetTransform: vi.fn(),

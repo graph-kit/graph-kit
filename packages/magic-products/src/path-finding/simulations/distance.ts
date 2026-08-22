@@ -14,6 +14,9 @@ export type Distance = Fraction | undefined;
 export const formatDistance = (distance: Distance) =>
   distance === undefined ? '∞' : distance.toFraction();
 
+export const explainerDistance = (distance: Distance) =>
+  distance === undefined ? '∞' : `<${distance.toFraction()}>`;
+
 /** the best known distance from one fixed source to every node */
 export type DistanceRow = Readonly<Record<GNode['id'], Distance>>;
 

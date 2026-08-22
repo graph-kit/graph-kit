@@ -2,6 +2,7 @@ import { nullThrows } from '@core/utils/assert';
 import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 
 import { MagicGraph } from '../graph-product/types.ts';
+import { fractionExplainerSegment } from './fractionExplainerSegment.ts';
 import { parseTextSegments } from './parseTextSegments.ts';
 import { Explainer, ExplainerHighlight } from './types.ts';
 import { useGraphElementRefExplainerSegment } from './useGraphElementIdPart.ts';
@@ -38,6 +39,10 @@ export const explainerSegments = (
     }
     if (bracketType === 'curly') {
       explainerSegments.push(useGraphElementRefExplainerSegment(graph, text));
+      continue;
+    }
+    if (bracketType === 'angle') {
+      explainerSegments.push(fractionExplainerSegment(text));
       continue;
     }
     const highlight = nullThrows(

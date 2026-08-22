@@ -291,6 +291,62 @@ describe(explainerSegments, () => {
     );
   });
 
+  test('resolves an angled fraction to a hoverable decimal', () => {
+    const explainer: Explainer = {
+      content: 'The cost is <5/2>',
+    };
+
+    const segments = explainerSegments(graph, explainer);
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'The cost is ',
+      '5/2',
+    ]);
+    expect(segments[1].highlight?.tooltipLabel).toBe('2.5');
+  });
+
+  test('rounds a repeating fraction and marks it as approximate', () => {
+    const segments = explainerSegments(graph, { content: '<1/3>' });
+
+    expect(segments[0].highlight?.tooltipLabel).toBe('~0.333');
+  });
+
+  test('respects a precision suffix on an angled fraction', () => {
+    const segments = explainerSegments(graph, { content: '<1/3:1>' });
+
+    expect(getValue(segments[0].text)).toBe('1/3');
+    expect(segments[0].highlight?.tooltipLabel).toBe('~0.3');
+  });
+
+  test('leaves an angled fraction that is an integer unhighlighted', () => {
+    const segments = explainerSegments(graph, { content: 'costs <4/2>' });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'costs ',
+      '2',
+    ]);
+    expect(segments[1].highlight).toBeUndefined();
+  });
+
+  test('angled fractions do not consume bracket highlights', () => {
+    const h = highlight();
+    const explainer: Explainer = {
+      content: '<1/3> and <2/3> for [Reason]',
+      highlights: [h],
+    };
+
+    const segments = explainerSegments(graph, explainer);
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      '1/3',
+      ' and ',
+      '2/3',
+      ' for ',
+      'Reason',
+    ]);
+    expect(segments.at(-1)?.highlight).toBe(h);
+  });
+
   test('defaults to an empty array when highlights is undefined', () => {
     const explainer: Explainer = {
       content: 'no brackets here',

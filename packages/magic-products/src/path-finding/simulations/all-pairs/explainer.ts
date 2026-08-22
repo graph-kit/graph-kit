@@ -1,6 +1,6 @@
 import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 
-import { formatDistance } from '../distance.ts';
+import { explainerDistance } from '../distance.ts';
 import { matrixSlotId } from './effects.ts';
 import { AllPairsFrame } from './frame.ts';
 
@@ -43,20 +43,20 @@ export const allPairsExplainer =
 
     if (frame.type === 'consider-pair') {
       return {
-        content: `{${frame.from}} to {${frame.to}} via {${frame.pivot}} Costs ${formatDistance(frame.viaPivot)}, Against ${formatDistance(frame.direct)} Today`,
+        content: `{${frame.from}} to {${frame.to}} via {${frame.pivot}} Costs ${explainerDistance(frame.viaPivot)}, Against ${explainerDistance(frame.direct)} Today`,
       };
     }
 
     if (frame.type === 'improve-pair') {
       return {
-        content: `The Detour Wins, So [Updating] {${frame.from}} to {${frame.to}} to ${formatDistance(frame.newDistance)}`,
+        content: `The Detour Wins, So [Updating] {${frame.from}} to {${frame.to}} to ${explainerDistance(frame.newDistance)}`,
         highlights: [highlights.improve],
       };
     }
 
     if (frame.type === 'keep-pair') {
       return {
-        content: `{${frame.from}} to {${frame.to}} Is Already ${formatDistance(frame.distance)}, So the Detour Through {${frame.pivot}} Is No Help`,
+        content: `{${frame.from}} to {${frame.to}} Is Already ${explainerDistance(frame.distance)}, So the Detour Through {${frame.pivot}} Is No Help`,
       };
     }
 

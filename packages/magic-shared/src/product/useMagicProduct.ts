@@ -77,6 +77,11 @@ export const useMagicProduct = (
     multiplayer,
   };
 
+  magic.surface.camera.events.subscribe(
+    'onCameraChange',
+    localStorage.invalidate,
+  );
+
   // read-only has nothing to draw with, so the tools come out of standby with it and
   // the panel closes behind them on `onDeactivated`
   if (annotations && multiplayer) {

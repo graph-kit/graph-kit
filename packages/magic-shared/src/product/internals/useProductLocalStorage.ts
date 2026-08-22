@@ -5,6 +5,8 @@ import { readLocalStorage, writeLocalStorage } from '@core/utils/localStorage';
 import { ProductFlags } from '../flags.ts';
 import { MagicProductHost, TransitField } from '../types.ts';
 
+const DEBOUNCE_MS = 500;
+
 const localStorageKey = (id: string) => 'product-data-' + id;
 
 export type LocalStorageControls = {
@@ -27,7 +29,7 @@ const useLocalStorageSync = (
 
   const invalidate = debounce(() => {
     writeLocalStorage(key, JSON.stringify(transit.encode()));
-  }, 500);
+  }, DEBOUNCE_MS);
 
   // no longer mounts itself: restoring now has to lose to a room, and only the
   // harness knows whether one answered. see the restore order in useMagicProduct

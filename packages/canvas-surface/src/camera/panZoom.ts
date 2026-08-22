@@ -9,6 +9,7 @@ import type {
   CanvasBoundEvents,
   DocumentBoundEvents,
 } from '../events/index.ts';
+import { type CameraState, createCameraEvents } from './events.ts';
 
 export const MIN_ZOOM = 0.2;
 export const MAX_ZOOM = 10;
@@ -24,6 +25,8 @@ export const usePanAndZoom = (
   const panX = ref(0);
   const panY = ref(0);
   const zoom = ref(1);
+
+  const events = createCameraEvents({ panX, panY, zoom });
 
   const getCanvasRect = () =>
     nullThrows(canvas.value, CANVAS_MISSING).getBoundingClientRect();
@@ -119,7 +122,7 @@ export const usePanAndZoom = (
        * rather than steered toward here. Zoom is clamped because the range is this
        * camera's to enforce no matter where the numbers came from.
        */
-      moveTo: (state: { panX: number; panY: number; zoom: number }) => {
+      moveTo: (state: CameraState) => {
         panX.value = state.panX;
         panY.value = state.panY;
         zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, state.zoom));
@@ -130,6 +133,7 @@ export const usePanAndZoom = (
       panY,
       zoom,
     },
+    events,
     getTransform: () => ({
       scaleX: zoom.value,
       scaleY: zoom.value,

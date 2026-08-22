@@ -12,8 +12,8 @@
   const controls = useAnnotationControls();
 
   const disabled = computed(() => {
-    if (magic.multiplayer?.room.isReadonly) {
-      return 'In read-only mode';
+    if (magic.multiplayer?.room.isReadonly.value) {
+      return 'Annotations unavailable in Read';
     }
   });
 

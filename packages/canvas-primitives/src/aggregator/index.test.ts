@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createAggregator } from './index.ts';
-import { Aggregator, AggregatorTransformer, CanvasElement } from './types.ts';
+import { AggregatorTransformer, CanvasElement } from './types.ts';
 
 const rendererStub = {
   beginFrame: () => {},
@@ -14,16 +14,16 @@ const element = (id: string, priority = 0) =>
 
 const pushing =
   (id: string, priority = 0): AggregatorTransformer =>
-  (agg: Aggregator) => {
-    agg.push(element(id, priority));
-    return agg;
+  (elements: CanvasElement[]) => {
+    elements.push(element(id, priority));
+    return elements;
   };
 
 const setup = () => {
   const controls = createAggregator(rendererStub);
   const draw = () => {
     controls.draw({} as CanvasRenderingContext2D);
-    return controls.aggregator().map(({ id }) => id);
+    return controls.elements().map(({ id }) => id);
   };
   return { ...controls, draw };
 };
@@ -43,7 +43,7 @@ describe('addTransformer', () => {
 
     addTransformer(pushing('a'));
     addTransformer(pushing('b'));
-    addTransformer((agg) => agg.filter(({ id }) => id !== 'a'));
+    addTransformer((elements) => elements.filter(({ id }) => id !== 'a'));
 
     expect(draw()).toEqual(['b']);
   });
@@ -98,9 +98,9 @@ describe('removeTransformer', () => {
     const last = pushing('c');
 
     addTransformer(pushing('a'));
-    addTransformer((agg) => {
+    addTransformer((elements) => {
       removeTransformer(last);
-      return agg;
+      return elements;
     });
     addTransformer(last);
 

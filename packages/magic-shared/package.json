@@ -136,10 +136,6 @@
       "types": "./dist/types/simulation/index.d.ts",
       "default": "./src/simulation/index.ts"
     },
-    "./themer": {
-      "types": "./dist/types/themer/index.d.ts",
-      "default": "./src/themer/index.ts"
-    },
     "./utilities": {
       "types": "./dist/types/utilities/index.d.ts",
       "default": "./src/utilities/index.ts"

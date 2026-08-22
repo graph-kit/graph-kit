@@ -8,6 +8,7 @@ import { useHostBinding } from './useHostBinding.ts';
 import { useJumpToUser } from './useJumpToUser.ts';
 import { useMultiplayerProduct } from './useMultiplayerProduct.ts';
 import { usePeerDrags } from './usePeerDrags.ts';
+import { usePeerNameTags } from './usePeerNameTags.ts';
 import { usePresenceBroadcast } from './usePresenceBroadcast.ts';
 import { useSuspendedContent } from './useSuspendedContent.ts';
 
@@ -50,6 +51,8 @@ export const useMultiplayer = ({
     useSuspendedContent({ surface: host.surface, events: product.events });
 
     useJumpToUser({ surface: host.surface, multiplayer: product });
+
+    usePeerNameTags({ surface: host.surface, multiplayer: product });
   }
 
   return {

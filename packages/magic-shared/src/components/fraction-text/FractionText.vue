@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import type { TooltipOptions } from '@core/components/Tooltip/types';
-  import { fractionDecimalHintText } from '@core/utils/math';
+  import { fractionDecimalHint } from '@core/utils/math';
   import Fraction from 'fraction.js';
 
   import { computed, useAttrs } from 'vue';
@@ -24,7 +24,7 @@
   const attrs = useAttrs();
 
   const decimalHint = computed(() =>
-    fractionDecimalHintText(props.value, props.precision),
+    fractionDecimalHint(props.value, props.precision),
   );
 </script>
 

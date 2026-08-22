@@ -1,5 +1,5 @@
 import { Color } from '@core/utils/colors';
-import { fractionDecimalHintText } from '@core/utils/math';
+import { fractionDecimalHint } from '@core/utils/math';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
@@ -48,7 +48,7 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
   return {
     name: () => `Total Cost: ${totalMstCost.value.toFraction()}`,
     tooltipLabel: () => {
-      const decimal = fractionDecimalHintText(totalMstCost.value);
+      const decimal = fractionDecimalHint(totalMstCost.value);
       return decimal ? `${decimal}: ${costExplanation}` : costExplanation;
     },
     lens: {

@@ -121,7 +121,7 @@ export const fractionIsInteger = (fraction: Fraction) => {
  * fractionDecimalHint(new Fraction(5, 2)) // '2.5'
  * fractionDecimalHint(new Fraction(1, 3)) // '~0.333'
  */
-export const fractionDecimalHintText = (
+export const fractionDecimalHint = (
   fraction: Fraction,
   fractionDigits?: number,
 ) => {
@@ -143,7 +143,7 @@ export const fractionWithDecimalText = (
   fraction: Fraction,
   fractionDigits?: number,
 ) => {
-  const decimal = fractionDecimalHintText(fraction, fractionDigits);
+  const decimal = fractionDecimalHint(fraction, fractionDigits);
   return decimal
     ? `${fraction.toFraction()} (${decimal})`
     : fraction.toFraction();

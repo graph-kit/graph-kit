@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   average,
-  fractionDecimalHintText,
+  fractionDecimalHint,
   fractionIsInteger,
   fractionToDecimal,
   fractionWithDecimalText,
@@ -85,18 +85,18 @@ describe('fractionIsInteger', () => {
 
 describe('fractionDecimalHint', () => {
   test('returns undefined for fractions that reduce to an integer', () => {
-    expect(fractionDecimalHintText(new Fraction(3))).toBeUndefined();
-    expect(fractionDecimalHintText(new Fraction(4, 2))).toBeUndefined();
-    expect(fractionDecimalHintText(new Fraction(0))).toBeUndefined();
+    expect(fractionDecimalHint(new Fraction(3))).toBeUndefined();
+    expect(fractionDecimalHint(new Fraction(4, 2))).toBeUndefined();
+    expect(fractionDecimalHint(new Fraction(0))).toBeUndefined();
   });
 
   test('returns the decimal for fractions with a fractional part', () => {
-    expect(fractionDecimalHintText(new Fraction(5, 2))).toBe('2.5');
-    expect(fractionDecimalHintText(new Fraction(1, 3))).toBe('~0.333');
+    expect(fractionDecimalHint(new Fraction(5, 2))).toBe('2.5');
+    expect(fractionDecimalHint(new Fraction(1, 3))).toBe('~0.333');
   });
 
   test('respects the requested precision', () => {
-    expect(fractionDecimalHintText(new Fraction(1, 3), 1)).toBe('~0.3');
+    expect(fractionDecimalHint(new Fraction(1, 3), 1)).toBe('~0.3');
   });
 });
 

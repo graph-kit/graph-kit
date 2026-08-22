@@ -23,6 +23,21 @@ env:
 # one job per check, so a failure names itself in the checks list rather than
 # hiding inside a shared log
 jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # the nuxt client build, which also prerenders every route. typecheck
+      # does not stand in for it: vue-tsc checks types, and this is what
+      # catches a vite resolution failure or a route that throws while
+      # prerendering
+      - name: Build
+        run: pnpm build
+
   typecheck:
     runs-on: ubuntu-22.04
     timeout-minutes: 15

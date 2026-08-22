@@ -7,7 +7,7 @@ import { isTextAreaActive } from './activeTextArea.ts';
 import { createTextarea } from './createTextarea.ts';
 import type { PlacedTextArea, TextAreaWithDefaults } from './defaults.ts';
 import { drawWithNoMatte } from './drawWithNoMatte.ts';
-import { getTextDimensions } from './getTextDimensions.ts';
+import { getFontMetrics, getTextDimensions } from './getTextDimensions.ts';
 import type { StartTextAreaEdit, TextBlock } from './types.ts';
 
 export const HORIZONTAL_TEXT_PADDING = 20;
@@ -104,16 +104,23 @@ export const getShapeTextProps = (
 type TextAreaDimensions = {
   width: number;
   height: number;
-  ascent: number;
-  descent: number;
 };
+
+/**
+ * how far below the middle of a text area the em middle is painted, which is what
+ * optically centers a line whose ink sits mostly above that middle. taken off the font
+ * rather than off the ink, since ink reaching lower the moment a descender or an emoji
+ * lands in the content would walk the whole line down with it
+ */
+export const getTextMiddleOffset = (text: Required<TextBlock>) =>
+  getFontMetrics(text).middleToBaseline / 4;
 
 export const getTextAreaDimension = (
   text: Required<TextBlock>,
 ): TextAreaDimensions => {
   const paddingVertical = HORIZONTAL_TEXT_PADDING;
 
-  const { width, height, ascent, descent } = getTextDimensions(text);
+  const { width, height } = getTextDimensions(text);
 
   return {
     width: Math.max(
@@ -124,8 +131,6 @@ export const getTextAreaDimension = (
       height + paddingVertical,
       text.fontSize * 2, // will need to be extended if text wrap
     ),
-    ascent,
-    descent,
   };
 };
 
@@ -143,7 +148,11 @@ export const drawTextWithTextArea =
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const { width, descent, height } = textAreaDimensions;
+    const { width, height } = textAreaDimensions;
 
-    ctx.fillText(content, at.x + width / 2, at.y + height / 2 + descent / 4);
+    ctx.fillText(
+      content,
+      at.x + width / 2,
+      at.y + height / 2 + getTextMiddleOffset(textBlock),
+    );
   };

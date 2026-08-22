@@ -5,7 +5,11 @@ import type { BoundingBox } from '../types/utility.ts';
 import { clearActiveTextArea, setActiveTextArea } from './activeTextArea.ts';
 import type { PlacedTextArea } from './defaults.ts';
 import { getFontMetrics } from './getTextDimensions.ts';
-import { HORIZONTAL_TEXT_PADDING, getTextAreaDimension } from './text.ts';
+import {
+  HORIZONTAL_TEXT_PADDING,
+  getTextAreaDimension,
+  getTextMiddleOffset,
+} from './text.ts';
 import type { OnTextAreaBlur } from './types.ts';
 
 export const createTextarea = (
@@ -31,7 +35,7 @@ export const createTextarea = (
   // of the text area. the input has to land its own baseline in the same place
   const baselineFromBoxTop =
     box.height / 2 +
-    box.descent / 4 +
+    getTextMiddleOffset(textBlock) +
     getFontMetrics(textBlock).middleToBaseline;
 
   // font metrics do not scale perfectly linearly, so take them at the size the

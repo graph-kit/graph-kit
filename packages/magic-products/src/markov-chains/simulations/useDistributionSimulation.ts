@@ -77,10 +77,7 @@ export const distributionSimulationDefinition = (
         onSetupCompleted: (frame) => (currentFrame.value = frame),
         onFrameTransition: (frame) => (currentFrame.value = frame),
         onTeardownCompleted: () =>
-          graph.events.unsubscribe(
-            'onStructureChange',
-            stopOnStructureChange,
-          ),
+          graph.events.unsubscribe('onStructureChange', stopOnStructureChange),
       };
     },
   };

@@ -47,23 +47,29 @@ export const startCtxCounter = (events: RepaintEvents): CtxCounter => {
   const prototype = CanvasRenderingContext2D.prototype;
   for (const name of methodNamesOf(prototype)) {
     restorePatches.push(
-      patchMethod(prototype, name, (original) =>
-        function (this: CanvasRenderingContext2D, ...args: unknown[]) {
-          count(name);
-          return original.apply(this, args);
-        },
+      patchMethod(
+        prototype,
+        name,
+        (original) =>
+          function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+            count(name);
+            return original.apply(this, args);
+          },
       ),
     );
   }
 
   restorePatches.push(
-    patchMethod(document, 'createElement', (original) =>
-      function (this: Document, ...args: unknown[]) {
-        if (String(args[0]).toLowerCase() === 'canvas') {
-          count(CANVAS_ELEMENTS_CREATED);
-        }
-        return original.apply(this, args);
-      },
+    patchMethod(
+      document,
+      'createElement',
+      (original) =>
+        function (this: Document, ...args: unknown[]) {
+          if (String(args[0]).toLowerCase() === 'canvas') {
+            count(CANVAS_ELEMENTS_CREATED);
+          }
+          return original.apply(this, args);
+        },
     ),
   );
 

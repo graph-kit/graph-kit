@@ -107,7 +107,10 @@ const createFakeGraph = () => {
       if (index >= 0) nodes.splice(index, 1);
     }
     positions._internal.remove(removedNodeIds);
-    consumerEvents.emit('onElementsRemoved', { removedNodeIds, removedEdgeIds });
+    consumerEvents.emit('onElementsRemoved', {
+      removedNodeIds,
+      removedEdgeIds,
+    });
     return { removedNodeIds, removedEdgeIds };
   };
 

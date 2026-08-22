@@ -45,8 +45,10 @@ export const useDebugState = (
     else activate();
 
     toast.show({
-      title: isActive.value ? 'Debug mode on' : 'Debug mode off',
-      description: 'Press d to toggle it.',
+      title: isActive.value ? 'Debug Mode On' : 'Debug Mode Off',
+      description: isActive.value
+        ? 'Press d to turn it back off.'
+        : 'Press d to turn it back on.',
       severity: 'info',
       duration: TOGGLE_TOAST_MS,
     });

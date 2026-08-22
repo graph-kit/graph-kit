@@ -6,10 +6,11 @@
     ToastViewport,
   } from 'reka-ui';
 
-  import { computed, useAttrs } from 'vue';
+  import { computed, ref, useAttrs } from 'vue';
 
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
+  import { useStackShift } from './useStackShift.ts';
 
   defineOptions({ inheritAttrs: false });
 
@@ -32,6 +33,10 @@
     'pointer-events-none fixed top-6 right-6 z-50 m-0 flex w-fit list-none flex-col gap-2 p-0 outline-none';
 
   const classes = computed(() => cn(base, attrClass.value));
+
+  const viewportRef = ref<{ $el?: HTMLElement }>();
+
+  useStackShift(computed(() => viewportRef.value?.$el));
 </script>
 
 <template>
@@ -47,6 +52,7 @@
     <slot />
     <ToastPortal>
       <ToastViewport
+        ref="viewportRef"
         v-bind="{ ...attrs, class: undefined }"
         :class="classes"
       />

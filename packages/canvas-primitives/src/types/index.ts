@@ -1,5 +1,7 @@
 import type { UnionToIntersection } from 'ts-essentials';
 
+// referenced only by a {@link} below, which no-unused-vars does not see
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ShapeFactoryWrapper } from '../shapeWrapper.ts';
 import type { ArrowSchema } from '../shapes/arrow/types.ts';
 import type { CircleSchema } from '../shapes/circle/types.ts';

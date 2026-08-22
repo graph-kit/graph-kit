@@ -1,11 +1,5 @@
 <script setup lang="ts">
-  import {
-    mdiBroom,
-    mdiDelete,
-    mdiDeleteOutline,
-    mdiTrashCan,
-    mdiUndoVariant,
-  } from '@mdi/js';
+  import { mdiBroom } from '@mdi/js';
 
   import { computed } from 'vue';
 

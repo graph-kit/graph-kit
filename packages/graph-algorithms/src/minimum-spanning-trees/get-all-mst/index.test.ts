@@ -331,7 +331,7 @@ describe('property based tests', () => {
   describe(getAllMsts, () => {
     it('is independent of the input edge ordering', () => {
       fc.assert(
-        fc.property(graphArbitrary, fc.context(), ({ nodes, edges }, ctx) => {
+        fc.property(graphArbitrary, fc.context(), ({ nodes, edges }, _ctx) => {
           const original = getAllMsts(nodes, edges);
 
           for (let i = 0; i < 5; i++) {

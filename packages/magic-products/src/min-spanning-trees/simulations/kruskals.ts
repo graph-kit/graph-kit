@@ -1,4 +1,4 @@
-import { GEdge, GNode } from '@magic/shared/graph';
+import { GNode } from '@magic/shared/graph';
 
 import {
   KruskalsFrame,

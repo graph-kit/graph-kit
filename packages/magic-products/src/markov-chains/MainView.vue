@@ -2,7 +2,7 @@
   import { useGraphProduct } from '@magic/shared/graph-product';
   import { MagicProduct } from '@magic/shared/product';
 
-  const graph = useGraphProduct({
+  useGraphProduct({
     productId: 'markov-chains',
   });
 </script>

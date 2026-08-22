@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { cn } from '@core/components/cn';
-  import { Color, contrastingTextColor } from '@core/utils/colors';
+  import { contrastingTextColor } from '@core/utils/colors';
   import { mdiEyedropperVariant } from '@mdi/js';
 
   import { computed } from 'vue';

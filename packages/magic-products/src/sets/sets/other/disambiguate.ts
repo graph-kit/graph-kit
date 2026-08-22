@@ -1,9 +1,7 @@
 import { parseMathJSON } from './parseMathJSON.ts';
 import { mathJsonToLatex } from './simplifier/dnf.ts';
 
-const BINARY_OPS = ['\\cup', '\\cap', '\\setminus', '\\triangle'] as const;
-
-type BinaryOp = (typeof BINARY_OPS)[number];
+type BinaryOp = '\\cup' | '\\cap' | '\\setminus' | '\\triangle';
 
 const TOKEN_REGEX =
   /\\left\(|\\right\)|\(|\)|\\cup|\\cap|\\setminus|\\triangle/g;

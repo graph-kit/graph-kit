@@ -150,11 +150,11 @@ const createDocHistory = (doc: Y.Doc): HistoryField => {
 
   const history: HistoryField = {
     canUndo: computed(() => {
-      refresh.value;
+      void refresh.value;
       return undoManager.undoStack.length > 0;
     }),
     canRedo: computed(() => {
-      refresh.value;
+      void refresh.value;
       return undoManager.redoStack.length > 0;
     }),
     undo: () => undoManager.undo(),

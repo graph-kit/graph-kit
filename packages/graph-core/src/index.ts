@@ -156,7 +156,7 @@ export const core = (options: Partial<CoreOptions>) => {
           }),
         });
       }),
-    validate: (data) => true,
+    validate: (_data) => true,
   };
 
   return {

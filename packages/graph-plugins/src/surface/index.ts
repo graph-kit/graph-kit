@@ -90,7 +90,7 @@ export const surface: SurfacePlugin = ({ controls, getters }) => {
         camera.panY.value = data.panY;
         camera.zoom.value = data.zoom;
       },
-      validate: (data) => true,
+      validate: (_data) => true,
     },
     onAfterInit: () => {
       const weightLayer = theme.createLayer(SURFACE_PLUGIN_ID + '/edge-weight');

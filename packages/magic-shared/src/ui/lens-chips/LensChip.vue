@@ -11,7 +11,7 @@
   // listeners meant for the chip also trigger from the tooltip.
   defineOptions({ inheritAttrs: false });
 
-  const props = defineProps<LensChipDefinition>();
+  defineProps<LensChipDefinition>();
 
   const model = defineModel<boolean>();
 

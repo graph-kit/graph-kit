@@ -1,4 +1,4 @@
-import { fractionDecimalHint } from '@core/utils/math';
+import { fractionDecimalHintText } from '@core/utils/math';
 import Fraction from 'fraction.js';
 
 import { ExplainerSegment } from './explainerSegments.ts';
@@ -15,7 +15,7 @@ import { ExplainerSegment } from './explainerSegments.ts';
 export const fractionExplainerSegment = (raw: string): ExplainerSegment => {
   const [value, precision] = raw.split(':');
   const fraction = new Fraction(value);
-  const decimal = fractionDecimalHint(
+  const decimal = fractionDecimalHintText(
     fraction,
     precision === undefined ? undefined : Number(precision),
   );

@@ -52,6 +52,13 @@ type DocAnnotation = {
 const BINDING_ORIGIN = Symbol('graph-product/binding');
 
 /**
+ * The same, for a write that tidies the document rather than carrying an edit of this
+ * user's. Kept apart so undo, which tracks BINDING_ORIGIN, cannot reverse it: a client
+ * clearing up after somebody else's removal has nothing to put back.
+ */
+const RECONCILE_ORIGIN = Symbol('graph-product/reconcile');
+
+/**
  * The keys one transaction touched. The reconcile is scoped to these rather than run
  * over the whole document, so a change to one element cannot reach any other: a node
  * someone is dragging right now is ahead of the document by design, and a full diff
@@ -106,12 +113,13 @@ const annotationFromDoc = (
 
 const nodeFromGraph = (graph: Graph, nodeId: string): DocNode => {
   const { x, y } = graph.positions.get(nodeId);
-  return { x, y, label: graph.getNode(nodeId)?.label ?? '?' };
+  return { x, y, label: graph.getNode(nodeId).label };
 };
 
+/** getEdge throws on an id the graph no longer holds rather than answering undefined */
 const edgeFromGraph = (graph: Graph, edgeId: string): DocEdge | undefined => {
+  if (!graph.isEdge(edgeId)) return undefined;
   const edge = graph.getEdge(edgeId);
-  if (!edge) return undefined;
   return {
     source: edge.source,
     target: edge.target,
@@ -182,9 +190,9 @@ export const bindGraphToDoc = (
   // always observes the flag the apply that triggered it set
   let applyingFromDoc = false;
 
-  const intoDoc = (write: () => void) => {
+  const intoDoc = (write: () => void, origin: symbol = BINDING_ORIGIN) => {
     if (applyingFromDoc) return;
-    doc.transact(write, BINDING_ORIGIN);
+    doc.transact(write, origin);
   };
 
   const intoGraph = (apply: () => void) => {
@@ -264,19 +272,23 @@ export const bindGraphToDoc = (
   // one action on this side for one change on the other, so the receiver derives the
   // same consequences the author's own action did
   const applyDocChange = ({ nodeIds, edgeIds, annotationIds }: DocChanges) => {
+    /** edges the graph took with a removed node that the document is still holding */
+    let orphanedEdgeIds: string[] = [];
+
     intoGraph(() => {
       const removedNodeIds = [...nodeIds].filter(
         (id) => !nodes.has(id) && graph.isNode(id),
       );
       const removedEdgeIds = [...edgeIds].filter(
-        (id) => !edges.has(id) && graph.getEdge(id) !== undefined,
+        (id) => !edges.has(id) && graph.isEdge(id),
       );
       // removals first, since an action that replaced an element shows up as both
       if (removedNodeIds.length > 0 || removedEdgeIds.length > 0) {
-        graph.actions.removeElements({
+        const removed = graph.actions.removeElements({
           nodes: removedNodeIds.map((id) => ({ id })),
           edges: removedEdgeIds.map((id) => ({ id })),
         });
+        orphanedEdgeIds = removed.removedEdgeIds.filter((id) => edges.has(id));
       }
 
       const changedNodes = presentEntries(nodes, nodeIds);
@@ -291,7 +303,7 @@ export const bindGraphToDoc = (
         }));
       // after the nodes, since removing one cascades to the edges that name it
       const addedEdges = changedEdges
-        .filter(([id]) => graph.getEdge(id) === undefined)
+        .filter(([id]) => !graph.isEdge(id))
         .map(([id, edge]) => ({
           id,
           source: edge.source,
@@ -317,10 +329,10 @@ export const bindGraphToDoc = (
       if (moved.length > 0) graph.positions.setMany(moved);
 
       const relabeled = changedNodes
-        .filter(([id, node]) => {
-          const live = graph.getNode(id);
-          return live !== undefined && live.label !== node.label;
-        })
+        .filter(
+          ([id, node]) =>
+            graph.isNode(id) && graph.getNode(id).label !== node.label,
+        )
         .map(([id, node]) => ({ nodeId: id, label: node.label }));
       if (relabeled.length > 0) graph.nodeLabel.setMany(relabeled);
 
@@ -341,16 +353,25 @@ export const bindGraphToDoc = (
       if (addedAnnotations.length > 0) graph.annotations.add(addedAnnotations);
 
       const reweighted = changedEdges
-        .filter(([id, edge]) => {
-          const live = graph.getEdge(id);
-          return live !== undefined && live.weight.toString() !== edge.weight;
-        })
+        .filter(
+          ([id, edge]) =>
+            graph.isEdge(id) &&
+            graph.getEdge(id).weight.toString() !== edge.weight,
+        )
         .map(([id, edge]) => ({
           edgeId: id,
           update: new Fraction(edge.weight),
         }));
       if (reweighted.length > 0) graph.weights.setMany(reweighted);
     });
+
+    // an edge drawn against a node someone else was removing at the same time is one
+    // no graph can hold: every client drops it, so the document has to be told
+    if (orphanedEdgeIds.length > 0) {
+      intoDoc(() => {
+        for (const edgeId of orphanedEdgeIds) edges.delete(edgeId);
+      }, RECONCILE_ORIGIN);
+    }
   };
 
   // one transaction is one change, where a per map observer would split it into as many
@@ -359,7 +380,12 @@ export const bindGraphToDoc = (
   //
   // the document is the source for everything except what this binding just wrote
   const onTransaction = (transaction: Y.Transaction) => {
-    if (transaction.origin === BINDING_ORIGIN) return;
+    if (
+      transaction.origin === BINDING_ORIGIN ||
+      transaction.origin === RECONCILE_ORIGIN
+    ) {
+      return;
+    }
     const changes: DocChanges = {
       nodeIds: changedKeys(transaction, nodes),
       edgeIds: changedKeys(transaction, edges),

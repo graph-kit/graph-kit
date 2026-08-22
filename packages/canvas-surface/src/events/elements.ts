@@ -91,7 +91,7 @@ export const createElementsUnderCursor = ({
 
   const refresh = () => {
     const coords = cursorCoordinates.value;
-    const elements = aggregator.getCanvasElementsAtCoordinate(coords);
+    const elements = aggregator.elementsAt(coords);
 
     const changed =
       coords.x !== elementsUnderCursor.coords.x ||

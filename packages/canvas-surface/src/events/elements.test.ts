@@ -23,7 +23,7 @@ const setup = () => {
   const aggregator = createAggregator(renderer);
 
   let underCursor: CanvasElement[] = [];
-  aggregator.getCanvasElementsAtCoordinate = () => underCursor;
+  aggregator.elementsAt = () => underCursor;
 
   const cursorCoordinates = ref({ x: 0, y: 0 });
   const canvasEvents = createEventHub({

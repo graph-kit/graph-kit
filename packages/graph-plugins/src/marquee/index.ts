@@ -1,4 +1,4 @@
-import { Aggregator, CanvasElement } from '@canvas/primitives/aggregator/types';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { normalizeBoundingBox } from '@canvas/primitives/helpers';
 import type { BoundingBox, Coordinate } from '@canvas/primitives/types/utility';
 import type { ElementMouseEvent } from '@canvas/surface/events/index';
@@ -74,7 +74,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       id,
       shape,
       paintOnly,
-    } of controls.surface.aggregator.aggregator()) {
+    } of controls.surface.aggregator.elements()) {
       if (!controls.isNode(id) && !controls.isEdge(id)) continue;
       if (paintOnly) continue;
       const inSelectionBox = shape.overlapsBox(box);
@@ -130,11 +130,11 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     };
   };
 
-  const addMarqueeBoxToAggregator = (aggregator: Aggregator) => {
-    if (!marqueeBox || !marqueeBoxHasMoved) return aggregator;
+  const addMarqueeBoxToAggregator = (elements: CanvasElement[]) => {
+    if (!marqueeBox || !marqueeBoxHasMoved) return elements;
 
-    aggregator.push(getMarqueeBoxCanvasElement(marqueeBox));
-    return aggregator;
+    elements.push(getMarqueeBoxCanvasElement(marqueeBox));
+    return elements;
   };
 
   // the box only offers up what the pointer could still reach on its own, and a paint
@@ -144,7 +144,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       controls.focus.focusedNodes().map(({ id }) => id),
     );
     const selectable: string[] = [];
-    for (const { id, paintOnly } of controls.surface.aggregator.aggregator()) {
+    for (const { id, paintOnly } of controls.surface.aggregator.elements()) {
       if (!paintOnly && focusedIds.has(id)) selectable.push(id);
     }
     return selectable;
@@ -175,16 +175,16 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     };
   };
 
-  const addSelectionBoxToAggregator = (aggregator: Aggregator) => {
-    if (!selectionBox) return aggregator;
+  const addSelectionBoxToAggregator = (elements: CanvasElement[]) => {
+    if (!selectionBox) return elements;
 
     const { width, height } = selectionBox;
-    if (width === 0 || height === 0) return aggregator;
+    if (width === 0 || height === 0) return elements;
 
     const selectionBoxSchema = getSelectionBoxSchema(selectionBox);
 
-    aggregator.push(selectionBoxSchema);
-    return aggregator;
+    elements.push(selectionBoxSchema);
+    return elements;
   };
 
   controls.surface.aggregator.addTransformer(addSelectionBoxToAggregator);

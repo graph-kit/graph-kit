@@ -1,8 +1,5 @@
-import {
-  Aggregator,
-  AggregatorTransformer,
-  CanvasElement,
-} from '@canvas/primitives/aggregator/types';
+import { createAggregator } from '@canvas/primitives/aggregator/index';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { CanvasSurface } from '@canvas/surface/types';
 import { createEventHub } from '@core/events/createEventHub';
 import { DraggedElement } from '@multiplayer/protocol/room';
@@ -28,12 +25,25 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
     createMultiplayerEventRegistry(),
   );
 
-  const transformers: AggregatorTransformer[] = [];
-  const surface = {
-    aggregator: {
-      addTransformer: (fn: AggregatorTransformer) => transformers.push(fn),
-    },
-  } as unknown as CanvasSurface;
+  const aggregator = createAggregator({
+    beginFrame: () => {},
+    endFrame: () => {},
+    drawGroup: () => {},
+  });
+
+  // seeds the elements under test, registered ahead of usePeerDrags so its own
+  // transformer sees them
+  let seeded: string[] = [];
+  aggregator.addTransformer((agg) => {
+    agg.push(
+      ...seeded.map(
+        (id) => ({ id, priority: 1, shape: {} }) as unknown as CanvasElement,
+      ),
+    );
+    return agg;
+  });
+
+  const surface = { aggregator } as unknown as CanvasSurface;
 
   const applied: string[] = [];
   const ended: string[] = [];
@@ -70,11 +80,15 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
 
   /** what the transformer leaves behind, which is what the pointer is tested against */
   const paintOnlyIds = (ids: string[]) => {
-    const aggregator: Aggregator = ids.map(
-      (id) => ({ id, priority: 1, shape: {} }) as unknown as CanvasElement,
-    );
-    for (const transform of transformers) transform(aggregator);
-    return aggregator.filter(({ paintOnly }) => paintOnly).map(({ id }) => id);
+    seeded = ids;
+    aggregator.draw({} as CanvasRenderingContext2D);
+    const drawn = aggregator.aggregator();
+
+    // half the assertions below expect nothing held, which an empty pipeline would
+    // satisfy on its own
+    expect(drawn.map(({ id }) => id)).toEqual(ids);
+
+    return drawn.filter(({ paintOnly }) => paintOnly).map(({ id }) => id);
   };
 
   return { events, applied, ended, paintOnlyIds };

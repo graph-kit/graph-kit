@@ -3,19 +3,13 @@ import type { Cursor } from '@core/utils/cursor';
 import { Shape } from '../types/index.ts';
 
 /**
- * the array in which canvas elements are added into in order to be rendered on the canvas
+ * usually pushes onto the array and returns it. return a new array to remove elements.
+ * runs every frame, so keep it cheap
  */
-export type Aggregator = CanvasElement[];
+export type AggregatorTransformer = (
+  elements: CanvasElement[],
+) => CanvasElement[];
 
-/**
- * a function that takes an `aggregator` and returns an `aggregator` with alterations to
- * the internal contents; invoked each render cycle
- */
-export type AggregatorTransformer = (aggregator: Aggregator) => Aggregator;
-
-/**
- * an element that can be fed into the `aggregator` in order to be rendered on the canvas
- */
 export type CanvasElement = {
   /**
    * unique identifier for this element
@@ -33,9 +27,8 @@ export type CanvasElement = {
    */
   shape: Shape;
   /**
-   * marks this element as paint only. it renders like any other, but
-   * `getCanvasElementsAtCoordinate` never returns it, so the pointer lands on whatever
-   * sits beneath it instead.
+   * marks this element as paint only. it renders like any other, but `elementsAt` never
+   * returns it, so the pointer lands on whatever sits beneath it instead.
    */
   paintOnly?: boolean;
   /**
@@ -43,7 +36,8 @@ export type CanvasElement = {
    */
   cursor?: Cursor;
   /**
-   * attached metadata
+   * the key `'dragNodeIds'` is reserved by the node-drag plugin
+   * (`NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD`)
    */
   data?: Record<string, unknown>;
 };

@@ -29,9 +29,9 @@
   const shapeCounts = ref<[string, number][]>([]);
   const viewport = ref({ width: 0, height: 0, dpr: 1 });
 
-  /** the aggregator is a plain array behind a getter, so its counts are polled */
+  /** elements() returns a plain array, not a ref, so its counts are polled */
   const sampleSurface = () => {
-    const elements = surface.aggregator.aggregator();
+    const elements = surface.aggregator.elements();
     const countByShape = new Map<string, number>();
     let hitTestable = 0;
 

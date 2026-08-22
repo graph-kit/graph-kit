@@ -1,4 +1,4 @@
-import { Aggregator } from '@canvas/primitives/aggregator/types';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type { ElementMouseEvent } from '@canvas/surface/index';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
@@ -63,7 +63,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
   // annotations are drawn over the graph, never targeted through it: a committed stroke is
   // not clickable and the tool cursors are not elements the pointer can land on
-  const addAnnotationsToAggregator = (elements: Aggregator) => {
+  const addAnnotationsToAggregator = (elements: CanvasElement[]) => {
     for (const element of engine.canvasElements()) {
       elements.push({ ...element, paintOnly: true });
     }

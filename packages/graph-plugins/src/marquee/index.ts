@@ -1,4 +1,4 @@
-import { Aggregator, CanvasElement } from '@canvas/primitives/aggregator/types';
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { normalizeBoundingBox } from '@canvas/primitives/helpers';
 import type { BoundingBox, Coordinate } from '@canvas/primitives/types/utility';
 import { type ElementMouseEvent } from '@canvas/surface/index';
@@ -73,7 +73,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       id,
       shape,
       paintOnly,
-    } of controls.surface.aggregator.aggregator()) {
+    } of controls.surface.aggregator.elements()) {
       if (!controls.isNode(id) && !controls.isEdge(id)) continue;
       if (paintOnly) continue;
       const inSelectionBox = shape.overlapsBox(box);
@@ -129,7 +129,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     };
   };
 
-  const addMarqueeBoxToAggregator = (elements: Aggregator) => {
+  const addMarqueeBoxToAggregator = (elements: CanvasElement[]) => {
     if (!marqueeBox || !marqueeBoxHasMoved) return elements;
 
     elements.push(getMarqueeBoxCanvasElement(marqueeBox));
@@ -143,7 +143,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       controls.focus.focusedNodes().map(({ id }) => id),
     );
     const selectable: string[] = [];
-    for (const { id, paintOnly } of controls.surface.aggregator.aggregator()) {
+    for (const { id, paintOnly } of controls.surface.aggregator.elements()) {
       if (!paintOnly && focusedIds.has(id)) selectable.push(id);
     }
     return selectable;
@@ -172,7 +172,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     };
   };
 
-  const addSelectionBoxToAggregator = (elements: Aggregator) => {
+  const addSelectionBoxToAggregator = (elements: CanvasElement[]) => {
     if (!selectionBox) return elements;
 
     const { width, height } = selectionBox;

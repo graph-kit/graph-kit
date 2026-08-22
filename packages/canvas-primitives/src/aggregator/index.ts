@@ -4,18 +4,18 @@ import { DeepReadonly } from 'ts-essentials';
 import { ShapeRenderer } from '../animation/index.ts';
 import { Coordinate } from '../types/utility.ts';
 import { AggregatorEventMap, createAggregatorEventRegistry } from './events.ts';
-import { Aggregator, AggregatorTransformer, CanvasElement } from './types.ts';
+import { AggregatorTransformer, CanvasElement } from './types.ts';
 
+/** the aggregator as plugins see it. `draw` is only on {@link AggregatorHost} */
 export type AggregatorControls = {
-  aggregator: () => DeepReadonly<Aggregator>;
   /**
-   * registers a {@link AggregatorTransformer | transformer} to run each render cycle
-   *
-   * ℹ️ transformers run in registration order, each handed the aggregator the previous
-   * one returned
-   *
-   * @param fn the transformer to add
-   * @example addTransformer((agg) => { agg.push(myElement); return agg })
+   * the elements drawn in the last frame, lowest priority first. the array is replaced
+   * every frame, so call this when you need it instead of storing the result
+   */
+  elements: () => DeepReadonly<CanvasElement[]>;
+  /**
+   * transformers run every frame in the order they were added, each getting the array
+   * the previous one returned
    */
   addTransformer: (fn: AggregatorTransformer) => void;
   /**
@@ -28,28 +28,36 @@ export type AggregatorControls = {
    * @example removeTransformer(myTransformer)
    */
   removeTransformer: (fn: AggregatorTransformer) => void;
-  getCanvasElementsAtCoordinate: (coords: Coordinate) => CanvasElement[];
-  draw: (ctx: CanvasRenderingContext2D) => void;
+  /**
+   * elements whose hitbox contains `coords`, in canvas space. ordered back to front, so
+   * the last one is on top. skips {@link CanvasElement.paintOnly | paint only} elements
+   */
+  elementsAt: (coords: Coordinate) => CanvasElement[];
   events: ReadonlyEventHub<AggregatorEventMap>;
+};
+
+/** only the canvas surface holds this. plugins draw through `surface.draw.content` */
+export type AggregatorHost = AggregatorControls & {
+  draw: (ctx: CanvasRenderingContext2D) => void;
 };
 
 export const createAggregator = (
   renderer: Pick<ShapeRenderer, 'drawGroup' | 'beginFrame' | 'endFrame'>,
-): AggregatorControls => {
+): AggregatorHost => {
   const events = createEventHub(createAggregatorEventRegistry());
 
-  let aggregator: Aggregator = [];
+  let elements: CanvasElement[] = [];
   const transformers: AggregatorTransformer[] = [];
 
-  const updateAggregator = () => {
+  const rebuild = () => {
     // snapshot: a transformer that adds or removes one mid pass would otherwise
     // shift the indicies out from under the reduce
-    const resolvedCanvasElements = [...transformers].reduce<Aggregator>(
+    const resolvedCanvasElements = [...transformers].reduce<CanvasElement[]>(
       (acc, fn) => fn(acc),
       [],
     );
 
-    aggregator = resolvedCanvasElements.toSorted(
+    elements = resolvedCanvasElements.toSorted(
       (a, b) => a.priority - b.priority,
     );
   };
@@ -63,9 +71,11 @@ export const createAggregator = (
     if (index !== -1) transformers.splice(index, 1);
   };
 
-  const groupByPriority = (elements: Aggregator): Map<number, Aggregator> => {
-    const groups = new Map<number, Aggregator>();
-    for (const item of elements) {
+  const groupByPriority = (
+    toGroup: CanvasElement[],
+  ): Map<number, CanvasElement[]> => {
+    const groups = new Map<number, CanvasElement[]>();
+    for (const item of toGroup) {
       const group = groups.get(item.priority) ?? [];
       group.push(item);
       groups.set(item.priority, group);
@@ -75,10 +85,10 @@ export const createAggregator = (
 
   const draw = (ctx: CanvasRenderingContext2D) => {
     events.emit('onBeforeDraw', ctx);
-    updateAggregator();
+    rebuild();
 
     renderer.beginFrame();
-    for (const group of groupByPriority(aggregator).values()) {
+    for (const group of groupByPriority(elements).values()) {
       renderer.drawGroup(
         ctx,
         group.map((item) => item.shape),
@@ -89,25 +99,16 @@ export const createAggregator = (
     events.emit('onDraw', ctx);
   };
 
-  /**
-   * Returns all canvas elements at given coordinate
-   *
-   * @param coords Point in canvas space to test against {@link CanvasElement.shape | element} hitboxes
-   * @returns All canvas elements whose hitbox contains coords, ordered back-to-front by paint
-   * priority, excluding those flagged {@link CanvasElement.paintOnly | paint only}
-   * @example const els = getCanvasElementsAtCoordinate({ x: 200, y: 550 })
-   * console.log(els) // [node, nodeAnchor] meaning nodeAnchor is above the node
-   */
-  const getCanvasElementsAtCoordinate = (coords: Coordinate) =>
-    aggregator.filter(
+  const elementsAt = (coords: Coordinate) =>
+    elements.filter(
       ({ shape, paintOnly }) => !paintOnly && shape.hitbox(coords),
     );
 
   return {
-    aggregator: () => aggregator,
+    elements: () => elements,
     addTransformer,
     removeTransformer,
-    getCanvasElementsAtCoordinate,
+    elementsAt,
     draw,
     events,
   };

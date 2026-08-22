@@ -33,7 +33,7 @@ export const useJumpToContent = (
 
   const contentOffscreen = ref(false);
 
-  const content = () => surface.aggregator.aggregator().filter(isContent);
+  const content = () => surface.aggregator.elements().filter(isContent);
 
   const check = throttle(() => {
     const elements = content();

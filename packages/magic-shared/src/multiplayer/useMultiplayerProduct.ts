@@ -1,4 +1,6 @@
-import { onMounted, onUnmounted } from 'vue';
+import { PRODUCT_WRITE_FLOOR, meetsFloor } from '@multiplayer/protocol/tiers';
+
+import { computed, onMounted, onUnmounted } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { ProductId, manifests } from '../product/manifests/index.ts';
@@ -59,12 +61,19 @@ export const useMultiplayerProduct = ({
 
   onUnmounted(() => actions.product.leave(productId));
 
+  const isReadonly = computed(
+    () =>
+      room.value.connected &&
+      !meetsFloor(room.value.me.tier, PRODUCT_WRITE_FLOOR),
+  );
+
   return {
     room: {
       state: room,
       start: () => actions.room.start(binding),
       join: ({ roomId }) => actions.room.join({ ...binding, roomId }),
       leave: actions.room.leave,
+      isReadonly,
     },
     events,
     ui: {

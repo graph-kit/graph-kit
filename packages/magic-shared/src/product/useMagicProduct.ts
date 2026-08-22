@@ -7,7 +7,7 @@ import { TEXT_BLOCK_DEFAULTS } from '@canvas/primitives/text/defaults';
 import { getTextDimensions } from '@canvas/primitives/text/getTextDimensions';
 import type { TextBlock } from '@canvas/primitives/text/types';
 
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
@@ -96,6 +96,18 @@ export const useMagicProduct = (
     localStorage,
     multiplayer,
   };
+
+  // read-only has nothing to draw with, so the tools come out of standby with it and
+  // the panel closes behind them on `onDeactivated`
+  if (annotations && multiplayer) {
+    watch(
+      multiplayer.room.isReadonly,
+      (isReadonly) => {
+        if (isReadonly) annotations.deactivate();
+      },
+      { immediate: true },
+    );
+  }
 
   const nameTagElement: AggregatorTransformer = (agg) => {
     if (!magic.multiplayer?.room.state.value.connected) return agg;

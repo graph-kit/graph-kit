@@ -5,9 +5,17 @@
 
   import Well from '../../components/layout/Well.vue';
   import ToggleIconButton from '../../components/toggle-icon-button/ToggleIconButton.vue';
+  import { useProvidedMagic } from '../../product/index.ts';
   import { useAnnotationControls } from './useAnnotationControls.ts';
 
+  const magic = useProvidedMagic();
   const controls = useAnnotationControls();
+
+  const disabled = computed(() => {
+    if (magic.multiplayer?.room.isReadonly) {
+      return 'In read-only mode';
+    }
+  });
 
   const content = computed(() => {
     if (controls.isActive.value) {
@@ -31,6 +39,7 @@
       @update:model-value="controls.toggle"
       @mouseenter="controls.ui.panel.setHighlight(true)"
       @mouseleave="controls.ui.panel.setHighlight(false)"
+      :disabled="disabled"
       class="bg-transparent dark:bg-transparent p-4"
       :label="content.label"
       :path="content.icon"

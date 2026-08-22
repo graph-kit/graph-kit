@@ -56,6 +56,11 @@ export type ProductMultiplayer = {
     start: () => Promise<RoomId>;
     join: (options: { roomId: RoomId }) => Promise<JoinResult>;
     leave: () => void;
+    /**
+     * the user holds a tier below what writing takes, so everything that would
+     * write stands down. false outside a room, since a tier is only a room's to grant
+     */
+    isReadonly: ComputedRef<boolean>;
   };
 
   /** room lifecycle, for anything that should only exist while a room does */

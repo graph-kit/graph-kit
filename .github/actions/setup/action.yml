@@ -1,0 +1,28 @@
+name: Setup
+description: pnpm, node, and a fully installed workspace
+
+# every ci job needs the same four steps, and they drifted between the old
+# tests and types workflows. this keeps them in one place.
+#
+# the caller still has to run actions/checkout first: a composite action that
+# lives in this repo cannot be resolved until the repo is on disk.
+
+runs:
+  using: composite
+
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Install Node
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'pnpm'
+
+    # from the root, so every workspace package is installed rather than the
+    # client alone. magic-client's postinstall runs nuxt prepare, and the
+    # typecheck needs the .nuxt types that generates
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash

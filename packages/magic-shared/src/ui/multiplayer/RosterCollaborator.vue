@@ -23,6 +23,7 @@
   import ProductBadge from './ProductBadge.vue';
   import TierBadge from './TierBadge.vue';
   import TierEdit from './TierEdit.vue';
+  import { assignableTiersFor } from './tier.ts';
 
   interface Props {
     member: RosterEntry;
@@ -44,7 +45,12 @@
     [
       { component: DisplayNameEdit, predicate: isMe.value },
       { component: JumpToUser, predicate: !isMe.value },
-      { component: TierEdit, predicate: room.value.me.isHost && !isMe.value },
+      {
+        component: TierEdit,
+        predicate:
+          !isMe.value &&
+          assignableTiersFor(room.value.me.tier, props.member.tier).length > 0,
+      },
       {
         component: MoveUser,
         predicate:

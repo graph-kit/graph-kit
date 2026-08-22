@@ -20,16 +20,17 @@ import {
   ERASING_ALPHA,
   IN_PROGRESS_ANNOTATION_ID,
   LASER_CURSOR_ID,
-  LASER_DECAY_MS,
   LASER_TRAIL_LENGTH,
 } from './constants.ts';
 import { createAnnotationsEventRegistry } from './events.ts';
+import { laserTrail } from './laserTrail.ts';
 import type {
   Annotation,
   AnnotationCanvasElement,
   AnnotationMode,
   AnnotationsControls,
   CreateAnnotationsOptions,
+  InFlightStroke,
 } from './types.ts';
 
 /**
@@ -56,8 +57,10 @@ export const createAnnotations = ({
   // the stroke in flight, read only by the draw pass, which reruns every frame regardless
   let strokePoints: Coordinate[] = [];
   let isDrawing = false;
+  // minted at the start of the stroke rather than at the end, so whoever is watching the
+  // stroke can name the annotation it is going to become before it becomes one
+  let strokeId = '';
   const erasedIds = new Set<string>();
-  let laserDecayInterval: ReturnType<typeof setInterval> | undefined;
   let lastMoveTime = Date.now();
 
   const isErasing = () => mode() === 'erasing';
@@ -119,24 +122,31 @@ export const createAnnotations = ({
     }
   };
 
-  const startDecayTimer = () => {
-    if (laserDecayInterval) return;
-    laserDecayInterval = setInterval(() => {
-      const stalled = Date.now() - lastMoveTime > LASER_DECAY_MS;
-      if (stalled && strokePoints.length >= 2) strokePoints.shift();
-    }, LASER_DECAY_MS);
-  };
+  /** the laser keeps every point it was given and shows only the live tail of them */
+  const visibleStrokePoints = () =>
+    isLaserPointing()
+      ? laserTrail(strokePoints, Date.now() - lastMoveTime)
+      : strokePoints;
 
-  const stopDecayTimer = () => {
-    if (!laserDecayInterval) return;
-    clearInterval(laserDecayInterval);
-    laserDecayInterval = undefined;
-  };
+  const inFlightStroke = (): InFlightStroke => ({
+    id: strokeId,
+    mode: isLaserPointing() ? 'laser' : 'drawing',
+    points: [...strokePoints],
+    fillColor: color(),
+    brushWeight: brushWeight(),
+  });
 
   const beginStroke = (coords: Coordinate) => {
     isDrawing = true;
+    strokeId = generateId();
     strokePoints = [coords];
-    if (isErasing()) markErased(coords);
+    lastMoveTime = Date.now();
+
+    if (isErasing()) {
+      markErased(coords);
+      return;
+    }
+    events.emit('onStrokeBegan', inFlightStroke());
   };
 
   const extendStroke = (coords: Coordinate) => {
@@ -148,13 +158,12 @@ export const createAnnotations = ({
     }
 
     strokePoints.push(coords);
-
-    if (isLaserPointing()) {
-      if (strokePoints.length > LASER_TRAIL_LENGTH) strokePoints.shift();
-      startDecayTimer();
+    if (isLaserPointing() && strokePoints.length > LASER_TRAIL_LENGTH) {
+      strokePoints.shift();
     }
 
     lastMoveTime = Date.now();
+    events.emit('onStrokeExtended', [coords]);
   };
 
   const endStroke = () => {
@@ -169,30 +178,34 @@ export const createAnnotations = ({
     }
 
     const points = strokePoints;
+    const id = strokeId;
     strokePoints = [];
 
-    // the laser leaves nothing behind, which is the whole point of it
-    if (isLaserPointing()) {
-      stopDecayTimer();
-      return;
+    if (!isLaserPointing()) {
+      add([
+        {
+          id,
+          type: 'draw',
+          points,
+          fillColor: color(),
+          brushWeight: brushWeight(),
+        },
+      ]);
     }
 
-    add([
-      {
-        id: generateId(),
-        type: 'draw',
-        points,
-        fillColor: color(),
-        brushWeight: brushWeight(),
-      },
-    ]);
+    events.emit('onStrokeEnded');
   };
 
   const abortStroke = () => {
+    // announced even though nothing commits: a stroke abandoned mid flight is still a
+    // stroke that stopped, and whoever was shown it has to be told to drop it
+    const wasDrawingStroke = isDrawing && !isErasing();
+
     isDrawing = false;
     strokePoints = [];
     erasedIds.clear();
-    stopDecayTimer();
+
+    if (wasDrawingStroke) events.emit('onStrokeEnded');
   };
 
   const eraserCursorElement = (): AnnotationCanvasElement => ({
@@ -224,7 +237,7 @@ export const createAnnotations = ({
     priority: ANNOTATION_IN_PROGRESS_PRIORITY,
     shape: scribble({
       type: 'draw',
-      points: strokePoints,
+      points: visibleStrokePoints(),
       fillColor: color(),
       brushWeight: brushWeight(),
     }),
@@ -250,7 +263,7 @@ export const createAnnotations = ({
     if (!isActive()) return elements;
 
     if (isErasing()) elements.push(eraserCursorElement());
-    else if (isDrawing && strokePoints.length > 0) {
+    else if (isDrawing && visibleStrokePoints().length > 0) {
       elements.push(strokeInFlightElement());
     } else if (isLaserPointing()) elements.push(laserCursorElement());
 

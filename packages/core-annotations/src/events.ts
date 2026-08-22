@@ -1,6 +1,7 @@
+import type { Coordinate } from '@canvas/primitives/types/utility';
 import type { EventMapToEventRegistry } from '@core/events/types';
 
-import type { Annotation } from './types.ts';
+import type { Annotation, InFlightStroke } from './types.ts';
 
 export type AnnotationsChange = {
   added: Annotation[];
@@ -21,6 +22,12 @@ export type AnnotationsEventMap = {
   onActivated: () => void;
   /** the tools went back to standby, dropping whatever stroke was in flight */
   onDeactivated: () => void;
+
+  onStrokeBegan: (stroke: Readonly<InFlightStroke>) => void;
+  /** only the points added since the last trigger, never the whole stroke */
+  onStrokeExtended: (points: readonly Coordinate[]) => void;
+  /** the stroke is over, whether it committed or was abandoned */
+  onStrokeEnded: () => void;
 };
 
 type AnnotationsEventRegistry = EventMapToEventRegistry<AnnotationsEventMap>;
@@ -29,4 +36,7 @@ export const createAnnotationsEventRegistry = (): AnnotationsEventRegistry => ({
   onAnnotationsChanged: new Set(),
   onActivated: new Set(),
   onDeactivated: new Set(),
+  onStrokeBegan: new Set(),
+  onStrokeExtended: new Set(),
+  onStrokeEnded: new Set(),
 });

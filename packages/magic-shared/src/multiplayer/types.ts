@@ -7,6 +7,7 @@ import {
 import {
   CameraState,
   DraggedElement,
+  PeerStroke,
   Point,
   ProductId,
   ProductPresence,
@@ -98,6 +99,10 @@ export type RoomControls = {
     startDrag: (elements: DraggedElement[]) => void;
     updateDrag: (elements: DraggedElement[]) => void;
     endDrag: () => void;
+    startStroke: (stroke: PeerStroke) => void;
+    /** only the points added since the last call, never the whole stroke */
+    extendStroke: (points: Point[]) => void;
+    endStroke: () => void;
   };
 };
 

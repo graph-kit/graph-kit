@@ -152,9 +152,10 @@ export const interactive =
     };
 
     const onEnable = () => {
-      controls.surface.events.elements.subscribe(
+      controls.surface.events.elements.handle(
         'onMouseDown',
         handleEdgeTextArea,
+        INTERACTIVE_PLUGIN_ID,
       );
       controls.surface.events.elements.handle(
         'onClick',
@@ -169,7 +170,7 @@ export const interactive =
     };
 
     const onDisable = () => {
-      controls.surface.events.elements.unsubscribe(
+      controls.surface.events.elements.unhandle(
         'onMouseDown',
         handleEdgeTextArea,
       );

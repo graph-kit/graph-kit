@@ -2,6 +2,7 @@ import { DocStateVector, DocUpdate } from './doc.ts';
 import {
   CameraState,
   DraggedElement,
+  PeerStroke,
   Point,
   ProductId,
   ProductPresence,
@@ -111,6 +112,19 @@ export type ClientToServerEvents = {
   startDrag: (options: { elements: DraggedElement[] }) => void;
   updateDrag: (options: { elements: DraggedElement[] }) => void;
   endDrag: () => void;
+
+  /**
+   * An annotation as it is drawn, so a stroke arrives while it is being made rather than
+   * all at once when it commits, and so the laser arrives at all: it commits to nothing,
+   * which makes this the only channel it has.
+   *
+   * `extendStroke` carries only the points added since the last one. Resending the whole
+   * stroke every move would cost the square of its length, and the room already holds the
+   * accumulation for anybody arriving late.
+   */
+  startStroke: (options: { stroke: PeerStroke }) => void;
+  extendStroke: (options: { points: Point[] }) => void;
+  endStroke: () => void;
 };
 
 /**
@@ -142,6 +156,10 @@ export type ServerToClientEvents = {
   }) => void;
   dragMoved: (options: { userId: UserId; elements: DraggedElement[] }) => void;
   dragEnded: (options: { userId: UserId }) => void;
+
+  strokeStarted: (options: { userId: UserId; stroke: PeerStroke }) => void;
+  strokeExtended: (options: { userId: UserId; points: Point[] }) => void;
+  strokeEnded: (options: { userId: UserId }) => void;
 
   /**
    * this user is on the product now. announced rather than left to be inferred from

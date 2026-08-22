@@ -10,6 +10,7 @@ import {
   UserId,
   emptyProductPresence,
 } from '@multiplayer/protocol/room';
+import { appendStrokePoints } from '@multiplayer/protocol/stroke';
 import { DEFAULT_TIER } from '@multiplayer/protocol/tiers';
 import { io as connect } from 'socket.io-client';
 import * as Y from 'yjs';
@@ -80,6 +81,10 @@ export const createMultiplayer = ({
       updateDrag: (elements) =>
         requireSocket().emit('updateDrag', { elements }),
       endDrag: () => requireSocket().emit('endDrag'),
+      startStroke: (stroke) => requireSocket().emit('startStroke', { stroke }),
+      extendStroke: (points) =>
+        requireSocket().emit('extendStroke', { points }),
+      endStroke: () => requireSocket().emit('endStroke'),
     },
   };
 
@@ -239,6 +244,28 @@ export const createMultiplayer = ({
       if (peerId === membership.value?.userId) return;
       peerPresence(peerId).drag = null;
       events.emit('onPeerDragEnded', peerId);
+    });
+
+    activeSocket.on('strokeStarted', ({ userId: peerId, stroke }) => {
+      peerPresence(peerId).stroke = stroke;
+      events.emit('onPeerStrokeStarted', peerId, stroke);
+    });
+
+    activeSocket.on('strokeExtended', ({ userId: peerId, points }) => {
+      const { stroke } = peerPresence(peerId);
+      // a delta for a stroke this client never saw start has nothing to append to
+      if (!stroke) return;
+
+      appendStrokePoints(stroke, points);
+      events.emit('onPeerStrokeExtended', peerId, points);
+    });
+
+    activeSocket.on('strokeEnded', ({ userId: peerId }) => {
+      // the sweep announces to the whole product, this client included, and the end of our
+      // own stroke is the annotation engine's business rather than a peer event
+      if (peerId === membership.value?.userId) return;
+      peerPresence(peerId).stroke = null;
+      events.emit('onPeerStrokeEnded', peerId);
     });
 
     activeSocket.on(

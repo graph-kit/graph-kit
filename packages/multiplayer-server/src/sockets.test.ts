@@ -9,7 +9,11 @@ import {
   ProductEntryState,
   ServerToClientEvents,
 } from '@multiplayer/protocol/events';
-import { RoomMembership, Seat } from '@multiplayer/protocol/room';
+import {
+  RoomMembership,
+  Seat,
+  emptyProductPresence,
+} from '@multiplayer/protocol/room';
 import { Socket, io as connect } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
@@ -753,12 +757,7 @@ describe('presence scoping', () => {
     const student = await connectClient();
     const { presence } = await joinRoomAt(student, roomId, 'traversals');
 
-    expect(presence[hostId]).toEqual({
-      cursorPosition: null,
-      cameraState: null,
-      drag: null,
-      isAnnotating: false,
-    });
+    expect(presence[hostId]).toEqual(emptyProductPresence());
   });
 
   it('leaves the arriving client out of its own entry payload', async () => {
@@ -871,5 +870,99 @@ describe('drag release', () => {
     student.emit('updateDrag', { elements: dragged });
 
     expect((await restarted).userId).toBe(studentId);
+  });
+});
+
+describe('live strokes', () => {
+  const stroke = {
+    id: 'stroke-1',
+    mode: 'drawing' as const,
+    points: [{ x: 0, y: 0 }],
+    fillColor: '#ff0000',
+    brushWeight: 6,
+  };
+
+  const roomOfTwo = async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    const joined = await joinRoomAt(student, roomId, 'traversals');
+    return { host, student, roomId, studentId: joined.userId };
+  };
+
+  it('relays a stroke as it is drawn rather than when it commits', async () => {
+    const { host, student, studentId } = await roomOfTwo();
+
+    const started = nextEvent(host, 'strokeStarted');
+    student.emit('startStroke', { stroke });
+    expect(await started).toEqual({ userId: studentId, stroke });
+
+    const extended = nextEvent(host, 'strokeExtended');
+    student.emit('extendStroke', { points: [{ x: 1, y: 0 }] });
+    expect(await extended).toEqual({
+      userId: studentId,
+      points: [{ x: 1, y: 0 }],
+    });
+
+    const ended = nextEvent(host, 'strokeEnded');
+    student.emit('endStroke');
+    expect((await ended).userId).toBe(studentId);
+  });
+
+  it('hands a later arrival a stroke that is still being drawn', async () => {
+    const { host, student, roomId } = await roomOfTwo();
+
+    student.emit('startStroke', { stroke });
+    await nextEvent(host, 'strokeStarted');
+    student.emit('extendStroke', { points: [{ x: 1, y: 0 }] });
+    await nextEvent(host, 'strokeExtended');
+
+    const latecomer = await connectClient();
+    const { presence } = await joinRoomAt(latecomer, roomId, 'traversals');
+
+    const [entry] = Object.values(presence).filter(({ stroke }) => stroke);
+    expect(entry.stroke).toMatchObject({
+      id: stroke.id,
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
+    });
+  });
+
+  it('drops a delta for a stroke it has no record of', async () => {
+    const { host, student } = await roomOfTwo();
+
+    // nothing named an id, a colour or a weight, so there is nothing to paint it as
+    student.emit('extendStroke', { points: [{ x: 1, y: 0 }] });
+
+    await expectNoEvent(host, 'strokeExtended', STALE_AFTER_MS);
+  });
+
+  it('clears a stroke when whoever was drawing it disconnects', async () => {
+    const { host, student, studentId, roomId } = await roomOfTwo();
+
+    student.emit('startStroke', { stroke });
+    await nextEvent(host, 'strokeStarted');
+
+    const left = nextEvent(host, 'peerLeftProduct');
+    student.disconnect();
+    expect((await left).userId).toBe(studentId);
+
+    // gone from the room's copy too, so the next arrival is not handed a phantom
+    const latecomer = await connectClient();
+    const { presence } = await joinRoomAt(latecomer, roomId, 'traversals');
+    expect(Object.values(presence).every(({ stroke }) => !stroke)).toBe(true);
+  });
+
+  it('leaves a laser held still on screen, since it sends nothing while held', async () => {
+    const { host, student } = await roomOfTwo();
+
+    student.emit('startStroke', { stroke: { ...stroke, mode: 'laser' } });
+    await nextEvent(host, 'strokeStarted');
+
+    // pointing at the thing being talked about is the ordinary case, and a sweep would
+    // take it off everyone's canvas mid sentence with no delta to bring it back
+    await expectNoEvent(host, 'strokeEnded', STALE_AFTER_MS * 4);
   });
 });

@@ -49,6 +49,17 @@ export const usePresenceBroadcast = (options: {
     presence()?.setAnnotating(false),
   );
 
+  // the stroke channel rather than the document, for the same reason a drag has one: a
+  // drawing settles into one committed annotation, and a laser settles into nothing, so
+  // waiting for the commit would show peers a stroke late and a laser never
+  annotations?.events.subscribe('onStrokeBegan', (stroke) =>
+    presence()?.startStroke({ ...stroke, points: [...stroke.points] }),
+  );
+  annotations?.events.subscribe('onStrokeExtended', (points) =>
+    presence()?.extendStroke([...points]),
+  );
+  annotations?.events.subscribe('onStrokeEnded', () => presence()?.endStroke());
+
   host.drag?.subscribe('onDragStarted', (elements) =>
     presence()?.startDrag(elements),
   );

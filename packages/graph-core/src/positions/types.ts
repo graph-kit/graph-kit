@@ -1,6 +1,8 @@
 import { MaybeGetter } from '@core/utils/maybeGetter/index';
 import { CoreNode, Position } from '@graph/primitives/types';
 
+// referenced only by a {@link} below, which no-unused-vars does not see
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { NodePositionStoreEventMap } from './events.ts';
 
 export type { Position };

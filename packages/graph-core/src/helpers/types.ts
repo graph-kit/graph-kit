@@ -2,6 +2,8 @@ import { GraphGetters } from '@graph/primitives/getters/types';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
 import { CoreGetters } from '../getters.ts';
+// referenced only by a {@link} below, which no-unused-vars does not see
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { CoreOptions } from '../options.ts';
 import { CoreControls } from '../types.ts';
 

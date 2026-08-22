@@ -7,7 +7,7 @@
     TooltipTrigger,
   } from 'reka-ui';
 
-  import { computed, normalizeClass, useAttrs, useSlots } from 'vue';
+  import { computed, normalizeClass, useAttrs } from 'vue';
 
   import { cn } from '../../cn.ts';
   import { type TooltipProps } from './types.ts';
@@ -23,7 +23,6 @@
   const open = defineModel<boolean>('open');
 
   const attrs = useAttrs();
-  const slots = useSlots();
 
   const hasContent = computed(() => !!props.label);
 

@@ -1,6 +1,9 @@
 type Serializable<T> = T extends { toJSON(): infer R }
   ? R
-  : T extends RegExp | Date | Function
+  : // the bare Function type is the point here: this arm matches any callable
+    // so it can be excluded, and a specific signature would let others through
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    T extends RegExp | Date | Function
     ? never // These break or change form during native stringify
     : T extends object
       ? { [K in keyof T]: Serializable<T[K]> }

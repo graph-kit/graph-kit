@@ -17,6 +17,10 @@
   );
 
   const toggleHidden = () => {
+    // query is a handle into the query store rather than component local
+    // state, so writing through it is how the flag is set. MainView reads it
+    // back to decide what to draw
+    // eslint-disable-next-line vue/no-mutating-props
     props.query.hidden = !hidden.value;
   };
 </script>

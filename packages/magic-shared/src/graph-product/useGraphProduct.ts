@@ -2,7 +2,6 @@ import { useGraph } from '../graph/useGraph.ts';
 import { resolveProductFlags } from '../product/flags.ts';
 import { MagicProductHost } from '../product/types.ts';
 import { useMagicProduct } from '../product/useMagicProduct.ts';
-import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { bindGraphToDoc } from './bindGraphToDoc.ts';
 import { provideGraph } from './context.ts';
 import { useGraphProductShortcuts } from './shortcuts.ts';

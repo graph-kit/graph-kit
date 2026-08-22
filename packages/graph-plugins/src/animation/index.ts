@@ -1,7 +1,7 @@
 // import { getCtx } from '@core/utils/canvas/index';
 import { AnimationPlugin } from './types.ts';
 
-export const animation: AnimationPlugin = ({ controls }) => {
+export const animation: AnimationPlugin = ({ controls: _controls }) => {
   // TODO re-enable this when auto animation stabilizes
   const autoAnimate = () => () => {};
   // controls.surface.renderer.autoAnimate.captureFrame(() =>

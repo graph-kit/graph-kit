@@ -1,6 +1,5 @@
 import type { FontFamily, FontWeight } from '@canvas/primitives/text/types';
 import type { ElementsUnderCursor } from '@canvas/surface/events/index';
-import { Coordinate } from '@canvas/surface/types';
 import {
   CursorFallback,
   ThemeOverrides,

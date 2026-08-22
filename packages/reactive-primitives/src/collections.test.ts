@@ -133,7 +133,7 @@ describe('reactiveMap', () => {
     expect(() => {
       map.get('a');
       map.set('a', 'first');
-      map.size;
+      void map.size;
     }).not.toThrow();
     expect(map.get('a')).toBe('first');
   });

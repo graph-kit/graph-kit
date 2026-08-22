@@ -2,7 +2,7 @@ import { CanvasSurface } from '@canvas/surface/types';
 import { nullThrows } from '@core/utils/assert';
 import { CURSOR } from '@core/utils/cursor';
 
-import { Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Ref, computed, onBeforeUnmount, ref } from 'vue';
 
 import type { SetDefinition } from '../../types.ts';
 import { isInsideCircle, isOnEdge } from '../other/circleUtils.ts';

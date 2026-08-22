@@ -36,11 +36,12 @@ export type InteractiveOptions = {
 
 export const DEFAULT_INTERACTIVE_OPTIONS: InteractiveOptions = {
   parseEdgeWeight: (input: string) => {
-    // fraction throws an error if the input cannot be parsed or
-    // is a divide by zero operation
     try {
       return new Fraction(input);
-    } catch {}
+    } catch {
+      // fraction throws if the input cannot be parsed or is a divide by zero.
+      // returning undefined is how a rejected weight is reported
+    }
   },
   newEdgeWeight: 1,
   allowSelfLoops: true,

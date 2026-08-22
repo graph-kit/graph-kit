@@ -52,7 +52,10 @@
 <template>
   <Well v-if="chips.length > 0">
     <HStack class="flex-wrap">
-      <template v-for="chip of chips">
+      <template
+        v-for="chip of chips"
+        :key="chipId(chip)"
+      >
         <LensChip
           v-bind="chip"
           @click="togglePinnedLens(chipId(chip))"

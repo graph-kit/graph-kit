@@ -15,6 +15,9 @@
     if (magic.multiplayer?.room.isReadonly.value) {
       return 'Annotations unavailable in Read';
     }
+    // undefined is the enabled case, and saying so explicitly is what
+    // vue/return-in-computed-property is after
+    return undefined;
   });
 
   const content = computed(() => {

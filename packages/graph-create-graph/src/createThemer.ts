@@ -51,7 +51,6 @@ export const createThemer =
           )) {
             // DeepPartial allows explicit `undefined` values, so guard even though no real caller would pass one
             if (themeValue === undefined) continue;
-            // @ts-ignore dynamic stuff like this is a known typescript inference limitation
             layer.set(tokenName, themeValue);
           }
         }

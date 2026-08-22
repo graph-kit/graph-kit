@@ -42,8 +42,9 @@
   /** everything the toast needs to work regardless of who paints it */
   const base = 'core-toast pointer-events-auto w-80';
 
+  // relative because the close affordance is pinned to the corner rather than laid out
   const card =
-    'flex items-start gap-3 rounded-md bg-neutral-900 p-3 text-white shadow-lg';
+    'relative flex items-start gap-3 rounded-md bg-neutral-900 p-3 text-white shadow-lg';
 
   const classes = computed(() =>
     cn(
@@ -78,7 +79,11 @@
         <slot name="icon" />
       </span>
 
-      <div class="flex min-w-0 grow flex-col gap-1">
+      <!-- the close affordance floats over this column, so it has to keep clear of it -->
+      <div
+        class="flex min-w-0 grow flex-col gap-1"
+        :class="$slots.close && 'pr-7'"
+      >
         <ToastTitle class="text-sm font-bold wrap-break-word">
           {{ title }}
         </ToastTitle>
@@ -96,17 +101,14 @@
         </div>
       </div>
 
-      <ToastClose as-child>
-        <slot name="close">
-          <button
-            type="button"
-            aria-label="Dismiss"
-            class="shrink-0 cursor-pointer rounded px-1 text-lg leading-none opacity-60 transition-opacity hover:opacity-100"
-          >
-            &times;
-          </button>
-        </slot>
-      </ToastClose>
+      <div
+        v-if="$slots.close"
+        class="absolute top-2 right-2"
+      >
+        <ToastClose as-child>
+          <slot name="close" />
+        </ToastClose>
+      </div>
     </slot>
   </ToastRoot>
 </template>

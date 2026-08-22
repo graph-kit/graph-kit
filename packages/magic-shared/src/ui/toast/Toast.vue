@@ -1,8 +1,10 @@
 <script setup lang="ts">
   import CoreToast from '@core/components/Toast';
   import { type ToastSeverity } from '@core/components/Toast/types';
+  import { mdiClose } from '@mdi/js';
 
   import Button from '../../components/button/Button.vue';
+  import IconButton from '../../components/icon-button/IconButton.vue';
   import Icon from '../../components/icon/Icon.vue';
   import { severityIcon } from './severity.ts';
   import { ToastButton } from './types.ts';
@@ -30,11 +32,10 @@
     <template #icon>
       <Icon
         :path="severityIcon[severity]"
-        :size="20"
+        :size="28"
       />
     </template>
 
-    <!-- conditional so an empty actions row never takes up the space it would need -->
     <template
       v-if="buttons?.length"
       #actions
@@ -47,6 +48,15 @@
       >
         {{ button.textContent }}
       </Button>
+    </template>
+
+    <template #close>
+      <IconButton
+        :path="mdiClose"
+        :size="18"
+        label="Close"
+        class="bg-transparent p-1 hover:bg-red-600 hover:text-white dark:bg-transparent dark:hover:bg-red-600 dark:hover:text-white"
+      />
     </template>
   </CoreToast>
 </template>

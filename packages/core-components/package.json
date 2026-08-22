@@ -79,6 +79,18 @@
       "types": "./dist/types/components/layout/VStack.vue.d.ts",
       "default": "./src/components/layout/VStack.vue"
     },
+    "./Toast": {
+      "types": "./dist/types/components/toast/Toast.vue.d.ts",
+      "default": "./src/components/toast/Toast.vue"
+    },
+    "./Toast/types": {
+      "types": "./dist/types/components/toast/types.d.ts",
+      "default": "./src/components/toast/types.ts"
+    },
+    "./Toaster": {
+      "types": "./dist/types/components/toast/Toaster.vue.d.ts",
+      "default": "./src/components/toast/Toaster.vue"
+    },
     "./*": {
       "types": "./dist/types/*.d.ts",
       "default": "./src/*.ts"

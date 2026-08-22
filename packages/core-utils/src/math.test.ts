@@ -3,8 +3,10 @@ import { describe, expect, test } from 'vitest';
 
 import {
   average,
+  fractionDecimalHint,
   fractionIsInteger,
   fractionToDecimal,
+  fractionWithDecimal,
   gcd,
   getPrimeFactors,
   lowestPrimeFactor,
@@ -78,6 +80,38 @@ describe('fractionIsInteger', () => {
 
   test('edge case: 0', () => {
     expect(fractionIsInteger(new Fraction(0))).toBe(true);
+  });
+});
+
+describe('fractionDecimalHint', () => {
+  test('returns undefined for fractions that reduce to an integer', () => {
+    expect(fractionDecimalHint(new Fraction(3))).toBeUndefined();
+    expect(fractionDecimalHint(new Fraction(4, 2))).toBeUndefined();
+    expect(fractionDecimalHint(new Fraction(0))).toBeUndefined();
+  });
+
+  test('returns the decimal for fractions with a fractional part', () => {
+    expect(fractionDecimalHint(new Fraction(5, 2))).toBe('2.5');
+    expect(fractionDecimalHint(new Fraction(1, 3))).toBe('~0.333');
+  });
+
+  test('respects the requested precision', () => {
+    expect(fractionDecimalHint(new Fraction(1, 3), 1)).toBe('~0.3');
+  });
+});
+
+describe('fractionWithDecimal', () => {
+  test('returns just the fraction when it is an integer', () => {
+    expect(fractionWithDecimal(new Fraction(4, 2))).toBe('2');
+  });
+
+  test('appends the decimal when there is one', () => {
+    expect(fractionWithDecimal(new Fraction(1, 3))).toBe('1/3 (~0.333)');
+    expect(fractionWithDecimal(new Fraction(5, 2))).toBe('5/2 (2.5)');
+  });
+
+  test('respects the requested precision', () => {
+    expect(fractionWithDecimal(new Fraction(1, 3), 1)).toBe('1/3 (~0.3)');
   });
 });
 

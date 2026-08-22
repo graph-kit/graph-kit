@@ -49,6 +49,51 @@ describe(parseTextSegments, () => {
     ]);
   });
 
+  test('parses an angle-bracketed fraction', () => {
+    expect(parseTextSegments('<5/2>')).toEqual([
+      { bracketType: 'angle', text: '5/2' },
+    ]);
+    expect(parseTextSegments('<3>')).toEqual([
+      { bracketType: 'angle', text: '3' },
+    ]);
+    expect(parseTextSegments('<-1/3>')).toEqual([
+      { bracketType: 'angle', text: '-1/3' },
+    ]);
+  });
+
+  test('parses an angle-bracketed fraction with a precision suffix', () => {
+    expect(parseTextSegments('<1/3:2>')).toEqual([
+      { bracketType: 'angle', text: '1/3:2' },
+    ]);
+  });
+
+  test('splits text around an angle-bracketed fraction', () => {
+    expect(parseTextSegments('costs <5/2> total')).toEqual([
+      { bracketType: undefined, text: 'costs ' },
+      { bracketType: 'angle', text: '5/2' },
+      { bracketType: undefined, text: ' total' },
+    ]);
+  });
+
+  test('leaves angle brackets that hold no fraction as plain text', () => {
+    expect(parseTextSegments('a < b and c > d')).toEqual([
+      { bracketType: undefined, text: 'a < b and c > d' },
+    ]);
+    expect(parseTextSegments('<not a fraction>')).toEqual([
+      { bracketType: undefined, text: '<not a fraction>' },
+    ]);
+  });
+
+  test('handles a mix of every bracket type', () => {
+    expect(parseTextSegments('{node-a} pays <1/3> for [Reason]')).toEqual([
+      { bracketType: 'curly', text: 'node-a' },
+      { bracketType: undefined, text: ' pays ' },
+      { bracketType: 'angle', text: '1/3' },
+      { bracketType: undefined, text: ' for ' },
+      { bracketType: 'square', text: 'Reason' },
+    ]);
+  });
+
   test('returns an empty array for an empty string', () => {
     expect(parseTextSegments('')).toEqual([]);
   });

@@ -144,6 +144,14 @@
       "types": "./dist/types/url/index.d.ts",
       "default": "./src/url/index.ts"
     },
+    "./Toaster": {
+      "types": "./dist/types/ui/toast/Toaster.vue.d.ts",
+      "default": "./src/ui/toast/Toaster.vue"
+    },
+    "./toast": {
+      "types": "./dist/types/ui/toast/index.d.ts",
+      "default": "./src/ui/toast/index.ts"
+    },
     "./*": {
       "types": "./dist/types/*.d.ts",
       "default": "./src/*.ts"

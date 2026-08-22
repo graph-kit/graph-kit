@@ -2,6 +2,7 @@ import { ComputedRef, computed, ref } from 'vue';
 
 import { ComponentSlot } from '../../component-slot/types.ts';
 import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
+import { toast } from '../toast/useToastState.ts';
 import CursorCoordinates from './CursorCoordinates.vue';
 
 const DEBUG_SLOTS: ComponentSlot[] = [
@@ -11,6 +12,8 @@ const DEBUG_SLOTS: ComponentSlot[] = [
     position: 'bottom-right',
   },
 ];
+
+const TOGGLE_TOAST_MS = 3000;
 
 export type DebugControls = {
   isActive: ComputedRef<boolean>;
@@ -37,10 +40,18 @@ export const useDebugState = (
     for (const slot of DEBUG_SLOTS) componentSlots.remove(slot.id);
   };
 
-  // TODO toast on toggle telling the user debug is on and that "d" turns it back off
   const toggle = () => {
     if (isActive.value) deactivate();
     else activate();
+
+    toast.show({
+      title: isActive.value ? 'Debug Mode On' : 'Debug Mode Off',
+      description: isActive.value
+        ? 'Press d to turn it back off.'
+        : 'Press d to turn it back on.',
+      severity: 'info',
+      duration: TOGGLE_TOAST_MS,
+    });
   };
 
   return {

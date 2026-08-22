@@ -22,6 +22,7 @@ import { useDebugState } from '../ui/debug/useDebugState.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { tierColor } from '../ui/multiplayer/tier.ts';
+import { useToastState } from '../ui/toast/useToastState.ts';
 import { useProductUI } from '../ui/useProductUI.ts';
 import { provideMagic } from './context.ts';
 import { resolveProductFlags } from './flags.ts';
@@ -85,6 +86,7 @@ export const useMagicProduct = (
     appearance,
     shortcuts,
     debug,
+    toast: useToastState(),
     annotations,
     lensChips: options.lensChips,
     simulationButtons: options.simulationButtons,

@@ -72,6 +72,19 @@ jobs:
       - name: Check formatting
         run: pnpm format:check
 
+  knip:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # dead files, exports and dependencies. knip prints configuration hints
+      # alongside findings but only findings set the exit code
+      - name: Knip
+        run: pnpm knip
+
   test:
     runs-on: ubuntu-22.04
     timeout-minutes: 15

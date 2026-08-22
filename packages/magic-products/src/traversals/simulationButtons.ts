@@ -1,7 +1,6 @@
+import { nullThrows } from '@core/utils/assert';
 import { GraphSimulationButtonOption } from '@magic/shared/graph-product';
 import { useFocusedNode } from '@magic/shared/utilities';
-
-import { watch } from 'vue';
 
 import { useTraversalSimulations } from './simulations/index.ts';
 
@@ -10,15 +9,14 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
 
   const node = useFocusedNode(graph);
 
-  watch(node, (newFocusedNode) => {
-    startNodeId.value = newFocusedNode?.id;
-  });
+  const disabled = () => !node.value && 'Click a node to set a starting point';
 
-  const disabled = () =>
-    !startNodeId.value && 'Click a node to set a starting point';
+  const beforeStarting = () => {
+    startNodeId.value = nullThrows(node.value?.id, 'no start node');
+  };
 
   return [
-    { definition: bfs, disabled },
-    { definition: dfs, disabled },
+    { definition: bfs, beforeStarting, disabled },
+    { definition: dfs, beforeStarting, disabled },
   ];
 };

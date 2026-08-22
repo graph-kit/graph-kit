@@ -1,6 +1,6 @@
 import { Color } from '@core/utils/colors';
-import { fractionDecimalHint } from '@core/utils/math';
 import { CoreEdge } from '@graph/primitives/types';
+import { fractionDecimalHint } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 import Fraction from 'fraction.js';

@@ -1,7 +1,7 @@
-import { fractionDecimalHint } from '@core/utils/math';
 import Fraction from 'fraction.js';
 
 import { ExplainerSegment } from './explainerSegments.ts';
+import { fractionDecimalHint } from './fractionDecimalHint.ts';
 
 /**
  * builds the segment for an `<angled>` fraction in explainer content, hovering

@@ -1,10 +1,10 @@
 <script setup lang="ts">
   import type { TooltipOptions } from '@core/components/Tooltip/types';
-  import { fractionDecimalHint } from '@core/utils/math';
   import Fraction from 'fraction.js';
 
   import { computed, useAttrs } from 'vue';
 
+  import { fractionDecimalHint } from '../../explainer/fractionDecimalHint.ts';
   import Tooltip from '../tooltip/Tooltip.vue';
 
   defineOptions({ inheritAttrs: false });

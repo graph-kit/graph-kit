@@ -21,7 +21,7 @@
   const matrixRows = computed(() =>
     nodeIds.value.map((sourceId, sourceIndex) => ({
       id: sourceId,
-      fromIndex: sourceIndex,
+      sourceIndex: sourceIndex,
       cells: nodeIds.value.map((targetId, targetIndex) => ({
         id: targetId,
         edge: grid.value[sourceIndex][targetIndex],
@@ -141,13 +141,13 @@
             <tr>
               <th :class="columnHeaderCellClass"></th>
               <th
-                v-for="(toId, toIndex) in nodeIds"
-                :key="toId"
+                v-for="(targetId, targetIndex) in nodeIds"
+                :key="targetId"
                 :class="columnHeaderCellClass"
-                @click="focusTargetNodeAndInboundEdges(toId, toIndex)"
+                @click="focusTargetNodeAndInboundEdges(targetId, targetIndex)"
               >
                 <Node
-                  :id="toId"
+                  :id="targetId"
                   :scale="density.nodeScale"
                 />
               </th>
@@ -160,7 +160,9 @@
             >
               <th
                 :class="headerCellClass"
-                @click="focusSourceNodeAndOutboundEdges(row.id, row.fromIndex)"
+                @click="
+                  focusSourceNodeAndOutboundEdges(row.id, row.sourceIndex)
+                "
               >
                 <Node
                   :id="row.id"

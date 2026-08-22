@@ -46,15 +46,15 @@
     <div class="max-h-[50vh] max-w-97 overflow-auto">
       <VStack v-if="graph.nodes.value.length > 0">
         <HStack
-          v-for="(targetIds, fromId) in adjacencyList"
-          :key="fromId"
+          v-for="(targetIds, sourceId) in adjacencyList"
+          :key="sourceId"
         >
           <div
             class="shrink-0"
-            @click="focusNode(fromId)"
+            @click="focusNode(sourceId)"
           >
             <Node
-              :id="fromId"
+              :id="sourceId"
               :scale="0.75"
             />
           </div>
@@ -70,18 +70,20 @@
           >
             <ToolTip
               v-for="targetId in targetIds"
-              :key="edgeIdBetween(fromId, targetId)"
+              :key="edgeIdBetween(sourceId, targetId)"
               :label="
                 edgeWeightLabel(
-                  edgeIdBetween(fromId, targetId),
-                  fromId,
+                  edgeIdBetween(sourceId, targetId),
+                  sourceId,
                   targetId,
                 )
               "
             >
               <template #trigger>
                 <Node
-                  @click="focusEdge(edgeIdBetween(fromId, targetId), targetId)"
+                  @click="
+                    focusEdge(edgeIdBetween(sourceId, targetId), targetId)
+                  "
                   :id="targetId"
                   :scale="0.75"
                 />
@@ -90,7 +92,7 @@
           </HStack>
           <ToolTip
             v-else
-            :label="noTargetsLabel(fromId)"
+            :label="noTargetsLabel(sourceId)"
           >
             <template #trigger>
               <span class="font-bold text-lg">None</span>

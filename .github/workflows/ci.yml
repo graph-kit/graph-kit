@@ -35,6 +35,17 @@ jobs:
       - name: Typecheck
         run: pnpm build:types
 
+  format:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Check formatting
+        run: pnpm format:check
+
   test:
     runs-on: ubuntu-22.04
     timeout-minutes: 15

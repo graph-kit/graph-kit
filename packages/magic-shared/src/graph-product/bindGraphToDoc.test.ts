@@ -1,4 +1,5 @@
-import { Annotation, AnnotationsEventMap } from '@core/annotations/index';
+import { createAnnotationsEventRegistry } from '@core/annotations/events';
+import { Annotation } from '@core/annotations/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { TransitEventMap } from '@graph/core/consumer-events';
@@ -57,11 +58,7 @@ const createFakeGraph = () => {
     onEncoded: new Set(),
     onDecoded: new Set(),
   });
-  const annotationEvents = createEventHub<AnnotationsEventMap>({
-    onAnnotationsChanged: new Set(),
-    onActivated: new Set(),
-    onDeactivated: new Set(),
-  });
+  const annotationEvents = createEventHub(createAnnotationsEventRegistry());
 
   // the store commits on its own clock, so the consumer event the binding listens to is
   // relayed from the core one rather than emitted at each call site

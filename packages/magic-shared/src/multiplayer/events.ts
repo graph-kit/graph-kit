@@ -3,6 +3,7 @@ import { DisbandReason } from '@multiplayer/protocol/events';
 import {
   CameraState,
   DraggedElement,
+  PeerStroke,
   Point,
   RosterEntry,
   UserId,
@@ -51,6 +52,15 @@ export type MultiplayerEventMap = {
   onPeerDragMoved: (userId: UserId, elements: DraggedElement[]) => void;
   onPeerDragEnded: (userId: UserId) => void;
 
+  /**
+   * A peer's annotation as it is drawn, and the only signal a laser ever produces. Ended
+   * arrives whether the stroke committed, was abandoned, or went stale on the server, so
+   * a subscriber clears rather than expecting something to have landed in the document.
+   */
+  onPeerStrokeStarted: (userId: UserId, stroke: PeerStroke) => void;
+  onPeerStrokeExtended: (userId: UserId, points: Point[]) => void;
+  onPeerStrokeEnded: (userId: UserId) => void;
+
   /** a peer is on the product, before they have done anything on it */
   onPeerEnteredProduct: (userId: UserId) => void;
   /** a peer is off the product entirely, whether they navigated, dropped or were kicked */
@@ -76,6 +86,9 @@ export const createMultiplayerEventRegistry = (): MultiplayerEventRegistry => ({
   onPeerDragStarted: new Set(),
   onPeerDragMoved: new Set(),
   onPeerDragEnded: new Set(),
+  onPeerStrokeStarted: new Set(),
+  onPeerStrokeExtended: new Set(),
+  onPeerStrokeEnded: new Set(),
   onPeerEnteredProduct: new Set(),
   onPeerLeftProduct: new Set(),
   onPresenceSeeded: new Set(),

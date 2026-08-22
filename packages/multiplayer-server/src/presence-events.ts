@@ -1,4 +1,12 @@
-import { clearDrag, hasDrag, setDrag, setPresence } from './presence.ts';
+import {
+  clearDrag,
+  clearStroke,
+  extendStroke,
+  hasDrag,
+  setDrag,
+  setPresence,
+  setStroke,
+} from './presence.ts';
 import { Connection } from './types.ts';
 
 /**
@@ -79,5 +87,49 @@ export const registerPresenceEvents = ({
 
     clearDrag(target.room, target.productId, userId);
     relayToProduct(target.productId, 'dragEnded', { userId });
+  });
+
+  /**
+   * A stroke is not swept for staleness the way a drag is. A drag held by somebody who
+   * vanished keeps their nodes out of everyone else's reach, so it is worth releasing
+   * early on a guess; a stroke is paint and blocks nothing, and every real departure
+   * already clears it through `clearPresence`. Sweeping one would also kill the ordinary
+   * case of a laser held still on the thing being talked about, which sends nothing for
+   * as long as it is held and has no delta to be revived by.
+   */
+  socket.on('startStroke', ({ stroke }) => {
+    const target = presenceTarget();
+    if (!target) return;
+    const { userId } = target;
+
+    setStroke(target.room, target.productId, userId, stroke);
+    relayToProduct(target.productId, 'strokeStarted', { userId, stroke });
+  });
+
+  socket.on('extendStroke', ({ points }) => {
+    const target = presenceTarget();
+    if (!target) return;
+    const { userId } = target;
+
+    // a delta for a stroke the room has no record of is dropped rather than revived: it
+    // names no id, colour or weight, so there is nothing to paint it as
+    const extended = extendStroke(
+      target.room,
+      target.productId,
+      userId,
+      points,
+    );
+    if (!extended) return;
+
+    relayToProduct(target.productId, 'strokeExtended', { userId, points });
+  });
+
+  socket.on('endStroke', () => {
+    const target = presenceTarget();
+    if (!target) return;
+    const { userId } = target;
+
+    clearStroke(target.room, target.productId, userId);
+    relayToProduct(target.productId, 'strokeEnded', { userId });
   });
 };

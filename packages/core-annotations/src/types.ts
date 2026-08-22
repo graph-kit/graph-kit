@@ -18,6 +18,19 @@ export type Annotation = ScribbleSchema & { id: string };
 export type AnnotationMode = (typeof ANNOTATION_MODES)[number];
 
 /**
+ * the stroke being drawn right now, before it is anything anyone has stored. carries the
+ * id it will commit under so a host watching the stroke can hand off to the committed
+ * annotation by identity.
+ */
+export type InFlightStroke = {
+  id: string;
+  mode: Exclude<AnnotationMode, 'erasing'>;
+  points: Coordinate[];
+  fillColor: Color;
+  brushWeight: number;
+};
+
+/**
  * what a renderer needs to paint one annotation. structurally the graph aggregator's
  * canvas element, spelled out here so the engine stays clear of graph types
  */

@@ -60,6 +60,19 @@ export type DraggedElement = {
 };
 
 /**
+ * a stroke somebody is drawing right now, ahead of the document write it settles into.
+ * carries the id it will commit under, so the committed annotation replaces the live one
+ * by identity rather than by whichever channel happens to land first.
+ */
+export type PeerStroke = {
+  id: string;
+  mode: 'drawing' | 'laser';
+  points: Point[];
+  fillColor: string;
+  brushWeight: number;
+};
+
+/**
  * What a user is doing inside one product right now. Scoped to the product channel it
  * travels on, which is why nothing here names a productId, and persisted by the room so
  * that entering a product hands over everyone's live state instead of leaving a client
@@ -74,6 +87,12 @@ export type ProductPresence = {
    * gesture can carry a whole selection, and null whenever nothing is being moved
    */
   drag: DraggedElement[] | null;
+  /**
+   * in flight for the same reason a drag is: a drawing settles into one committed
+   * annotation, and a laser settles into nothing at all, so neither belongs in the
+   * document while it is still being made
+   */
+  stroke: PeerStroke | null;
   /** the annotation tools are taking input, which is not the same as a stroke being in flight */
   isAnnotating: boolean;
 };
@@ -83,6 +102,7 @@ export const emptyProductPresence = (): ProductPresence => ({
   cursorPosition: null,
   cameraState: null,
   drag: null,
+  stroke: null,
   isAnnotating: false,
 });
 

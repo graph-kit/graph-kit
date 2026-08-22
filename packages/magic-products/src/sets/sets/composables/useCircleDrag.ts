@@ -9,7 +9,7 @@ import { useDrag } from './useDrag.ts';
 type CircleDragProps = {
   surface: CanvasSurface;
   definitions: Ref<SetDefinition[]>;
-  isResizing: Ref<Boolean>;
+  isResizing: Ref<boolean>;
 };
 
 export const useCircleDrag = ({

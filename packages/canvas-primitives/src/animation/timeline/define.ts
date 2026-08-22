@@ -1,5 +1,3 @@
-// @typescript-eslint/no-unused-vars reports unused even if referenced in jsdoc
-// eslint-disable-next-line
 import { generateId } from '@core/utils/id';
 import type { DeepReadonly, DeepRequired } from 'ts-essentials';
 

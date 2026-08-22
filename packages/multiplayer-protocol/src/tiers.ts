@@ -28,20 +28,25 @@ export const meetsFloor = (tier: Tier, floor: Tier): boolean =>
  */
 export const PRODUCT_WRITE_FLOOR: Tier = 'write';
 
-/** moveUser and kickUser share this floor, setTier uses the ordinal rule instead */
+/** moveUser and kickUser share this floor */
 export const ROOM_COMMAND_FLOOR: Tier = 'admin';
+
+/** its own constant, so lowering the room command floor never also hands out the roster */
+export const TIER_ASSIGNMENT_FLOOR: Tier = 'admin';
 
 /** the lowest tier, so joining a room grants a view and nothing else until assigned higher */
 export const DEFAULT_TIER: Tier = 'read';
 
-// three independent conditions. the floor is what stops a writer demoting anyone to read,
-// which the ordinal rule alone would allow, and without the host guard an admin could
-// demote the host and orphan disband-on-disconnect
+/**
+ * strict on the target, inclusive on the payload: an admin may raise someone to admin but
+ * never take it back off one
+ */
 export const canSetTier = (
   callerTier: Tier,
   targetCurrentTier: Tier,
   nextTier: AssignableTier,
 ): boolean =>
-  meetsFloor(callerTier, ROOM_COMMAND_FLOOR) &&
+  meetsFloor(callerTier, TIER_ASSIGNMENT_FLOOR) &&
   targetCurrentTier !== 'host' &&
-  rankOf(callerTier) > rankOf(nextTier);
+  rankOf(callerTier) > rankOf(targetCurrentTier) &&
+  rankOf(callerTier) >= rankOf(nextTier);

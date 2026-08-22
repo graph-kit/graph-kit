@@ -80,7 +80,7 @@ export const canWriteProduct = (room: Room, userId: UserId): boolean => {
   return tier !== undefined && meetsFloor(tier, PRODUCT_WRITE_FLOOR);
 };
 
-/** moveUser and kickUser share this floor; setTier uses the ordinal rule instead */
+/** moveUser and kickUser share this floor; setTier is gated by canSetTier alone */
 export const canRunRoomCommand = (room: Room, userId: UserId): boolean => {
   const tier = tierOf(room, userId);
   return tier !== undefined && meetsFloor(tier, ROOM_COMMAND_FLOOR);

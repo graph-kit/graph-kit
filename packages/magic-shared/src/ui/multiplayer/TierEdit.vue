@@ -1,11 +1,9 @@
 <script setup lang="ts">
   import { mdiAccountCog, mdiInformationOutline } from '@mdi/js';
   import { RosterEntry } from '@multiplayer/protocol/room';
-  import {
-    ASSIGNABLE_TIERS,
-    AssignableTier,
-    Tier,
-  } from '@multiplayer/protocol/tiers';
+  import { AssignableTier, Tier } from '@multiplayer/protocol/tiers';
+
+  import { computed } from 'vue';
 
   import DropdownSubmenu from '../../components/dropdown/DropdownSubmenu.vue';
   import MenuItem from '../../components/dropdown/MenuItem.vue';
@@ -15,6 +13,7 @@
   import Tooltip from '../../components/tooltip/Tooltip.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
   import TierBadge from './TierBadge.vue';
+  import { assignableTiersFor } from './tier.ts';
 
   interface Props {
     member: RosterEntry;
@@ -24,13 +23,17 @@
 
   const { room } = useConnectedMultiplayer();
 
+  const tiers = computed(() =>
+    assignableTiersFor(room.value.me.tier, props.member.tier),
+  );
+
   const setTier = (tier: AssignableTier) =>
     room.value.controls.setTier(props.member.userId, tier);
 
   const tierInfo: Record<Tier, string> = {
     host: 'Hosts opened the session. Can do anything, cannot be reassigned or removed, and ends the session for everyone on leaving.',
     admin:
-      'Admins can edit, move anyone between experiences, and reassign or remove anyone ranked below them.',
+      'Admins can edit, move anyone between experiences, and reassign or remove anyone ranked below them, up to and including making them an admin. Only the host can change an admin.',
     write: 'Writers can edit, but cannot move, reassign or remove anyone.',
     read: 'Readers follow along and can select and pan, but cannot edit anything.',
   };
@@ -44,7 +47,7 @@
     </template>
     <VStack gap="0">
       <MenuItem
-        v-for="tier in ASSIGNABLE_TIERS"
+        v-for="tier in tiers"
         :key="tier"
         @click="setTier(tier)"
       >

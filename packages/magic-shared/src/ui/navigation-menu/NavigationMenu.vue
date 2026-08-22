@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
 
+  import { computed } from 'vue';
+
   import Button from '../../components/button/Button.vue';
   import Dropdown from '../../components/dropdown/Dropdown.vue';
   import MenuItem from '../../components/dropdown/MenuItem.vue';
@@ -8,6 +10,7 @@
   import Well from '../../components/layout/Well.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import { products } from '../../product/manifests/index.ts';
+  import { MagicProductManifest } from '../../product/manifests/types.ts';
   import ProductCard from '../product-card/ProductCard.vue';
   import { productHref } from './navigateToProduct.ts';
 
@@ -21,6 +24,15 @@
     products.find((product) => magic.manifest.id === product.id),
     'product id not recognized',
   );
+
+  const inRoom = computed(
+    () => magic.multiplayer?.room.state.value.connected === true,
+  );
+
+  const disabledReason = (product: MagicProductManifest) =>
+    inRoom.value && !product.multiplayer
+      ? `${product.navigation.card?.name} does not support collaborative sessions`
+      : undefined;
 </script>
 
 <template>
@@ -37,6 +49,7 @@
         v-for="{ product, card } in displayedProducts"
         :key="product.id"
         :href="productHref(product)"
+        :disabled="disabledReason(product)"
         class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
       >
         <ProductCard

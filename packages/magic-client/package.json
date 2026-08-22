@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@magic/products": "workspace:*",
-    "@core/utils": "workspace:*",
     "@magic/shared": "workspace:*",
+    "katex": "^0.18.1",
     "nuxt": "^4.1.2",
     "vue": "catalog:"
   },

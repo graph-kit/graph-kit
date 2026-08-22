@@ -17,7 +17,7 @@ export type SocketServer = Server<ClientToServerEvents, ServerToClientEvents>;
 export type MemberSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 /** what a room command aimed at one member needs from that member's own connection */
-export type MemberConnection = {
+type MemberConnection = {
   evict: (by: RosterEntry) => void;
   moveTo: (productId: ProductId, by: RosterEntry) => void;
   /** stands up, keeping the socket, so a proven claim can sit down in its place */
@@ -32,7 +32,7 @@ export type ServerContext = {
 };
 
 /** the room, product and member one presence signal belongs to */
-export type PresenceTarget = {
+type PresenceTarget = {
   room: Room;
   productId: ProductId;
   userId: UserId;

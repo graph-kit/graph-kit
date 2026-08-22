@@ -6,7 +6,6 @@ import {
   fractionDecimalHint,
   fractionIsInteger,
   fractionToDecimal,
-  fractionWithDecimalText,
   gcd,
   getPrimeFactors,
   lowestPrimeFactor,
@@ -97,21 +96,6 @@ describe('fractionDecimalHint', () => {
 
   test('respects the requested precision', () => {
     expect(fractionDecimalHint(new Fraction(1, 3), 1)).toBe('~0.3');
-  });
-});
-
-describe('fractionWithDecimal', () => {
-  test('returns just the fraction when it is an integer', () => {
-    expect(fractionWithDecimalText(new Fraction(4, 2))).toBe('2');
-  });
-
-  test('appends the decimal when there is one', () => {
-    expect(fractionWithDecimalText(new Fraction(1, 3))).toBe('1/3 (~0.333)');
-    expect(fractionWithDecimalText(new Fraction(5, 2))).toBe('5/2 (2.5)');
-  });
-
-  test('respects the requested precision', () => {
-    expect(fractionWithDecimalText(new Fraction(1, 3), 1)).toBe('1/3 (~0.3)');
   });
 });
 

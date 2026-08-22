@@ -130,26 +130,6 @@ export const fractionDecimalHint = (
 };
 
 /**
- * formats a fraction with its decimal approximation appended, for text-only
- * spots that have nowhere to hang a tooltip
- *
- * @param fraction the fraction to format
- * @param fractionDigits how many decimal places to keep
- * @returns the fraction, followed by its decimal when it has one
- * @example fractionWithDecimal(new Fraction(4, 2)) // '2'
- * fractionWithDecimal(new Fraction(1, 3)) // '1/3 (~0.333)'
- */
-export const fractionWithDecimalText = (
-  fraction: Fraction,
-  fractionDigits?: number,
-) => {
-  const decimal = fractionDecimalHint(fraction, fractionDigits);
-  return decimal
-    ? `${fraction.toFraction()} (${decimal})`
-    : fraction.toFraction();
-};
-
-/**
  * get the average of an array of numbers
  *
  * @param arr the array of numbers to average

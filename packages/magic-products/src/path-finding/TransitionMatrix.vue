@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
   import Node from '@magic/shared/Node';
-  import Tooltip from '@magic/shared/Tooltip';
+  import TruncatedText from '@magic/shared/TruncatedText';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
   import { GNode } from '@magic/shared/graph';
@@ -49,6 +49,9 @@
     );
     return graph.transitionMatrix.value[sourceIndex][targetIndex].toFraction();
   };
+
+  const cellTooltip = (sourceId: GNode['id'], targetId: GNode['id']) =>
+    `${cellLabel(sourceId, targetId)}: ${cellText(sourceId, targetId)}`;
 
   const focusSourceNodeAndOutboundEdges = (
     sourceId: GNode['id'],
@@ -178,25 +181,22 @@
                   :edge-id="cell.edge.id"
                   v-slot="{ color, cursor }"
                 >
-                  <Tooltip
-                    :label="cellLabel(row.id, cell.id)"
-                    :delay="400"
-                  >
-                    <template #trigger>
-                      <td class="p-0">
-                        <button
-                          type="button"
-                          :class="dataCellClass"
-                          :style="{ backgroundColor: color, cursor }"
-                          @click="graph.focus.set([cell.edge.id])"
-                        >
-                          <span class="block truncate">{{
-                            cellText(row.id, cell.id)
-                          }}</span>
-                        </button>
-                      </td>
-                    </template>
-                  </Tooltip>
+                  <td class="p-0">
+                    <button
+                      type="button"
+                      :class="dataCellClass"
+                      :style="{ backgroundColor: color, cursor }"
+                      @click="graph.focus.set([cell.edge.id])"
+                    >
+                      <TruncatedText
+                        class="block"
+                        :tooltip="cellTooltip(row.id, cell.id)"
+                        :delay="400"
+                      >
+                        {{ cellText(row.id, cell.id) }}
+                      </TruncatedText>
+                    </button>
+                  </td>
                 </TransitionMatrixCell>
                 <td
                   v-else

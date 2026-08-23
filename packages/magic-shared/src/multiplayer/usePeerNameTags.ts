@@ -8,6 +8,7 @@ import { TEXT_BLOCK_DEFAULTS } from '@canvas/primitives/text/defaults';
 import { getTextDimensions } from '@canvas/primitives/text/getTextDimensions';
 import type { TextBlock } from '@canvas/primitives/text/types';
 import { CanvasSurface } from '@canvas/surface/types';
+import { ANNOTATION_PRIORITY } from '@core/annotations/constants';
 
 import { onUnmounted } from 'vue';
 
@@ -50,7 +51,9 @@ export const usePeerNameTags = ({
     if (!room.connected) return agg;
 
     const roster = room.userIdToRosterEntry;
-    for (const [userId, presence] of Object.entries(room.userIdToPresence)) {
+    const userPresence = Object.entries(room.userIdToPresence);
+    for (let i = 0; i < userPresence.length; i++) {
+      const [userId, presence] = userPresence[i];
       if (!presence.cursorPosition) continue;
 
       const { displayName, tier } = roster[userId];
@@ -87,7 +90,7 @@ export const usePeerNameTags = ({
 
       const cursorDot: CanvasElement = {
         id: userId + '_cursorDot',
-        priority: Infinity,
+        priority: ANNOTATION_PRIORITY + i + 1,
         paintOnly: true,
         shape: circle({
           at: presence.cursorPosition,

@@ -8,6 +8,8 @@ export {
 } from './constants.ts';
 export type { AnnotationsChange, AnnotationsEventMap } from './events.ts';
 export { laserTrail } from './laserTrail.ts';
+export { createStrokeInFlight } from './strokeInFlight.ts';
+export type { StrokeInFlight } from './strokeInFlight.ts';
 export type {
   Annotation,
   AnnotationCanvasElement,

@@ -24,8 +24,8 @@ export const useHostBinding = (host: MagicProductHost): ProductHostBinding => {
     binding,
     multiplayerHost: {
       ...host.multiplayer,
-      bind: (doc) => {
-        const made = host.multiplayer.bind(doc);
+      bind: (doc, mode) => {
+        const made = host.multiplayer.bind(doc, mode);
         binding.value = made;
         return made;
       },

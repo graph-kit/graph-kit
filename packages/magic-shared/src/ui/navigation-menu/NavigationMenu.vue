@@ -10,6 +10,7 @@
   import Well from '../../components/layout/Well.vue';
   import { useProvidedMagic } from '../../product/context.ts';
   import { products } from '../../product/manifests/index.ts';
+  import { getNavigationName } from '../../product/manifests/navigationName.ts';
   import { MagicProductManifest } from '../../product/manifests/types.ts';
   import ProductCard from '../product-card/ProductCard.vue';
   import { productHref } from './navigateToProduct.ts';
@@ -31,7 +32,7 @@
 
   const disabledReason = (product: MagicProductManifest) =>
     inRoom.value && !product.multiplayer
-      ? `${product.navigation.card?.name} does not support collaborative sessions`
+      ? `${getNavigationName(product.id)} does not support collaborative sessions`
       : undefined;
 </script>
 
@@ -48,7 +49,7 @@
       <MenuItem
         v-for="{ product, card } in displayedProducts"
         :key="product.id"
-        :href="productHref(product)"
+        :href="productHref(product.id)"
         :disabled="disabledReason(product)"
         class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
       >

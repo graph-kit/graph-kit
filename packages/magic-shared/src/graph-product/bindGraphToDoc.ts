@@ -9,7 +9,7 @@ import * as Y from 'yjs';
 import { computed, ref } from 'vue';
 
 import { Graph } from '../graph/types.ts';
-import { HistoryField, HostBinding } from '../product/types.ts';
+import { DocBindMode, HistoryField, HostBinding } from '../product/types.ts';
 
 /** named rather than inline so unbind can hand back the very same reference */
 type GraphSubscriber<Name extends keyof ConsumerEventMap> =
@@ -171,8 +171,8 @@ const createDocHistory = (doc: Y.Doc): HistoryField => {
 /**
  * Ties a graph to a room document, in both directions, for the life of the product.
  *
- * An empty document means nobody has opened this product in the room yet, so the graph
- * seeds it. Otherwise the document is authoritative and the graph is rebuilt from it.
+ * Seeding writes the graph into the document. Adopting rebuilds the graph from it, which
+ * empties the graph when the room has nothing for this product, see {@link DocBindMode}.
  *
  * Hands back undo over the document, which the harness uses in place of the graph's own
  * whole state history for as long as the graph is shared.
@@ -180,6 +180,7 @@ const createDocHistory = (doc: Y.Doc): HistoryField => {
 export const bindGraphToDoc = (
   graph: Graph,
   doc: Y.Doc,
+  mode: DocBindMode,
   isDraggedLocally: (nodeId: string) => boolean,
 ): HostBinding => {
   const nodes = readNodes(doc);
@@ -545,11 +546,8 @@ export const bindGraphToDoc = (
     graph.rawEvents.transit.unsubscribe('onDecoded', writeWholeGraph);
   };
 
-  if (nodes.size === 0 && edges.size === 0 && annotations.size === 0) {
-    writeWholeGraph();
-  } else {
-    readWholeDoc();
-  }
+  if (mode === 'seed') writeWholeGraph();
+  else readWholeDoc();
 
   subscribe();
 

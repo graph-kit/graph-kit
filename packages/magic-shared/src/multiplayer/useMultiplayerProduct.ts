@@ -8,6 +8,7 @@ import { MultiplayerHostField } from '../product/types.ts';
 import { useJoinSessionBanner } from '../ui/multiplayer/useJoinSessionBanner.ts';
 import { useRosterPanel } from '../ui/multiplayer/useRosterPanel.ts';
 import { useProvidedMultiplayer } from './context.ts';
+import { joinAndFollowHost } from './joinAndFollowHost.ts';
 import { ProductMultiplayer } from './types.ts';
 import { roomIdUrl } from './url.ts';
 import { useTierBehavior } from './useTierBehavior.ts';
@@ -53,7 +54,8 @@ export const useMultiplayerProduct = ({
     if (!targetRoomId) return;
 
     try {
-      await actions.room.join({ ...binding, roomId: targetRoomId });
+      const joinRoomResult = await actions.room.join({ roomId: targetRoomId });
+      if (joinRoomResult.joined) await actions.product.enter(binding);
     } catch (err) {
       console.warn('multiplayer: could not reach the room to join it', err);
     }
@@ -71,7 +73,7 @@ export const useMultiplayerProduct = ({
     room: {
       state: room,
       start: () => actions.room.start(binding),
-      join: ({ roomId }) => actions.room.join({ ...binding, roomId }),
+      join: ({ roomId }) => joinAndFollowHost({ actions, binding, roomId }),
       leave: actions.room.leave,
       isReadonly,
     },

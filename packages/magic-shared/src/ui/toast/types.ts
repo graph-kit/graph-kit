@@ -4,10 +4,11 @@ import { Component, ComputedRef } from 'vue';
 
 export type { ToastSeverity };
 
-export type ToastButton = {
-  textContent: string;
-  onClick: () => void;
-};
+export type ToastButton = { textContent: string } & (
+  | { onClick: () => void; href?: never }
+  /** renders the action as a real link, so the browser owns the navigation */
+  | { href: string; onClick?: never }
+);
 
 /** the toast the harness renders for you */
 type StandardToast = {

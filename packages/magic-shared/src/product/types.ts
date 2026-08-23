@@ -89,6 +89,14 @@ export type TierBehavior = {
 };
 
 /**
+ * Where a room document's opening state comes from. A room seeds once, from the product
+ * it was opened on; every product it reaches after that adopts, an empty document
+ * included, so arriving somewhere nobody has been yet starts blank rather than filling
+ * the room with whatever the arriving client happened to be holding.
+ */
+export type DocBindMode = 'seed' | 'adopt';
+
+/**
  * The mapping between what a host holds and the room's document, in both directions. The
  * only thing that knows either shape, which is what keeps the document out of the harness
  * and the room out of the product.
@@ -99,17 +107,14 @@ export type TierBehavior = {
 export type MultiplayerHostField = {
   /**
    * Ties the host to the room's document for as long as the product is mounted, mirroring
-   * changes both ways from then on.
-   *
-   * An empty document means nobody has opened this product in the room yet, so the host
-   * seeds it from what it already holds. Otherwise the document is authoritative and the
-   * host adopts it, discarding local state.
+   * changes both ways from then on. Seeding writes what the host holds into the document,
+   * adopting rebuilds the host from it, see {@link DocBindMode}.
    *
    * Answers with the binding it made: undo over the document, which the harness swaps in
    * for as long as the room owns the product, and the teardown that lets a later join
    * rebind onto a different document.
    */
-  bind: (doc: Y.Doc) => HostBinding | undefined;
+  bind: (doc: Y.Doc, mode: DocBindMode) => HostBinding | undefined;
 
   /**
    * What the host does about each tier, in one place, because the question a host has to

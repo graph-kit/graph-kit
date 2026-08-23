@@ -27,8 +27,7 @@
         "
       />
       <Button
-        as="a"
-        :href="productHref(activeProduct)"
+        :href="productHref(activeProduct.id)"
         class="gap-2 px-5"
       >
         Open

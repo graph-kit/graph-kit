@@ -10,7 +10,6 @@ import { reactiveMap, signal } from '@reactive/primitives/index';
 
 import {
   ANNOTATION_CURSOR_PRIORITY,
-  ANNOTATION_IN_PROGRESS_PRIORITY,
   ANNOTATION_PRIORITY,
   DEFAULT_BRUSH_WEIGHT,
   DEFAULT_COLOR,
@@ -18,12 +17,11 @@ import {
   ERASER_CURSOR_ID,
   ERASER_OUTLINE_WIDTH,
   ERASING_ALPHA,
-  IN_PROGRESS_ANNOTATION_ID,
   LASER_CURSOR_ID,
-  LASER_TRAIL_LENGTH,
 } from './constants.ts';
 import { createAnnotationsEventRegistry } from './events.ts';
-import { laserTrail } from './laserTrail.ts';
+import { createStrokeInFlight } from './strokeInFlight.ts';
+import type { StrokeInFlight } from './strokeInFlight.ts';
 import type {
   Annotation,
   AnnotationCanvasElement,
@@ -54,14 +52,10 @@ export const createAnnotations = ({
   // which a plugin getter or a bridged ref sits on top of. insertion order is paint order
   const annotationsById = reactiveMap<string, Annotation>();
 
-  // the stroke in flight, read only by the draw pass, which reruns every frame regardless
-  let strokePoints: Coordinate[] = [];
+  // absent while erasing, which commits by taking annotations away rather than adding one
+  let inFlight: StrokeInFlight | undefined;
   let isDrawing = false;
-  // minted at the start of the stroke rather than at the end, so whoever is watching the
-  // stroke can name the annotation it is going to become before it becomes one
-  let strokeId = '';
   const erasedIds = new Set<string>();
-  let lastMoveTime = Date.now();
 
   const isErasing = () => mode() === 'erasing';
   const isLaserPointing = () => mode() === 'laser';
@@ -122,31 +116,26 @@ export const createAnnotations = ({
     }
   };
 
-  /** the laser keeps every point it was given and shows only the live tail of them */
-  const visibleStrokePoints = () =>
-    isLaserPointing()
-      ? laserTrail(strokePoints, Date.now() - lastMoveTime)
-      : strokePoints;
-
-  const inFlightStroke = (): InFlightStroke => ({
-    id: strokeId,
-    mode: isLaserPointing() ? 'laser' : 'drawing',
-    points: [...strokePoints],
-    fillColor: color(),
-    brushWeight: brushWeight(),
-  });
-
   const beginStroke = (coords: Coordinate) => {
     isDrawing = true;
-    strokeId = generateId();
-    strokePoints = [coords];
-    lastMoveTime = Date.now();
 
     if (isErasing()) {
       markErased(coords);
       return;
     }
-    events.emit('onStrokeBegan', inFlightStroke());
+
+    // minted at the start of the stroke rather than at the end, so whoever is watching the
+    // stroke can name the annotation it is going to become before it becomes one
+    const stroke: InFlightStroke = {
+      id: generateId(),
+      mode: isLaserPointing() ? 'laser' : 'drawing',
+      points: [coords],
+      fillColor: color(),
+      brushWeight: brushWeight(),
+    };
+
+    inFlight = createStrokeInFlight(stroke);
+    events.emit('onStrokeBegan', stroke);
   };
 
   const extendStroke = (coords: Coordinate) => {
@@ -157,12 +146,7 @@ export const createAnnotations = ({
       return;
     }
 
-    strokePoints.push(coords);
-    if (isLaserPointing() && strokePoints.length > LASER_TRAIL_LENGTH) {
-      strokePoints.shift();
-    }
-
-    lastMoveTime = Date.now();
+    inFlight?.extend([coords]);
     events.emit('onStrokeExtended', [coords]);
   };
 
@@ -177,21 +161,9 @@ export const createAnnotations = ({
       return;
     }
 
-    const points = strokePoints;
-    const id = strokeId;
-    strokePoints = [];
-
-    if (!isLaserPointing()) {
-      add([
-        {
-          id,
-          type: 'draw',
-          points,
-          fillColor: color(),
-          brushWeight: brushWeight(),
-        },
-      ]);
-    }
+    const annotation = inFlight?.committed();
+    inFlight = undefined;
+    if (annotation) add([annotation]);
 
     events.emit('onStrokeEnded');
   };
@@ -202,7 +174,7 @@ export const createAnnotations = ({
     const wasDrawingStroke = isDrawing && !isErasing();
 
     isDrawing = false;
-    strokePoints = [];
+    inFlight = undefined;
     erasedIds.clear();
 
     if (wasDrawingStroke) events.emit('onStrokeEnded');
@@ -232,17 +204,6 @@ export const createAnnotations = ({
     }),
   });
 
-  const strokeInFlightElement = (): AnnotationCanvasElement => ({
-    id: IN_PROGRESS_ANNOTATION_ID,
-    priority: ANNOTATION_IN_PROGRESS_PRIORITY,
-    shape: scribble({
-      type: 'draw',
-      points: visibleStrokePoints(),
-      fillColor: color(),
-      brushWeight: brushWeight(),
-    }),
-  });
-
   const canvasElements = () => {
     const elements: AnnotationCanvasElement[] = [];
 
@@ -262,10 +223,16 @@ export const createAnnotations = ({
     // they outlive the session that drew them, and a peer's arrive without one
     if (!isActive()) return elements;
 
-    if (isErasing()) elements.push(eraserCursorElement());
-    else if (isDrawing && visibleStrokePoints().length > 0) {
-      elements.push(strokeInFlightElement());
-    } else if (isLaserPointing()) elements.push(laserCursorElement());
+    if (isErasing()) {
+      elements.push(eraserCursorElement());
+      return elements;
+    }
+
+    // once per frame, since it is what prunes the laser trail
+    const strokeElement = inFlight?.element();
+
+    if (strokeElement) elements.push(strokeElement);
+    else if (isLaserPointing()) elements.push(laserCursorElement());
 
     return elements;
   };

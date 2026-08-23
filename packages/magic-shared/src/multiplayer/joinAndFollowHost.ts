@@ -1,7 +1,7 @@
 import { JoinResult } from '@multiplayer/protocol/events';
 import { RoomId, RoomMembership } from '@multiplayer/protocol/room';
 
-import { ProductId, manifests } from '../product/manifests/index.ts';
+import { ProductId } from '../product/manifests/index.ts';
 import { isProductId } from '../product/manifests/isValidProductId.ts';
 import { getNavigationName } from '../product/manifests/navigationName.ts';
 import {
@@ -10,7 +10,7 @@ import {
 } from '../ui/navigation-menu/navigateToProduct.ts';
 import { toast } from '../ui/toast/useToastState.ts';
 import { MultiplayerControls, ProductBinding } from './types.ts';
-import { roomIdUrl } from './url.ts';
+import { jumpUserIdUrl } from './url.ts';
 
 const STRANDED_TOAST_MS = 12_000;
 
@@ -37,9 +37,10 @@ export const joinAndFollowHost = async ({
   const hostProduct = hostProductIn(joinRoomResult);
   const hostProductToFollow =
     hostProduct === binding.productId ? null : hostProduct;
+  const joinedAsHost = joinRoomResult.data.hostId === joinRoomResult.userId;
 
-  if (hostProductToFollow) {
-    const navigationFailed = true;
+  if (hostProductToFollow && !joinedAsHost) {
+    const navigationFailed = await navigateToProduct(hostProductToFollow);
     if (!navigationFailed) return joinRoomResult;
 
     const hostProductName = getNavigationName(hostProductToFollow);
@@ -52,11 +53,8 @@ export const joinAndFollowHost = async ({
         {
           textContent: `Jump To ${hostProductName}`,
           href: productHref(
-            manifests[hostProductToFollow],
-            roomIdUrl.params({
-              roomId: joinRoomResult.roomId,
-              jumpToUserId: joinRoomResult.data.hostId,
-            }),
+            hostProductToFollow,
+            jumpUserIdUrl.params(joinRoomResult.data.hostId),
           ),
         },
       ],

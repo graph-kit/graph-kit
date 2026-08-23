@@ -49,7 +49,7 @@
       <MenuItem
         v-for="{ product, card } in displayedProducts"
         :key="product.id"
-        :href="productHref(product)"
+        :href="productHref(product.id)"
         :disabled="disabledReason(product)"
         class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
       >

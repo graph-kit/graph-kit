@@ -8,8 +8,6 @@
   import { jumpUserIdUrl } from '../../multiplayer/url.ts';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
   import { useProvidedMagic } from '../../product/context.ts';
-  import { manifests } from '../../product/manifests/index.ts';
-  import { assertIsProductId } from '../../product/manifests/isValidProductId.ts';
   import { productHref } from '../navigation-menu/navigateToProduct.ts';
 
   interface Props {
@@ -28,8 +26,7 @@
   const hrefToMemberInOtherProduct = computed(() => {
     const { productId, userId } = props.member;
     if (productId === null || inSameProduct.value) return undefined;
-    assertIsProductId(productId);
-    return productHref(manifests[productId], jumpUserIdUrl.params(userId));
+    return productHref(productId, jumpUserIdUrl.params(userId));
   });
 
   const cameraToJumpTo = computed(
@@ -38,7 +35,8 @@
 
   const disabledReason = computed(() => {
     if (props.member.productId === null) return 'Not in an experience yet';
-    if (inSameProduct.value && !cameraToJumpTo.value) return true;
+    if (inSameProduct.value && !cameraToJumpTo.value)
+      return `Waiting for ${props.member.displayName} to settle in`;
     return false;
   });
 

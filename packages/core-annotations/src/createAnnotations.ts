@@ -248,7 +248,6 @@ export const createAnnotations = ({
   const deactivate = () => {
     if (!isActive()) return;
     abortStroke();
-    mode('drawing');
     isActive(false);
     events.emit('onDeactivated');
   };

@@ -31,7 +31,8 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {
-      bind: (doc) => bindGraphToDoc(graph, doc, draggedNodes.isDragging),
+      bind: (doc, mode) =>
+        bindGraphToDoc(graph, doc, mode, draggedNodes.isDragging),
       drag: draggedNodes.events,
       tiers: {
         host: {},

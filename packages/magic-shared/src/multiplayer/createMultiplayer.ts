@@ -17,6 +17,7 @@ import * as Y from 'yjs';
 
 import { computed, ref, shallowRef } from 'vue';
 
+import { DocBindMode } from '../product/types.ts';
 import { REMOTE_ORIGIN, getDisplayName } from './constants.ts';
 import { createMultiplayerEventRegistry } from './events.ts';
 import { clearSeat, readSeat, writeSeat } from './seat.ts';
@@ -172,12 +173,13 @@ export const createMultiplayer = ({
 
   /**
    * Opens a document for the product and ties the host to it, replacing any binding
-   * already in place. Whatever `adopt` writes lands before the host binds, so the
-   * product takes on the room's state instead of seeding it with what was on screen.
+   * already in place. The room's copy lands before the host binds, so an adopting host
+   * is handed the document it is meant to take on rather than an empty one.
    */
   const openProduct = (
     { productId, host }: ProductBinding,
-    adopt?: (doc: Y.Doc) => void,
+    mode: DocBindMode,
+    roomDoc?: DocUpdate | null,
   ) => {
     releaseProduct();
 
@@ -187,9 +189,9 @@ export const createMultiplayer = ({
       requireSocket().emit('docUpdate', { productId, update });
     });
 
-    adopt?.(doc);
+    if (roomDoc) Y.applyUpdate(doc, toDocUpdate(roomDoc), REMOTE_ORIGIN);
 
-    const binding = host.bind(doc);
+    const binding = host.bind(doc, mode);
     mountedProduct.value = { productId, doc, unbind: binding?.unbind };
     return doc;
   };
@@ -432,11 +434,15 @@ export const createMultiplayer = ({
   // pagehide covers close and refresh, and unlike visibilitychange it skips tab switches
   window.addEventListener('pagehide', () => socket?.disconnect());
 
-  /** the product's own state, which is what a room opens on */
+  /** the product's own state, the one and only thing a room ever seeds from */
   const seedFromProduct = (binding: ProductBinding) =>
-    Y.encodeStateAsUpdate(openProduct(binding));
+    Y.encodeStateAsUpdate(openProduct(binding, 'seed'));
 
-  /** takes on the room's copy of a product, replacing whatever the product was showing */
+  /**
+   * Takes on the room's copy of a product, replacing whatever the product was showing.
+   * A room that has never reached this product has no copy, and an empty one is still
+   * the room's answer: the product opens blank rather than donating what was on screen.
+   */
   const adoptRoomProduct = async ({ productId, host }: ProductBinding) => {
     events.emit('onPendingStarted');
     try {
@@ -446,12 +452,7 @@ export const createMultiplayer = ({
           .emit('enterProduct', { productId }, respond),
       );
 
-      openProduct({ productId, host }, (doc) => {
-        // absent when nobody in the room has opened this product yet, which leaves the
-        // document empty and makes this product seed it instead
-        if (state.doc)
-          Y.applyUpdate(doc, toDocUpdate(state.doc), REMOTE_ORIGIN);
-      });
+      openProduct({ productId, host }, 'adopt', state.doc);
 
       // what everyone on the product is already doing, so a peer sitting perfectly still
       // is on screen from the first frame rather than once they happen to move
@@ -484,7 +485,7 @@ export const createMultiplayer = ({
       return started.roomId;
     },
 
-    join: async ({ roomId, productId, host }) => {
+    join: async ({ roomId }) => {
       const activeSocket = ensureSocket();
       events.emit('onPendingStarted');
       const result = await requestJoin(activeSocket, roomId).finally(() =>
@@ -502,8 +503,6 @@ export const createMultiplayer = ({
       }
       roomIdUrl.write(result.roomId);
       adoptMembership(result);
-
-      await adoptRoomProduct({ productId, host });
 
       return result;
     },

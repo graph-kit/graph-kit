@@ -37,7 +37,7 @@ export type ProductBinding = {
 
 export type RoomActions = {
   start: (options: ProductBinding) => Promise<RoomId>;
-  join: (options: ProductBinding & { roomId: RoomId }) => Promise<JoinResult>;
+  join: (options: { roomId: RoomId }) => Promise<JoinResult>;
   leave: () => void;
 };
 

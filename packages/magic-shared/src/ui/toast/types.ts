@@ -6,7 +6,9 @@ export type { ToastSeverity };
 
 export type ToastButton = {
   textContent: string;
-  onClick: () => void;
+  onClick?: () => void;
+  /** renders the action as a real link, so the browser owns the navigation */
+  href?: string;
 };
 
 /** the toast the harness renders for you */

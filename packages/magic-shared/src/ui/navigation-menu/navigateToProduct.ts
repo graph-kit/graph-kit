@@ -11,6 +11,5 @@ export const productHref = (
 ) => `/${product.navigation.slug}${queryString(extraParams)}`;
 
 /** for moves the user did not click a link to make, like a collaborator pulling them across */
-export const navigateToProduct = (productId: ProductId) => {
+export const navigateToProduct = (productId: ProductId) =>
   navigateTo(productHref(manifests[productId]));
-};

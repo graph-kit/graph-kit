@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  # main is not protected, so this is the only thing that catches a merge that
+  # went in without its checks finishing. it also warms the pnpm cache that
+  # branch runs restore from
+  push:
+    branches: [main]
+
+# a second push to a branch used to leave the first run going to completion.
+# main is left alone: those runs are the record of whether main is green
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: 3
+
+# one job per check, so a failure names itself in the checks list rather than
+# hiding inside a shared log
+jobs:
+  typecheck:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # vue-tsc -b over the root tsconfig, which references all 33 projects
+      - name: Typecheck
+        run: pnpm build:types
+
+  test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # --run because the test script is bare `vitest`, which is watch mode.
+      # actions sets CI and vitest would pick up on that, but a watch mode
+      # process that ignores it sits here until the job times out
+      - name: Test
+        run: pnpm test --run

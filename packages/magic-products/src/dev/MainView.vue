@@ -4,7 +4,7 @@
 
   import ActionBar from './ActionBar.vue';
 
-  const graph = useGraphShell({
+  const { shell } = useGraphShell({
     productId: 'dev',
     flags: {
       /*
@@ -18,7 +18,7 @@
     },
   });
 
-  graph.shell.componentSlots.add({
+  shell.componentSlots.add({
     id: 'action-bar',
     component: ActionBar,
     position: 'bottom-middle',

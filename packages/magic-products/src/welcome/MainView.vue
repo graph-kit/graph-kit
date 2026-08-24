@@ -6,7 +6,7 @@
   import WelcomeBanner from './WelcomeBanner.vue';
   import { provideWelcomeScene } from './useWelcomeScene.ts';
 
-  const graph = useGraphShell({
+  const { graph, shell } = useGraphShell({
     productId: 'welcome',
     flags: {
       history: false,
@@ -24,7 +24,7 @@
 
   provideWelcomeScene(graph);
 
-  graph.shell.componentSlots.addMany([
+  shell.componentSlots.addMany([
     {
       id: 'welcome-banner',
       component: WelcomeBanner,

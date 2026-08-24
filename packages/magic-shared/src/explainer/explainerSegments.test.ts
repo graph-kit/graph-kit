@@ -302,7 +302,7 @@ describe(explainerSegments, () => {
       content: 'The cost is <5/2>',
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       'The cost is ',
@@ -312,7 +312,7 @@ describe(explainerSegments, () => {
   });
 
   test('resolves an angled decimal to the same fraction and hint', () => {
-    const segments = explainerSegments(graph, { content: 'This is <3.5>' });
+    const segments = explainerSegments(context, { content: 'This is <3.5>' });
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       'This is ',
@@ -322,7 +322,7 @@ describe(explainerSegments, () => {
   });
 
   test('resolves an angled repeating decimal, as a stringified Fraction gives', () => {
-    const segments = explainerSegments(graph, {
+    const segments = explainerSegments(context, {
       content: `This is <${new Fraction(1, 3)}>`,
     });
 
@@ -331,13 +331,13 @@ describe(explainerSegments, () => {
   });
 
   test('rounds a repeating fraction and marks it as approximate', () => {
-    const segments = explainerSegments(graph, { content: '<1/3>' });
+    const segments = explainerSegments(context, { content: '<1/3>' });
 
     expect(segments[0].highlight?.tooltipLabel).toBe('~0.333');
   });
 
   test('leaves an angled fraction that is an integer unhighlighted', () => {
-    const segments = explainerSegments(graph, { content: 'costs <4/2>' });
+    const segments = explainerSegments(context, { content: 'costs <4/2>' });
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       'costs ',
@@ -367,7 +367,7 @@ describe(explainerSegments, () => {
       highlights: [h],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       '1/3',

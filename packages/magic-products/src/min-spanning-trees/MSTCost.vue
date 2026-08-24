@@ -33,7 +33,7 @@
       .join('')
       .slice(0, -2);
     return {
-      content: `${stringOfPluses} = <${cost.value.toFraction()}>`,
+      content: `${stringOfPluses} = <${cost.value}>`,
       highlights: [
         {
           tooltipLabel: () => fractionDecimalHint(cost.value),

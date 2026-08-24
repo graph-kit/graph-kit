@@ -60,7 +60,7 @@ export const singleSourceExplainer =
     if (frame.type === 'relax-edge') {
       const { weight } = graph.getEdge(frame.edge);
       return {
-        content: `Taking the Edge from {${frame.from}} to {${frame.to}}, Which Costs <${weight.toFraction()}>`,
+        content: `Taking the Edge from {${frame.from}} to {${frame.to}}, Which Costs <${weight}>`,
       };
     }
 

@@ -61,9 +61,30 @@ describe(parseTextSegments, () => {
     ]);
   });
 
+  test('parses an angle-bracketed decimal', () => {
+    expect(parseTextSegments('<3.5>')).toEqual([
+      { bracketType: 'angle', text: '3.5' },
+    ]);
+    expect(parseTextSegments('<-0.25>')).toEqual([
+      { bracketType: 'angle', text: '-0.25' },
+    ]);
+  });
+
+  test('parses the repeating decimal a stringified Fraction produces', () => {
+    expect(parseTextSegments('<0.(3)>')).toEqual([
+      { bracketType: 'angle', text: '0.(3)' },
+    ]);
+    expect(parseTextSegments('<-0.1(6)>')).toEqual([
+      { bracketType: 'angle', text: '-0.1(6)' },
+    ]);
+  });
+
   test('parses an angle-bracketed fraction with a precision suffix', () => {
     expect(parseTextSegments('<1/3:2>')).toEqual([
       { bracketType: 'angle', text: '1/3:2' },
+    ]);
+    expect(parseTextSegments('<0.(3):2>')).toEqual([
+      { bracketType: 'angle', text: '0.(3):2' },
     ]);
   });
 
@@ -81,6 +102,9 @@ describe(parseTextSegments, () => {
     ]);
     expect(parseTextSegments('<not a fraction>')).toEqual([
       { bracketType: undefined, text: '<not a fraction>' },
+    ]);
+    expect(parseTextSegments('<3.>')).toEqual([
+      { bracketType: undefined, text: '<3.>' },
     ]);
   });
 

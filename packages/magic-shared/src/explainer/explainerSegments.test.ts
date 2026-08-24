@@ -1,4 +1,5 @@
 import { getValue } from '@core/utils/maybeGetter/index';
+import Fraction from 'fraction.js';
 import { describe, expect, test, vi } from 'vitest';
 
 import { GEdge } from '../graph/types.ts';
@@ -303,6 +304,25 @@ describe(explainerSegments, () => {
       '5/2',
     ]);
     expect(segments[1].highlight?.tooltipLabel).toBe('2.5');
+  });
+
+  test('resolves an angled decimal to the same fraction and hint', () => {
+    const segments = explainerSegments(graph, { content: 'This is <3.5>' });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'This is ',
+      '7/2',
+    ]);
+    expect(segments[1].highlight?.tooltipLabel).toBe('3.5');
+  });
+
+  test('resolves an angled repeating decimal, as a stringified Fraction gives', () => {
+    const segments = explainerSegments(graph, {
+      content: `This is <${new Fraction(1, 3)}>`,
+    });
+
+    expect(getValue(segments[1].text)).toBe('1/3');
+    expect(segments[1].highlight?.tooltipLabel).toBe('~0.333');
   });
 
   test('rounds a repeating fraction and marks it as approximate', () => {

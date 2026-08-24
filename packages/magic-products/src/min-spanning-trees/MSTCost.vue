@@ -3,7 +3,7 @@
   import { fractionIsInteger, fractionToDecimal } from '@core/utils/math';
   import Well from '@magic/shared/Well';
   import { Explainer, ExplainerText } from '@magic/shared/explainer';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import Fraction from 'fraction.js';
 
   import { computed } from 'vue';

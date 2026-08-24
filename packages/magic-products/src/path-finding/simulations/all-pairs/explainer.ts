@@ -6,8 +6,8 @@ import { AllPairsFrame } from './frame.ts';
 
 const matrixHighlight = (tooltipLabel: string): ExplainerHighlight => ({
   tooltipLabel,
-  activate: (graph) => graph.magic.componentSlots.setHighlighted(matrixSlotId),
-  deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
+  activate: ({ shell }) => shell.componentSlots.setHighlighted(matrixSlotId),
+  deactivate: ({ shell }) => shell.componentSlots.clearHighlighted(),
 });
 
 const highlights = {

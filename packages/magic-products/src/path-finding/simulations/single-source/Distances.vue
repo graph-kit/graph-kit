@@ -3,7 +3,7 @@
   import Node from '@magic/shared/Node';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useCurrentFrame } from '@magic/shared/simulation';
 
   import { computed } from 'vue';

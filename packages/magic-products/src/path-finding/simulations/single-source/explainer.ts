@@ -10,8 +10,8 @@ export const frontierSlotId = 'path-finding/frontier';
 const componentSlotHighlight = (
   slot: typeof frontierSlotId | typeof distancesSlotId,
 ): ExplainerHighlight => ({
-  activate: (graph) => graph.magic.componentSlots.setHighlighted(slot),
-  deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
+  activate: ({ shell }) => shell.componentSlots.setHighlighted(slot),
+  deactivate: ({ shell }) => shell.componentSlots.clearHighlighted(),
 });
 
 const highlights = {

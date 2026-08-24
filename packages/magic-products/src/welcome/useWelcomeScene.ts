@@ -2,7 +2,7 @@ import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { CoreNode } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
-import { MagicProductManifest, manifests } from '@magic/shared/product';
+import { ProductManifest, manifests } from '@magic/shared/product';
 import { useFocusedNode } from '@magic/shared/utilities';
 import tinycolor from 'tinycolor2';
 
@@ -23,7 +23,7 @@ const STAGGER_MS = 0; // TODO set back to 160 when auto animate stabilizes
 const KEY = 'WELCOME_SCENE';
 
 const createWelcomeScene = (graph: Graph) => {
-  const productByNodeId = new Map<string, MagicProductManifest>();
+  const productByNodeId = new Map<string, ProductManifest>();
   const paintByNodeId = new Map<string, Color>();
 
   for (const { productId, color } of welcomeNodes) {
@@ -51,7 +51,7 @@ const createWelcomeScene = (graph: Graph) => {
     })
     .activate();
 
-  const hoveredProduct = ref<MagicProductManifest>();
+  const hoveredProduct = ref<ProductManifest>();
 
   const focusedNode = useFocusedNode(graph);
 

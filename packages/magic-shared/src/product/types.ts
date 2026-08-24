@@ -15,22 +15,22 @@ import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
-import { AppearanceControls } from '../ui/appearance/useProductAppearance.ts';
+import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
-import { ProductFlagOptions, ProductFlags } from './flags.ts';
-import { LocalStorageControls } from './internals/useProductLocalStorage.ts';
+import { ShellFlagOptions, ShellFlags } from './flags.ts';
+import { LocalStorageControls } from './internals/useShellLocalStorage.ts';
 import { ProductId } from './manifests/index.ts';
-import { MagicProductManifest } from './manifests/types.ts';
+import { ProductManifest } from './manifests/types.ts';
 
 export type TransitField = {
   encode: () => any;
   decode: (payload: any) => void;
 };
 
-/** a host's drag, in the three moments the room cares about */
-export type HostDragEventMap = {
+/** a product's drag, in the three moments the room cares about */
+export type DragEventMap = {
   onDragStarted: (elements: DraggedElement[]) => void;
   onDragMoved: (elements: DraggedElement[]) => void;
   onDragEnded: () => void;
@@ -45,9 +45,9 @@ export type HistoryField = {
   clear: () => void;
 };
 
-export type HostBinding = {
+export type DocBinding = {
   history: HistoryField;
-  /** stops mirroring, leaving the host's own state exactly as the document left it */
+  /** stops mirroring, leaving the product's own state exactly as the document left it */
   unbind: () => void;
   /**
    * One peer's in flight move. Nothing here is written to the document, which the
@@ -60,27 +60,27 @@ export type HostBinding = {
 };
 
 /**
- * everything the magic product harness needs in order to function
+ * everything the shell needs in order to function
  */
-export type MagicProductHost = {
+export type ProductControls = {
   /**
-   * how the host's state is serialized. absent when it has none worth carrying, which
-   * is what local storage and link sharing are built on, see {@link ProductFlags}
+   * how the product's state is serialized. absent when it has none worth carrying, which
+   * is what local storage and link sharing are built on, see {@link ShellFlags}
    */
   transit?: TransitField;
   /**
-   * the annotation tools the host owns, absent when it has none or has them flagged off.
-   * the harness only puts chrome around them, so anything holding a canvas can hand its
+   * the annotation tools the product owns, absent when it has none or has them flagged off.
+   * the shell only puts chrome around them, so anything holding a canvas can hand its
    * own over, see `@core/annotations`
    */
   annotations?: AnnotationsControls;
   surface: CanvasSurface;
   onAppearanceChanged: (color: BasicColorMode) => void;
-  multiplayer: MultiplayerHostField;
+  multiplayer: MultiplayerControls;
   history?: HistoryField;
 };
 
-/** what a host does as the local user takes a tier on and gives it up */
+/** what a product does as the local user takes a tier on and gives it up */
 export type TierBehavior = {
   /** the local user is now on this tier */
   enter?: () => void;
@@ -97,31 +97,31 @@ export type TierBehavior = {
 export type DocBindMode = 'seed' | 'adopt';
 
 /**
- * The mapping between what a host holds and the room's document, in both directions. The
- * only thing that knows either shape, which is what keeps the document out of the harness
+ * The mapping between what a product holds and the room's document, in both directions. The
+ * only thing that knows either shape, which is what keeps the document out of the shell
  * and the room out of the product.
  *
  * Separate from {@link TransitField} because the document's shape is not transit's, and
  * adopting one can mean more than writing it (stopping a simulation, dropping a lens).
  */
-export type MultiplayerHostField = {
+export type MultiplayerControls = {
   /**
-   * Ties the host to the room's document for as long as the product is mounted, mirroring
-   * changes both ways from then on. Seeding writes what the host holds into the document,
-   * adopting rebuilds the host from it, see {@link DocBindMode}.
+   * Ties the product to the room's document for as long as the product is mounted, mirroring
+   * changes both ways from then on. Seeding writes what the product holds into the document,
+   * adopting rebuilds the product from it, see {@link DocBindMode}.
    *
-   * Answers with the binding it made: undo over the document, which the harness swaps in
+   * Answers with the binding it made: undo over the document, which the shell swaps in
    * for as long as the room owns the product, and the teardown that lets a later join
    * rebind onto a different document.
    */
-  bind: (doc: Y.Doc, mode: DocBindMode) => HostBinding | undefined;
+  bind: (doc: Y.Doc, mode: DocBindMode) => DocBinding | undefined;
 
   /**
-   * What the host does about each tier, in one place, because the question a host has to
+   * What the product does about each tier, in one place, because the question a product has to
    * answer is not "how do I lock down read" but "what does each of these mean for me".
    *
-   * Exhaustive: a tier added to the protocol is a compile error at every host until it
-   * decides, rather than a permission that quietly does nothing. A tier a host has
+   * Exhaustive: a tier added to the protocol is a compile error at every product until it
+   * decides, rather than a permission that quietly does nothing. A tier a product has
    * nothing to say about is an empty object, which is that decision written down.
    *
    * Enter runs after exit of the tier being left, and leaving the room exits without
@@ -130,26 +130,26 @@ export type MultiplayerHostField = {
   tiers: Record<Tier, TierBehavior>;
 
   /**
-   * What the host is moving, as a lifecycle rather than a value to read. Pushed rather
+   * What the product is moving, as a lifecycle rather than a value to read. Pushed rather
    * than pulled so a drag travels on its own signal instead of alongside the cursor that
    * happens to be causing it, which is what lets the room tell a held element from a
-   * stale one. Absent for a host with nothing draggable.
+   * stale one. Absent for a product with nothing draggable.
    */
-  drag?: ReadonlyEventHub<HostDragEventMap>;
+  drag?: ReadonlyEventHub<DragEventMap>;
 };
 
-export type MagicProductOptions = {
+export type ShellOptions = {
   productId: ProductId;
-  /** what the product asks for, see {@link ProductFlags} */
-  flags?: ProductFlagOptions;
+  /** what the product asks for, see {@link ShellFlags} */
+  flags?: ShellFlagOptions;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
 };
 
-/** the harness itself: the chrome and controls wrapped around a hosted product */
-export type Magic = {
-  manifest: MagicProductManifest;
-  flags: ProductFlags;
+/** the shell itself: the chrome and controls wrapped around a product */
+export type Shell = {
+  manifest: ProductManifest;
+  flags: ShellFlags;
   lens: LensControls;
   componentSlots: ComponentSlotControls;
   simulation: SimulationControls;

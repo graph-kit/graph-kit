@@ -1,7 +1,7 @@
-import type { MagicProductHost } from './types.ts';
+import type { ProductControls } from './types.ts';
 
 /** every optional behavior a product can switch on or off */
-export type ProductFlags = {
+export type ShellFlags = {
   /**
    * tracks undo/redo over the product's state
    * @default true
@@ -24,36 +24,36 @@ export type ProductFlags = {
   linkSharing: boolean;
 };
 
-const DEFAULTS: ProductFlags = {
+const DEFAULTS: ShellFlags = {
   history: true,
   localStorage: true,
   annotations: true,
   linkSharing: true,
 };
 
-/** what a product author writes: only what differs from {@link ProductFlags} defaults */
-export type ProductFlagOptions = Partial<ProductFlags>;
+/** what a product author writes: only what differs from {@link ShellFlags} defaults */
+export type ShellFlagOptions = Partial<ShellFlags>;
 
-/** nothing to persist or put in a link without {@link MagicProductHost.transit} */
+/** nothing to persist or put in a link without {@link ProductControls.transit} */
 const TRANSIT_BACKED = [
   'localStorage',
   'linkSharing',
-] as const satisfies readonly (keyof ProductFlags)[];
+] as const satisfies readonly (keyof ShellFlags)[];
 
-/** what the product asked for, narrowed to what its host can actually support */
-export const resolveProductFlags = (
-  flags: ProductFlagOptions = {},
-  host: Pick<MagicProductHost, 'transit'>,
-): ProductFlags => {
+/** what the product asked for, narrowed to what its controls can actually support */
+export const resolveShellFlags = (
+  flags: ShellFlagOptions = {},
+  host: Pick<ProductControls, 'transit'>,
+): ShellFlags => {
   // an explicit undefined means no opinion, same as omitting the flag
   const set = Object.entries(flags).filter(([, value]) => value !== undefined);
-  const resolved: ProductFlags = { ...DEFAULTS, ...Object.fromEntries(set) };
+  const resolved: ShellFlags = { ...DEFAULTS, ...Object.fromEntries(set) };
 
   if (host.transit) return resolved;
 
   for (const flag of TRANSIT_BACKED) {
     if (flags[flag] && import.meta.env.DEV)
-      console.warn(`[magic] ${flag} needs host transit, ignoring`);
+      console.warn(`[shell] ${flag} needs host transit, ignoring`);
     resolved[flag] = false;
   }
 

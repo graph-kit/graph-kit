@@ -8,7 +8,7 @@
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import { useRunningSimulation } from '../useRunningSimulation.ts';
   import SimulationExplainerText from './SimulationExplainerText.vue';
 
@@ -35,8 +35,8 @@
     return (playhead / (totalFrames - 1)) * 100;
   });
 
-  const magic = useProvidedMagic();
-  const { useShortcut } = magic.shortcuts;
+  const shell = useProvidedShell();
+  const { useShortcut } = shell.shortcuts;
 
   useShortcut({
     key: 'left',

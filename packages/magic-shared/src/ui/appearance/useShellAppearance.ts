@@ -25,9 +25,9 @@ const validAppearance = (appearance: unknown): appearance is BasicColorSchema =>
 const resolve = (schema: BasicColorSchema, system: BasicColorMode) =>
   schema === 'auto' ? system : schema;
 
-export type AppearanceControls = ReturnType<typeof useProductAppearance>;
+export type AppearanceControls = ReturnType<typeof useShellAppearance>;
 
-export const useProductAppearance = (
+export const useShellAppearance = (
   onAppearanceChanged: (color: BasicColorMode) => void,
 ) => {
   const storedSchema = useCookie<BasicColorSchema>(APPEARANCE_COOKIE_KEY, {

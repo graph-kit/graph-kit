@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { useGraphProduct } from '@magic/shared/graph-product';
-  import { MagicProduct } from '@magic/shared/product';
+  import Shell from '@magic/shared/Shell';
+  import { useGraphShell } from '@magic/shared/graph-shell';
 
   import { lensChips } from './lensChips.ts';
   import { simulationButtons } from './simulationButtons.ts';
 
-  useGraphProduct({
+  useGraphShell({
     productId: 'min-spanning-trees',
     core: {
       directed: false,
@@ -19,5 +19,5 @@
 </script>
 
 <template>
-  <MagicProduct />
+  <Shell />
 </template>

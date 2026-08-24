@@ -6,7 +6,7 @@ export const appearances: BasicColorSchema[] = ['light', 'dark', 'auto'];
 export const DEFAULT_APPEARANCE: BasicColorSchema = 'auto';
 
 /** the appearance the user picked, one of {@link appearances} */
-export const APPEARANCE_COOKIE_KEY = 'product-appearance';
+export const APPEARANCE_COOKIE_KEY = 'shell-appearance';
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 

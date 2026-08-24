@@ -2,15 +2,15 @@ import { assert, nullThrows } from '@core/utils/assert';
 
 import { computed } from 'vue';
 
-import { useProvidedMagic } from '../product/context.ts';
+import { useProvidedShell } from '../product/context.ts';
 
 /** for anything that only ever exists inside a room, which can then read it directly */
 export const useConnectedMultiplayer = () => {
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const multiplayer = computed(() =>
     nullThrows(
-      magic.multiplayer,
+      shell.multiplayer,
       'multiplayer: read on a product without a room',
     ),
   );

@@ -7,7 +7,7 @@
   import ToggleButtonGroup from '../../components/toggle-button-group/ToggleButtonGroup.vue';
   import ToggleButtonGroupItem from '../../components/toggle-button-group/ToggleButtonGroupItem.vue';
   import Tooltip from '../../components/tooltip/Tooltip.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import { appearances } from './appearances.ts';
 
   const appearanceToDisplayString: Record<BasicColorSchema, string> = {
@@ -22,13 +22,13 @@
     auto: mdiMonitor,
   };
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 </script>
 
 <template>
   <VStack class="py-2">
     <div class="px-2">
-      <ToggleButtonGroup v-model="magic.appearance.value">
+      <ToggleButtonGroup v-model="shell.appearance.value">
         <template
           v-for="appearance in appearances"
           :key="appearance"

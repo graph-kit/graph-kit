@@ -10,4 +10,4 @@ Ordering is declared relationally, `{ before: [...] }` against other handler ids
 than as a number nobody can pick correctly in isolation.
 
 Nothing here knows about graphs or canvases. The graph core, the canvas surface, the
-annotation engine and the product harness all build their own event maps on top of it.
+annotation engine and the shell all build their own event maps on top of it.

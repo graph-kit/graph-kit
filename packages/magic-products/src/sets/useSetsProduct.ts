@@ -1,10 +1,6 @@
 import { useCanvasSurface } from '@canvas/surface/index';
 import { nullThrows } from '@core/utils/assert';
-import {
-  Magic,
-  MagicProductHost,
-  useMagicProduct,
-} from '@magic/shared/product';
+import { ProductControls, Shell, useShell } from '@magic/shared/product';
 
 import { ComputedRef, inject, provide } from 'vue';
 
@@ -26,10 +22,10 @@ export type SetsProductState = {
   sections: ComputedRef<Section[]>;
 };
 
-const useSetsProductState = (magic: Magic): SetsProductState => {
+const useSetsProductState = (shell: Shell): SetsProductState => {
   const queries = createQueries();
   const sets = createSetDefinitions();
-  const theme = useSetsTheme(magic);
+  const theme = useSetsTheme(shell);
   const sections = useSections(sets.definitions);
 
   return {
@@ -60,7 +56,7 @@ export const useSetsProduct = () => {
   // sets has no serializable state yet, so there is nothing to mirror either way. it
   // is not flagged multiplayer, and giving it real transit is what would unblock both,
   // along with the local storage and link sharing that transit gates.
-  const host: MagicProductHost = {
+  const host: ProductControls = {
     surface,
     onAppearanceChanged: () => {},
     multiplayer: {
@@ -75,18 +71,18 @@ export const useSetsProduct = () => {
     },
   };
 
-  const magic = useMagicProduct(host, { productId: 'sets' });
+  const shell = useShell(host, { productId: 'sets' });
 
-  const setsProductState = useSetsProductState(magic);
-  useCanvasTheme(magic, setsProductState);
+  const setsProductState = useSetsProductState(shell);
+  useCanvasTheme(shell, setsProductState);
 
   provideSetsProductState(setsProductState);
 
-  magic.componentSlots.add({
+  shell.componentSlots.add({
     id: 'sets/query-panel',
     component: QueryPanel,
     position: 'bottom-middle',
   });
 
-  return { magic, setsProductState };
+  return { shell, setsProductState };
 };

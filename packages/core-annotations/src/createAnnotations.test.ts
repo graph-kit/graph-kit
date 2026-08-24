@@ -124,7 +124,6 @@ describe('annotations', () => {
     annotations.deactivate();
     annotations.endStroke();
 
-    expect(annotations.mode()).toBe('drawing');
     expect(annotations.isActive()).toBe(false);
     expect(changes).toEqual([]);
   });

@@ -7,8 +7,8 @@ import { slotIds } from './shared.ts';
 const componentSlotHighlight = (
   slot: keyof typeof slotIds,
 ): ExplainerHighlight => ({
-  activate: (graph) => graph.magic.componentSlots.setHighlighted(slotIds[slot]),
-  deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
+  activate: ({ shell }) => shell.componentSlots.setHighlighted(slotIds[slot]),
+  deactivate: ({ shell }) => shell.componentSlots.clearHighlighted(),
 });
 
 const highlights = {

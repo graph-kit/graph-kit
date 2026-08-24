@@ -4,7 +4,7 @@ import { computed, onMounted, onUnmounted } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { ProductId, manifests } from '../product/manifests/index.ts';
-import { MultiplayerHostField } from '../product/types.ts';
+import { MultiplayerControls } from '../product/types.ts';
 import { useJoinSessionBanner } from '../ui/multiplayer/useJoinSessionBanner.ts';
 import { useRosterPanel } from '../ui/multiplayer/useRosterPanel.ts';
 import { useProvidedMultiplayer } from './context.ts';
@@ -15,7 +15,7 @@ import { useTierBehavior } from './useTierBehavior.ts';
 
 type MultiplayerProductOptions = {
   productId: ProductId;
-  host: MultiplayerHostField;
+  host: MultiplayerControls;
   componentSlots: ComponentSlotControls;
 };
 

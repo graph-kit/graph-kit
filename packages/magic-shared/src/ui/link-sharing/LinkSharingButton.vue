@@ -4,10 +4,10 @@
   import { computed, ref } from 'vue';
 
   import MenuItem from '../../components/dropdown/MenuItem.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import { getLink } from './linkPayload.ts';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   let linkCopiedResetTimer: NodeJS.Timeout;
 
@@ -17,7 +17,7 @@
   const copyLinkToClipboard = () => {
     clearTimeout(linkCopiedResetTimer);
     try {
-      navigator.clipboard.writeText(getLink(magic));
+      navigator.clipboard.writeText(getLink(shell));
       linkCopiedToClipboard.value = true;
       linkCopiedResetTimer = setTimeout(
         () => (linkCopiedToClipboard.value = false),

@@ -1,6 +1,6 @@
 import { dark } from '@graph/theme-presets/dark/index';
 import { light } from '@graph/theme-presets/light/index';
-import { Magic } from '@magic/shared/product';
+import { Shell } from '@magic/shared/product';
 
 import { computed } from 'vue';
 
@@ -22,9 +22,9 @@ export type SetsTheme = {
   canvas: CanvasColors;
 };
 
-export const useSetsTheme = (magic: Magic) => {
+export const useSetsTheme = (shell: Shell) => {
   const theme = computed(() =>
-    magic.appearance.state.value === 'dark' ? dark : light,
+    shell.appearance.state.value === 'dark' ? dark : light,
   );
 
   return computed<SetsTheme>(() => ({

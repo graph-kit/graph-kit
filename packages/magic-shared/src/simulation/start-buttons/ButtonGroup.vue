@@ -3,15 +3,15 @@
 
   import HStack from '../../components/layout/HStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import StartButton from './StartButton.vue';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
-  const buttons = computed(() => magic.simulationButtons ?? []);
+  const buttons = computed(() => shell.simulationButtons ?? []);
 
   const show = computed(() => {
-    const simRunning = magic.simulation.current.value;
+    const simRunning = shell.simulation.current.value;
     return buttons.value.length > 0 && !simRunning;
   });
 </script>

@@ -7,7 +7,7 @@
   import MenuItem from '../../components/dropdown/MenuItem.vue';
   import { jumpUserIdUrl } from '../../multiplayer/url.ts';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import { productHref } from '../navigation-menu/navigateToProduct.ts';
 
   interface Props {
@@ -16,11 +16,11 @@
 
   const props = defineProps<Props>();
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
   const { room } = useConnectedMultiplayer();
 
   const inSameProduct = computed(
-    () => props.member.productId === magic.manifest.id,
+    () => props.member.productId === shell.manifest.id,
   );
 
   const hrefToMemberInOtherProduct = computed(() => {
@@ -43,7 +43,7 @@
   const matchMemberCameraWithoutNavigating = () => {
     const camera = cameraToJumpTo.value;
     if (!inSameProduct.value || !camera) return;
-    magic.surface.camera.actions.moveTo(camera);
+    shell.surface.camera.actions.moveTo(camera);
   };
 </script>
 

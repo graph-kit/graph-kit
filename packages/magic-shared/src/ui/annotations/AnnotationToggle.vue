@@ -5,14 +5,14 @@
 
   import Well from '../../components/layout/Well.vue';
   import ToggleIconButton from '../../components/toggle-icon-button/ToggleIconButton.vue';
-  import { useProvidedMagic } from '../../product/index.ts';
+  import { useProvidedShell } from '../../product/index.ts';
   import { useAnnotationControls } from './useAnnotationControls.ts';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
   const controls = useAnnotationControls();
 
   const disabled = computed(() => {
-    if (magic.multiplayer?.room.isReadonly.value) {
+    if (shell.multiplayer?.room.isReadonly.value) {
       return 'Annotations unavailable in Read';
     }
   });

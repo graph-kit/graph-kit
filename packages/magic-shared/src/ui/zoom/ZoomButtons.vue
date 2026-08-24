@@ -7,11 +7,11 @@
   import IconButton from '../../components/icon-button/IconButton.vue';
   import HStack from '../../components/layout/HStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
-  const camera = magic.surface.camera;
+  const camera = shell.surface.camera;
 
   const ZOOM_LOG_RANGE = Math.log(MAX_ZOOM / MIN_ZOOM);
 

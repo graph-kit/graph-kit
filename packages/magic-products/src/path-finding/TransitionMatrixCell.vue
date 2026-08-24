@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useEdgeStyles } from '@magic/shared/theme/edge';
 
   import { onUnmounted } from 'vue';

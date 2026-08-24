@@ -1,4 +1,5 @@
-import { displayNumber } from '../utilities/displayNumber.ts';
+import { displayNumber } from '@core/utils/math';
+
 import { ExplainerSegment } from './explainerSegments.ts';
 import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
 
@@ -19,7 +20,7 @@ export const numberExplainerSegment = (raw: string): ExplainerSegment => {
   const { primary, secondary, error } = displayNumber(raw);
 
   if (error) {
-    console.error(`explainer cannot parse '${raw}' as a number`);
+    console.error(`explainer: cannot parse "${raw}" as a number`);
     return unparsedExplainerSegment(error);
   }
 

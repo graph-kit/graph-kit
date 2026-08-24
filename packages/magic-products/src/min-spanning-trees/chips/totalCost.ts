@@ -1,8 +1,8 @@
 import { Color } from '@core/utils/colors';
+import { displayNumber } from '@core/utils/math';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
-import { displayNumber } from '@magic/shared/utilities';
 import Fraction from 'fraction.js';
 import tinycolor from 'tinycolor2';
 
@@ -42,13 +42,15 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
     },
   });
 
+  const displayCost = computed(() => displayNumber(totalMstCost.value));
+
   const costExplanation =
     'The total cost if you sum up all the edges making up the minimum spanning tree.';
 
   return {
-    name: () => `Total Cost: ${totalMstCost.value.toFraction()}`,
+    name: () => `Total Cost: ${displayCost.value.primary}`,
     tooltipLabel: () => {
-      const { secondary } = displayNumber(totalMstCost.value);
+      const { secondary } = displayCost.value;
       return secondary ? `${secondary}: ${costExplanation}` : costExplanation;
     },
     lens: {

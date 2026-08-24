@@ -110,6 +110,70 @@ export const fractionIsInteger = (fraction: Fraction) => {
   return fraction.d === 1n;
 };
 
+export type DisplayNumber = {
+  // main user-facing number (usually a fraction)
+  primary: string;
+  // usually in tooltip such as decimal approximation
+  secondary?: string;
+  error?: string;
+};
+
+const fractionDisplay = (
+  fraction: Fraction,
+  fractionDigits?: number,
+): DisplayNumber => ({
+  primary: fraction.toFraction(),
+  secondary: fractionIsInteger(fraction)
+    ? undefined
+    : fractionToDecimal(fraction, fractionDigits),
+});
+
+const INFINITY_TEXTS = ['∞', String(Infinity)];
+const NEGATIVE_INFINITY_TEXTS = INFINITY_TEXTS.map((text) => `-${text}`);
+
+/**
+ * formats number into main user-facing number and secondary helper number,
+ * usually a decimal approximation
+ *
+ * @param value the number, written as a decimal, a `numerator/denominator`
+ * string, a symbol like `∞`, or an already built Fraction
+ * @param fractionDigits how many decimal places the approximation keeps
+ * @returns the primary and secondary forms, or an `error` saying why the input
+ * could not be read
+ * @example displayNumber('1/3') // '1/3' and '~0.333'
+ * displayNumber(Infinity) // '∞', the symbol needs no decimal
+ * displayNumber('1/0') // errors, cannot divide by zero
+ * displayNumber('half') // errors, cannot be parsed
+ */
+export const displayNumber = (
+  value: number | string | Fraction,
+  fractionDigits?: number,
+): DisplayNumber => {
+  if (value instanceof Fraction) return fractionDisplay(value, fractionDigits);
+
+  const raw = typeof value === 'string' ? value.trim() : String(value);
+
+  if (INFINITY_TEXTS.includes(raw)) return { primary: '∞' };
+  if (NEGATIVE_INFINITY_TEXTS.includes(raw)) return { primary: '-∞' };
+
+  let fraction: Fraction;
+  try {
+    fraction = new Fraction(typeof value === 'string' ? raw : value);
+  } catch (error) {
+    // checking for the fraction.js error message
+    const dividedByZero =
+      error instanceof Error && error.message === 'Division by Zero';
+    return {
+      primary: raw,
+      error: dividedByZero
+        ? `Cannot Divide "${raw}" By Zero`
+        : `Cannot Parse "${raw}" As A Number`,
+    };
+  }
+
+  return fractionDisplay(fraction, fractionDigits);
+};
+
 /**
  * get the average of an array of numbers
  *

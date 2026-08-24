@@ -10,8 +10,6 @@ const pattern = new RegExp(
     String.raw`\{([^}]*)\}`,
     String.raw`\[([^\]]*)\]`,
     String.raw`<([^<>]*)>`,
-    // a `<` that never closes is ordinary text, so stray angles are never swallowed
-    String.raw`((?:[^{}[\]<]|<(?![^<>]*>))+)`,
   ].join('|'),
   'g',
 );

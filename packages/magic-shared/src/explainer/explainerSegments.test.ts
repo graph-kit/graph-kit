@@ -379,6 +379,27 @@ describe(explainerSegments, () => {
     expect(segments.at(-1)?.highlight).toBe(h);
   });
 
+  test('marks an angled number it cannot read with a hoverable reason', () => {
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const segments = explainerSegments(context, { content: 'costs <half>' });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'costs ',
+      '?',
+    ]);
+    expect(segments[1].highlight?.tooltipLabel).toBe(
+      'Cannot Parse "half" As A Number',
+    );
+    expect(consoleError).toHaveBeenCalledWith(
+      'explainer: cannot parse "half" as a number',
+    );
+
+    consoleError.mockRestore();
+  });
+
   test('defaults to an empty array when highlights is undefined', () => {
     const explainer: Explainer = {
       content: 'no brackets here',

@@ -48,6 +48,7 @@ export const useGraphElementRefExplainerSegment = (
   const inGraph = graph.isNode(id) || graph.isEdge(id);
 
   if (!inGraph) {
+    console.error(`explainer: no graph element under the id "${id}"`);
     return unparsedExplainerSegment(`Graph Element With ID ${id} Not In Graph`);
   }
 

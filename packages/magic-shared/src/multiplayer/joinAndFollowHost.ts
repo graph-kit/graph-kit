@@ -9,13 +9,13 @@ import {
   productHref,
 } from '../ui/navigation-menu/navigateToProduct.ts';
 import { toast } from '../ui/toast/useToastState.ts';
-import { MultiplayerControls, ProductBinding } from './types.ts';
+import { ConnectionControls, ProductBinding } from './types.ts';
 import { jumpUserIdUrl } from './url.ts';
 
 const STRANDED_TOAST_MS = 12_000;
 
 type JoinAndFollowHostOptions = {
-  actions: MultiplayerControls['actions'];
+  actions: ConnectionControls['actions'];
   binding: ProductBinding;
   roomId: RoomId;
 };

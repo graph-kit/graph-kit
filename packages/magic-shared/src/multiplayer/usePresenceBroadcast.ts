@@ -3,7 +3,7 @@ import { AnnotationsControls } from '@core/annotations/index';
 
 import { watch } from 'vue';
 
-import { MultiplayerHostField } from '../product/types.ts';
+import { MultiplayerControls } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
 
 /**
@@ -14,7 +14,7 @@ import { ProductMultiplayer } from './types.ts';
 export const usePresenceBroadcast = (options: {
   surface: CanvasSurface;
   multiplayer: ProductMultiplayer;
-  host: MultiplayerHostField;
+  host: MultiplayerControls;
   annotations?: AnnotationsControls;
 }) => {
   const { surface, multiplayer, host, annotations } = options;

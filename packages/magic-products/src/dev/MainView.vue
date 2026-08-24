@@ -1,10 +1,10 @@
 <script setup lang="ts">
-  import { useGraphProduct } from '@magic/shared/graph-product';
-  import { MagicProduct } from '@magic/shared/product';
+  import Shell from '@magic/shared/Shell';
+  import { useGraphShell } from '@magic/shared/graph-product';
 
   import ActionBar from './ActionBar.vue';
 
-  const graph = useGraphProduct({
+  const graph = useGraphShell({
     productId: 'dev',
     flags: {
       /*
@@ -18,7 +18,7 @@
     },
   });
 
-  graph.magic.componentSlots.add({
+  graph.shell.componentSlots.add({
     id: 'action-bar',
     component: ActionBar,
     position: 'bottom-middle',
@@ -26,5 +26,5 @@
 </script>
 
 <template>
-  <MagicProduct />
+  <Shell />
 </template>

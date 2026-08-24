@@ -7,12 +7,12 @@ import { RoomState } from './types.ts';
 
 type TierBehaviorOptions = {
   room: ComputedRef<RoomState>;
-  /** what the host decided each tier means for it, see {@link MultiplayerHostField.tiers} */
+  /** what the host decided each tier means for it, see {@link MultiplayerControls.tiers} */
   tiers: Record<Tier, TierBehavior>;
 };
 
 /**
- * Runs the host's tier callbacks as the local user's tier changes, which is the one place
+ * Runs the product's tier callbacks as the local user's tier changes, which is the one place
  * a tier turns into anything happening on this client.
  *
  * Held tier rather than watched value, because the room state is rebuilt on every roster

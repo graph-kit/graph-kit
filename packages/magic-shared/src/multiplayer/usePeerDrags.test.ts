@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 
 import { computed, shallowRef } from 'vue';
 
-import { HostBinding } from '../product/types.ts';
+import { DocBinding } from '../product/types.ts';
 import {
   MultiplayerEventMap,
   createMultiplayerEventRegistry,
@@ -37,11 +37,11 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
 
   const applied: string[] = [];
   const ended: string[] = [];
-  const binding = shallowRef<HostBinding>({
+  const binding = shallowRef<DocBinding>({
     applyPeerDrag: (peerId: string, elements: DraggedElement[]) =>
       applied.push(`${peerId}:${elements.map(({ id }) => id).join(',')}`),
     endPeerDrag: (peerId: string) => ended.push(peerId),
-  } as unknown as HostBinding);
+  } as unknown as DocBinding);
 
   const userIdToPresence = Object.fromEntries(
     Object.entries(peerDrags).map(([peerId, drag]) => [

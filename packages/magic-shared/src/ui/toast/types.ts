@@ -10,7 +10,7 @@ export type ToastButton = { textContent: string } & (
   | { href: string; onClick?: never }
 );
 
-/** the toast the harness renders for you */
+/** the toast the shell renders for you */
 type StandardToast = {
   title: string;
   description?: string;
@@ -21,7 +21,7 @@ type StandardToast = {
 /**
  * the escape hatch: this component sits inside the toast chrome and owns everything
  * within it, including whether it offers a way to close. the queue, the timer, swipe
- * to dismiss and the announcement still come from the harness
+ * to dismiss and the announcement still come from the shell
  */
 type CustomToast = {
   component: Component;

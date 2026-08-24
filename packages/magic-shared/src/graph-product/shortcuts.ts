@@ -1,18 +1,18 @@
 import { Graph } from '../graph/types.ts';
-import { Magic } from '../product/types.ts';
+import { Shell } from '../product/types.ts';
 import { ShortcutItem } from '../shortcuts/useShortcuts.ts';
 
-export const useGraphProductShortcuts = (magic: Magic, graph: Graph) => {
+export const useGraphShellShortcuts = (shell: Shell, graph: Graph) => {
   // TODO make it windows + mac agnostic
   const shortcuts: ShortcutItem[] = [
     {
-      id: 'product/focus-all',
+      id: 'shell/focus-all',
       key: 'meta+a',
       callback: graph.focus.setAll,
     },
   ];
 
   for (const shortcut of shortcuts) {
-    magic.shortcuts.add(shortcut);
+    shell.shortcuts.add(shortcut);
   }
 };

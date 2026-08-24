@@ -3,14 +3,14 @@
   import Button from '@magic/shared/Button';
   import Icon from '@magic/shared/Icon';
   import { useProvidedGraph } from '@magic/shared/graph-product';
-  import { useProvidedMagic } from '@magic/shared/product';
+  import { useProvidedShell } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities/useFocusedNode';
   import { mdiPlay } from '@mdi/js';
 
   import { useProvidedTreeSimulation } from './useProvidedTree.ts';
 
   const graph = useProvidedGraph();
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const {
     controls: { mode, target },
@@ -22,7 +22,7 @@
     assert(node.value, 'target not defined');
     mode.value = 'remove';
     target.value = node.value.id;
-    magic.simulation.start(definition);
+    shell.simulation.start(definition);
   };
 </script>
 

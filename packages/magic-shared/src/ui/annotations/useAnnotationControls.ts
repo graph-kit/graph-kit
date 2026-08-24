@@ -1,11 +1,11 @@
 import { nullThrows } from '@core/utils/assert';
 
-import { useProvidedMagic } from '../../product/context.ts';
+import { useProvidedShell } from '../../product/context.ts';
 
 export const useAnnotationControls = () => {
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
   return nullThrows(
-    magic.annotations,
-    'annotation controls not on magic instance!',
+    shell.annotations,
+    'annotation controls not on shell instance!',
   );
 };

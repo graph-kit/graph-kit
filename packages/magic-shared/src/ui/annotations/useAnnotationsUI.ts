@@ -5,7 +5,7 @@ import { useComponent } from '../../component-slot/useComponent.ts';
 import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
 import AnnotationsPanel from './AnnotationPanel.vue';
 
-const ANNOTATION_PANEL_SLOT_ID = 'product/annotations/panel';
+const ANNOTATION_PANEL_SLOT_ID = 'shell/annotations/panel';
 
 export const useAnnotationsUI = (
   annotations: AnnotationsControls,

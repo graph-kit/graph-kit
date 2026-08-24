@@ -21,7 +21,7 @@ import { Socket } from 'socket.io-client';
 import { ComputedRef } from 'vue';
 
 import { ComponentControls } from '../component-slot/useComponent.ts';
-import { MultiplayerHostField } from '../product/types.ts';
+import { MultiplayerControls } from '../product/types.ts';
 import { MultiplayerEventMap } from './events.ts';
 
 export type MultiplayerSocket = Socket<
@@ -29,10 +29,10 @@ export type MultiplayerSocket = Socket<
   ClientToServerEvents
 >;
 
-/** what a room needs from the product it opens on, supplied by the harness */
+/** what a room needs from the product it opens on, supplied by the shell */
 export type ProductBinding = {
   productId: ProductId;
-  host: MultiplayerHostField;
+  host: MultiplayerControls;
 };
 
 export type RoomActions = {
@@ -48,7 +48,7 @@ export type ProductActions = {
 };
 
 /**
- * the product facing surface. the harness knows its own product and host, so a caller
+ * the product facing surface. the shell knows its own product and controls, so a caller
  * supplies nothing but who is arriving.
  */
 export type ProductMultiplayer = {
@@ -118,7 +118,7 @@ export type RoomState =
       controls: RoomControls;
     };
 
-export type MultiplayerControls = {
+export type ConnectionControls = {
   actions: {
     room: RoomActions;
     product: ProductActions;

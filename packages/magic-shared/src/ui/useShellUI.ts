@@ -4,20 +4,20 @@ import BottomLeftControls from './bottom-left-controls/BottomLeftControls.vue';
 import BottomRightControls from './bottom-right-controls/BottomRightControls.vue';
 import NavigationMenu from './navigation-menu/NavigationMenu.vue';
 
-export const useProductUI = (componentSlots: ComponentSlotControls) => {
+export const useShellUI = (componentSlots: ComponentSlotControls) => {
   const slots: ComponentSlot[] = [
     {
-      id: 'product/bottom-left-controls',
+      id: 'shell/bottom-left-controls',
       component: BottomLeftControls,
       position: 'bottom-left',
     },
     {
-      id: 'product/bottom-right-controls',
+      id: 'shell/bottom-right-controls',
       component: BottomRightControls,
       position: 'bottom-right',
     },
     {
-      id: 'product/navigation-menu',
+      id: 'shell/navigation-menu',
       component: NavigationMenu,
       position: 'top-left',
     },

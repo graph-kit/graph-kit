@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import { useGraphProduct } from '@magic/shared/graph-product';
-  import { MagicProduct } from '@magic/shared/product';
+  import Shell from '@magic/shared/Shell';
+  import { useGraphShell } from '@magic/shared/graph-product';
 
   import ActionBar from './ActionBar.vue';
   import WelcomeBanner from './WelcomeBanner.vue';
   import { provideWelcomeScene } from './useWelcomeScene.ts';
 
-  const graph = useGraphProduct({
+  const graph = useGraphShell({
     productId: 'welcome',
     flags: {
       history: false,
@@ -24,7 +24,7 @@
 
   provideWelcomeScene(graph);
 
-  graph.magic.componentSlots.addMany([
+  graph.shell.componentSlots.addMany([
     {
       id: 'welcome-banner',
       component: WelcomeBanner,
@@ -39,5 +39,5 @@
 </script>
 
 <template>
-  <MagicProduct />
+  <Shell />
 </template>

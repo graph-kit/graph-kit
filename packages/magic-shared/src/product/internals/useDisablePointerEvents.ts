@@ -1,8 +1,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
-import { Magic } from '../types.ts';
+import { Shell } from '../types.ts';
 
-export const useDisablePointerEvents = (magic: Magic) => {
+export const useDisablePointerEvents = (shell: Shell) => {
   const disableUIPointerEvents = ref(false);
 
   /*
@@ -22,13 +22,13 @@ export const useDisablePointerEvents = (magic: Magic) => {
   const startPointerEvents = () => (disableUIPointerEvents.value = false);
 
   onMounted(() => {
-    magic.surface.events.canvas.subscribe('onMouseDown', stopPointerEvents);
-    magic.surface.events.dom.subscribe('onMouseUp', startPointerEvents);
+    shell.surface.events.canvas.subscribe('onMouseDown', stopPointerEvents);
+    shell.surface.events.dom.subscribe('onMouseUp', startPointerEvents);
   });
 
   onUnmounted(() => {
-    magic.surface.events.canvas.unsubscribe('onMouseDown', stopPointerEvents);
-    magic.surface.events.dom.unsubscribe('onMouseUp', startPointerEvents);
+    shell.surface.events.canvas.unsubscribe('onMouseDown', stopPointerEvents);
+    shell.surface.events.dom.unsubscribe('onMouseUp', startPointerEvents);
   });
 
   return pointerEvents;

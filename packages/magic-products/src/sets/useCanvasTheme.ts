@@ -1,16 +1,16 @@
 import { crossPattern } from '@canvas/surface/crossPattern';
-import { Magic } from '@magic/shared/product';
+import { Shell } from '@magic/shared/product';
 
 import { computed, onMounted, watch } from 'vue';
 
 import { SetsProductState } from './useSetsProduct.ts';
 
 export const useCanvasTheme = (
-  magic: Magic,
+  shell: Shell,
   setsProductState: SetsProductState,
 ) => {
   const { theme } = setsProductState;
-  const canvas = computed(() => magic.surface.canvas.value);
+  const canvas = computed(() => shell.surface.canvas.value);
 
   const setCanvasColor = () => {
     if (!canvas.value) return console.warn('no canvas found in DOM');
@@ -21,7 +21,7 @@ export const useCanvasTheme = (
 
   onMounted(setCanvasColor);
 
-  magic.surface.draw.backgroundPattern.value = crossPattern((alpha) =>
+  shell.surface.draw.backgroundPattern.value = crossPattern((alpha) =>
     theme.value.canvas.patternColor(alpha),
   );
 };

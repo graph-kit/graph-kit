@@ -3,47 +3,47 @@ import { onMounted, watch } from 'vue';
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
 import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
-import { useProductShortcuts } from '../shortcuts/useProductShortcuts.ts';
+import { useShellShortcuts } from '../shortcuts/useShellShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import SimulationButtonGroup from '../simulation/start-buttons/ButtonGroup.vue';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
 import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
-import { useProductAppearance } from '../ui/appearance/useProductAppearance.ts';
+import { useShellAppearance } from '../ui/appearance/useShellAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useToastState } from '../ui/toast/useToastState.ts';
-import { useProductUI } from '../ui/useProductUI.ts';
-import { provideMagic } from './context.ts';
-import { resolveProductFlags } from './flags.ts';
-import { useProductHistory } from './internals/useProductHistory.ts';
-import { useProductLocalStorage } from './internals/useProductLocalStorage.ts';
+import { useShellUI } from '../ui/useShellUI.ts';
+import { provideShell } from './context.ts';
+import { resolveShellFlags } from './flags.ts';
+import { useShellHistory } from './internals/useShellHistory.ts';
+import { useShellLocalStorage } from './internals/useShellLocalStorage.ts';
 import { manifests } from './manifests/index.ts';
-import { Magic, MagicProductHost, MagicProductOptions } from './types.ts';
+import { ProductControls, Shell, ShellOptions } from './types.ts';
 
-export const useMagicProduct = (
-  host: MagicProductHost,
-  options: MagicProductOptions,
-): Magic => {
+export const useShell = (
+  host: ProductControls,
+  options: ShellOptions,
+): Shell => {
   const componentSlots = useComponentSlotsState();
   const lens = useLensState(componentSlots);
   const simulation = useSimulationState(componentSlots, lens);
 
-  const appearance = useProductAppearance(host.onAppearanceChanged);
+  const appearance = useShellAppearance(host.onAppearanceChanged);
 
   const annotations = host.annotations
     ? useAnnotationsUI(host.annotations, componentSlots)
     : undefined;
 
-  const flags = resolveProductFlags(options.flags, host);
+  const flags = resolveShellFlags(options.flags, host);
 
-  useProductUI(componentSlots);
+  useShellUI(componentSlots);
   const debug = useDebugState(componentSlots);
   const shortcuts = useShortcuts();
 
   const manifest = manifests[options.productId];
 
-  const localStorage = useProductLocalStorage(manifest.id, host, flags);
+  const localStorage = useShellLocalStorage(manifest.id, host, flags);
 
   const { product: multiplayer, roomHistory } = useMultiplayer({
     host,
@@ -51,13 +51,13 @@ export const useMagicProduct = (
     componentSlots,
   });
 
-  const history = useProductHistory({
+  const history = useShellHistory({
     local: host.history,
     roomHistory,
     inRoom: () => multiplayer?.room.state.value.connected === true,
   });
 
-  const magic: Magic = {
+  const shell: Shell = {
     manifest,
     flags,
     lens,
@@ -77,7 +77,7 @@ export const useMagicProduct = (
     multiplayer,
   };
 
-  magic.surface.camera.events.subscribe(
+  shell.surface.camera.events.subscribe(
     'onCameraChange',
     localStorage.invalidate,
   );
@@ -94,9 +94,9 @@ export const useMagicProduct = (
     );
   }
 
-  if (magic.lensChips) {
-    magic.componentSlots.add({
-      id: 'product/lens-chips',
+  if (shell.lensChips) {
+    shell.componentSlots.add({
+      id: 'shell/lens-chips',
       component: LensChipGroup,
       position: 'top-middle',
       // should always be stuck to the top
@@ -104,9 +104,9 @@ export const useMagicProduct = (
     });
   }
 
-  if (magic.simulationButtons) {
-    magic.componentSlots.add({
-      id: 'product/simulation-buttons',
+  if (shell.simulationButtons) {
+    shell.componentSlots.add({
+      id: 'shell/simulation-buttons',
       component: SimulationButtonGroup,
       position: 'bottom-middle',
       // should always be stuck to the bottom
@@ -115,16 +115,16 @@ export const useMagicProduct = (
   }
 
   onMounted(() => {
-    magic.localStorage.sync();
+    shell.localStorage.sync();
     // replace what was in local storage with what was in link
-    if (magic.flags.linkSharing) loadFromLinkPayload(magic);
+    if (shell.flags.linkSharing) loadFromLinkPayload(shell);
 
     // whatever was restored is the starting point, not the state setup began with
-    magic.history?.clear();
+    shell.history?.clear();
   });
 
-  useProductShortcuts(magic);
-  provideMagic(magic);
+  useShellShortcuts(shell);
+  provideShell(shell);
 
-  return magic;
+  return shell;
 };

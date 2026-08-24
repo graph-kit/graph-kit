@@ -1,14 +1,9 @@
-// the graph flavored half of the harness: everything that knows it is hosting a graph
-export { useGraphProduct } from './useGraphProduct.ts';
+// the graph flavored half of the shell: everything that knows it is hosting a graph
+export { useGraphShell } from './useGraphShell.ts';
 export type {
   GraphLensChipOption,
   GraphSimulationButtonOption,
-  GraphProductOptions,
-  MagicGraph,
+  GraphShellOptions,
 } from './types.ts';
 
-export {
-  provideGraph,
-  useProvidedGraph,
-  useProvidedMagicGraph,
-} from './context.ts';
+export { provideGraph, useProvidedGraph } from './context.ts';

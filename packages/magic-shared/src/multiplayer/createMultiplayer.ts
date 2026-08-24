@@ -22,7 +22,7 @@ import { REMOTE_ORIGIN, getDisplayName } from './constants.ts';
 import { createMultiplayerEventRegistry } from './events.ts';
 import { clearSeat, readSeat, writeSeat } from './seat.ts';
 import {
-  MultiplayerControls,
+  ConnectionControls,
   MultiplayerSocket,
   ProductActions,
   ProductBinding,
@@ -42,7 +42,7 @@ const ACK_TIMEOUT_MS = 10_000;
 export const createMultiplayer = ({
   serverUrl,
   onMovedToProduct,
-}: CreateMultiplayerOptions): MultiplayerControls => {
+}: CreateMultiplayerOptions): ConnectionControls => {
   const events = createEventHub(createMultiplayerEventRegistry());
 
   const membership = ref<RoomMembership | null>(null);
@@ -172,8 +172,8 @@ export const createMultiplayer = ({
   };
 
   /**
-   * Opens a document for the product and ties the host to it, replacing any binding
-   * already in place. The room's copy lands before the host binds, so an adopting host
+   * Opens a document for the product and ties the product to it, replacing any binding
+   * already in place. The room's copy lands before the product binds, so an adopting product
    * is handed the document it is meant to take on rather than an empty one.
    */
   const openProduct = (

@@ -3,16 +3,16 @@
 
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import { productThumbnail } from '../../product/manifests/thumbnail.ts';
-  import { MagicProductCard } from '../../product/manifests/types.ts';
+  import { ProductCard } from '../../product/manifests/types.ts';
 
-  const props = defineProps<{ productId: string; card: MagicProductCard }>();
+  const props = defineProps<{ productId: string; card: ProductCard }>();
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const thumbnail = computed(() =>
-    productThumbnail(props.productId, magic.appearance.state.value),
+    productThumbnail(props.productId, shell.appearance.state.value),
   );
 </script>
 

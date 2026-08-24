@@ -1,16 +1,19 @@
+import { Graph } from '../graph/types.ts';
 import { useGraph } from '../graph/useGraph.ts';
-import { resolveProductFlags } from '../product/flags.ts';
-import { MagicProductHost } from '../product/types.ts';
-import { useMagicProduct } from '../product/useMagicProduct.ts';
+import { resolveShellFlags } from '../product/flags.ts';
+import { ProductControls, Shell } from '../product/types.ts';
+import { useShell } from '../product/useShell.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { bindGraphToDoc } from './bindGraphToDoc.ts';
 import { provideGraph } from './context.ts';
-import { useGraphProductShortcuts } from './shortcuts.ts';
+import { useGraphShellShortcuts } from './shortcuts.ts';
 import { trackDraggedNodes } from './trackDraggedNodes.ts';
-import { GraphProductOptions, MagicGraph } from './types.ts';
+import { GraphShellOptions } from './types.ts';
 
-/** adapts a graph to the harness host interface, see {@link useMagicProduct} */
-export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
+/** adapts a graph to the shell's controls interface, see {@link useShell} */
+export const useGraphShell = (
+  options: GraphShellOptions,
+): Graph & { shell: Shell } => {
   const graph = useGraph(options);
 
   const lensChips = options.lensChips?.(graph);
@@ -18,12 +21,12 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
 
   const draggedNodes = trackDraggedNodes(graph);
 
-  const flags = resolveProductFlags(options.flags, graph);
+  const flags = resolveShellFlags(options.flags, graph);
 
   if (!flags.history) graph.history.lifecycle.disable();
   if (!flags.annotations) graph.annotations.lifecycle.disable();
 
-  const host: MagicProductHost = {
+  const host: ProductControls = {
     surface: graph.surface,
     transit: graph.transit,
     annotations: flags.annotations ? graph.annotations : undefined,
@@ -46,35 +49,35 @@ export const useGraphProduct = (options: GraphProductOptions): MagicGraph => {
     },
   };
 
-  const magic = useMagicProduct(host, {
+  const shell = useShell(host, {
     productId: options.productId,
     flags: options.flags,
     lensChips,
     simulationButtons,
   });
 
-  graph.events.subscribe('onStructureChange', magic.simulation.invalidate);
+  graph.events.subscribe('onStructureChange', shell.simulation.invalidate);
 
-  graph.events.subscribe('onStructureChange', magic.localStorage.invalidate);
+  graph.events.subscribe('onStructureChange', shell.localStorage.invalidate);
   graph.annotations.events.subscribe(
     'onAnnotationsChanged',
-    magic.localStorage.invalidate,
+    shell.localStorage.invalidate,
   );
 
   // any settled move, not just a drag drop, so programmatic repositioning persists too
   graph.events.subscribe(
     'onNodePositionsCommitted',
-    magic.localStorage.invalidate,
+    shell.localStorage.invalidate,
   );
 
-  magic.simulation.events.subscribe('onSimulationStarted', graph.focus.clear);
+  shell.simulation.events.subscribe('onSimulationStarted', graph.focus.clear);
 
-  useGraphProductShortcuts(magic, graph);
+  useGraphShellShortcuts(shell, graph);
 
   provideGraph(graph);
 
   return {
     ...graph,
-    magic,
+    shell,
   };
 };

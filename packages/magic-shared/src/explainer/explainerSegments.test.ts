@@ -356,8 +356,8 @@ describe(explainerSegments, () => {
       ' and ',
       '∞',
     ]);
-    expect(segments[0].highlight?.tooltipLabel).toBe('Infinity');
-    expect(segments[2].highlight?.tooltipLabel).toBe('Infinity');
+    expect(segments[0].highlight).toBeUndefined();
+    expect(segments[2].highlight).toBeUndefined();
   });
 
   test('angled fractions do not consume bracket highlights', () => {

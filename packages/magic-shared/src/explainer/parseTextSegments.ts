@@ -10,6 +10,7 @@ const pattern = new RegExp(
     String.raw`\{([^}]*)\}`,
     String.raw`\[([^\]]*)\]`,
     String.raw`<([^<>]*)>`,
+    String.raw`((?:[^{}[\]<]|<(?![^<>]*>))+)`,
   ].join('|'),
   'g',
 );

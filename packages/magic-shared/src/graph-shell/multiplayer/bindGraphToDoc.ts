@@ -8,8 +8,8 @@ import * as Y from 'yjs';
 
 import { computed, ref } from 'vue';
 
-import { Graph } from '../graph/types.ts';
-import { DocBindMode, DocBinding, HistoryField } from '../product/types.ts';
+import { Graph } from '../../graph/types.ts';
+import { DocBindMode, DocBinding, HistoryField } from '../../product/types.ts';
 
 /** named rather than inline so unbind can hand back the very same reference */
 type GraphSubscriber<Name extends keyof ConsumerEventMap> =
@@ -49,14 +49,14 @@ type DocAnnotation = {
  * they come back around as a transaction.
  * Distinct from the connection's remote origin, which decides what goes on the wire.
  */
-const BINDING_ORIGIN = Symbol('graph-product/binding');
+const BINDING_ORIGIN = Symbol('graph-shell/binding');
 
 /**
  * The same, for a write that tidies the document rather than carrying an edit of this
  * user's. Kept apart so undo, which tracks BINDING_ORIGIN, cannot reverse it: a client
  * clearing up after somebody else's removal has nothing to put back.
  */
-const RECONCILE_ORIGIN = Symbol('graph-product/reconcile');
+const RECONCILE_ORIGIN = Symbol('graph-shell/reconcile');
 
 /**
  * The keys one transaction touched. The reconcile is scoped to these rather than run

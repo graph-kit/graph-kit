@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
 
   import { computed, ref } from 'vue';
 

@@ -1,8 +1,8 @@
 import { createEventHub } from '@core/events/createEventHub';
 import { DraggedElement } from '@multiplayer/protocol/room';
 
-import { Graph } from '../graph/types.ts';
-import { DragEventMap } from '../product/types.ts';
+import { Graph } from '../../graph/types.ts';
+import { DragEventMap } from '../../product/types.ts';
 
 /**
  * Turns the graph's node drag into the three moments the room cares about. Positions are

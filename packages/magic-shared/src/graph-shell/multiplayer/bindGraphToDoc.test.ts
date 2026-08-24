@@ -10,7 +10,7 @@ import Fraction from 'fraction.js';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
-import { Graph } from '../graph/types.ts';
+import { Graph } from '../../graph/types.ts';
 import { bindGraphToDoc } from './bindGraphToDoc.ts';
 
 /** not BINDING_ORIGIN, so a receiving binding treats it as somebody else's write */

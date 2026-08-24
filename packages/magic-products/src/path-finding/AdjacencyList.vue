@@ -6,7 +6,7 @@
   import ToolTip from '@magic/shared/Tooltip';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { mdiArrowRight } from '@mdi/js';
 
   const graph = useProvidedGraph();

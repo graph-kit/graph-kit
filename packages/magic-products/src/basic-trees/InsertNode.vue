@@ -6,7 +6,7 @@
   import Icon from '@magic/shared/Icon';
   import TextInput from '@magic/shared/TextInput';
   import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useProvidedShell } from '@magic/shared/product';
   import { mdiPlay, mdiPlus, mdiPlusBox } from '@mdi/js';
 

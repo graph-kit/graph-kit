@@ -104,9 +104,9 @@
       "types": "./dist/types/graph/index.d.ts",
       "default": "./src/graph/index.ts"
     },
-    "./graph-product": {
-      "types": "./dist/types/graph-product/index.d.ts",
-      "default": "./src/graph-product/index.ts"
+    "./graph-shell": {
+      "types": "./dist/types/graph-shell/index.d.ts",
+      "default": "./src/graph-shell/index.ts"
     },
     "./lens": {
       "types": "./dist/types/lens/index.d.ts",

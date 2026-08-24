@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import Shell from '@magic/shared/Shell';
-  import { useGraphShell } from '@magic/shared/graph-product';
+  import { useGraphShell } from '@magic/shared/graph-shell';
 
   import { lensChips } from './lensChips.ts';
   import { simulationButtons } from './simulationButtons.ts';

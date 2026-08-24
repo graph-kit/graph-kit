@@ -2,7 +2,7 @@
   import { assert } from '@core/utils/assert';
   import Button from '@magic/shared/Button';
   import Icon from '@magic/shared/Icon';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useProvidedShell } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities/useFocusedNode';
   import { mdiPlay } from '@mdi/js';

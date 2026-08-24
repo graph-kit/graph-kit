@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import HStack from '@core/components/HStack';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import type { GEdge } from '@magic/shared/graph/types';
   import { useEdgeStyles } from '@magic/shared/theme';
 

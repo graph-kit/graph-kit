@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import Shell from '@magic/shared/Shell';
-  import { useGraphShell } from '@magic/shared/graph-product';
+  import { useGraphShell } from '@magic/shared/graph-shell';
   import { useFocusedNode } from '@magic/shared/utilities';
 
   import InsertNode from './InsertNode.vue';

@@ -4,10 +4,10 @@ import { resolveShellFlags } from '../product/flags.ts';
 import { ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
-import { bindGraphToDoc } from './bindGraphToDoc.ts';
 import { provideGraph } from './context.ts';
+import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
+import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
-import { trackDraggedNodes } from './trackDraggedNodes.ts';
 import { GraphShellOptions } from './types.ts';
 
 /** adapts a graph to the shell's controls interface, see {@link useShell} */

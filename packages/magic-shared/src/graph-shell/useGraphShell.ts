@@ -3,7 +3,6 @@ import { useGraph } from '../graph/useGraph.ts';
 import { resolveShellFlags } from '../product/flags.ts';
 import { ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
-import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { provideGraph } from './context.ts';
 import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
 import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';

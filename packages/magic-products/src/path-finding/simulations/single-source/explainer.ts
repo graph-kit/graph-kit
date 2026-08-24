@@ -1,7 +1,7 @@
 import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
 
-import { explainerDistance } from '../distance.ts';
+import { formatDistance } from '../distance.ts';
 import { SingleSourceFrame } from './frame.ts';
 
 export const distancesSlotId = 'path-finding/distances';
@@ -38,7 +38,7 @@ export const singleSourceExplainer =
   (frame: SingleSourceFrame): Explainer | undefined => {
     if (frame.type === 'start') {
       return {
-        content: `Starting at {${frame.source}}. Every Other Node Is an ∞ Away in [Distances]`,
+        content: `Starting at {${frame.source}}. Every Other Node Is an <∞> Away in [Distances]`,
         highlights: [highlights.distances],
       };
     }
@@ -52,7 +52,7 @@ export const singleSourceExplainer =
 
     if (frame.type === 'settle-node') {
       return {
-        content: `Cheapest in the [Frontier] is {${frame.node}} at ${explainerDistance(frame.distance)}, So That Distance Is Final`,
+        content: `Cheapest in the [Frontier] is {${frame.node}} at <${formatDistance(frame.distance)}>, So That Distance Is Final`,
         highlights: [highlights.frontier],
       };
     }
@@ -66,14 +66,14 @@ export const singleSourceExplainer =
 
     if (frame.type === 'improve-distance') {
       return {
-        content: `${explainerDistance(frame.newDistance)} Beats ${explainerDistance(frame.oldDistance)}, So [Improving] {${frame.node}}`,
+        content: `<${formatDistance(frame.newDistance)}> Beats <${formatDistance(frame.oldDistance)}>, So [Improving] {${frame.node}}`,
         highlights: [highlights.improve],
       };
     }
 
     if (frame.type === 'keep-distance') {
       return {
-        content: `{${frame.node}} Is Already ${explainerDistance(frame.distance)} Away and ${explainerDistance(frame.offered)} Is No Better, So [Keeping] It`,
+        content: `{${frame.node}} Is Already <${formatDistance(frame.distance)}> Away and <${formatDistance(frame.offered)}> Is No Better, So [Keeping] It`,
         highlights: [highlights.keep],
       };
     }
@@ -81,7 +81,7 @@ export const singleSourceExplainer =
     if (frame.type === 'unreachable') {
       const count = frame.nodes.length;
       return {
-        content: `${count} Node${count === 1 ? '' : 's'} Stayed at ∞ in [Distances]: Nothing Leads There`,
+        content: `${count} Node${count === 1 ? '' : 's'} Stayed at <∞> in [Distances]: Nothing Leads There`,
         highlights: [highlights.distances],
       };
     }

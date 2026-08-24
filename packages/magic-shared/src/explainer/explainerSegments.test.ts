@@ -346,6 +346,20 @@ describe(explainerSegments, () => {
     expect(segments[1].highlight).toBeUndefined();
   });
 
+  test('resolves an angled infinity, written either way', () => {
+    const segments = explainerSegments(context, {
+      content: `<∞> and <${Infinity}>`,
+    });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      '∞',
+      ' and ',
+      '∞',
+    ]);
+    expect(segments[0].highlight?.tooltipLabel).toBe('Infinity');
+    expect(segments[2].highlight?.tooltipLabel).toBe('Infinity');
+  });
+
   test('angled fractions do not consume bracket highlights', () => {
     const h = highlight();
     const explainer: Explainer = {

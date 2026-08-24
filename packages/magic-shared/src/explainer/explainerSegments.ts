@@ -1,8 +1,11 @@
 import { nullThrows } from '@core/utils/assert';
 import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 
-import { MagicGraph } from '../graph-product/types.ts';
 import { fractionExplainerSegment } from './fractionExplainerSegment.ts';
+import {
+  infinityExplainerSegment,
+  isExplainerInfinity,
+} from './infinityExplainerSegment.ts';
 import { parseTextSegments } from './parseTextSegments.ts';
 import { Explainer, ExplainerContext, ExplainerHighlight } from './types.ts';
 import { useGraphElementRefExplainerSegment } from './useGraphElementIdPart.ts';
@@ -44,7 +47,11 @@ export const explainerSegments = (
       continue;
     }
     if (bracketType === 'angle') {
-      explainerSegments.push(fractionExplainerSegment(text));
+      explainerSegments.push(
+        isExplainerInfinity(text)
+          ? infinityExplainerSegment()
+          : fractionExplainerSegment(text),
+      );
       continue;
     }
     const highlight = nullThrows(

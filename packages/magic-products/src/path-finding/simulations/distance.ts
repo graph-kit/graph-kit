@@ -11,11 +11,9 @@ import Fraction from 'fraction.js';
  */
 export type Distance = Fraction | undefined;
 
+// because this function is also used in the UI, it can't leave the parsing up to the angle brackets, therefore has to use .toFraction()
 export const formatDistance = (distance: Distance) =>
   distance === undefined ? '∞' : distance.toFraction();
-
-export const explainerDistance = (distance: Distance) =>
-  distance === undefined ? '∞' : `<${distance}>`;
 
 /** the best known distance from one fixed source to every node */
 export type DistanceRow = Readonly<Record<GNode['id'], Distance>>;

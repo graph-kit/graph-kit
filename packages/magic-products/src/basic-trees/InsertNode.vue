@@ -6,8 +6,8 @@
   import Icon from '@magic/shared/Icon';
   import TextInput from '@magic/shared/TextInput';
   import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
-  import { useProvidedMagic } from '@magic/shared/product';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
+  import { useProvidedShell } from '@magic/shared/product';
   import { mdiPlay, mdiPlus, mdiPlusBox } from '@mdi/js';
 
   import { computed, ref } from 'vue';
@@ -15,7 +15,7 @@
   import { useProvidedTreeSimulation } from './useProvidedTree.ts';
 
   const graph = useProvidedGraph();
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
   const {
     controls: { mode, target },
     definition,
@@ -41,7 +41,7 @@
       'node transaction failed',
     );
     target.value = node.id;
-    magic.simulation.start(definition);
+    shell.simulation.start(definition);
   };
 </script>
 

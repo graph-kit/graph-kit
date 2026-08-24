@@ -28,6 +28,10 @@
       "types": "./dist/types/ui/product-card/ProductCard.vue.d.ts",
       "default": "./src/ui/product-card/ProductCard.vue"
     },
+    "./Shell": {
+      "types": "./dist/types/product/Shell.vue.d.ts",
+      "default": "./src/product/Shell.vue"
+    },
     "./Well": {
       "types": "./dist/types/components/layout/Well.vue.d.ts",
       "default": "./src/components/layout/Well.vue"
@@ -104,9 +108,9 @@
       "types": "./dist/types/graph/index.d.ts",
       "default": "./src/graph/index.ts"
     },
-    "./graph-product": {
-      "types": "./dist/types/graph-product/index.d.ts",
-      "default": "./src/graph-product/index.ts"
+    "./graph-shell": {
+      "types": "./dist/types/graph-shell/index.d.ts",
+      "default": "./src/graph-shell/index.ts"
     },
     "./lens": {
       "types": "./dist/types/lens/index.d.ts",

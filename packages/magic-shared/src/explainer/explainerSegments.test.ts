@@ -2,7 +2,7 @@ import { getValue } from '@core/utils/maybeGetter/index';
 import Fraction from 'fraction.js';
 import { describe, expect, test, vi } from 'vitest';
 
-import { GEdge } from '../graph/types.ts';
+import { GEdge, Graph } from '../graph/types.ts';
 import { Explainer, ExplainerHighlight } from './types.ts';
 
 vi.mock('../theme/node/index.ts', () => ({
@@ -39,7 +39,12 @@ const graph = {
       _resolveToken: () => undefined,
     },
   },
-} as unknown as Parameters<typeof explainerSegments>[0];
+} as unknown as Graph;
+
+// the shell half is unused by these cases: they exercise graph element resolution
+const context = { graph, shell: {} } as unknown as Parameters<
+  typeof explainerSegments
+>[0];
 
 const highlight = (
   overrides: Partial<ExplainerHighlight> = {},
@@ -51,7 +56,7 @@ const highlight = (
 
 describe(explainerSegments, () => {
   test('returns an empty array when explainer is undefined', () => {
-    expect(explainerSegments(graph, undefined)).toEqual([]);
+    expect(explainerSegments(context, undefined)).toEqual([]);
   });
 
   test('returns a single unhighlighted segment when there are no brackets', () => {
@@ -60,7 +65,7 @@ describe(explainerSegments, () => {
       highlights: [],
     };
 
-    expect(explainerSegments(graph, explainer)).toEqual([
+    expect(explainerSegments(context, explainer)).toEqual([
       {
         id: expect.any(String),
         text: 'no brackets here',
@@ -76,7 +81,7 @@ describe(explainerSegments, () => {
       highlights: [h],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual([
       'Looking at ',
@@ -96,7 +101,7 @@ describe(explainerSegments, () => {
       highlights: [h1, h2],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual([
       'Looking',
@@ -118,7 +123,7 @@ describe(explainerSegments, () => {
       highlights: [h1, h2],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual([
       'Start',
@@ -138,7 +143,7 @@ describe(explainerSegments, () => {
       highlights: [h1, h2],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual(['Foo', 'Bar']);
     expect(segments[0].highlight).toBe(h1);
@@ -151,7 +156,7 @@ describe(explainerSegments, () => {
       highlights: [highlight()],
     };
 
-    expect(() => explainerSegments(graph, explainer)).toThrow();
+    expect(() => explainerSegments(context, explainer)).toThrow();
   });
 
   test('resolves content when it is a getter function', () => {
@@ -160,7 +165,7 @@ describe(explainerSegments, () => {
       highlights: [],
     };
 
-    expect(explainerSegments(graph, explainer)).toEqual([
+    expect(explainerSegments(context, explainer)).toEqual([
       {
         id: expect.any(String),
         text: 'no brackets here',
@@ -176,7 +181,7 @@ describe(explainerSegments, () => {
       highlights: () => [h],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual([
       'Looking at ',
@@ -193,7 +198,7 @@ describe(explainerSegments, () => {
       highlights: () => [h],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual([
       'Looking at ',
@@ -209,7 +214,7 @@ describe(explainerSegments, () => {
       highlights: [highlight()],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual([
       'This is Node ',
@@ -228,7 +233,7 @@ describe(explainerSegments, () => {
       highlights: [h],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((s) => getValue(s.text))).toEqual([
       'Comparing ',
@@ -247,7 +252,7 @@ describe(explainerSegments, () => {
       highlights: [],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       'Take edge ',
@@ -263,7 +268,7 @@ describe(explainerSegments, () => {
       highlights: [],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       'From ',
@@ -281,7 +286,7 @@ describe(explainerSegments, () => {
       highlights: [],
     };
 
-    const segments = explainerSegments(graph, explainer);
+    const segments = explainerSegments(context, explainer);
 
     expect(segments.map((segment) => getValue(segment.text))).toEqual([
       'Missing ',
@@ -372,7 +377,7 @@ describe(explainerSegments, () => {
       content: 'no brackets here',
     };
 
-    expect(explainerSegments(graph, explainer)).toEqual([
+    expect(explainerSegments(context, explainer)).toEqual([
       {
         id: expect.any(String),
         text: 'no brackets here',

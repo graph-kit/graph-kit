@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { Color } from '@core/utils/colors';
-  import { MagicProduct } from '@magic/shared/product';
+  import Shell from '@magic/shared/Shell';
 
   import { computed } from 'vue';
 
@@ -14,7 +14,7 @@
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
-    magic,
+    shell,
     setsProductState: { sets, sections, queryAnalysis, theme, queries },
   } = useSetsProduct();
 
@@ -33,18 +33,18 @@
   });
 
   const { isResizing } = useCircleResize({
-    surface: magic.surface,
+    surface: shell.surface,
     definitions: sets.definitions,
   });
 
   useCircleDrag({
-    surface: magic.surface,
+    surface: shell.surface,
     definitions: sets.definitions,
     isResizing,
   });
 
   const focus = useSetFocus({
-    surface: magic.surface,
+    surface: shell.surface,
     definitions: sets.definitions,
   });
 
@@ -66,7 +66,7 @@
 
   const createSetDefinition = () => {
     const definition = sets.addDefinition(
-      magic.surface.cursorCoordinates.value,
+      shell.surface.cursorCoordinates.value,
     );
     focus.set(definition.id);
   };
@@ -78,7 +78,7 @@
     for (const setId of focusedSetIds) sets.removeDefinition(setId);
   };
 
-  magic.surface.draw.content.value = (ctx) => {
+  shell.surface.draw.content.value = (ctx) => {
     draw(
       ctx,
       {
@@ -86,23 +86,23 @@
         sections: sections.value,
         sectionKeyToColors: sectionKeyToColors.value,
         isSetFocused: focus.isFocused,
-        bounds: magic.surface.visibleWorldRect.value,
+        bounds: shell.surface.visibleWorldRect.value,
       },
       theme.value.set,
     );
   };
 
-  magic.surface.events.canvas.subscribe('onDblClick', createSetDefinition);
+  shell.surface.events.canvas.subscribe('onDblClick', createSetDefinition);
 
-  magic.shortcuts.add({
+  shell.shortcuts.add({
     id: 'delete-set',
     callback: deleteFocusedSetDefinitions,
     key: 'backspace',
   });
 
-  useCursorStyle(sets.definitions, magic.surface);
+  useCursorStyle(sets.definitions, shell.surface);
 </script>
 
 <template>
-  <MagicProduct />
+  <Shell />
 </template>

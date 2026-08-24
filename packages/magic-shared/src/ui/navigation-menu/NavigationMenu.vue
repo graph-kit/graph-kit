@@ -8,30 +8,31 @@
   import MenuItem from '../../components/dropdown/MenuItem.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import { products } from '../../product/manifests/index.ts';
-  import { MagicProductManifest } from '../../product/manifests/types.ts';
+  import { getNavigationName } from '../../product/manifests/navigationName.ts';
+  import { ProductManifest } from '../../product/manifests/types.ts';
   import ProductCard from '../product-card/ProductCard.vue';
   import { productHref } from './navigateToProduct.ts';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const displayedProducts = products.flatMap((product) =>
     product.navigation.card ? [{ product, card: product.navigation.card }] : [],
   );
 
   const activeProduct = nullThrows(
-    products.find((product) => magic.manifest.id === product.id),
+    products.find((product) => shell.manifest.id === product.id),
     'product id not recognized',
   );
 
   const inRoom = computed(
-    () => magic.multiplayer?.room.state.value.connected === true,
+    () => shell.multiplayer?.room.state.value.connected === true,
   );
 
-  const disabledReason = (product: MagicProductManifest) =>
+  const disabledReason = (product: ProductManifest) =>
     inRoom.value && !product.multiplayer
-      ? `${product.navigation.card?.name} does not support collaborative sessions`
+      ? `${getNavigationName(product.id)} does not support collaborative sessions`
       : undefined;
 </script>
 
@@ -48,7 +49,7 @@
       <MenuItem
         v-for="{ product, card } in displayedProducts"
         :key="product.id"
-        :href="productHref(product)"
+        :href="productHref(product.id)"
         :disabled="disabledReason(product)"
         class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
       >

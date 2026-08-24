@@ -5,20 +5,20 @@
 
   import HStack from '../../components/layout/HStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import LensChip from './LensChip.vue';
   import { LensChipDefinition } from './types.ts';
 
   const chipId = (chip: LensChipDefinition) => chip.lens.id;
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const pinnedLensId = ref<string>();
   const hoveredLensId = ref<string>();
 
   const chips = computed(() =>
     nullThrows(
-      magic.lensChips,
+      shell.lensChips,
       'LensChipGroup is being rendered without chips!',
     ),
   );
@@ -41,10 +41,10 @@
 
   watch(displayedChip, (newChip, oldChip) => {
     if (oldChip) {
-      magic.lens.remove(oldChip.lens.id);
+      shell.lens.remove(oldChip.lens.id);
     }
     if (newChip) {
-      magic.lens.add(newChip.lens);
+      shell.lens.add(newChip.lens);
     }
   });
 </script>

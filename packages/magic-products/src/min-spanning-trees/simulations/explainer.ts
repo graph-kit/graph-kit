@@ -29,8 +29,8 @@ const listEdges = (graph: Graph, edgeIds: readonly string[]) => {
 };
 
 const componentSlotHighlight = (slotId: string): ExplainerHighlight => ({
-  activate: (graph) => graph.magic.componentSlots.setHighlighted(slotId),
-  deactivate: (graph) => graph.magic.componentSlots.clearHighlighted(),
+  activate: ({ shell }) => shell.componentSlots.setHighlighted(slotId),
+  deactivate: ({ shell }) => shell.componentSlots.clearHighlighted(),
 });
 
 const sharedHighlights = {

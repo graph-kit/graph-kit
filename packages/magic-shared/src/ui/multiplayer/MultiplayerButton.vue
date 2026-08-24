@@ -21,12 +21,12 @@
   import Icon from '../../components/icon/Icon.vue';
   import VStack from '../../components/layout/VStack.vue';
   import TextInput from '../../components/text-input/TextInput.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const multiplayer = computed(() =>
-    nullThrows(magic.multiplayer, 'multiplayer undefined'),
+    nullThrows(shell.multiplayer, 'multiplayer undefined'),
   );
 
   const enteredRoomCode = ref('');

@@ -1,8 +1,8 @@
 import { createEventHub } from '@core/events/createEventHub';
 import { DraggedElement } from '@multiplayer/protocol/room';
 
-import { Graph } from '../graph/types.ts';
-import { HostDragEventMap } from '../product/types.ts';
+import { Graph } from '../../graph/types.ts';
+import { DragEventMap } from '../../product/types.ts';
 
 /**
  * Turns the graph's node drag into the three moments the room cares about. Positions are
@@ -11,7 +11,7 @@ import { HostDragEventMap } from '../product/types.ts';
  */
 export type DraggedNodes = {
   /** for the wire */
-  events: ReturnType<typeof createEventHub<HostDragEventMap>>;
+  events: ReturnType<typeof createEventHub<DragEventMap>>;
   /** for deciding whose move wins on a node two people have hold of */
   isDragging: (nodeId: string) => boolean;
 };
@@ -19,7 +19,7 @@ export type DraggedNodes = {
 export const trackDraggedNodes = (graph: Graph): DraggedNodes => {
   let draggedNodeIds = new Set<string>();
 
-  const events = createEventHub<HostDragEventMap>({
+  const events = createEventHub<DragEventMap>({
     onDragStarted: new Set(),
     onDragMoved: new Set(),
     onDragEnded: new Set(),

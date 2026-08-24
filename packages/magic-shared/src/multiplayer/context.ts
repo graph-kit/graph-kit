@@ -1,6 +1,6 @@
 import { App, inject } from 'vue';
 
-import { MultiplayerControls } from './types.ts';
+import { ConnectionControls } from './types.ts';
 
 const MULTIPLAYER_KEY = 'MAGIC_MULTIPLAYER';
 
@@ -10,7 +10,7 @@ const MULTIPLAYER_KEY = 'MAGIC_MULTIPLAYER';
  */
 export const provideMultiplayer = (
   app: App,
-  multiplayer: MultiplayerControls,
+  multiplayer: ConnectionControls,
 ): void => {
   app.provide(MULTIPLAYER_KEY, multiplayer);
 };
@@ -20,5 +20,5 @@ export const provideMultiplayer = (
  * plugin is client only, so nothing is provided during prerender, and a deployment
  * without a configured server runs the whole app with multiplayer simply switched off.
  */
-export const useProvidedMultiplayer = (): MultiplayerControls | undefined =>
-  inject<MultiplayerControls | undefined>(MULTIPLAYER_KEY, undefined);
+export const useProvidedMultiplayer = (): ConnectionControls | undefined =>
+  inject<ConnectionControls | undefined>(MULTIPLAYER_KEY, undefined);

@@ -2,22 +2,29 @@ import { MaybeGetter } from '@core/utils/maybeGetter/index';
 
 import { StyleValue } from 'vue';
 
-import { MagicGraph } from '../graph-product/types.ts';
+import { Graph } from '../graph/types.ts';
+import { Shell } from '../product/types.ts';
 
-export type Explainer = {
-  content: MaybeGetter<string, [MagicGraph]>;
-  highlights?: MaybeGetter<ExplainerHighlight[], [MagicGraph]>;
+/** both halves an explainer can reach: the graph it describes and the shell around it */
+export type ExplainerContext = {
+  graph: Graph;
+  shell: Shell;
 };
 
-type GetterWithGraph = (graph: MagicGraph) => void;
+export type Explainer = {
+  content: MaybeGetter<string, [ExplainerContext]>;
+  highlights?: MaybeGetter<ExplainerHighlight[], [ExplainerContext]>;
+};
+
+type GetterWithContext = (context: ExplainerContext) => void;
 
 export type ExplainerHighlight = {
-  activate?: GetterWithGraph;
-  deactivate?: GetterWithGraph;
-  onMounted?: GetterWithGraph;
-  onUnmounted?: GetterWithGraph;
-  tooltipLabel?: MaybeGetter<string | undefined, [MagicGraph]>;
+  activate?: GetterWithContext;
+  deactivate?: GetterWithContext;
+  onMounted?: GetterWithContext;
+  onUnmounted?: GetterWithContext;
+  tooltipLabel?: MaybeGetter<string | undefined, [ExplainerContext]>;
   // TODO nest classes and styles under attrs field, and have attrs field spread onto button
-  classes?: MaybeGetter<string, [MagicGraph]>;
-  styles?: MaybeGetter<StyleValue, [MagicGraph]>;
+  classes?: MaybeGetter<string, [ExplainerContext]>;
+  styles?: MaybeGetter<StyleValue, [ExplainerContext]>;
 };

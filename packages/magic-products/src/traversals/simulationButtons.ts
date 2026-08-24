@@ -1,5 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
-import { GraphSimulationButtonOption } from '@magic/shared/graph-product';
+import { GraphSimulationButtonOption } from '@magic/shared/graph-shell';
 import { useFocusedNode } from '@magic/shared/utilities';
 
 import { useTraversalSimulations } from './simulations/index.ts';

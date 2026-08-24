@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import { useGraphProduct } from '@magic/shared/graph-product';
-  import { MagicProduct } from '@magic/shared/product';
+  import Shell from '@magic/shared/Shell';
+  import { useGraphShell } from '@magic/shared/graph-shell';
 
-  const graph = useGraphProduct({
+  const graph = useGraphShell({
     productId: 'markov-chains',
   });
 </script>
 
 <template>
-  <MagicProduct />
+  <Shell />
 </template>

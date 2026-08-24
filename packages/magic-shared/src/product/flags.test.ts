@@ -1,20 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { resolveProductFlags } from './flags.ts';
-import { MagicProductHost, TransitField } from './types.ts';
+import { resolveShellFlags } from './flags.ts';
+import { ProductControls, TransitField } from './types.ts';
 
 const transit: TransitField = { encode: () => ({}), decode: () => {} };
 
-const hosting: Pick<MagicProductHost, 'transit'> = { transit };
-const stateless: Pick<MagicProductHost, 'transit'> = {};
+const hosting: Pick<ProductControls, 'transit'> = { transit };
+const stateless: Pick<ProductControls, 'transit'> = {};
 
 const warnings = () => vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('resolveProductFlags', () => {
+describe('resolveShellFlags', () => {
   it('falls back to the defaults a product says nothing about', () => {
-    expect(resolveProductFlags({}, hosting)).toEqual({
+    expect(resolveShellFlags({}, hosting)).toEqual({
       history: true,
       localStorage: true,
       annotations: true,
@@ -23,7 +23,7 @@ describe('resolveProductFlags', () => {
   });
 
   it('takes what the product asked for over the default', () => {
-    const flags = resolveProductFlags(
+    const flags = resolveShellFlags(
       { history: false, annotations: false },
       hosting,
     );
@@ -35,27 +35,27 @@ describe('resolveProductFlags', () => {
   });
 
   it('reads an explicit undefined as no opinion', () => {
-    const flags = resolveProductFlags({ history: undefined }, hosting);
+    const flags = resolveShellFlags({ history: undefined }, hosting);
     expect(flags.history).toBe(true);
   });
 
   it('hands back a fresh object each time', () => {
-    const flags = resolveProductFlags({}, hosting);
+    const flags = resolveShellFlags({}, hosting);
     flags.history = false;
 
-    expect(resolveProductFlags({}, hosting).history).toBe(true);
+    expect(resolveShellFlags({}, hosting).history).toBe(true);
   });
 
   describe('without host transit', () => {
     it('forces off the flags transit backs', () => {
-      const flags = resolveProductFlags({}, stateless);
+      const flags = resolveShellFlags({}, stateless);
 
       expect(flags.localStorage).toBe(false);
       expect(flags.linkSharing).toBe(false);
     });
 
     it('leaves every other flag alone', () => {
-      const flags = resolveProductFlags({ annotations: false }, stateless);
+      const flags = resolveShellFlags({ annotations: false }, stateless);
 
       expect(flags.history).toBe(true);
       expect(flags.annotations).toBe(false);
@@ -64,14 +64,14 @@ describe('resolveProductFlags', () => {
     it('overrules a product that asked for one anyway', () => {
       warnings();
 
-      const flags = resolveProductFlags({ linkSharing: true }, stateless);
+      const flags = resolveShellFlags({ linkSharing: true }, stateless);
       expect(flags.linkSharing).toBe(false);
     });
 
     it('warns about the flag it overruled', () => {
       const warn = warnings();
 
-      resolveProductFlags({ localStorage: true }, stateless);
+      resolveShellFlags({ localStorage: true }, stateless);
 
       expect(warn).toHaveBeenCalledOnce();
       expect(warn.mock.calls[0]?.[0]).toContain('localStorage');
@@ -80,7 +80,7 @@ describe('resolveProductFlags', () => {
     it('stays quiet when the product only inherited the default', () => {
       const warn = warnings();
 
-      resolveProductFlags({ annotations: true }, stateless);
+      resolveShellFlags({ annotations: true }, stateless);
 
       expect(warn).not.toHaveBeenCalled();
     });
@@ -88,7 +88,7 @@ describe('resolveProductFlags', () => {
     it('stays quiet when the product turned it off itself', () => {
       const warn = warnings();
 
-      resolveProductFlags({ localStorage: false }, stateless);
+      resolveShellFlags({ localStorage: false }, stateless);
 
       expect(warn).not.toHaveBeenCalled();
     });
@@ -97,7 +97,7 @@ describe('resolveProductFlags', () => {
   it('warns about nothing when the host carries transit', () => {
     const warn = warnings();
 
-    resolveProductFlags({ localStorage: true, linkSharing: true }, hosting);
+    resolveShellFlags({ localStorage: true, linkSharing: true }, hosting);
 
     expect(warn).not.toHaveBeenCalled();
   });

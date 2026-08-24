@@ -4,31 +4,31 @@ import {
   decompressFromEncodedURIComponent,
 } from 'lz-string';
 
-import { Magic } from '../../product/types.ts';
+import { Shell } from '../../product/types.ts';
 import { queryParam, stripQueryParam } from '../../url/index.ts';
 
 const sharePayloadQueryParam = 'data';
 
 // both sides are unreachable without transit, which is what gates the linkSharing flag
-const transitOf = (magic: Magic) =>
-  nullThrows(magic.transit, 'link sharing requires host transit');
+const transitOf = (shell: Shell) =>
+  nullThrows(shell.transit, 'link sharing requires host transit');
 
-const getLinkPayload = (magic: Magic) => {
-  const encoding = transitOf(magic).encode();
+const getLinkPayload = (shell: Shell) => {
+  const encoding = transitOf(shell).encode();
   const stringEncoding = JSON.stringify(encoding);
   return compressToEncodedURIComponent(stringEncoding);
 };
 
-export const getLink = (magic: Magic) => {
+export const getLink = (shell: Shell) => {
   const { origin } = window.location;
-  const { slug } = magic.manifest.navigation;
-  const payload = getLinkPayload(magic);
+  const { slug } = shell.manifest.navigation;
+  const payload = getLinkPayload(shell);
   const query = `${sharePayloadQueryParam}=${payload}`;
 
   return `${origin}/${slug}?${query}`;
 };
 
-export const loadFromLinkPayload = (magic: Magic) => {
+export const loadFromLinkPayload = (shell: Shell) => {
   const payload = queryParam(sharePayloadQueryParam);
   if (!payload) return;
 
@@ -39,5 +39,5 @@ export const loadFromLinkPayload = (magic: Magic) => {
   if (!stringEncoding) return;
 
   const parsedEncoding = JSON.parse(stringEncoding);
-  transitOf(magic).decode(parsedEncoding);
+  transitOf(shell).decode(parsedEncoding);
 };

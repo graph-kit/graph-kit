@@ -11,7 +11,7 @@ import { MultiplayerEventMap } from '../../multiplayer/events.ts';
 import { RoomState } from '../../multiplayer/types.ts';
 import RosterPanel from './RosterPanel.vue';
 
-const ROSTER_PANEL_SLOT_ID = 'product/roster-panel';
+const ROSTER_PANEL_SLOT_ID = 'shell/roster-panel';
 type RosterPanelOptions = {
   room: ComputedRef<RoomState>;
   events: ReadonlyEventHub<MultiplayerEventMap>;

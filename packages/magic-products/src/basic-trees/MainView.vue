@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { useGraphProduct } from '@magic/shared/graph-product';
-  import { MagicProduct } from '@magic/shared/product';
+  import Shell from '@magic/shared/Shell';
+  import { useGraphShell } from '@magic/shared/graph-shell';
   import { useFocusedNode } from '@magic/shared/utilities';
 
   import InsertNode from './InsertNode.vue';
@@ -8,7 +8,7 @@
   import { useTreeSimulation } from './simulations/useTreeSimulation.ts';
   import { provideTreeSimulation } from './useProvidedTree.ts';
 
-  const graph = useGraphProduct({
+  const graph = useGraphShell({
     productId: 'avl-trees',
     flags: {
       history: false,
@@ -37,5 +37,5 @@
 </script>
 
 <template>
-  <MagicProduct />
+  <Shell />
 </template>

@@ -7,7 +7,7 @@ import CursorCoordinates from './CursorCoordinates.vue';
 
 const DEBUG_SLOTS: ComponentSlot[] = [
   {
-    id: 'product/debug/cursor-coordinates',
+    id: 'shell/debug/cursor-coordinates',
     component: CursorCoordinates,
     position: 'bottom-right',
   },

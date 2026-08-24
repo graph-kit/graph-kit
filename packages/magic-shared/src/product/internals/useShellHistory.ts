@@ -3,7 +3,7 @@ import { ComputedRef, computed, watch } from 'vue';
 import { HistoryField } from '../types.ts';
 
 export type ProductHistoryOptions = {
-  /** the host's own, which covers all of its state and none of anyone else's */
+  /** the product's own, which covers all of its state and none of anyone else's */
   local: HistoryField | undefined;
   roomHistory: ComputedRef<HistoryField | undefined>;
   inRoom: () => boolean;
@@ -14,7 +14,7 @@ export type ProductHistoryOptions = {
  * scoped undo, since replaying whole local states over a session would take a peer's
  * work with it.
  */
-export const useProductHistory = ({
+export const useShellHistory = ({
   local,
   roomHistory,
   inRoom,

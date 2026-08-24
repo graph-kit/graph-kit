@@ -5,16 +5,16 @@ import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { onUnmounted } from 'vue';
 
 import { ProductMultiplayer } from './types.ts';
-import { ProductHostBinding } from './useHostBinding.ts';
+import { BoundProductControls } from './useDocBinding.ts';
 
 type PeerDragOptions = {
-  binding: ProductHostBinding['binding'];
+  binding: BoundProductControls['binding'];
   multiplayer: ProductMultiplayer | undefined;
   surface: CanvasSurface;
 };
 
 /**
- * Hands the host what every peer is moving right now, so a drag shows up as it happens
+ * Hands the product what every peer is moving right now, so a drag shows up as it happens
  * rather than landing all at once when it commits, and keeps what they are holding out
  * of this user's reach for as long as they have it.
  */

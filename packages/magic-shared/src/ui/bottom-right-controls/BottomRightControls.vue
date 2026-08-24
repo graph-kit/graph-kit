@@ -6,19 +6,19 @@
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import AnnotationToggle from '../annotations/AnnotationToggle.vue';
   import AppearanceToggle from '../appearance/AppearanceToggle.vue';
   import FullscreenButton from '../fullscreen/FullscreenButton.vue';
   import LinkSharingButton from '../link-sharing/LinkSharingButton.vue';
   import MultiplayerButton from '../multiplayer/MultiplayerButton.vue';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 </script>
 
 <template>
   <HStack>
-    <AnnotationToggle v-if="magic.annotations" />
+    <AnnotationToggle v-if="shell.annotations" />
 
     <Well class="p-0 rounded-full overflow-hidden">
       <Dropdown
@@ -34,8 +34,8 @@
           />
         </template>
         <VStack gap="0">
-          <MultiplayerButton v-if="magic.multiplayer" />
-          <LinkSharingButton v-if="magic.flags.linkSharing" />
+          <MultiplayerButton v-if="shell.multiplayer" />
+          <LinkSharingButton v-if="shell.flags.linkSharing" />
 
           <FullscreenButton />
           <AppearanceToggle />

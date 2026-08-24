@@ -10,7 +10,7 @@ import { ComponentSlotControls } from '../../component-slot/useComponentSlotsSta
 import { MultiplayerEventMap } from '../../multiplayer/events.ts';
 import JoinSessionBanner from './JoinSessionBanner.vue';
 
-const JOIN_SESSION_SLOT_ID = 'product/multiplayer/join-session-banner';
+const JOIN_SESSION_SLOT_ID = 'shell/multiplayer/join-session-banner';
 
 type JoinSessionBannerOptions = {
   events: ReadonlyEventHub<MultiplayerEventMap>;

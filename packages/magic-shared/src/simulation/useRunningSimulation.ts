@@ -2,15 +2,15 @@ import { nullThrows } from '@core/utils/assert';
 
 import { computed } from 'vue';
 
-import { useProvidedMagic } from '../product/context.ts';
+import { useProvidedShell } from '../product/context.ts';
 import { useCurrentFrame } from './useCurrentFrame.ts';
 
 export const useRunningSimulation = () => {
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const simulation = computed(() =>
     nullThrows(
-      magic.simulation.current.value,
+      shell.simulation.current.value,
       'no actively running simulation!',
     ),
   );

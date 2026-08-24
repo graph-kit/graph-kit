@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { useProvidedMagic } from '../product/context.ts';
+  import { useProvidedShell } from '../product/context.ts';
   import { HighlightProps, SlotPosition } from './types.ts';
   import { useComponentBySlotPosition } from './useComponentsBySlotPosition.ts';
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
-  const componentSlots = useComponentBySlotPosition(magic.componentSlots);
+  const componentSlots = useComponentBySlotPosition(shell.componentSlots);
 
   // maps 1:1 to slot positions in ComponentSlot type
   const props = defineProps<{
@@ -31,7 +31,7 @@
   };
 
   const highlightProps = (id: string): HighlightProps => {
-    const isHighlighted = magic.componentSlots.highlightedId.value === id;
+    const isHighlighted = shell.componentSlots.highlightedId.value === id;
     const sharedClasses = 'relative border-4 rounded-lg';
     const colorClass = isHighlighted ? 'border-red-500' : 'border-transparent';
     return {

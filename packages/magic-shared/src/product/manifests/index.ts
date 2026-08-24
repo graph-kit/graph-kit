@@ -1,5 +1,5 @@
 import { productThumbnail } from './thumbnail.ts';
-import { MagicProductManifest } from './types.ts';
+import { ProductManifest } from './types.ts';
 
 /**
  * every product experience, in the order the navigation menu lists them. shared
@@ -158,9 +158,9 @@ export const manifests = {
         'Interactive computer science theory: traversals, shortest paths, spanning trees, AVL trees, Markov chains and set theory.',
     },
   },
-} as const satisfies Record<string, MagicProductManifest>;
+} as const satisfies Record<string, ProductManifest>;
 
 export type ProductId = keyof typeof manifests;
 
 /** the same manifests as a list, for rendering every product in order */
-export const products: MagicProductManifest[] = Object.values(manifests);
+export const products: ProductManifest[] = Object.values(manifests);

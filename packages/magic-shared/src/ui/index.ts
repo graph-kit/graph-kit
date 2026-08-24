@@ -1,1 +1,4 @@
-export { navigateToProduct, productHref } from './navigation-menu/navigateToProduct.ts';
+export {
+  navigateToProduct,
+  productHref,
+} from './navigation-menu/navigateToProduct.ts';

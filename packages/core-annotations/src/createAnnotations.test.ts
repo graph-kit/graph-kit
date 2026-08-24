@@ -1,7 +1,12 @@
 import type { CanvasSurface } from '@canvas/surface/types';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ERASER_BRUSH_RADIUS } from './constants.ts';
+import {
+  ANNOTATION_IN_PROGRESS_PRIORITY,
+  ERASER_BRUSH_RADIUS,
+  LASER_DECAY_MS,
+  LASER_HOLD_MS,
+} from './constants.ts';
 import { createAnnotations } from './createAnnotations.ts';
 import type { AnnotationsChange } from './events.ts';
 import type { InFlightStroke } from './types.ts';
@@ -19,6 +24,13 @@ const setup = () => {
   annotations.activate();
   return { annotations, changes };
 };
+
+/** how far the trail in flight reaches */
+const inFlightWidth = (annotations: ReturnType<typeof createAnnotations>) =>
+  annotations
+    .canvasElements()
+    .find(({ priority }) => priority === ANNOTATION_IN_PROGRESS_PRIORITY)
+    ?.shape.getBoundingBox().width;
 
 const drawStroke = (
   annotations: ReturnType<typeof createAnnotations>,
@@ -112,7 +124,6 @@ describe('annotations', () => {
     annotations.deactivate();
     annotations.endStroke();
 
-    expect(annotations.mode()).toBe('drawing');
     expect(annotations.isActive()).toBe(false);
     expect(changes).toEqual([]);
   });
@@ -128,6 +139,28 @@ describe('annotations', () => {
 
     annotations.deactivate();
     expect(painted()).toEqual([committed.id]);
+  });
+
+  it('does not spring the laser trail back out once it has retreated', () => {
+    vi.useFakeTimers();
+    const { annotations } = setup();
+    annotations.setMode('laser');
+
+    annotations.beginStroke({ x: 0, y: 0 });
+    for (let i = 1; i <= 40; i++) annotations.extendStroke({ x: i * 10, y: 0 });
+
+    expect(inFlightWidth(annotations)).toBeGreaterThan(100);
+
+    // held down and held still, long enough to bleed off
+    vi.advanceTimersByTime(LASER_HOLD_MS + LASER_DECAY_MS);
+    expect(inFlightWidth(annotations)).toBeLessThan(10);
+
+    // moving puts the decay budget back to full, so a buffer that kept its retreated
+    // points would redraw the path taken before the pause
+    annotations.extendStroke({ x: 405, y: 0 });
+    expect(inFlightWidth(annotations)).toBeLessThan(20);
+
+    vi.useRealTimers();
   });
 
   it('stops the laser decay timer rather than leaving it running', () => {

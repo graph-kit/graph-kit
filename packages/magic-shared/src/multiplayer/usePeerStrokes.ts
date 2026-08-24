@@ -1,12 +1,11 @@
 import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
-import { scribble } from '@canvas/primitives/shapes/scribble/index';
 import { CanvasSurface } from '@canvas/surface/types';
 import {
-  ANNOTATION_IN_PROGRESS_PRIORITY,
   AnnotationsControls,
-  laserTrail,
+  StrokeInFlight,
+  createStrokeInFlight,
 } from '@core/annotations/index';
-import { UserId } from '@multiplayer/protocol/room';
+import { PeerStroke, Point, UserId } from '@multiplayer/protocol/room';
 
 import { onUnmounted } from 'vue';
 
@@ -23,9 +22,10 @@ type PeerStrokeOptions = {
  * made rather than landing whole when it commits, and so a laser shows up at all: it
  * commits to nothing, and this is the only channel it has.
  *
- * Reads presence straight off the room each frame rather than keeping its own copy of it,
- * which is what leaves nothing here to clean up when a peer goes: the connection already
- * drops their entry, and a stroke nobody is listed as drawing is a stroke nobody paints.
+ * Who is drawing is read off the room each frame, so a peer who goes takes their stroke
+ * with them. What they have drawn is held here instead, in the same {@link StrokeInFlight}
+ * the local engine uses: the room's copy is everything the peer has drawn rather than what
+ * is still on screen, so a laser rebuilt from it would spring back to full on every packet.
  */
 export const usePeerStrokes = ({
   surface,
@@ -34,47 +34,44 @@ export const usePeerStrokes = ({
 }: PeerStrokeOptions) => {
   const { events, room } = multiplayer;
 
-  /**
-   * A receiver clock, deliberately not a field on the wire: a laser sends nothing while it
-   * holds still, so the trail has to bleed off against time this client can trust rather
-   * than against a peer's, which is skewed by however far apart their clocks are.
-   */
-  const extendedAt = new Map<UserId, number>();
+  const strokes = new Map<UserId, StrokeInFlight>();
 
-  const touch = (peerId: UserId) => extendedAt.set(peerId, Date.now());
-  const forget = (peerId: UserId) => extendedAt.delete(peerId);
+  const forget = (peerId: UserId) => strokes.delete(peerId);
 
-  /**
-   * whoever was mid stroke as this client arrived, which no event will announce. counted
-   * from now rather than from whenever they last moved, which nothing here can know: a
-   * laser they are still holding should arrive whole and start decaying, rather than
-   * arrive already worn down to a dot
-   */
-  const adoptSeeded = () => {
-    const state = room.state.value;
-    if (!state.connected) return;
-    for (const [peerId, entry] of Object.entries(state.userIdToPresence)) {
-      if (entry.stroke) touch(peerId);
-    }
-  };
+  const start = (peerId: UserId, stroke: PeerStroke) =>
+    strokes.set(peerId, createStrokeInFlight(stroke));
 
-  events.subscribe('onPeerStrokeStarted', touch);
-  events.subscribe('onPeerStrokeExtended', touch);
+  const extend = (peerId: UserId, points: Point[]) =>
+    strokes.get(peerId)?.extend(points);
+
+  events.subscribe('onPeerStrokeStarted', start);
+  events.subscribe('onPeerStrokeExtended', extend);
   events.subscribe('onPeerStrokeEnded', forget);
   events.subscribe('onPeerLeftProduct', forget);
-  events.subscribe('onPeerEnteredProduct', touch);
-  events.subscribe('onPresenceSeeded', adoptSeeded);
 
   // the hub belongs to the connection and outlives this product, so a mount that did not
   // clean up would keep answering for a canvas that is gone
   onUnmounted(() => {
-    events.unsubscribe('onPeerStrokeStarted', touch);
-    events.unsubscribe('onPeerStrokeExtended', touch);
+    events.unsubscribe('onPeerStrokeStarted', start);
+    events.unsubscribe('onPeerStrokeExtended', extend);
     events.unsubscribe('onPeerStrokeEnded', forget);
     events.unsubscribe('onPeerLeftProduct', forget);
-    events.unsubscribe('onPeerEnteredProduct', touch);
-    events.unsubscribe('onPresenceSeeded', adoptSeeded);
   });
+
+  /**
+   * adopts whoever was already mid stroke as this client started looking, which no event
+   * announces. matched on the stroke id so a `started` that never arrived leaves a stroke
+   * to adopt rather than a stale one to keep redrawing.
+   */
+  const strokeOf = (peerId: UserId, stroke: PeerStroke) => {
+    const known = strokes.get(peerId);
+    if (known?.id === stroke.id) return known;
+
+    // the drawer's own colour, not their tier's: recolouring at the handoff reads as a jump
+    const adopted = createStrokeInFlight(stroke);
+    strokes.set(peerId, adopted);
+    return adopted;
+  };
 
   const peerStrokeElements: AggregatorTransformer = (aggregator) => {
     const state = room.state.value;
@@ -90,30 +87,11 @@ export const usePeerStrokes = ({
       const { stroke } = presence;
       if (!stroke || committedIds.has(stroke.id)) continue;
 
-      const points =
-        stroke.mode === 'laser'
-          ? laserTrail(
-              stroke.points,
-              Date.now() - (extendedAt.get(peerId) ?? Date.now()),
-            )
-          : stroke.points;
-      if (points.length === 0) continue;
+      const element = strokeOf(peerId, stroke).element();
+      if (!element) continue;
 
-      aggregator.push({
-        id: stroke.id,
-        priority: ANNOTATION_IN_PROGRESS_PRIORITY,
-        // a stroke nobody has committed is not a thing the pointer can land on, and the
-        // peer drawing it is the only one who gets to decide what it becomes
-        paintOnly: true,
-        shape: scribble({
-          type: 'draw',
-          points,
-          // the drawer's own colour, not their tier's: this is what the stroke commits
-          // as, and recolouring it at the handoff would read as a jump
-          fillColor: stroke.fillColor,
-          brushWeight: stroke.brushWeight,
-        }),
-      });
+      // a stroke nobody has committed is not a thing the pointer can land on
+      aggregator.push({ ...element, paintOnly: true });
     }
 
     return aggregator;

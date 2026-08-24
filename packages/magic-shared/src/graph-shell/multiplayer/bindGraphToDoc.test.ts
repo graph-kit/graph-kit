@@ -10,7 +10,7 @@ import Fraction from 'fraction.js';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
-import { Graph } from '../graph/types.ts';
+import { Graph } from '../../graph/types.ts';
 import { bindGraphToDoc } from './bindGraphToDoc.ts';
 
 /** not BINDING_ORIGIN, so a receiving binding treats it as somebody else's write */
@@ -206,8 +206,11 @@ const createClient = (room?: Y.Doc) => {
   let locallyDragged = new Set<string>();
   const doc = new Y.Doc();
   if (room) Y.applyUpdate(doc, Y.encodeStateAsUpdate(room));
-  const binding = bindGraphToDoc(graph, doc, (nodeId) =>
-    locallyDragged.has(nodeId),
+  const binding = bindGraphToDoc(
+    graph,
+    doc,
+    room ? 'adopt' : 'seed',
+    (nodeId) => locallyDragged.has(nodeId),
   );
 
   return {
@@ -255,6 +258,14 @@ describe(bindGraphToDoc, () => {
     const { doc } = createClient();
 
     expect([...doc.getMap('nodes').keys()].sort()).toEqual(['a', 'b']);
+  });
+
+  it('empties the graph when adopting a document the room never filled', () => {
+    const { graph, doc } = createClient(new Y.Doc());
+
+    expect(graph.nodes.value).toEqual([]);
+    expect(graph.edges.value).toEqual([]);
+    expect([...doc.getMap('nodes').keys()]).toEqual([]);
   });
 
   it('applies a remote move', () => {

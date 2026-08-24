@@ -6,21 +6,22 @@
 
   import Button from '../components/button/Button.vue';
   import Tooltip from '../components/tooltip/Tooltip.vue';
-  import { useProvidedMagicGraph } from '../graph-product/context.ts';
+  import { useProvidedGraph } from '../graph-shell/context.ts';
+  import { useProvidedShell } from '../product/context.ts';
   import { explainerSegments } from './explainerSegments.ts';
   import { Explainer, ExplainerHighlight } from './types.ts';
 
-  const graph = useProvidedMagicGraph();
+  const context = { graph: useProvidedGraph(), shell: useProvidedShell() };
 
   const props = defineProps<{
     explainer?: Explainer;
   }>();
 
-  const segments = computed(() => explainerSegments(graph, props.explainer));
+  const segments = computed(() => explainerSegments(context, props.explainer));
 
   const setHighlight = (highlight: ExplainerHighlight, active: boolean) => {
-    if (active) highlight.activate?.(graph);
-    else highlight.deactivate?.(graph);
+    if (active) highlight.activate?.(context);
+    else highlight.deactivate?.(context);
   };
 </script>
 
@@ -32,20 +33,20 @@
     >
       <template v-if="segment.highlight">
         <Tooltip
-          :label="getValue(segment.highlight.tooltipLabel, graph)"
+          :label="getValue(segment.highlight.tooltipLabel, context)"
           @update:open="setHighlight(segment.highlight, $event)"
-          @vue:mounted="segment.highlight.onMounted?.(graph)"
-          @vue:unmounted="segment.highlight.onUnmounted?.(graph)"
+          @vue:mounted="segment.highlight.onMounted?.(context)"
+          @vue:unmounted="segment.highlight.onUnmounted?.(context)"
         >
           <template #trigger>
             <Button
               :class="
                 cn(
                   'text-2xl font-bold px-2 py-0',
-                  getValue(segment.highlight.classes, graph),
+                  getValue(segment.highlight.classes, context),
                 )
               "
-              :style="getValue(segment.highlight.styles, graph)"
+              :style="getValue(segment.highlight.styles, context)"
               >{{ getValue(segment.text) }}</Button
             >
           </template>

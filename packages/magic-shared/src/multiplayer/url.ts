@@ -11,11 +11,6 @@ export const roomIdUrl = {
   strip: () => stripQueryParam(ROOM_QUERY_PARAM),
 } as const;
 
-/**
- * A jump at someone in another experience rides in the url rather than in memory,
- * because the click that starts it is a real navigation and nothing in memory survives
- * one. Read on arrival by whichever experience the link landed on.
- */
 export const jumpUserIdUrl = {
   read: () => queryParam(JUMP_QUERY_PARAM),
   /** as href params, for the link that starts the jump */

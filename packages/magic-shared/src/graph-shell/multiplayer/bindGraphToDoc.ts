@@ -8,8 +8,8 @@ import * as Y from 'yjs';
 
 import { computed, ref } from 'vue';
 
-import { Graph } from '../graph/types.ts';
-import { HistoryField, HostBinding } from '../product/types.ts';
+import { Graph } from '../../graph/types.ts';
+import { DocBindMode, DocBinding, HistoryField } from '../../product/types.ts';
 
 /** named rather than inline so unbind can hand back the very same reference */
 type GraphSubscriber<Name extends keyof ConsumerEventMap> =
@@ -49,14 +49,14 @@ type DocAnnotation = {
  * they come back around as a transaction.
  * Distinct from the connection's remote origin, which decides what goes on the wire.
  */
-const BINDING_ORIGIN = Symbol('graph-product/binding');
+const BINDING_ORIGIN = Symbol('graph-shell/binding');
 
 /**
  * The same, for a write that tidies the document rather than carrying an edit of this
  * user's. Kept apart so undo, which tracks BINDING_ORIGIN, cannot reverse it: a client
  * clearing up after somebody else's removal has nothing to put back.
  */
-const RECONCILE_ORIGIN = Symbol('graph-product/reconcile');
+const RECONCILE_ORIGIN = Symbol('graph-shell/reconcile');
 
 /**
  * The keys one transaction touched. The reconcile is scoped to these rather than run
@@ -171,17 +171,18 @@ const createDocHistory = (doc: Y.Doc): HistoryField => {
 /**
  * Ties a graph to a room document, in both directions, for the life of the product.
  *
- * An empty document means nobody has opened this product in the room yet, so the graph
- * seeds it. Otherwise the document is authoritative and the graph is rebuilt from it.
+ * Seeding writes the graph into the document. Adopting rebuilds the graph from it, which
+ * empties the graph when the room has nothing for this product, see {@link DocBindMode}.
  *
- * Hands back undo over the document, which the harness uses in place of the graph's own
+ * Hands back undo over the document, which the shell uses in place of the graph's own
  * whole state history for as long as the graph is shared.
  */
 export const bindGraphToDoc = (
   graph: Graph,
   doc: Y.Doc,
+  mode: DocBindMode,
   isDraggedLocally: (nodeId: string) => boolean,
-): HostBinding => {
+): DocBinding => {
   const nodes = readNodes(doc);
   const edges = readEdges(doc);
   const annotations = readAnnotations(doc);
@@ -507,7 +508,7 @@ export const bindGraphToDoc = (
     intoGraph(() => stream.controls.stop());
   };
 
-  const applyPeerDrag: HostBinding['applyPeerDrag'] = (peerId, elements) => {
+  const applyPeerDrag: DocBinding['applyPeerDrag'] = (peerId, elements) => {
     const moves = elements
       // a node the local user has hold of stays where they are putting it, and one
       // that is not on this graph yet arrives with the move that adds it. isNode
@@ -525,7 +526,7 @@ export const bindGraphToDoc = (
     stream.controls.setMany(moves);
   };
 
-  const endPeerDrag: HostBinding['endPeerDrag'] = (peerId) =>
+  const endPeerDrag: DocBinding['endPeerDrag'] = (peerId) =>
     stopPeerStream(peerId);
 
   const unbind = () => {
@@ -545,11 +546,8 @@ export const bindGraphToDoc = (
     graph.rawEvents.transit.unsubscribe('onDecoded', writeWholeGraph);
   };
 
-  if (nodes.size === 0 && edges.size === 0 && annotations.size === 0) {
-    writeWholeGraph();
-  } else {
-    readWholeDoc();
-  }
+  if (mode === 'seed') writeWholeGraph();
+  else readWholeDoc();
 
   subscribe();
 

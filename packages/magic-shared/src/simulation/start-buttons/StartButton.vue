@@ -4,7 +4,7 @@
 
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';
-  import { useProvidedMagic } from '../../product/context.ts';
+  import { useProvidedShell } from '../../product/context.ts';
   import { SimulationDefinition } from '../types.ts';
 
   const props = defineProps<{
@@ -13,11 +13,11 @@
     beforeStarting?: () => void;
   }>();
 
-  const magic = useProvidedMagic();
+  const shell = useProvidedShell();
 
   const start = () => {
     props.beforeStarting?.();
-    magic.simulation.start(
+    shell.simulation.start(
       nullThrows(props.definition, 'no definition provided'),
     );
   };

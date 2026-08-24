@@ -2,9 +2,9 @@ import { ComputedRef, computed } from 'vue';
 
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { ProductId } from '../product/manifests/index.ts';
-import { HistoryField, MagicProductHost } from '../product/types.ts';
+import { HistoryField, ProductControls } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
-import { useHostBinding } from './useHostBinding.ts';
+import { useDocBinding } from './useDocBinding.ts';
 import { useJumpToUser } from './useJumpToUser.ts';
 import { useMultiplayerProduct } from './useMultiplayerProduct.ts';
 import { usePeerDrags } from './usePeerDrags.ts';
@@ -14,7 +14,7 @@ import { usePresenceBroadcast } from './usePresenceBroadcast.ts';
 import { useSuspendedContent } from './useSuspendedContent.ts';
 
 type MultiplayerOptions = {
-  host: MagicProductHost;
+  host: ProductControls;
   productId: ProductId;
   componentSlots: ComponentSlotControls;
 };
@@ -31,11 +31,11 @@ export const useMultiplayer = ({
   productId,
   componentSlots,
 }: MultiplayerOptions): MultiplayerSetup => {
-  const { binding, multiplayerHost } = useHostBinding(host);
+  const { binding, multiplayer } = useDocBinding(host);
 
   const product = useMultiplayerProduct({
     productId,
-    host: multiplayerHost,
+    host: multiplayer,
     componentSlots,
   });
 

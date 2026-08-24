@@ -44,6 +44,7 @@
         v-for="button of buttons"
         :key="button.textContent"
         class="px-2 py-1 text-sm"
+        :href="button.href"
         @click="button.onClick"
       >
         {{ button.textContent }}

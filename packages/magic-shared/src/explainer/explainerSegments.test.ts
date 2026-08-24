@@ -336,13 +336,6 @@ describe(explainerSegments, () => {
     expect(segments[0].highlight?.tooltipLabel).toBe('~0.333');
   });
 
-  test('respects a precision suffix on an angled fraction', () => {
-    const segments = explainerSegments(graph, { content: '<1/3:1>' });
-
-    expect(getValue(segments[0].text)).toBe('1/3');
-    expect(segments[0].highlight?.tooltipLabel).toBe('~0.3');
-  });
-
   test('leaves an angled fraction that is an integer unhighlighted', () => {
     const segments = explainerSegments(graph, { content: 'costs <4/2>' });
 

@@ -56,10 +56,6 @@
       "types": "./dist/types/components/tooltip/Tooltip.vue.d.ts",
       "default": "./src/components/tooltip/Tooltip.vue"
     },
-    "./FractionText": {
-      "types": "./dist/types/components/fraction-text/FractionText.vue.d.ts",
-      "default": "./src/components/fraction-text/FractionText.vue"
-    },
     "./TruncatedText": {
       "types": "./dist/types/components/truncated-text/TruncatedText.vue.d.ts",
       "default": "./src/components/truncated-text/TruncatedText.vue"

@@ -79,15 +79,6 @@ describe(parseTextSegments, () => {
     ]);
   });
 
-  test('parses an angle-bracketed fraction with a precision suffix', () => {
-    expect(parseTextSegments('<1/3:2>')).toEqual([
-      { bracketType: 'angle', text: '1/3:2' },
-    ]);
-    expect(parseTextSegments('<0.(3):2>')).toEqual([
-      { bracketType: 'angle', text: '0.(3):2' },
-    ]);
-  });
-
   test('splits text around an angle-bracketed fraction', () => {
     expect(parseTextSegments('costs <5/2> total')).toEqual([
       { bracketType: undefined, text: 'costs ' },

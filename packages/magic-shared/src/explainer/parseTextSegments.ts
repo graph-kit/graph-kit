@@ -6,10 +6,9 @@ export type TextSegment = {
 };
 
 /**
- * `5`, `5/2`, `-1/3`, `3.5`, `0.(3)` (the repeating decimal fraction.js prints),
- * or any of those with a `:precision` suffix
+ * `5`, `5/2`, `-1/3`, `3.5` or `0.(3)` (the repeating decimal fraction.js prints)
  */
-const FRACTION = String.raw`-?\d+(?:\/\d+|\.(?:\d*\(\d+\)|\d+))?(?::\d+)?`;
+const FRACTION = String.raw`-?\d+(?:\/\d+|\.(?:\d*\(\d+\)|\d+))?`;
 
 const pattern = new RegExp(
   [

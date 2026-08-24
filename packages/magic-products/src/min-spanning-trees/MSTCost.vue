@@ -1,12 +1,8 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
   import Well from '@magic/shared/Well';
-  import {
-    Explainer,
-    ExplainerText,
-    fractionDecimalHint,
-  } from '@magic/shared/explainer';
-  import { useProvidedGraph } from '@magic/shared/graph-product';
+  import { Explainer, ExplainerText } from '@magic/shared/explainer';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import Fraction from 'fraction.js';
 
   import { computed } from 'vue';

@@ -2,6 +2,7 @@ import Fraction from 'fraction.js';
 
 import { ExplainerSegment } from './explainerSegments.ts';
 import { fractionDecimalHint } from './fractionDecimalHint.ts';
+import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
 
 /**
  * builds the segment for an `<angled>` fraction in explainer content, hovering
@@ -12,9 +13,17 @@ import { fractionDecimalHint } from './fractionDecimalHint.ts';
  * @example fractionExplainerSegment('1/3') // hovers to reveal '~0.333'
  * fractionExplainerSegment('3.5') // '7/2', hovers to reveal '3.5'
  * fractionExplainerSegment('4/2') // plain '2', nothing to reveal
+ * fractionExplainerSegment('half') // red '?', hovers to say it cannot be read
  */
 export const fractionExplainerSegment = (raw: string): ExplainerSegment => {
-  const fraction = new Fraction(raw);
+  let fraction: Fraction;
+  try {
+    fraction = new Fraction(raw);
+  } catch {
+    console.error(`explainer cannot parse '${raw}' as a fraction`);
+    return unparsedExplainerSegment(`Cannot Parse "${raw}" As A Fraction`);
+  }
+
   const decimal = fractionDecimalHint(fraction);
 
   return {

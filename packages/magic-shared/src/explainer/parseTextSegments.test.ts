@@ -49,33 +49,24 @@ describe(parseTextSegments, () => {
     ]);
   });
 
-  test('parses an angle-bracketed fraction', () => {
+  test('parses an angle-bracketed segment', () => {
     expect(parseTextSegments('<5/2>')).toEqual([
       { bracketType: 'angle', text: '5/2' },
     ]);
     expect(parseTextSegments('<3>')).toEqual([
       { bracketType: 'angle', text: '3' },
     ]);
-    expect(parseTextSegments('<-1/3>')).toEqual([
-      { bracketType: 'angle', text: '-1/3' },
-    ]);
-  });
-
-  test('parses an angle-bracketed decimal', () => {
-    expect(parseTextSegments('<3.5>')).toEqual([
-      { bracketType: 'angle', text: '3.5' },
-    ]);
     expect(parseTextSegments('<-0.25>')).toEqual([
       { bracketType: 'angle', text: '-0.25' },
     ]);
   });
 
-  test('parses the repeating decimal a stringified Fraction produces', () => {
-    expect(parseTextSegments('<0.(3)>')).toEqual([
-      { bracketType: 'angle', text: '0.(3)' },
+  test('hands whatever sits between the angles to the reader verbatim', () => {
+    expect(parseTextSegments('<not a fraction>')).toEqual([
+      { bracketType: 'angle', text: 'not a fraction' },
     ]);
-    expect(parseTextSegments('<-0.1(6)>')).toEqual([
-      { bracketType: 'angle', text: '-0.1(6)' },
+    expect(parseTextSegments('<>')).toEqual([
+      { bracketType: 'angle', text: '' },
     ]);
   });
 
@@ -87,15 +78,19 @@ describe(parseTextSegments, () => {
     ]);
   });
 
-  test('leaves angle brackets that hold no fraction as plain text', () => {
-    expect(parseTextSegments('a < b and c > d')).toEqual([
-      { bracketType: undefined, text: 'a < b and c > d' },
+  test('leaves an angle that never closes as plain text', () => {
+    expect(parseTextSegments('a < b and c')).toEqual([
+      { bracketType: undefined, text: 'a < b and c' },
     ]);
-    expect(parseTextSegments('<not a fraction>')).toEqual([
-      { bracketType: undefined, text: '<not a fraction>' },
+    expect(parseTextSegments('2 < 3')).toEqual([
+      { bracketType: undefined, text: '2 < 3' },
     ]);
-    expect(parseTextSegments('<3.>')).toEqual([
-      { bracketType: undefined, text: '<3.>' },
+  });
+
+  test('takes the innermost pair when angles nest', () => {
+    expect(parseTextSegments('<<1/3>')).toEqual([
+      { bracketType: undefined, text: '<' },
+      { bracketType: 'angle', text: '1/3' },
     ]);
   });
 

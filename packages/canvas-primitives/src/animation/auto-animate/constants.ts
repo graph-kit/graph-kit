@@ -8,7 +8,7 @@ export const GHOST_REDRAW = Symbol('ghost redraw');
 /**
  * properties supported by the auto animate feature.
  *
- * ⚠️ **only properties listed here will be animated with `useAutoAnimate`**
+ * ⚠️ **only properties listed here will be animated with `createAutoAnimate`**
  */
 export const AUTO_ANIMATED_PROPERTIES = new Set<EverySchemaPropName>([
   'at',

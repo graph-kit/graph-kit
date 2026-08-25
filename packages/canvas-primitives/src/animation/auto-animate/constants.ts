@@ -1,6 +1,10 @@
 import { EverySchemaPropName } from '../../types/index.ts';
 
 export const AUTO_ANIMATE_DURATION_MS = 500;
+
+/** marks a schema as a ghost's redraw rather than a shape the consumer drew */
+export const GHOST_REDRAW = Symbol('ghost redraw');
+
 /**
  * properties supported by the auto animate feature.
  *

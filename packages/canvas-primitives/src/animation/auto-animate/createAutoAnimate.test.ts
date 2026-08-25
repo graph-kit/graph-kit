@@ -77,13 +77,11 @@ const createHarness = () => {
     },
   );
 
-  // the shipped render path never captures a ghost id, so this only exists to
-  // reach the re-add-during-removal branch
-  let captureGhosts = false;
-
+  // the scene holds only what the consumer put on the canvas. ghosts redraw
+  // themselves outside it, which is what keeps them out of the capture, so a
+  // shape re-added under a ghost's id is captured here like any other
   const flushDraw = () => {
-    for (const [schemaId, entry] of scene) {
-      if (!captureGhosts && autoAnimate.isGhost(schemaId)) continue;
+    for (const entry of scene.values()) {
       autoAnimate.captureSchemaState(entry.schema, entry.shapeName);
     }
   };
@@ -99,10 +97,6 @@ const createHarness = () => {
 
     /** simulates an animation exhausting its run count */
     endAnimations,
-
-    setCaptureGhosts: (value: boolean) => {
-      captureGhosts = value;
-    },
 
     /** what `getAnimatedSchema` reports for a shape that is mid-animation */
     setLiveSchema: (schemaId: SchemaId, schema: LooseSchema) => {
@@ -474,18 +468,7 @@ describe('re-adding a shape while its exit animation is still playing', () => {
     harness.mutate(() => harness.put('circle', readded));
   };
 
-  test('the render path never reaches the continuation branch', () => {
-    // both the real shape proxy and this harness skip ghost ids when
-    // capturing, so a re-added shape produces no "after" snapshot at all: no
-    // animation starts and it keeps rendering as a shrinking ghost
-    removeThenReadd(circle('circle-1', { radius: 40 }));
-
-    expect(harness.played).toHaveLength(0);
-    expect(harness.autoAnimate.isGhost('circle-1')).toBe(true);
-  });
-
   test('continues from the ghost rather than replaying the entrance', () => {
-    harness.setCaptureGhosts(true);
     harness.setLiveSchema('circle-1', circle('circle-1', { radius: 4 }));
 
     removeThenReadd(circle('circle-1', { radius: 40 }));
@@ -494,11 +477,21 @@ describe('re-adding a shape while its exit animation is still playing', () => {
     expect(harness.played[0].timeline).not.toBe(circleAdd);
     expect(startProperties(harness.played[0])).toEqual({ radius: 4 });
     expect(endProperties(harness.played[0])).toEqual({ radius: 40 });
+  });
+
+  test('stops the exit animation and retires the ghost', () => {
+    harness.setLiveSchema('circle-1', circle('circle-1', { radius: 4 }));
+
+    removeThenReadd(circle('circle-1', { radius: 40 }));
+
+    // the real shape draws under the id the ghost was holding, so the ghost has
+    // to be gone before the handover animation starts or both get drawn
+    expect(harness.stopAllCalls).toEqual(['circle-1']);
     expect(harness.autoAnimate.isGhost('circle-1')).toBe(false);
+    expect(harness.autoAnimate.getGhosts()).toHaveLength(0);
   });
 
   test('just cancels the removal when the shape came back unchanged', () => {
-    harness.setCaptureGhosts(true);
     harness.setLiveSchema('circle-1', circle('circle-1'));
 
     removeThenReadd(circle('circle-1'));
@@ -506,5 +499,22 @@ describe('re-adding a shape while its exit animation is still playing', () => {
     expect(harness.played).toHaveLength(0);
     expect(harness.stopAllCalls).toEqual(['circle-1']);
     expect(harness.autoAnimate.isGhost('circle-1')).toBe(false);
+  });
+
+  test('drops a ghost that has no animation to hand over from', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    harness.put('rect', { id: 'rect-1', at: { x: 0, y: 0 }, width: 10 });
+    harness.mutate(() => harness.drop('rect-1'));
+    expect(harness.autoAnimate.isGhost('rect-1')).toBe(true);
+
+    harness.mutate(() =>
+      harness.put('rect', { id: 'rect-1', at: { x: 0, y: 0 }, width: 20 }),
+    );
+
+    expect(harness.autoAnimate.isGhost('rect-1')).toBe(false);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('has no animation to clear it'),
+    );
+    warn.mockRestore();
   });
 });

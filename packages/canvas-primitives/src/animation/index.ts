@@ -16,6 +16,7 @@ import type {
   WithId,
 } from '../types/index.ts';
 import { shapeProps } from '../types/index.ts';
+import { GHOST_REDRAW } from './auto-animate/constants.ts';
 import { createAutoAnimate } from './auto-animate/createAutoAnimate.ts';
 import type { DefineTimeline } from './timeline/define.ts';
 import { createDefineTimeline } from './timeline/define.ts';
@@ -39,6 +40,12 @@ export type AnimatedShapeFactories = {
  * not by the code that just builds shapes
  */
 export type ShapeRenderer = {
+  /**
+   * advances the animation clock to `now` and retires finished animations.
+   * belongs to whoever drives the frame loop, and must run before that frame
+   * draws anything, since drawing is a pure read of the state it leaves behind
+   */
+  tick: (now: number) => void;
   /**
    * a `drawGroup` that also draws recently-removed shapes ("ghosts") in the
    * draw-order position they held right before removal, for as long as their
@@ -142,6 +149,9 @@ export const createAnimatedShapes = (): AnimatedShapes => {
   const activeAnimations: ActiveAnimationsMap = new Map();
   const schemaIdToShapeName: Map<SchemaId, ShapeName> = new Map();
 
+  /** the one instant every property in the current frame resolves against */
+  let frameNow = performance.now();
+
   const { defineTimeline, timelineIdToTimeline } = createDefineTimeline({
     play: ({
       shapeId,
@@ -153,7 +163,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     }) => {
       const newAnimation: ActiveAnimation = {
         runCount: synchronize ? Infinity : runCount,
-        startedAt: synchronize ? 0 : Date.now(),
+        startedAt: synchronize ? 0 : frameNow,
         timelineId,
         onComplete,
         onOver,
@@ -194,6 +204,41 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     for (const animation of animations ?? []) animation.onOver?.();
   };
 
+  const hasFinished = (animation: ActiveAnimation) => {
+    const timeline = nullThrows(
+      timelineIdToTimeline.get(animation.timelineId),
+      'animation activated without a timeline!',
+    );
+    const runCount = getCurrentRunCount(
+      { ...timeline, ...animation },
+      frameNow,
+    );
+    return runCount >= animation.runCount;
+  };
+
+  const tick: ShapeRenderer['tick'] = (now) => {
+    frameNow = now;
+
+    const retired: ActiveAnimation[] = [];
+
+    for (const [schemaId, animations] of [...activeAnimations]) {
+      const stillRunning: ActiveAnimation[] = [];
+      for (const animation of animations) {
+        if (hasFinished(animation)) retired.push(animation);
+        else stillRunning.push(animation);
+      }
+
+      if (stillRunning.length === animations.length) continue;
+      if (stillRunning.length === 0) activeAnimations.delete(schemaId);
+      else activeAnimations.set(schemaId, stillRunning);
+    }
+
+    for (const animation of retired) {
+      animation.onComplete?.();
+      animation.onOver?.();
+    }
+  };
+
   /**
    * if schema is actively being animated, returns the live schema with animated props applied.
    */
@@ -210,8 +255,6 @@ export const createAnimatedShapes = (): AnimatedShapes => {
       schemaIdToShapeName.get(schemaId),
       'Animation set without shape name mapping. this should never happen!',
     );
-
-    const expired: ActiveAnimation[] = [];
 
     for (const animation of animations) {
       const timeline = nullThrows(
@@ -232,19 +275,9 @@ export const createAnimatedShapes = (): AnimatedShapes => {
         continue;
       }
 
-      // cleanup animation if expired
-      const currentRunCount = getCurrentRunCount(animationWithTimeline);
-      const shouldRemove = currentRunCount >= animationWithTimeline.runCount;
-      if (shouldRemove) {
-        expired.push(animation);
-        animation.onComplete?.();
-        animation.onOver?.();
-        continue;
-      }
-
       // resolve the properties for the animated shape schema
       const { properties } = animationWithTimeline;
-      const progress = getAnimationProgress(animationWithTimeline);
+      const progress = getAnimationProgress(animationWithTimeline, frameNow);
 
       const infusedProps = Object.entries(properties).reduce((acc, curr) => {
         const [propName, getAnimatedValue] = curr;
@@ -259,14 +292,6 @@ export const createAnimatedShapes = (): AnimatedShapes => {
         ...outputSchema,
         ...infusedProps,
       };
-    }
-
-    // only drop the animations that actually expired, leaving any others
-    // still running on this shape untouched
-    if (expired.length > 0) {
-      const stillRunning = animations.filter((a) => !expired.includes(a));
-      if (stillRunning.length === 0) activeAnimations.delete(schemaId);
-      else activeAnimations.set(schemaId, stillRunning);
     }
 
     return outputSchema;
@@ -292,10 +317,6 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
           // lookup all actively running animations on this shape
           const animations = activeAnimations.get(schema.id);
-
-          if (schema.id === 'node-1') {
-            console.log('attempting', prop);
-          }
 
           const captureState = autoAnimate.captureSchemaState(
             schema,
@@ -328,7 +349,6 @@ export const createAnimatedShapes = (): AnimatedShapes => {
             'animations present but getAnimatedSchema returned nothing. this should never happen!',
           );
 
-          if (!activeAnimations.has(schema.id)) return target[prop];
           return factory(animatedSchema as WithId<Schema>)[prop];
         },
       });
@@ -367,7 +387,10 @@ export const createAnimatedShapes = (): AnimatedShapes => {
       return {
         id,
         orderIndex,
-        shape: animatedShapes[shapeName](rest as WithId<any>),
+        shape: animatedShapes[shapeName]({
+          ...rest,
+          [GHOST_REDRAW]: true,
+        } as WithId<any>),
       };
     });
 
@@ -415,7 +438,6 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     }
 
     shapesDrawnThisFrame = groupEnd;
-    console.log('drawing', shapesWithGhosts.length);
     drawGroupPure(ctx, shapesWithGhosts);
   };
 
@@ -435,7 +457,6 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
     for (const ghost of unclaimedGhosts) ghostsPlacedThisFrame.add(ghost.id);
 
-    console.log('drawing for real', unclaimedGhosts.length);
     drawGroupPure(
       ctx,
       unclaimedGhosts
@@ -446,6 +467,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
   return {
     shapes: animatedShapes,
+    tick,
     drawGroup,
     beginFrame,
     endFrame,
@@ -507,7 +529,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
         }
 
         const { properties } = animationWithTimeline;
-        const progress = getAnimationProgress(animationWithTimeline);
+        const progress = getAnimationProgress(animationWithTimeline, frameNow);
 
         const animationFunction = properties[inputPropName as string];
         propVal = animationFunction(schemaWithDefaults, progress);

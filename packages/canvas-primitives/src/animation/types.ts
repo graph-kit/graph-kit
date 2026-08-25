@@ -25,7 +25,7 @@ export type ActiveAnimation = {
   runCount: number;
 
   /**
-   * unix timestamp when the animation started
+   * frame clock reading when the animation started
    */
   startedAt: number;
 

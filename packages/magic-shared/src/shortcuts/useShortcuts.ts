@@ -1,3 +1,4 @@
+import { devWarning } from '@core/utils/debugging';
 import { PartiallyPartial } from '@core/utils/types';
 import { Callback, Key } from 'ctrl-keys';
 
@@ -25,7 +26,7 @@ export const useShortcuts = (): ShortcutControls => {
   const add: ShortcutControls['add'] = (shortcut) => {
     const idExists = shortcuts.value.some((s) => s.id === shortcut.id);
     if (idExists) {
-      console.error(
+      devWarning(
         'Prevented shortcut with duplicate ID from being added',
         shortcut,
       );

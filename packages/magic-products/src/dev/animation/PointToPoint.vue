@@ -3,6 +3,7 @@
   import Button from '@magic/shared/Button';
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
+  import { useProvidedShell } from '@magic/shared/product';
 
   import { computed } from 'vue';
 
@@ -42,6 +43,7 @@
     ],
     edges: [
       {
+        id: 'node-1-2',
         source: 'node-1',
         target: 'node-2',
       },
@@ -65,6 +67,18 @@
       for (const node of scene.nodes) graph.actions.removeNode(node);
     });
   };
+
+  const shell = useProvidedShell();
+  shell.shortcuts.add({
+    key: 'arrowleft',
+    callback: destroyScene,
+    id: '<',
+  });
+  shell.shortcuts.add({
+    key: 'arrowright',
+    callback: createScene,
+    id: '>',
+  });
 </script>
 
 <template>

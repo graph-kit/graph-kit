@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
+  import { devWarning } from '@core/utils/debugging';
   import {
     mdiAccountMultiple,
     mdiAccountMultiplePlus,
@@ -22,6 +23,7 @@
   import VStack from '../../components/layout/VStack.vue';
   import TextInput from '../../components/text-input/TextInput.vue';
   import { useProvidedShell } from '../../product/context.ts';
+  import { toast } from '../toast/index.ts';
 
   const shell = useProvidedShell();
 
@@ -48,15 +50,37 @@
   const joiningSession = ref(false);
   const startingSession = ref(false);
 
+  const SESSION_FAILED_TOAST_MS = 8_000;
+
+  /** long enough to read a code off and pass it on */
+  const SESSION_STARTED_TOAST_MS = 10_000;
+
   const joinSession = async () => {
     if (!roomCodeValid.value) return;
     joiningSession.value = true;
     try {
-      await multiplayer.value.room.join({ roomId: roomCodeInput.value });
+      const result = await multiplayer.value.room.join({
+        roomId: roomCodeInput.value,
+      });
+
+      // the server's one refusal, which makes the code wrong rather than the trip
+      if (!result.joined) {
+        toast.show({
+          title: 'No Session Under That Code',
+          description: `${roomCodeInput.value} does not belong to a session that is still running.`,
+          severity: 'warn',
+          duration: SESSION_FAILED_TOAST_MS,
+        });
+      }
     } catch (err) {
-      // TODO surface the unreachable room in a toast
-      // https://github.com/graph-kit/graph-kit/issues/783
-      console.warn('multiplayer: could not reach the room to join it', err);
+      devWarning('multiplayer: could not reach the room to join it', err);
+      toast.show({
+        title: 'Could Not Reach The Session',
+        description:
+          'The server did not answer. Check your connection and try again.',
+        severity: 'error',
+        duration: SESSION_FAILED_TOAST_MS,
+      });
     } finally {
       joiningSession.value = false;
     }
@@ -65,14 +89,25 @@
   const startSession = async () => {
     startingSession.value = true;
     try {
-      await multiplayer.value.room.start();
+      const roomId = await multiplayer.value.room.start();
+      toast.show({
+        title: 'Session Started',
+        description: `Join with session code ${roomId.toUpperCase()}.`,
+        severity: 'success',
+        duration: SESSION_STARTED_TOAST_MS,
+      });
     } catch (err) {
-      // TODO surface the unreachable room in a toast
-      // https://github.com/graph-kit/graph-kit/issues/783
-      console.warn(
+      devWarning(
         'multiplayer: could not reach the server to start a room',
         err,
       );
+      toast.show({
+        title: 'Could Not Start A Session',
+        description:
+          'The server did not answer. Check your connection and try again.',
+        severity: 'error',
+        duration: SESSION_FAILED_TOAST_MS,
+      });
     } finally {
       startingSession.value = false;
     }

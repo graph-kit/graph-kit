@@ -1,55 +1,45 @@
 <script setup lang="ts">
-  import { mdiCheck, mdiLink } from '@mdi/js';
-
-  import { computed, ref } from 'vue';
+  import { devWarning } from '@core/utils/debugging';
+  import { mdiLink } from '@mdi/js';
 
   import MenuItem from '../../components/dropdown/MenuItem.vue';
   import { useProvidedShell } from '../../product/context.ts';
+  import { toast } from '../toast/index.ts';
   import { getLink } from './linkPayload.ts';
 
   const shell = useProvidedShell();
 
-  let linkCopiedResetTimer: NodeJS.Timeout;
+  const COPIED_TOAST_MS = 4_000;
 
-  // 3 seconds of link copied confirmation state
-  const LINK_COPIED_FEEDBACK_DURATION_MS = 3_000;
+  const COPY_FAILED_TOAST_MS = 6_000;
 
-  const copyLinkToClipboard = () => {
-    clearTimeout(linkCopiedResetTimer);
+  // awaited, because a clipboard the browser turns down rejects rather than throwing
+  const copyLinkToClipboard = async () => {
     try {
-      navigator.clipboard.writeText(getLink(shell));
-      linkCopiedToClipboard.value = true;
-      linkCopiedResetTimer = setTimeout(
-        () => (linkCopiedToClipboard.value = false),
-        LINK_COPIED_FEEDBACK_DURATION_MS,
-      );
+      await navigator.clipboard.writeText(getLink(shell));
+      toast.show({
+        title: 'Link Copied',
+        description: 'The link carries a copy of what is on screen.',
+        severity: 'success',
+        duration: COPIED_TOAST_MS,
+      });
     } catch (err) {
-      // TODO handle link copy failure with a toast
-      // https://github.com/graph-kit/graph-kit/issues/783
-      console.error('Failed to copy to clipboard!', err);
+      devWarning('link sharing: the clipboard turned down the link', err);
+      toast.show({
+        title: 'Could Not Copy The Link',
+        description: 'Your browser turned down access to the clipboard.',
+        severity: 'error',
+        duration: COPY_FAILED_TOAST_MS,
+      });
     }
   };
-
-  const linkCopiedToClipboard = ref(false);
-
-  const display = computed(() => {
-    return linkCopiedToClipboard.value
-      ? {
-          text: 'Link Copied',
-          icon: mdiCheck,
-        }
-      : {
-          text: 'Copy Link',
-          icon: mdiLink,
-        };
-  });
 </script>
 
 <template>
   <MenuItem
     @click="copyLinkToClipboard"
-    :icon="display.icon"
+    :icon="mdiLink"
   >
-    {{ display.text }}
+    Copy Link
   </MenuItem>
 </template>

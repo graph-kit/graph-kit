@@ -10,7 +10,7 @@ import type {
   ShapeName,
 } from '../../types/index.ts';
 import { type GetAnimatedSchema, resolveSchemaWithDefaults } from '../index.ts';
-import type { DefineTimeline, Timeline } from '../timeline/define.ts';
+import type { DefineTimeline } from '../timeline/define.ts';
 import type { LooseSchema, LooseSchemaValue } from '../types.ts';
 import { arrowAdd } from './arrow/add.ts';
 import { arrowRemove } from './arrow/remove.ts';
@@ -18,20 +18,22 @@ import { circleAdd } from './circle/add.ts';
 import { circleRemove } from './circle/remove.ts';
 import {
   AUTO_ANIMATED_PROPERTIES,
-  AUTO_ANIMATE_DURATION_MS,
+  DEFAULT_AUTO_ANIMATE_DURATION_MS,
   GHOST_REDRAW,
 } from './constants.ts';
-import { LooseSchemaWithName } from './types.ts';
+import { AutoAnimateTimeline, LooseSchemaWithName } from './types.ts';
 
 /**
- * a shape that was removed from the graph but is still mid-removal-animation.
- * `orderIndex` is this shape's position among everything drawn during the
- * capture's "before" snapshot, so it can be redrawn in the right z-order
- * relative to shapes still being drawn normally.
+ * a shape that was removed but is still mid-removal-animation
  */
 export type GhostShape = {
   id: SchemaId;
   schema: LooseSchemaWithName;
+  /**
+   * shape's position among everything drawn during the
+   * capture's "before" snapshot, so it can be redrawn in the right z-order
+   * relative to shapes still being drawn normally
+   */
   orderIndex: number;
 };
 
@@ -50,6 +52,8 @@ export const createAutoAnimate = (
 ) => {
   let capturedSchemas: Map<SchemaId, LooseSchemaWithName> = new Map();
   let captureState: CaptureState;
+
+  let animationDuration = DEFAULT_AUTO_ANIMATE_DURATION_MS;
 
   const snapshotMap: Map<
     SchemaId,
@@ -79,7 +83,6 @@ export const createAutoAnimate = (
 
     return {
       forShapes: [shapeName],
-      durationMs: AUTO_ANIMATE_DURATION_MS,
       keyframes: [
         {
           progress: 0,
@@ -94,7 +97,7 @@ export const createAutoAnimate = (
   };
 
   const runAnimation = (
-    timeline: Timeline<any>,
+    timeline: AutoAnimateTimeline<any>,
     schemaId: string,
     onOver?: () => void,
   ) => {
@@ -102,11 +105,33 @@ export const createAutoAnimate = (
     // replace it with the auto-animates timeline instead of running them in parallel.
     stopAllAnimations(schemaId);
 
-    const { play } = defineTimeline(timeline);
+    const { play } = defineTimeline({
+      ...timeline,
+      durationMs: animationDuration,
+    });
     play({ shapeId: schemaId, runCount: 1, onOver });
   };
 
   return {
+    /** how long an auto animated capture takes to play out, in ms */
+    get animationDuration() {
+      return animationDuration;
+    },
+
+    /**
+     * sets how long an auto animated capture takes to play out.
+     * animations already in flight keep the duration they started with
+     */
+    setAnimationDuration: (durationMs: number) => {
+      if (!Number.isFinite(durationMs) || durationMs <= 0) {
+        devWarning(
+          `auto animate duration must be a positive number, got ${durationMs}. ignoring`,
+        );
+        return;
+      }
+      animationDuration = durationMs;
+    },
+
     captureSchemaState: (schema: LooseSchema, shapeName: ShapeName) => {
       if (!captureState) return captureState;
       // we only care about capturing each schema once, the rest of the calls should be ignored

@@ -7,7 +7,7 @@ import { arrowAdd } from './arrow/add.ts';
 import { arrowRemove } from './arrow/remove.ts';
 import { circleAdd } from './circle/add.ts';
 import { circleRemove } from './circle/remove.ts';
-import { AUTO_ANIMATE_DURATION_MS } from './constants.ts';
+import { DEFAULT_AUTO_ANIMATE_DURATION_MS } from './constants.ts';
 import { createAutoAnimate } from './createAutoAnimate.ts';
 
 type PlayedAnimation = {
@@ -240,7 +240,38 @@ describe('diffing a changed shape', () => {
     const [animation] = harness.played;
     expect(animation.runCount).toBe(1);
     expect(animation.timeline.forShapes).toEqual(['circle']);
-    expect(animation.timeline.durationMs).toBe(AUTO_ANIMATE_DURATION_MS);
+    expect(animation.timeline.durationMs).toBe(
+      DEFAULT_AUTO_ANIMATE_DURATION_MS,
+    );
+  });
+
+  test('plays at whatever duration was last set, adds and removes included', () => {
+    harness.autoAnimate.setAnimationDuration(1200);
+    expect(harness.autoAnimate.animationDuration).toBe(1200);
+
+    harness.put('circle', circle('circle-1'));
+    harness.mutate(() => {
+      harness.put('circle', circle('circle-1', { radius: 30 }));
+      harness.put('arrow', arrow('arrow-1'));
+    });
+
+    for (const animation of harness.played) {
+      expect(animation.timeline.durationMs).toBe(1200);
+    }
+  });
+
+  test('keeps the current duration when handed one that is not positive', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    harness.autoAnimate.setAnimationDuration(0);
+    harness.autoAnimate.setAnimationDuration(-1);
+    harness.autoAnimate.setAnimationDuration(NaN);
+
+    expect(harness.autoAnimate.animationDuration).toBe(
+      DEFAULT_AUTO_ANIMATE_DURATION_MS,
+    );
+    expect(warn).toHaveBeenCalledTimes(3);
+    warn.mockRestore();
   });
 
   test('plays nothing when a mutation leaves every shape untouched', () => {
@@ -299,14 +330,14 @@ describe('shapes that appeared', () => {
     harness.mutate(() => harness.put('circle', circle('circle-1')));
 
     expect(harness.played).toHaveLength(1);
-    expect(harness.played[0].timeline).toBe(circleAdd);
+    expect(harness.played[0].timeline).toMatchObject(circleAdd);
     expect(harness.played[0].shapeId).toBe('circle-1');
   });
 
   test('plays the entrance timeline for an arrow', () => {
     harness.mutate(() => harness.put('arrow', arrow('arrow-1')));
 
-    expect(harness.played[0].timeline).toBe(arrowAdd);
+    expect(harness.played[0].timeline).toMatchObject(arrowAdd);
   });
 
   test('leaves a shape with no entrance timeline alone', () => {
@@ -340,7 +371,7 @@ describe('shapes that disappeared', () => {
     harness.mutate(() => harness.drop('circle-1'));
 
     expect(harness.played).toHaveLength(1);
-    expect(harness.played[0].timeline).toBe(circleRemove);
+    expect(harness.played[0].timeline).toMatchObject(circleRemove);
     expect(harness.autoAnimate.isGhost('circle-1')).toBe(true);
     expect(harness.autoAnimate.getGhosts()[0].schema).toMatchObject({
       shapeName: 'circle',
@@ -353,7 +384,7 @@ describe('shapes that disappeared', () => {
 
     harness.mutate(() => harness.drop('arrow-1'));
 
-    expect(harness.played[0].timeline).toBe(arrowRemove);
+    expect(harness.played[0].timeline).toMatchObject(arrowRemove);
   });
 
   test('drops the ghost once the exit animation is over', () => {

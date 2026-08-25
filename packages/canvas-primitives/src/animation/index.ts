@@ -66,6 +66,13 @@ export type ShapeRenderer = {
      * twice, animating the difference. returns the finalizer for the "after"
      */
     captureFrame: (flushDraw: () => void) => () => void;
+    /** how long an auto animated capture takes to play out, in ms */
+    readonly animationDuration: number;
+    /**
+     * sets how long an auto animated capture takes to play out.
+     * animations already in flight keep the duration they started with
+     */
+    setAnimationDuration: (durationMs: number) => void;
   };
   /**
    * if a schema is actively being animated, the live schema with animated
@@ -433,7 +440,15 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     beginFrame,
     endFrame,
     defineTimeline,
-    autoAnimate: { captureFrame: autoAnimate.captureFrame },
+    autoAnimate: {
+      captureFrame: autoAnimate.captureFrame,
+      // forwarded as a getter so it tracks the live value instead of the one
+      // that happened to be set when the renderer was created
+      get animationDuration() {
+        return autoAnimate.animationDuration;
+      },
+      setAnimationDuration: autoAnimate.setAnimationDuration,
+    },
     getAnimatedSchema,
     getAnimatedProp: <TProp extends EverySchemaPropName>(
       schemaId: SchemaId,

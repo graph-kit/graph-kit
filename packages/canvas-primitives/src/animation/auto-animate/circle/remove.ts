@@ -1,11 +1,9 @@
 import tinycolor from 'tinycolor2';
 
-import { Timeline } from '../../timeline/define.ts';
-import { AUTO_ANIMATE_DURATION_MS } from '../constants.ts';
+import { AutoAnimateTimeline } from '../types.ts';
 
-export const circleRemove: Timeline<'circle'> = {
+export const circleRemove: AutoAnimateTimeline<'circle'> = {
   forShapes: ['circle'],
-  durationMs: AUTO_ANIMATE_DURATION_MS,
   easing: { radius: 'in-out' },
   keyframes: [
     {

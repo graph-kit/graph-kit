@@ -1,7 +1,22 @@
-import { displayNumber } from '@core/utils/math';
+import {
+  DisplayNumberError,
+  DisplayNumberErrorReason,
+  displayNumber,
+} from '@core/utils/math';
 
 import { ExplainerSegment } from './explainerSegments.ts';
 import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
+
+const UNREADABLE_LABELS: Record<
+  DisplayNumberErrorReason,
+  (raw: string) => string
+> = {
+  'divide-by-zero': (raw) => `Cannot Divide By Zero: ${raw}`,
+  unparseable: (raw) => `Cannot Parse ${raw} As A Number`,
+};
+
+const unreadableLabel = ({ error, raw }: DisplayNumberError) =>
+  UNREADABLE_LABELS[error](raw);
 
 /**
  * builds the segment for an `<angled>` number in explainer content, hovering to
@@ -12,17 +27,18 @@ import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
  * as infinity
  * @example numberExplainerSegment('1/3') // hovers to reveal '~0.333'
  * numberExplainerSegment('3.5') // '7/2', hovers to reveal '3.5'
- * numberExplainerSegment('4/2') // plain '2', nothing to reveal
- * numberExplainerSegment('∞') // '∞', the symbol speaks for itself
+ * numberExplainerSegment('∞') // '∞', no secondary
  * numberExplainerSegment('half') // red '?', hovers to say it cannot be read
  */
 export const numberExplainerSegment = (raw: string): ExplainerSegment => {
-  const { primary, secondary, error } = displayNumber(raw);
+  const display = displayNumber(raw);
 
-  if (error) {
+  if ('error' in display) {
     console.error(`explainer: cannot parse "${raw}" as a number`);
-    return unparsedExplainerSegment(error);
+    return unparsedExplainerSegment(unreadableLabel(display));
   }
+
+  const { primary, secondary } = display;
 
   return {
     id: crypto.randomUUID(),

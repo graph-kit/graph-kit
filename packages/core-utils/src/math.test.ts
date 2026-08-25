@@ -3,11 +3,13 @@ import { describe, expect, test } from 'vitest';
 
 import {
   average,
+  displayFraction,
   displayNumber,
   fractionIsInteger,
   fractionToDecimal,
   gcd,
   getPrimeFactors,
+  isFractionDivisionByZero,
   lowestPrimeFactor,
   roundToNearestN,
 } from './math.ts';
@@ -79,6 +81,53 @@ describe('fractionIsInteger', () => {
 
   test('edge case: 0', () => {
     expect(fractionIsInteger(new Fraction(0))).toBe(true);
+  });
+});
+
+describe('isFractionDivisionByZero', () => {
+  test('recognises a zero denominator', () => {
+    expect(() => new Fraction('1/0')).toThrow();
+    try {
+      new Fraction('1/0');
+    } catch (error) {
+      expect(isFractionDivisionByZero(error)).toBe(true);
+    }
+  });
+
+  test('does not claim unparseable input, which throws the same type', () => {
+    try {
+      new Fraction('half');
+    } catch (error) {
+      expect(isFractionDivisionByZero(error)).toBe(false);
+    }
+  });
+
+  test('edge case: a thrown value that is not an Error', () => {
+    expect(isFractionDivisionByZero('Division by Zero')).toBe(false);
+    expect(isFractionDivisionByZero(undefined)).toBe(false);
+  });
+});
+
+describe('displayFraction', () => {
+  test('pairs a fraction with its decimal', () => {
+    expect(displayFraction(new Fraction(5, 2))).toEqual({
+      primary: '5/2',
+      secondary: '2.5',
+    });
+  });
+
+  test('leaves an integer without a decimal to approximate', () => {
+    expect(displayFraction(new Fraction(4, 2))).toEqual({
+      primary: '2',
+      secondary: undefined,
+    });
+  });
+
+  test('honours the requested decimal places', () => {
+    expect(displayFraction(new Fraction(1, 3), 1)).toEqual({
+      primary: '1/3',
+      secondary: '~0.3',
+    });
   });
 });
 
@@ -159,19 +208,26 @@ describe('displayNumber', () => {
 
   test('reports a zero denominator as its own failure', () => {
     expect(displayNumber('1/0')).toEqual({
-      primary: '1/0',
-      error: 'Cannot Divide "1/0" By Zero',
+      error: 'divide-by-zero',
+      raw: '1/0',
     });
   });
 
-  test('reports input it cannot read as a number, echoing it back', () => {
+  test('reports input it cannot read as a number, handing back what it saw', () => {
     expect(displayNumber('half')).toEqual({
-      primary: 'half',
-      error: 'Cannot Parse "half" As A Number',
+      error: 'unparseable',
+      raw: 'half',
     });
     expect(displayNumber(NaN)).toEqual({
-      primary: 'NaN',
-      error: 'Cannot Parse "NaN" As A Number',
+      error: 'unparseable',
+      raw: 'NaN',
+    });
+  });
+
+  test('hands back the trimmed input, not the original spacing', () => {
+    expect(displayNumber('  half  ')).toEqual({
+      error: 'unparseable',
+      raw: 'half',
     });
   });
 

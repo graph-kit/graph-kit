@@ -391,7 +391,7 @@ describe(explainerSegments, () => {
       '?',
     ]);
     expect(segments[1].highlight?.tooltipLabel).toBe(
-      'Cannot Parse "half" As A Number',
+      'Cannot Parse half As A Number',
     );
     expect(consoleError).toHaveBeenCalledWith(
       'explainer: cannot parse "half" as a number',

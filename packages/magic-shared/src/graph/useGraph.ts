@@ -23,6 +23,7 @@ import { transitionMatrix } from '@graph/plugins/transition-matrix/index';
 import { dark } from '@graph/theme-presets/dark/index';
 import { light } from '@graph/theme-presets/light/index';
 import { useAdjacencyLists } from '@graph/vue/useAdjacencyLists';
+import { useAnimation } from '@graph/vue/useAnimation';
 import { useCharacteristics } from '@graph/vue/useCharacteristics';
 import { useCreateGraphActivePreset } from '@graph/vue/useCreateGraphActivePreset';
 import { useFocus } from '@graph/vue/useFocus';
@@ -89,6 +90,7 @@ export const useGraph = (options: UseGraphOptions = {}) => {
   );
   const vueFocus = useFocus(graph.focus);
   const vueHistory = useHistory(graph.history);
+  const vueAnimation = useAnimation(graph.animation);
 
   const vueEvents = useGraphEvents(graph.events);
 
@@ -101,6 +103,7 @@ export const useGraph = (options: UseGraphOptions = {}) => {
     minimumSpanningTrees: vueMinimumSpanningTrees,
     focus: vueFocus,
     history: vueHistory,
+    animation: vueAnimation,
     theme: {
       ...graph.theme,
       ...vueActivePreset,

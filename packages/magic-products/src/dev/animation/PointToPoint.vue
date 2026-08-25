@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import HStackVue from '@core/components/HStack';
   import Button from '@magic/shared/Button';
+  import ToggleButton from '@magic/shared/ToggleButton';
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useProvidedShell } from '@magic/shared/product';
@@ -55,11 +56,6 @@
       for (const node of scene.nodes) graph.actions.addNode(node);
       for (const edge of scene.edges) graph.actions.addEdge(edge);
     });
-    // setTimeout(() => {
-    //   graph.animation.capture(() => {
-    //     for (const edge of scene.edges) graph.actions.addEdge(edge);
-    //   });
-    // }, 1000);
   };
 
   const destroyScene = () => {

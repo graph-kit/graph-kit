@@ -26,7 +26,7 @@
 <template>
   <CoreToast
     v-bind="{ open, duration, title, description, severity }"
-    class="bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-white"
+    class="bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-white w-90"
     @close="$emit('close')"
   >
     <template #icon>

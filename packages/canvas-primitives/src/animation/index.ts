@@ -1,3 +1,4 @@
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 import { assert, nullThrows } from '@core/utils/assert';
 import { devWarning } from '@core/utils/debugging';
 import type { UnionToIntersection } from 'ts-essentials';
@@ -18,6 +19,7 @@ import type {
 import { shapeProps } from '../types/index.ts';
 import { GHOST_REDRAW } from './auto-animate/constants.ts';
 import { createAutoAnimate } from './auto-animate/createAutoAnimate.ts';
+import type { AutoAnimateEventMap } from './auto-animate/events.ts';
 import type { DefineTimeline } from './timeline/define.ts';
 import { createDefineTimeline } from './timeline/define.ts';
 import type { ActiveAnimation, LooseSchema } from './types.ts';
@@ -66,6 +68,14 @@ export type ShapeRenderer = {
      * twice, animating the difference. returns the finalizer for the "after"
      */
     captureFrame: (flushDraw: () => void) => () => void;
+    /** how long an auto animated capture takes to play out, in ms */
+    readonly animationDuration: number;
+    /**
+     * sets how long an auto animated capture takes to play out.
+     * animations already in flight keep the duration they started with
+     */
+    setAnimationDuration: (durationMs: number) => void;
+    events: ReadonlyEventHub<AutoAnimateEventMap>;
   };
   /**
    * if a schema is actively being animated, the live schema with animated
@@ -433,7 +443,16 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     beginFrame,
     endFrame,
     defineTimeline,
-    autoAnimate: { captureFrame: autoAnimate.captureFrame },
+    autoAnimate: {
+      captureFrame: autoAnimate.captureFrame,
+      // forwarded as a getter so it tracks the live value instead of the one
+      // that happened to be set when the renderer was created
+      get animationDuration() {
+        return autoAnimate.animationDuration;
+      },
+      setAnimationDuration: autoAnimate.setAnimationDuration,
+      events: autoAnimate.events,
+    },
     getAnimatedSchema,
     getAnimatedProp: <TProp extends EverySchemaPropName>(
       schemaId: SchemaId,

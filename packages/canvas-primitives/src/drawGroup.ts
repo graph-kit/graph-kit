@@ -43,19 +43,14 @@ export const drawGroup = (ctx: CanvasRenderingContext2D, shapes: Shape[]) => {
 
   const punchesHoles = group.some(({ drawHole }) => drawHole);
 
-  /*
-    the isolated surface only earns its cost when there is a hole to punch:
-    without one, the group is drawn and then blitted over unchanged, which
-    lands exactly the same pixels as drawing onto the main canvas directly.
-    node groups never punch (their text areas take the matte path), and every
-    node is its own priority group, so this is the common case by a wide margin
-  */
   if (!punchesHoles) {
-    for (const { shape } of group) shape.drawShape(ctx);
+    for (const { shape } of group) {
+      shape.drawShape(ctx);
+    }
   } else {
+    console.log('shape drawn', shapes);
     withScratchCanvas(ctx, (scratchCtx) => {
       for (const { shape } of group) shape.drawShape(scratchCtx);
-
       scratchCtx.globalCompositeOperation = 'destination-out';
       for (const { drawHole } of group) drawHole?.(scratchCtx);
     });

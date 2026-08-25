@@ -2,7 +2,7 @@
   import Shell from '@magic/shared/Shell';
   import { useGraphShell } from '@magic/shared/graph-shell';
 
-  import ActionBar from './ActionBar.vue';
+  import PointToPoint from './animation/PointToPoint.vue';
 
   const { shell } = useGraphShell({
     productId: 'dev',
@@ -19,8 +19,8 @@
   });
 
   shell.componentSlots.add({
-    id: 'action-bar',
-    component: ActionBar,
+    id: 'animation/point-to-point',
+    component: PointToPoint,
     position: 'bottom-middle',
   });
 </script>

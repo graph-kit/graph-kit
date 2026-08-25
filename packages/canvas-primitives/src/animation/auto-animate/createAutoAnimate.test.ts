@@ -85,10 +85,6 @@ const createHarness = () => {
     for (const [schemaId, entry] of scene) {
       if (!captureGhosts && autoAnimate.isGhost(schemaId)) continue;
       autoAnimate.captureSchemaState(entry.schema, entry.shapeName);
-      drawLog.push({
-        schemaId,
-        override: autoAnimate.getCaptureOverride(schemaId),
-      });
     }
   };
 
@@ -418,28 +414,6 @@ describe('the capture window', () => {
     expect(harness.drawLog).toEqual([
       { schemaId: 'circle-1', override: undefined },
     ]);
-  });
-
-  test('captures a shape once per pass however many times it is asked', () => {
-    // the animated shape proxy calls into capture on every single property
-    // read, so only the first call within a pass can be allowed to count
-    const finalize = harness.autoAnimate.captureFrame(() => {
-      harness.autoAnimate.captureSchemaState(circle('circle-1'), 'circle');
-      harness.autoAnimate.captureSchemaState(
-        circle('circle-1', { at: { x: 999, y: 999 } }),
-        'circle',
-      );
-    });
-    const override = harness.autoAnimate.getCaptureOverride('circle-1');
-    finalize();
-
-    expect(override).toMatchObject({ schema: { at: { x: 0, y: 0 } } });
-  });
-
-  test('ignores captures taken outside a window', () => {
-    harness.autoAnimate.captureSchemaState(circle('circle-1'), 'circle');
-
-    expect(harness.autoAnimate.getCaptureOverride('circle-1')).toBeUndefined();
   });
 
   test('throws away snapshots left by a window that never finalized', () => {

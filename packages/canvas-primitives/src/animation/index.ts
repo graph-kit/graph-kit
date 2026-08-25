@@ -247,7 +247,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
     let outputSchema = nullThrows(
       animations.at(0)?.schemaWithDefaults,
-      'animation set without a schema. this should never happen!',
+      'Animation set without a schema. this should never happen!',
     );
 
     const shapeName = nullThrows(
@@ -258,7 +258,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     for (const animation of animations) {
       const timeline = nullThrows(
         timelineIdToTimeline.get(animation.timelineId),
-        'animation activated without a timeline!',
+        'Animation activated without a timeline!',
       );
 
       const animationWithTimeline = {
@@ -314,15 +314,14 @@ export const createAnimatedShapes = (): AnimatedShapes => {
           // if not a recognized shape property, return early
           if (!shapeProps.has(prop)) return target[prop];
 
-          // lookup all actively running animations on this shape
-          const animations = activeAnimations.get(schema.id);
-
           const captureState = autoAnimate.captureSchemaState(
             schema,
             shapeName,
           );
           if (captureState === 'after') return withoutDrawing(target)[prop];
 
+          // lookup all actively running animations on this shape
+          const animations = activeAnimations.get(schema.id);
           if (!animations || animations.length === 0) return target[prop];
 
           // lazily capture the baseline schema on the first render after the

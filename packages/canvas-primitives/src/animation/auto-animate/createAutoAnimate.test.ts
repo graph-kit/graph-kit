@@ -32,8 +32,8 @@ type DrawRecord = {
  *   only thing that ever clears a ghost
  * - a draw pass asks for the capture override immediately after capturing,
  *   the way the animated shape proxy does
- * - a draw pass skips ghost ids entirely, matching the `isGhost` guard that
- *   same proxy applies before it captures anything
+ * - ghosts redraw themselves outside the scene, so nothing here skips them and
+ *   a shape re-added under a ghost's id is captured like any other
  */
 const createHarness = () => {
   const scene: Map<SchemaId, { schema: LooseSchema; shapeName: ShapeName }> =
@@ -77,12 +77,33 @@ const createHarness = () => {
     },
   );
 
-  // the scene holds only what the consumer put on the canvas. ghosts redraw
-  // themselves outside it, which is what keeps them out of the capture, so a
-  // shape re-added under a ghost's id is captured here like any other
+  /**
+   * what the animated shape proxy would render a shape from: nothing at all
+   * during the "after" pass, its animated schema while one is running, and
+   * otherwise the schema the consumer holds
+   */
+  const renderOverride = (
+    schemaId: SchemaId,
+    captureState: 'before' | 'after' | undefined,
+  ): DrawRecord['override'] => {
+    if (captureState === 'after') return 'suppress';
+
+    const animatedSchema = liveSchemas.get(schemaId);
+    if (animatedSchema) return { schema: animatedSchema };
+
+    return undefined;
+  };
+
   const flushDraw = () => {
     for (const entry of scene.values()) {
-      autoAnimate.captureSchemaState(entry.schema, entry.shapeName);
+      const captureState = autoAnimate.captureSchemaState(
+        entry.schema,
+        entry.shapeName,
+      );
+      drawLog.push({
+        schemaId: entry.schema.id,
+        override: renderOverride(entry.schema.id, captureState),
+      });
     }
   };
 
@@ -383,17 +404,20 @@ describe('shapes that disappeared', () => {
 });
 
 describe('the capture window', () => {
-  test('holds a mutated shape on its pre-mutation schema for both passes', () => {
+  test('paints the shape where it still is, then nothing', () => {
     harness.put('circle', circle('circle-1'));
 
     harness.mutate(() => {
       harness.put('circle', circle('circle-1', { at: { x: 100, y: 100 } }));
     });
 
-    expect(harness.drawLog).toHaveLength(2);
-    for (const record of harness.drawLog) {
-      expect(record.override).toMatchObject({ schema: { at: { x: 0, y: 0 } } });
-    }
+    // the passes paint without clearing, so leaving the "after" one suppressed
+    // holds the pre-mutation pixels on the canvas and keeps the mutated
+    // position off it until the animation interpolates toward it
+    expect(harness.drawLog).toEqual([
+      { schemaId: 'circle-1', override: undefined },
+      { schemaId: 'circle-1', override: 'suppress' },
+    ]);
   });
 
   test('stops overriding anything once the window closes', () => {

@@ -128,8 +128,7 @@ export const resolveSchemaWithDefaults = (
 
 /**
  * a version of the shape whose properties are all defined but whose draw
- * methods are no-ops, for shapes that must not render anything yet (no
- * "before" state exists to fall back to during an auto-animate capture)
+ * methods are no-ops
  */
 const withoutDrawing = (shape: Shape): Shape => ({
   ...shape,

@@ -3,7 +3,6 @@ import { describe, expect, test } from 'vitest';
 
 import {
   average,
-  displayFraction,
   displayNumber,
   fractionIsInteger,
   fractionToDecimal,
@@ -108,29 +107,6 @@ describe('isFractionDivisionByZero', () => {
   });
 });
 
-describe('displayFraction', () => {
-  test('pairs a fraction with its decimal', () => {
-    expect(displayFraction(new Fraction(5, 2))).toEqual({
-      primary: '5/2',
-      secondary: '2.5',
-    });
-  });
-
-  test('leaves an integer without a decimal to approximate', () => {
-    expect(displayFraction(new Fraction(4, 2))).toEqual({
-      primary: '2',
-      secondary: undefined,
-    });
-  });
-
-  test('honours the requested decimal places', () => {
-    expect(displayFraction(new Fraction(1, 3), 1)).toEqual({
-      primary: '1/3',
-      secondary: '~0.3',
-    });
-  });
-});
-
 describe('displayNumber', () => {
   test('pairs a fraction with its decimal', () => {
     expect(displayNumber('5/2')).toEqual({
@@ -172,6 +148,27 @@ describe('displayNumber', () => {
       primary: '1/3',
       secondary: '~0.333',
     });
+  });
+
+  test('honours the requested decimal places for a built fraction', () => {
+    expect(displayNumber(new Fraction(1, 3), 1)).toEqual({
+      primary: '1/3',
+      secondary: '~0.3',
+    });
+  });
+
+  test('leaves a built integer fraction without a decimal to approximate', () => {
+    expect(displayNumber(new Fraction(4, 2))).toEqual({
+      primary: '2',
+      secondary: undefined,
+    });
+  });
+
+  test('a built fraction cannot fail, so its result needs no narrowing', () => {
+    // reaching .primary without an `'error' in` check only typechecks while the
+    // Fraction overload rules an error out
+    const { primary } = displayNumber(new Fraction(5, 2));
+    expect(primary).toBe('5/2');
   });
 
   test('reads numbers written in exponent notation', () => {

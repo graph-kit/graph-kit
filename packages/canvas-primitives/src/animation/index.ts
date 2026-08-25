@@ -36,31 +36,24 @@ export type AnimatedShapeFactories = {
 
 /**
  * the frame lifecycle and timeline machinery that makes
- * {@link AnimatedShapeFactories} animate. held by whoever owns the draw loop,
- * not by the code that just builds shapes
+ * {@link AnimatedShapeFactories} animate, held by whoever owns the draw loop
  */
 export type ShapeRenderer = {
   /**
    * advances the animation clock to `now` and retires finished animations.
-   * belongs to whoever drives the frame loop, and must run before that frame
-   * draws anything, since drawing is a pure read of the state it leaves behind
+   * must run before the frame draws, since drawing is a pure read of its state
    */
   tick: (now: number) => void;
   /**
    * a `drawGroup` that also draws recently-removed shapes ("ghosts") in the
-   * draw-order position they held right before removal, for as long as their
-   * remove animation is still running
+   * position they held before removal, until their remove animation ends
    */
   drawGroup: (ctx: CanvasRenderingContext2D, groupShapes: Shape[]) => void;
-  /**
-   * marks the start of a draw pass, resetting the running shape count that
-   * `drawGroup` places ghosts against. call once per frame
-   */
+  /** resets the shape count `drawGroup` places ghosts against. once per frame */
   beginFrame: () => void;
   /**
-   * draws any ghost whose priority tier had no surviving live elements this
-   * frame, and so never got a `drawGroup` call to be spliced into. call once
-   * per frame, after every `drawGroup`
+   * draws any ghost whose priority tier had no live elements to splice it
+   * into. call once per frame, after every `drawGroup`
    */
   endFrame: (ctx: CanvasRenderingContext2D) => void;
   /**
@@ -69,9 +62,8 @@ export type ShapeRenderer = {
   defineTimeline: DefineTimeline;
   autoAnimate: {
     /**
-     * captures a before/after pair of schema snapshots around a mutation by
-     * invoking `flushDraw` twice, generating animations from the difference.
-     * returns the finalizer that takes the "after" snapshot
+     * snapshots schemas either side of a mutation by invoking `flushDraw`
+     * twice, animating the difference. returns the finalizer for the "after"
      */
     captureFrame: (flushDraw: () => void) => () => void;
   };
@@ -81,31 +73,24 @@ export type ShapeRenderer = {
    */
   getAnimatedSchema: GetAnimatedSchema;
   /**
-   * Get the animated value of a schema property currently being animated.
+   * the animated value of a single schema property, for imperative timelines
+   * where one property depends on another and `getAnimatedSchema` would be
+   * circular.
    *
-   * Intended for use in imperative timelines where resolving one property's animated value
-   * depends on the animated value of another property. In these special cases, `getAnimatedSchema`
-   * would cause a circular dependency.
-   *
-   * WARNING: Calling this on a property that the imperative track itself resolves
+   * WARNING: calling this on a property the imperative track itself resolves
    * will crash your app!
    */
   getAnimatedProp: <TProp extends EverySchemaPropName>(
     schemaId: SchemaId,
     inputPropName: TProp,
   ) => UnionToIntersection<EverySchemaProp>[TProp];
-  /**
-   * a mapping between shapes (via ids) and the animations currently
-   * active/running on those shapes
-   */
+  /** shape ids to the animations currently running on them */
   activeAnimations: ActiveAnimationsMap;
 };
 
 /**
- * one closure's worth of animated shapes: the factories and the renderer that
- * drives them share the same active-animation state, so they are created
- * together and split apart by the consumer that hands each half to a
- * different audience
+ * the factories and the renderer that drives them, created together because
+ * they share the same active-animation state
  */
 export type AnimatedShapes = {
   /**
@@ -141,10 +126,7 @@ const withoutDrawing = (shape: Shape): Shape => ({
 });
 
 export const createAnimatedShapes = (): AnimatedShapes => {
-  /**
-   * a mapping between shapes (via ids) and the animations currently
-   * active/running on those shapes
-   */
+  /** shape ids to the animations currently running on them */
   const activeAnimations: ActiveAnimationsMap = new Map();
   const schemaIdToShapeName: Map<SchemaId, ShapeName> = new Map();
 
@@ -193,10 +175,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     resume: () => devWarning('not implemented'),
   });
 
-  /**
-   * stops every animation currently running on a shape, regardless of which
-   * timeline started it or whether auto-animate is the one tracking it.
-   */
+  /** stops every animation on a shape, whichever timeline started it */
   const stopAllAnimations = (shapeId: SchemaId) => {
     const animations = activeAnimations.get(shapeId);
     activeAnimations.delete(shapeId);
@@ -368,12 +347,8 @@ export const createAnimatedShapes = (): AnimatedShapes => {
   };
 
   /**
-   * shapes removed from the graph don't come back through `animatedShapes`
-   * naturally (the caller has no reason to keep asking for a shape it just
-   * deleted), so their remove animation would never be visible. this rebuilds
-   * a `Shape` for each in-flight ghost from its last known schema, which
-   * re-enters the same animated-shape proxy and therefore still resolves the
-   * remove timeline's live (in-progress) property values.
+   * rebuilds a `Shape` for each in-flight ghost from its last known schema, so
+   * a remove animation stays visible after the caller stops asking for it
    */
   const getGhostShapes = (): {
     id: SchemaId;
@@ -393,21 +368,13 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     });
 
   /**
-   * a `drawGroup` that transparently keeps drawing recently-removed shapes
-   * ("ghosts") for the duration of their remove animation, at the draw
-   * position they held right before removal. `drawGroup` is called once per
-   * priority group, potentially several times per frame, so ghosts must be
-   * placed relative to a running position across the whole frame rather than
-   * reset on every call. `beginFrame` marks where that running count starts
-   * over; the caller invokes it once, at the single point per frame where it
-   * already knows a new draw pass is starting.
+   * `drawGroup` with in-flight ghosts spliced back into the position they held
+   * before removal. it runs once per priority group, so ghosts are placed
+   * against a count spanning the whole frame rather than one per call
    */
   let shapesDrawnThisFrame = 0;
-  // ghosts already placed into a group this frame, so a ghost whose captured
-  // orderIndex sits right on a group boundary (removing a shape shrinks the
-  // total by one, so a ghost that was last overall now has an orderIndex
-  // equal to, not less than, every group's new end) is claimed by exactly
-  // one group instead of falling through every group's exclusive range
+  // a group's range is inclusive, so a ghost on a boundary matches more than
+  // one of them. this keeps it claimed by the first
   const ghostsPlacedThisFrame = new Set<SchemaId>();
   const beginFrame = () => {
     shapesDrawnThisFrame = 0;
@@ -440,12 +407,8 @@ export const createAnimatedShapes = (): AnimatedShapes => {
   };
 
   /**
-   * a ghost whose priority tier has no surviving live elements this frame
-   * (e.g. removing the last node in the graph, or the last shape at a given
-   * priority) never gets a `drawGroup` call to be spliced into at all, since
-   * the caller only invokes `drawGroup` for priority tiers that still have
-   * live elements. call this once per frame, after all real `drawGroup`
-   * calls, to draw any ghosts that were never claimed by one.
+   * draws any ghost no `drawGroup` claimed, which happens when its whole
+   * priority tier is gone. call once per frame, after every `drawGroup`
    */
   const endFrame = (ctx: CanvasRenderingContext2D) => {
     const unclaimedGhosts = getGhostShapes().filter(

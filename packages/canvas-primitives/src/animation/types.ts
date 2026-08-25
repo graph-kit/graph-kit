@@ -25,7 +25,7 @@ export type ActiveAnimation = {
   runCount: number;
 
   /**
-   * unix timestamp when the animation started
+   * frame clock reading when the animation started
    */
   startedAt: number;
 
@@ -35,18 +35,13 @@ export type ActiveAnimation = {
   schemaWithDefaults?: LooseSchema;
 
   /**
-   * called the moment this animation naturally exhausts its `runCount`
-   * (the same tick {@link GetAnimatedSchema} cleans it up). Not called
-   * when the animation is interrupted early via `stop`.
+   * called the moment this animation exhausts its `runCount`.
+   * Not called when the animation is interrupted early via `stop`.
    */
   onComplete?: () => void;
 
   /**
-   * called the moment this animation stops playing for any reason: natural
-   * completion (same tick as `onComplete`), an explicit `stop`, or being
-   * displaced by `stopAllAnimations`. Use this over `onComplete` for cleanup
-   * that must always happen once the animation is no longer active, so it
-   * can't be skipped by an interruption.
+   * called the moment this animation stops playing for any reason
    */
   onOver?: () => void;
 };

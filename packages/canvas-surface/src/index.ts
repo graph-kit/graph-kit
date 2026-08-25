@@ -89,7 +89,7 @@ export const useCanvasSurface = (): CanvasSurface => {
       scheduleRepaint();
       if (now - lastRepaintAt < MS_PER_REPAINT) return;
       lastRepaintAt = now;
-      repaintCanvas();
+      repaintCanvas(now);
     });
   };
 
@@ -137,8 +137,9 @@ export const useCanvasSurface = (): CanvasSurface => {
     visibleWorldRect,
   );
 
-  const repaintCanvas = () => {
+  const repaintCanvas = (now: number) => {
     if (!ctx) return;
+    renderer.tick(now);
     lifecycleEvents.emit('onBeforeRepaint');
     camera.transformAndClear(ctx);
     pattern.draw(ctx);

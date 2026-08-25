@@ -1,4 +1,5 @@
-import { nullThrows } from '@core/utils/assert';
+import { assert, nullThrows } from '@core/utils/assert';
+import { devWarning } from '@core/utils/debugging';
 import type { UnionToIntersection } from 'ts-essentials';
 
 import { getSchemaWithDefaults } from '../defaults/shapes.ts';
@@ -15,6 +16,7 @@ import type {
   WithId,
 } from '../types/index.ts';
 import { shapeProps } from '../types/index.ts';
+import { GHOST_REDRAW } from './auto-animate/constants.ts';
 import { createAutoAnimate } from './auto-animate/createAutoAnimate.ts';
 import type { DefineTimeline } from './timeline/define.ts';
 import { createDefineTimeline } from './timeline/define.ts';
@@ -34,25 +36,24 @@ export type AnimatedShapeFactories = {
 
 /**
  * the frame lifecycle and timeline machinery that makes
- * {@link AnimatedShapeFactories} animate. held by whoever owns the draw loop,
- * not by the code that just builds shapes
+ * {@link AnimatedShapeFactories} animate, held by whoever owns the draw loop
  */
 export type ShapeRenderer = {
   /**
+   * advances the animation clock to `now` and retires finished animations.
+   * must run before the frame draws, since drawing is a pure read of its state
+   */
+  tick: (now: number) => void;
+  /**
    * a `drawGroup` that also draws recently-removed shapes ("ghosts") in the
-   * draw-order position they held right before removal, for as long as their
-   * remove animation is still running
+   * position they held before removal, until their remove animation ends
    */
   drawGroup: (ctx: CanvasRenderingContext2D, groupShapes: Shape[]) => void;
-  /**
-   * marks the start of a draw pass, resetting the running shape count that
-   * `drawGroup` places ghosts against. call once per frame
-   */
+  /** resets the shape count `drawGroup` places ghosts against. once per frame */
   beginFrame: () => void;
   /**
-   * draws any ghost whose priority tier had no surviving live elements this
-   * frame, and so never got a `drawGroup` call to be spliced into. call once
-   * per frame, after every `drawGroup`
+   * draws any ghost whose priority tier had no live elements to splice it
+   * into. call once per frame, after every `drawGroup`
    */
   endFrame: (ctx: CanvasRenderingContext2D) => void;
   /**
@@ -61,9 +62,8 @@ export type ShapeRenderer = {
   defineTimeline: DefineTimeline;
   autoAnimate: {
     /**
-     * captures a before/after pair of schema snapshots around a mutation by
-     * invoking `flushDraw` twice, generating animations from the difference.
-     * returns the finalizer that takes the "after" snapshot
+     * snapshots schemas either side of a mutation by invoking `flushDraw`
+     * twice, animating the difference. returns the finalizer for the "after"
      */
     captureFrame: (flushDraw: () => void) => () => void;
   };
@@ -73,31 +73,24 @@ export type ShapeRenderer = {
    */
   getAnimatedSchema: GetAnimatedSchema;
   /**
-   * Get the animated value of a schema property currently being animated.
+   * the animated value of a single schema property, for imperative timelines
+   * where one property depends on another and `getAnimatedSchema` would be
+   * circular.
    *
-   * Intended for use in imperative timelines where resolving one property's animated value
-   * depends on the animated value of another property. In these special cases, `getAnimatedSchema`
-   * would cause a circular dependency.
-   *
-   * WARNING: Calling this on a property that the imperative track itself resolves
+   * WARNING: calling this on a property the imperative track itself resolves
    * will crash your app!
    */
   getAnimatedProp: <TProp extends EverySchemaPropName>(
     schemaId: SchemaId,
     inputPropName: TProp,
   ) => UnionToIntersection<EverySchemaProp>[TProp];
-  /**
-   * a mapping between shapes (via ids) and the animations currently
-   * active/running on those shapes
-   */
+  /** shape ids to the animations currently running on them */
   activeAnimations: ActiveAnimationsMap;
 };
 
 /**
- * one closure's worth of animated shapes: the factories and the renderer that
- * drives them share the same active-animation state, so they are created
- * together and split apart by the consumer that hands each half to a
- * different audience
+ * the factories and the renderer that drives them, created together because
+ * they share the same active-animation state
  */
 export type AnimatedShapes = {
   /**
@@ -120,8 +113,7 @@ export const resolveSchemaWithDefaults = (
 
 /**
  * a version of the shape whose properties are all defined but whose draw
- * methods are no-ops, for shapes that must not render anything yet (no
- * "before" state exists to fall back to during an auto-animate capture)
+ * methods are no-ops
  */
 const withoutDrawing = (shape: Shape): Shape => ({
   ...shape,
@@ -134,12 +126,12 @@ const withoutDrawing = (shape: Shape): Shape => ({
 });
 
 export const createAnimatedShapes = (): AnimatedShapes => {
-  /**
-   * a mapping between shapes (via ids) and the animations currently
-   * active/running on those shapes
-   */
+  /** shape ids to the animations currently running on them */
   const activeAnimations: ActiveAnimationsMap = new Map();
   const schemaIdToShapeName: Map<SchemaId, ShapeName> = new Map();
+
+  /** the one instant every property in the current frame resolves against */
+  let frameNow = performance.now();
 
   const { defineTimeline, timelineIdToTimeline } = createDefineTimeline({
     play: ({
@@ -152,7 +144,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     }) => {
       const newAnimation: ActiveAnimation = {
         runCount: synchronize ? Infinity : runCount,
-        startedAt: synchronize ? 0 : Date.now(),
+        startedAt: synchronize ? 0 : frameNow,
         timelineId,
         onComplete,
         onOver,
@@ -168,26 +160,61 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     stop: ({ shapeId, timelineId }) => {
       const animations = activeAnimations.get(shapeId);
       if (!animations) return;
+
       const stopped = animations.filter((a) => a.timelineId === timelineId);
       const stillRunning = animations.filter(
         (a) => a.timelineId !== timelineId,
       );
+
       if (stillRunning.length === 0) activeAnimations.delete(shapeId);
       else activeAnimations.set(shapeId, stillRunning);
+
       for (const animation of stopped) animation.onOver?.();
     },
-    pause: () => console.warn('not implemented'),
-    resume: () => console.warn('not implemented'),
+    pause: () => devWarning('not implemented'),
+    resume: () => devWarning('not implemented'),
   });
 
-  /**
-   * stops every animation currently running on a shape, regardless of which
-   * timeline started it or whether auto-animate is the one tracking it.
-   */
+  /** stops every animation on a shape, whichever timeline started it */
   const stopAllAnimations = (shapeId: SchemaId) => {
     const animations = activeAnimations.get(shapeId);
     activeAnimations.delete(shapeId);
     for (const animation of animations ?? []) animation.onOver?.();
+  };
+
+  const hasFinished = (animation: ActiveAnimation) => {
+    const timeline = nullThrows(
+      timelineIdToTimeline.get(animation.timelineId),
+      'animation activated without a timeline!',
+    );
+    const runCount = getCurrentRunCount(
+      { ...timeline, ...animation },
+      frameNow,
+    );
+    return runCount >= animation.runCount;
+  };
+
+  const tick: ShapeRenderer['tick'] = (now) => {
+    frameNow = now;
+
+    const retired: ActiveAnimation[] = [];
+
+    for (const [schemaId, animations] of [...activeAnimations]) {
+      const stillRunning: ActiveAnimation[] = [];
+      for (const animation of animations) {
+        if (hasFinished(animation)) retired.push(animation);
+        else stillRunning.push(animation);
+      }
+
+      if (stillRunning.length === animations.length) continue;
+      if (stillRunning.length === 0) activeAnimations.delete(schemaId);
+      else activeAnimations.set(schemaId, stillRunning);
+    }
+
+    for (const animation of retired) {
+      animation.onComplete?.();
+      animation.onOver?.();
+    }
   };
 
   /**
@@ -198,21 +225,19 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     if (!animations || animations.length === 0) return;
 
     let outputSchema = nullThrows(
-      animations[0].schemaWithDefaults,
-      'animation set without a schema. this should never happen!',
+      animations.at(0)?.schemaWithDefaults,
+      'Animation set without a schema. this should never happen!',
     );
 
     const shapeName = nullThrows(
       schemaIdToShapeName.get(schemaId),
-      '(Internal Error) Animation set without shape name mapping. this should never happen!',
+      'Animation set without shape name mapping. this should never happen!',
     );
-
-    const expired: ActiveAnimation[] = [];
 
     for (const animation of animations) {
       const timeline = nullThrows(
         timelineIdToTimeline.get(animation.timelineId),
-        'animation activated without a timeline!',
+        'Animation activated without a timeline!',
       );
 
       const animationWithTimeline = {
@@ -222,25 +247,15 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
       const { validShapes, timelineId } = animationWithTimeline;
       if (!validShapes.has(shapeName)) {
-        console.warn(
-          `(Internal Error) Attempted to apply inappropriate animation to schema! Animation timeline ${timelineId} only works for shapes ${Array.from(validShapes.keys())} but schema ${schemaId} is of shape ${shapeName}.`,
+        devWarning(
+          `Attempted to apply inappropriate animation to schema! Animation timeline ${timelineId} only works for shapes ${Array.from(validShapes.keys())} but schema ${schemaId} is of shape ${shapeName}.`,
         );
-        continue;
-      }
-
-      // cleanup animation if expired
-      const currentRunCount = getCurrentRunCount(animationWithTimeline);
-      const shouldRemove = currentRunCount >= animationWithTimeline.runCount;
-      if (shouldRemove) {
-        expired.push(animation);
-        animation.onComplete?.();
-        animation.onOver?.();
         continue;
       }
 
       // resolve the properties for the animated shape schema
       const { properties } = animationWithTimeline;
-      const progress = getAnimationProgress(animationWithTimeline);
+      const progress = getAnimationProgress(animationWithTimeline, frameNow);
 
       const infusedProps = Object.entries(properties).reduce((acc, curr) => {
         const [propName, getAnimatedValue] = curr;
@@ -257,14 +272,6 @@ export const createAnimatedShapes = (): AnimatedShapes => {
       };
     }
 
-    // only drop the animations that actually expired, leaving any others
-    // still running on this shape untouched
-    if (expired.length > 0) {
-      const stillRunning = animations.filter((a) => !expired.includes(a));
-      if (stillRunning.length === 0) activeAnimations.delete(schemaId);
-      else activeAnimations.set(schemaId, stillRunning);
-    }
-
     return outputSchema;
   };
 
@@ -274,10 +281,10 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     stopAllAnimations,
   );
 
-  function animatedFactory<T extends Omit<LooseSchema, 'id'>>(
-    factory: ShapeFactory<T>,
+  function animatedFactory<Schema extends Omit<LooseSchema, 'id'>>(
+    factory: ShapeFactory<Schema>,
     shapeName: ShapeName,
-  ): ShapeFactory<WithId<T>> {
+  ): ShapeFactory<WithId<Schema>> {
     return (schema) =>
       new Proxy(factory(schema), {
         get: (target, rawProp) => {
@@ -286,38 +293,14 @@ export const createAnimatedShapes = (): AnimatedShapes => {
           // if not a recognized shape property, return early
           if (!shapeProps.has(prop)) return target[prop];
 
+          const captureState = autoAnimate.captureSchemaState(
+            schema,
+            shapeName,
+          );
+          if (captureState === 'after') return withoutDrawing(target)[prop];
+
           // lookup all actively running animations on this shape
           const animations = activeAnimations.get(schema.id);
-
-          // ghosts are a rendering-only artifact of a shape that's already
-          // gone from the graph, redrawn every frame purely to finish its
-          // remove animation. they must never enter the before/after diffing
-          // used to auto-generate animations for real graph elements: since
-          // a ghost's schema is constantly changing mid-animation, any other
-          // add/remove action's capture pass would see that as a "property
-          // changed" and start a second, untracked animation on the same
-          // schema id, clobbering the actual remove animation via
-          // `stopAllAnimations` before it can finish.
-          const isGhost = autoAnimate.isGhost(schema.id);
-
-          if (!isGhost) {
-            autoAnimate.captureSchemaState(schema, shapeName);
-
-            // auto-animate may be in the middle of comparing this shape's old and new
-            // schema, so keep showing the old state for now instead of the update
-            // that just happened, otherwise it'll flash instead of animate
-            const captureOverride = autoAnimate.getCaptureOverride(schema.id);
-
-            if (captureOverride) {
-              if (captureOverride === 'suppress')
-                return withoutDrawing(target)[prop];
-              // auto-animate wants this schema rendered instead of the current schema
-              const { shapeName: _, ...targetMapSchema } =
-                captureOverride.schema;
-              return factory(targetMapSchema as WithId<T>)[prop];
-            }
-          }
-
           if (!animations || animations.length === 0) return target[prop];
 
           // lazily capture the baseline schema on the first render after the
@@ -329,27 +312,21 @@ export const createAnimatedShapes = (): AnimatedShapes => {
             );
           }
 
-          if (prop === 'startTextAreaEdit')
-            return console.warn(
-              'shapes with active animations cannot spawn text inputs',
+          if (prop === 'startTextAreaEdit') {
+            devWarning(
+              'Shapes with active animations cannot spawn text inputs',
             );
+            return;
+          }
 
           schemaIdToShapeName.set(schema.id, shapeName);
 
           const animatedSchema = nullThrows(
             getAnimatedSchema(schema.id),
-            'animations present but getAnimatedSchema returned nothing. this should never happen!',
+            'Animations present but getAnimatedSchema returned nothing. this should never happen!',
           );
 
-          if (!activeAnimations.has(schema.id)) {
-            // a ghost with no animation left has finished its remove
-            // sequence and no longer has a "real" state to fall back to;
-            // draw nothing instead of popping back to its frozen full schema
-            if (isGhost) return withoutDrawing(target)[prop];
-            return target[prop];
-          }
-
-          return factory(animatedSchema as WithId<T>)[prop];
+          return factory(animatedSchema as WithId<Schema>)[prop];
         },
       });
   }
@@ -370,12 +347,8 @@ export const createAnimatedShapes = (): AnimatedShapes => {
   };
 
   /**
-   * shapes removed from the graph don't come back through `animatedShapes`
-   * naturally (the caller has no reason to keep asking for a shape it just
-   * deleted), so their remove animation would never be visible. this rebuilds
-   * a `Shape` for each in-flight ghost from its last known schema, which
-   * re-enters the same animated-shape proxy and therefore still resolves the
-   * remove timeline's live (in-progress) property values.
+   * rebuilds a `Shape` for each in-flight ghost from its last known schema, so
+   * a remove animation stays visible after the caller stops asking for it
    */
   const getGhostShapes = (): {
     id: SchemaId;
@@ -387,26 +360,21 @@ export const createAnimatedShapes = (): AnimatedShapes => {
       return {
         id,
         orderIndex,
-        shape: animatedShapes[shapeName](rest as WithId<any>),
+        shape: animatedShapes[shapeName]({
+          ...rest,
+          [GHOST_REDRAW]: true,
+        } as WithId<any>),
       };
     });
 
   /**
-   * a `drawGroup` that transparently keeps drawing recently-removed shapes
-   * ("ghosts") for the duration of their remove animation, at the draw
-   * position they held right before removal. `drawGroup` is called once per
-   * priority group, potentially several times per frame, so ghosts must be
-   * placed relative to a running position across the whole frame rather than
-   * reset on every call. `beginFrame` marks where that running count starts
-   * over; the caller invokes it once, at the single point per frame where it
-   * already knows a new draw pass is starting.
+   * `drawGroup` with in-flight ghosts spliced back into the position they held
+   * before removal. it runs once per priority group, so ghosts are placed
+   * against a count spanning the whole frame rather than one per call
    */
   let shapesDrawnThisFrame = 0;
-  // ghosts already placed into a group this frame, so a ghost whose captured
-  // orderIndex sits right on a group boundary (removing a shape shrinks the
-  // total by one, so a ghost that was last overall now has an orderIndex
-  // equal to, not less than, every group's new end) is claimed by exactly
-  // one group instead of falling through every group's exclusive range
+  // a group's range is inclusive, so a ghost on a boundary matches more than
+  // one of them. this keeps it claimed by the first
   const ghostsPlacedThisFrame = new Set<SchemaId>();
   const beginFrame = () => {
     shapesDrawnThisFrame = 0;
@@ -435,17 +403,12 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     }
 
     shapesDrawnThisFrame = groupEnd;
-
     drawGroupPure(ctx, shapesWithGhosts);
   };
 
   /**
-   * a ghost whose priority tier has no surviving live elements this frame
-   * (e.g. removing the last node in the graph, or the last shape at a given
-   * priority) never gets a `drawGroup` call to be spliced into at all, since
-   * the caller only invokes `drawGroup` for priority tiers that still have
-   * live elements. call this once per frame, after all real `drawGroup`
-   * calls, to draw any ghosts that were never claimed by one.
+   * draws any ghost no `drawGroup` claimed, which happens when its whole
+   * priority tier is gone. call once per frame, after every `drawGroup`
    */
   const endFrame = (ctx: CanvasRenderingContext2D) => {
     const unclaimedGhosts = getGhostShapes().filter(
@@ -465,6 +428,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
   return {
     shapes: animatedShapes,
+    tick,
     drawGroup,
     beginFrame,
     endFrame,
@@ -475,42 +439,36 @@ export const createAnimatedShapes = (): AnimatedShapes => {
       schemaId: SchemaId,
       inputPropName: TProp,
     ) => {
-      const animations = activeAnimations.get(schemaId);
-      if (!animations || animations.length === 0) {
-        throw new Error(`Schema with id ${schemaId} has no running animations`);
-      }
+      const animations = activeAnimations.get(schemaId) ?? [];
+      assert(
+        animations.length,
+        `Schema with id ${schemaId} has no running animations`,
+      );
 
-      const { schemaWithDefaults } = animations[0];
+      const schemaWithDefaults = nullThrows(
+        animations[0].schemaWithDefaults,
+        'Animation set without a schema. this should never happen!',
+      );
 
-      if (!schemaWithDefaults) {
-        throw new Error(
-          '(Internal Error) Animation set without a schema. this should never happen!',
-        );
-      }
+      assert(
+        inputPropName in schemaWithDefaults,
+        `Prop name ${inputPropName} is not a property on schema (${Object.keys(schemaWithDefaults)})`,
+      );
 
-      if (!(inputPropName in schemaWithDefaults)) {
-        throw new Error(
-          `(User Error) Input prop name ${inputPropName} not a property on schema (${Object.keys(schemaWithDefaults)})`,
-        );
-      }
-
-      const shapeName = schemaIdToShapeName.get(schemaId);
-      if (!shapeName) {
-        throw new Error(
-          '(Internal Error) Animation set without shape name mapping. this should never happen!',
-        );
-      }
+      const shapeName = nullThrows(
+        schemaIdToShapeName.get(schemaId),
+        'Animation set without shape name mapping. this should never happen!',
+      );
 
       let propVal = schemaWithDefaults[
         inputPropName
       ] as UnionToIntersection<EverySchemaProp>[TProp];
 
       for (const animation of animations) {
-        const timeline = timelineIdToTimeline.get(animation.timelineId);
-        if (!timeline)
-          throw new Error(
-            '(Internal Error) Animation activated without a timeline!',
-          );
+        const timeline = nullThrows(
+          timelineIdToTimeline.get(animation.timelineId),
+          'Animation activated without a timeline!',
+        );
 
         const animationWithTimeline = {
           ...timeline,
@@ -519,14 +477,14 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
         const { validShapes, timelineId } = animationWithTimeline;
         if (!validShapes.has(shapeName)) {
-          console.warn(
-            `(Internal Error) Attempted to apply inappropriate animation to schema! Animation timeline ${timelineId} only works for shapes ${Array.from(validShapes.keys())} but schema ${schemaId} is of shape ${shapeName}.`,
+          devWarning(
+            `Attempted to apply inappropriate animation to schema! Animation timeline ${timelineId} only works for shapes ${Array.from(validShapes.keys())} but schema ${schemaId} is of shape ${shapeName}.`,
           );
           continue;
         }
 
         const { properties } = animationWithTimeline;
-        const progress = getAnimationProgress(animationWithTimeline);
+        const progress = getAnimationProgress(animationWithTimeline, frameNow);
 
         const animationFunction = properties[inputPropName as string];
         propVal = animationFunction(schemaWithDefaults, progress);

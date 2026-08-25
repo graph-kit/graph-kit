@@ -12,7 +12,7 @@ import { GraphShellOptions } from './types.ts';
 /** adapts a graph to the shell's controls interface, see {@link useShell} */
 export const useGraphShell = (
   options: GraphShellOptions,
-): Graph & { shell: Shell } => {
+): { shell: Shell; graph: Graph } => {
   const graph = useGraph(options);
 
   const lensChips = options.lensChips?.(graph);
@@ -76,7 +76,7 @@ export const useGraphShell = (
   provideGraph(graph);
 
   return {
-    ...graph,
+    graph,
     shell,
   };
 };

@@ -1,12 +1,12 @@
-// import { getCtx } from '@core/utils/canvas/index';
+import { getCtx } from '@core/utils/canvas/index';
+
 import { AnimationPlugin } from './types.ts';
 
 export const animation: AnimationPlugin = ({ controls }) => {
-  // TODO re-enable this when auto animation stabilizes
-  const autoAnimate = () => () => {};
-  // controls.surface.renderer.autoAnimate.captureFrame(() =>
-  //   controls.surface.aggregator.draw(getCtx(controls.surface.canvas)),
-  // );
+  const autoAnimate = () =>
+    controls.surface.renderer.autoAnimate.captureFrame(() =>
+      controls.surface.aggregator.draw(getCtx(controls.surface.canvas)),
+    );
 
   // a capture window left open freezes every shape it snapshotted on its pre-mutation
   // schema, so finalize has to run even when the mutation throws

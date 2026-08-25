@@ -1,3 +1,4 @@
+import { assert } from '@core/utils/assert';
 import type { Color } from '@core/utils/colors';
 import tinycolor from 'tinycolor2';
 
@@ -11,13 +12,13 @@ export const isColor = (color: tinycolor.Instance) => color.isValid();
 
 export const interpolateColor: InterpolationFunction<Color> =
   (keyframes, defaultEasing, fallback) => (progress) => {
+    // "none" color cannot be interpolated
+    keyframes = keyframes.filter((kf) => kf.value !== 'none');
     if (keyframes.length === 0) return fallback;
 
+    // TODO replace with more forgiving dev warning and drop the keyframes with invalid colors
     const validColors = keyframes.map((kf) => tinycolor(kf.value));
-
-    if (!validColors.every(isColor)) {
-      throw new Error('Invalid color provided in keyframe.');
-    }
+    assert(validColors.every(isColor), 'Invalid color provided in keyframe.');
 
     for (let i = 0; i < keyframes.length - 1; i++) {
       const startKeyframe = keyframes[i];

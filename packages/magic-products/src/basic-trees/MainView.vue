@@ -8,7 +8,7 @@
   import { useTreeSimulation } from './simulations/useTreeSimulation.ts';
   import { provideTreeSimulation } from './useProvidedTree.ts';
 
-  const graph = useGraphShell({
+  const { graph } = useGraphShell({
     productId: 'avl-trees',
     flags: {
       history: false,

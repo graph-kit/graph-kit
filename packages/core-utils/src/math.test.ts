@@ -185,6 +185,13 @@ describe('displayNumber', () => {
     });
   });
 
+  test('parses string fraction notation', () => {
+    expect(displayNumber(`0.(3)`)).toEqual({
+      primary: '1/3',
+      secondary: '~0.333',
+    });
+  });
+
   test('shows infinity as a symbol that needs no decimal', () => {
     for (const infinity of ['∞', String(Infinity), Infinity] as const) {
       expect(displayNumber(infinity)).toEqual({

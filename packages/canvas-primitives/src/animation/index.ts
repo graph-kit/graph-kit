@@ -1,4 +1,4 @@
-import { nullThrows } from '@core/utils/assert';
+import { assert, nullThrows } from '@core/utils/assert';
 import { devWarning } from '@core/utils/debugging';
 import type { UnionToIntersection } from 'ts-essentials';
 
@@ -476,42 +476,36 @@ export const createAnimatedShapes = (): AnimatedShapes => {
       schemaId: SchemaId,
       inputPropName: TProp,
     ) => {
-      const animations = activeAnimations.get(schemaId);
-      if (!animations || animations.length === 0) {
-        throw new Error(`Schema with id ${schemaId} has no running animations`);
-      }
+      const animations = activeAnimations.get(schemaId) ?? [];
+      assert(
+        animations.length,
+        `Schema with id ${schemaId} has no running animations`,
+      );
 
-      const { schemaWithDefaults } = animations[0];
+      const schemaWithDefaults = nullThrows(
+        animations[0].schemaWithDefaults,
+        'Animation set without a schema. this should never happen!',
+      );
 
-      if (!schemaWithDefaults) {
-        throw new Error(
-          '(Internal Error) Animation set without a schema. this should never happen!',
-        );
-      }
+      assert(
+        inputPropName in schemaWithDefaults,
+        `Prop name ${inputPropName} is not a property on schema (${Object.keys(schemaWithDefaults)})`,
+      );
 
-      if (!(inputPropName in schemaWithDefaults)) {
-        throw new Error(
-          `(User Error) Input prop name ${inputPropName} not a property on schema (${Object.keys(schemaWithDefaults)})`,
-        );
-      }
-
-      const shapeName = schemaIdToShapeName.get(schemaId);
-      if (!shapeName) {
-        throw new Error(
-          '(Internal Error) Animation set without shape name mapping. this should never happen!',
-        );
-      }
+      const shapeName = nullThrows(
+        schemaIdToShapeName.get(schemaId),
+        'Animation set without shape name mapping. this should never happen!',
+      );
 
       let propVal = schemaWithDefaults[
         inputPropName
       ] as UnionToIntersection<EverySchemaProp>[TProp];
 
       for (const animation of animations) {
-        const timeline = timelineIdToTimeline.get(animation.timelineId);
-        if (!timeline)
-          throw new Error(
-            '(Internal Error) Animation activated without a timeline!',
-          );
+        const timeline = nullThrows(
+          timelineIdToTimeline.get(animation.timelineId),
+          'Animation activated without a timeline!',
+        );
 
         const animationWithTimeline = {
           ...timeline,
@@ -520,8 +514,8 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
         const { validShapes, timelineId } = animationWithTimeline;
         if (!validShapes.has(shapeName)) {
-          console.warn(
-            `(Internal Error) Attempted to apply inappropriate animation to schema! Animation timeline ${timelineId} only works for shapes ${Array.from(validShapes.keys())} but schema ${schemaId} is of shape ${shapeName}.`,
+          devWarning(
+            `Attempted to apply inappropriate animation to schema! Animation timeline ${timelineId} only works for shapes ${Array.from(validShapes.keys())} but schema ${schemaId} is of shape ${shapeName}.`,
           );
           continue;
         }

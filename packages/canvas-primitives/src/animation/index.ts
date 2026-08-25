@@ -335,7 +335,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
           if (prop === 'startTextAreaEdit') {
             devWarning(
-              'shapes with active animations cannot spawn text inputs',
+              'Shapes with active animations cannot spawn text inputs',
             );
             return;
           }
@@ -344,7 +344,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
 
           const animatedSchema = nullThrows(
             getAnimatedSchema(schema.id),
-            'animations present but getAnimatedSchema returned nothing. this should never happen!',
+            'Animations present but getAnimatedSchema returned nothing. this should never happen!',
           );
 
           return factory(animatedSchema as WithId<Schema>)[prop];

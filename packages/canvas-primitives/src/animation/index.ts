@@ -1,3 +1,4 @@
+import { ReadonlyEventHub } from '@core/events/createEventHub';
 import { assert, nullThrows } from '@core/utils/assert';
 import { devWarning } from '@core/utils/debugging';
 import type { UnionToIntersection } from 'ts-essentials';
@@ -18,6 +19,7 @@ import type {
 import { shapeProps } from '../types/index.ts';
 import { GHOST_REDRAW } from './auto-animate/constants.ts';
 import { createAutoAnimate } from './auto-animate/createAutoAnimate.ts';
+import type { AutoAnimateEventMap } from './auto-animate/events.ts';
 import type { DefineTimeline } from './timeline/define.ts';
 import { createDefineTimeline } from './timeline/define.ts';
 import type { ActiveAnimation, LooseSchema } from './types.ts';
@@ -73,6 +75,7 @@ export type ShapeRenderer = {
      * animations already in flight keep the duration they started with
      */
     setAnimationDuration: (durationMs: number) => void;
+    events: ReadonlyEventHub<AutoAnimateEventMap>;
   };
   /**
    * if a schema is actively being animated, the live schema with animated
@@ -448,6 +451,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
         return autoAnimate.animationDuration;
       },
       setAnimationDuration: autoAnimate.setAnimationDuration,
+      events: autoAnimate.events,
     },
     getAnimatedSchema,
     getAnimatedProp: <TProp extends EverySchemaPropName>(

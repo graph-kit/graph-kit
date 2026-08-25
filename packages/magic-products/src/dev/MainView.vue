@@ -12,6 +12,7 @@
         would leave a run measuring that scene on top of the one it asked for
       */
       localStorage: false,
+      adjustAnimationSpeed: true,
     },
     core: {
       directed: true,

@@ -1,3 +1,4 @@
+import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { jsonClone } from '@core/utils/clone';
 import { devWarning } from '@core/utils/debugging';
@@ -21,6 +22,7 @@ import {
   DEFAULT_AUTO_ANIMATE_DURATION_MS,
   GHOST_REDRAW,
 } from './constants.ts';
+import { createAutoAnimateEventRegistry } from './events.ts';
 import { AutoAnimateTimeline, LooseSchemaWithName } from './types.ts';
 
 /**
@@ -54,6 +56,8 @@ export const createAutoAnimate = (
   let captureState: CaptureState;
 
   let animationDuration = DEFAULT_AUTO_ANIMATE_DURATION_MS;
+
+  const events = createEventHub(createAutoAnimateEventRegistry());
 
   const snapshotMap: Map<
     SchemaId,
@@ -113,6 +117,8 @@ export const createAutoAnimate = (
   };
 
   return {
+    events,
+
     /** how long an auto animated capture takes to play out, in ms */
     get animationDuration() {
       return animationDuration;
@@ -125,11 +131,16 @@ export const createAutoAnimate = (
     setAnimationDuration: (durationMs: number) => {
       if (!Number.isFinite(durationMs) || durationMs <= 0) {
         devWarning(
-          `auto animate duration must be a positive number, got ${durationMs}. ignoring`,
+          `Auto animate duration must be a positive number, got ${durationMs}. ignoring`,
         );
         return;
       }
+
+      if (durationMs === animationDuration) return;
+
+      const oldDurationMs = animationDuration;
       animationDuration = durationMs;
+      events.emit('onAnimationDurationChanged', durationMs, oldDurationMs);
     },
 
     captureSchemaState: (schema: LooseSchema, shapeName: ShapeName) => {
@@ -206,7 +217,7 @@ export const createAutoAnimate = (
           if (!beforeSchema) {
             const schema = nullThrows(
               afterSchema,
-              'after schema must be defined',
+              'After schema must be defined',
             );
 
             // shape is re-appearing while its remove animation is still playing
@@ -216,7 +227,7 @@ export const createAutoAnimate = (
 
               if (!ghostLiveSchema) {
                 devWarning(
-                  `ghost ${schema.id} has no animation to clear it and would have outlived the shape it stood in for. dropping it`,
+                  `Ghost ${schema.id} has no animation to clear it and would have outlived the shape it stood in for. dropping it`,
                 );
                 ghosts.delete(schema.id);
                 continue;
@@ -234,7 +245,7 @@ export const createAutoAnimate = (
               // which means we cannot animate between them
               if (schemaDifference?.shapeName) {
                 devWarning(
-                  'illegal shape name difference mid animation in shape with ID',
+                  'Illegal shape name difference mid animation in shape with ID',
                   schema.id,
                 );
                 stopAllAnimations(schema.id);
@@ -284,7 +295,7 @@ export const createAutoAnimate = (
               schema: beforeSchema,
               orderIndex: nullThrows(
                 beforeCaptureOrder.get(snapshot.schemaId),
-                'did not capture order in snapshot',
+                'Did not capture order in snapshot',
               ),
             });
 
@@ -311,7 +322,7 @@ export const createAutoAnimate = (
           const { shapeName } = schemaDifference;
           if (shapeName) {
             devWarning(
-              `shape with ID ${snapshot.schemaId} changed from a ${beforeSchema.shapeName} to an ${afterSchema.shapeName}. Animating between shapes is unsupported`,
+              `Shape with ID ${snapshot.schemaId} changed from a ${beforeSchema.shapeName} to an ${afterSchema.shapeName}. Animating between shapes is unsupported`,
             );
             continue;
           }

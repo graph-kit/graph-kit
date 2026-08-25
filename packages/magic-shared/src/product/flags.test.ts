@@ -19,6 +19,7 @@ describe('resolveShellFlags', () => {
       localStorage: true,
       annotations: true,
       linkSharing: true,
+      adjustAnimationSpeed: false,
     });
   });
 

@@ -12,15 +12,15 @@ export const arrowRemove: AutoAnimateTimeline<'arrow'> = {
     {
       progress: 0,
       properties: {
-        end: (end) => end,
         lineWidth: (lw) => lw,
+        fillColor: (c) => c,
       },
     },
     {
       progress: 1,
       properties: {
         lineWidth: 0,
-        end: (_, { start }) => start,
+        fillColor: (c) => tinycolor(c).setAlpha(0).toRgbString(),
         textArea: (ta) => ({
           id: ta.id,
           color: tinycolor(ta.color).setAlpha(0).toRgbString(),

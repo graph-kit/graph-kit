@@ -13,6 +13,7 @@
     flags: {
       history: false,
       localStorage: false,
+      adjustAnimationSpeed: true,
     },
     core: {
       weighted: false,

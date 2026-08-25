@@ -23,6 +23,15 @@
     if (active) highlight.activate?.(context);
     else highlight.deactivate?.(context);
   };
+
+  const mounted = (highlight: ExplainerHighlight) => {
+    highlight.onMounted?.(context);
+  };
+
+  const unmounted = (highlight: ExplainerHighlight) => {
+    highlight.deactivate?.(context);
+    highlight.onUnmounted?.(context);
+  };
 </script>
 
 <template>
@@ -35,8 +44,8 @@
         <Tooltip
           :label="getValue(segment.highlight.tooltipLabel, context)"
           @update:open="setHighlight(segment.highlight, $event)"
-          @vue:mounted="segment.highlight.onMounted?.(context)"
-          @vue:unmounted="segment.highlight.onUnmounted?.(context)"
+          @vue:mounted="mounted(segment.highlight)"
+          @vue:unmounted="unmounted(segment.highlight)"
         >
           <template #trigger>
             <Button

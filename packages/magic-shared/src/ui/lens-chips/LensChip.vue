@@ -33,10 +33,7 @@
         <span>
           {{ getValue(name) }}
         </span>
-        <Icon
-          v-if="getValue(tooltipLabel)"
-          :path="mdiInformationOutline"
-        />
+        <Icon :path="mdiInformationOutline" />
       </ToggleButton>
     </template>
   </Tooltip>

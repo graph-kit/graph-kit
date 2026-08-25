@@ -3,10 +3,7 @@ import { FrameCollector } from '@magic/shared/simulation';
 
 import { AVLFrame, AVLFrameNoRoot } from '../simulations/frames.ts';
 import { NodePayload, TreeNode } from './TreeNode.ts';
-import { getTreeHeight } from './getTreeHeight.ts';
-
-const getBalance = (node: TreeNode) =>
-  getTreeHeight(node.left) - getTreeHeight(node.right);
+import { getBalanceFactor } from './getBalanceFactor.ts';
 
 export class AVLTree {
   root: TreeNode | undefined;
@@ -160,10 +157,10 @@ export class AVLTree {
     node: TreeNode,
     isLeft: boolean,
   ): TreeNode {
-    const balance = getBalance(node);
+    const balance = getBalanceFactor(node);
 
     // Left Left Case
-    if (balance > 1 && getBalance(node.left!) >= 0) {
+    if (balance > 1 && getBalanceFactor(node.left) >= 0) {
       const result = this.rotateRight(node);
       if (parent) {
         if (isLeft) parent.left = result;
@@ -185,7 +182,7 @@ export class AVLTree {
     }
 
     // Right Right Case
-    if (balance < -1 && getBalance(node.right!) <= 0) {
+    if (balance < -1 && getBalanceFactor(node.right!) <= 0) {
       const result = this.rotateLeft(node);
       if (parent) {
         if (isLeft) parent.left = result;
@@ -207,7 +204,7 @@ export class AVLTree {
     }
 
     // Left Right Case
-    if (balance > 1 && getBalance(node.left!) < 0) {
+    if (balance > 1 && getBalanceFactor(node.left!) < 0) {
       node.left = this.rotateLeft(node.left!);
       const result = this.rotateRight(node);
       if (parent) {
@@ -230,7 +227,7 @@ export class AVLTree {
     }
 
     // Right Left Case
-    if (balance < -1 && getBalance(node.right!) > 0) {
+    if (balance < -1 && getBalanceFactor(node.right!) > 0) {
       node.right = this.rotateRight(node.right!);
       const result = this.rotateLeft(node);
       if (parent) {

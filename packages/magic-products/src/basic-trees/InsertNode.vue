@@ -1,6 +1,5 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
-  import { getRandomInRange } from '@core/utils/random';
   import Button from '@magic/shared/Button';
   import Dropdown from '@magic/shared/Dropdown';
   import Icon from '@magic/shared/Icon';
@@ -8,7 +7,7 @@
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useProvidedShell } from '@magic/shared/product';
-  import { mdiPlay, mdiPlus, mdiPlusBox } from '@mdi/js';
+  import { mdiPlay, mdiPlus } from '@mdi/js';
 
   import { computed, ref } from 'vue';
 

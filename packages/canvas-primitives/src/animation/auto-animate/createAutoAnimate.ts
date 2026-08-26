@@ -20,6 +20,7 @@ import { circleRemove } from './circle/remove.ts';
 import {
   AUTO_ANIMATED_PROPERTIES,
   DEFAULT_AUTO_ANIMATE_DURATION_MS,
+  GEOMETRY_PROPERTIES,
   GHOST_REDRAW,
 } from './constants.ts';
 import { createAutoAnimateEventRegistry } from './events.ts';
@@ -48,6 +49,11 @@ type CreateTimelineValue = {
 };
 
 type CaptureState = 'before' | 'after' | undefined;
+
+export type FinalizeCaptureOptions = {
+  ignore?: ReadonlySet<SchemaId>;
+  ignoreGeometry?: ReadonlySet<SchemaId>;
+};
 
 export const createAutoAnimate = (
   defineTimeline: DefineTimeline,
@@ -201,16 +207,16 @@ export const createAutoAnimate = (
 
       takeSnapshot('before');
 
-      return () => {
+      return (options?: FinalizeCaptureOptions) => {
         takeSnapshot('after');
 
-        const schemasCapturedInSnapshots = Array.from(snapshotMap).map(
-          ([schemaId, snapshotStates]) => ({
+        const schemasCapturedInSnapshots = Array.from(snapshotMap)
+          .filter(([schemaId]) => !options?.ignore?.has(schemaId))
+          .map(([schemaId, snapshotStates]) => ({
             schemaId,
             beforeSchema: snapshotStates.before,
             afterSchema: snapshotStates.after,
-          }),
-        );
+          }));
 
         for (const snapshot of schemasCapturedInSnapshots) {
           const { beforeSchema, afterSchema } = snapshot;
@@ -339,9 +345,20 @@ export const createAutoAnimate = (
             schemaDifference,
           ) as EverySchemaPropName[];
 
-          const supportedSchemaProperties = schemaPropNames.filter((name) =>
-            AUTO_ANIMATED_PROPERTIES.has(name),
+          const geometryIsOwnedElsewhere =
+            options?.ignoreGeometry?.has(snapshot.schemaId) ?? false;
+
+          const supportedSchemaProperties = schemaPropNames.filter(
+            (name) =>
+              AUTO_ANIMATED_PROPERTIES.has(name) &&
+              !(geometryIsOwnedElsewhere && GEOMETRY_PROPERTIES.has(name)),
           );
+
+          if (
+            geometryIsOwnedElsewhere &&
+            supportedSchemaProperties.length === 0
+          )
+            continue;
 
           const timelineValues = supportedSchemaProperties.map(
             (name): CreateTimelineValue => ({

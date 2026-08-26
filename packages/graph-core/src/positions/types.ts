@@ -27,6 +27,8 @@ export type NodePositionStreamControls = {
    * store can report the commit without re-deriving it. Empty if already stopped.
    */
   stop: () => NodePositionEntry[];
+  /** ends the stream without committing, dropping whatever it was presenting */
+  cancel: () => void;
 };
 
 export type PresentedPositionControls = {

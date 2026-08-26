@@ -135,6 +135,15 @@ export const createNodePositionStore = (
         events.emit('onNodeMoveStreamEnd');
         return committed;
       },
+      cancel: () => {
+        if (stopped) return;
+        stopped = true;
+        devStreamRegistry?.unregister(unregisterToken);
+        for (const nodeId of touchedNodeIds) {
+          nodeIdToPresentedPosition.delete(nodeId);
+        }
+        events.emit('onNodeMoveStreamEnd');
+      },
     };
     devStreamRegistry?.register(stream, undefined, unregisterToken);
     return stream;

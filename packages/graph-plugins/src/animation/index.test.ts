@@ -4,24 +4,73 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { animation } from './index.ts';
 
+const animatedProperties = (timeline: any) =>
+  Object.keys(timeline.keyframes[0].properties).sort();
+
 const setup = () => {
   const playedDurations: number[] = [];
+  const playedTimelines: any[] = [];
 
   const autoAnimate = createAutoAnimate(
     ((timeline: { durationMs: number }) => ({
-      play: () => playedDurations.push(timeline.durationMs),
+      play: () => {
+        playedDurations.push(timeline.durationMs);
+        playedTimelines.push(timeline);
+      },
     })) as any,
     () => undefined,
     () => {},
   );
 
   /** shapes the draw pass reports, so a capture has something to animate */
-  const scene: { id: string; at: { x: number; y: number }; radius: number }[] =
-    [];
+  const scene: { id: string; fillColor: string }[] = [];
 
+  // mirrors the render path: a shape's geometry is read from the presented position
   const draw = () => {
-    for (const schema of scene)
-      autoAnimate.captureSchemaState(schema, 'circle');
+    for (const node of scene) {
+      autoAnimate.captureSchemaState(
+        {
+          id: node.id,
+          at: { ...positions.presented.get(node.id) },
+          radius: 10,
+          fillColor: node.fillColor,
+        },
+        'circle',
+      );
+    }
+  };
+
+  const committed = new Map<string, { x: number; y: number; z: number }>();
+  const overrides = new Map<string, { x: number; y: number; z: number }>();
+
+  const positions = {
+    get: (nodeId: string) => committed.get(nodeId) ?? { x: 0, y: 0, z: 0 },
+    presented: {
+      get: (nodeId: string) => overrides.get(nodeId) ?? positions.get(nodeId),
+      set: (nodeId: string, position: { x: number; y: number; z: number }) => {
+        overrides.set(nodeId, {
+          ...positions.presented.get(nodeId),
+          ...position,
+        });
+      },
+      clear: (nodeId: string) => overrides.delete(nodeId),
+    },
+    createStream: () => ({
+      setMany: (
+        updates: { nodeId: string; update: { x: number; y: number } }[],
+      ) => {
+        for (const { nodeId, update } of updates) {
+          positions.presented.set(nodeId, {
+            ...positions.presented.get(nodeId),
+            ...update,
+          });
+        }
+        return updates;
+      },
+      cancel: () => {
+        for (const nodeId of [...overrides.keys()]) overrides.delete(nodeId);
+      },
+    }),
   };
 
   const plugin = animation({
@@ -31,13 +80,33 @@ const setup = () => {
         aggregator: { draw },
         canvas: { getContext: () => ({}) },
       },
+      positions,
+      nodes: () => scene.map(({ id }) => ({ id })),
+      edges: () => [],
+      isNode: (nodeId: string) => scene.some(({ id }) => id === nodeId),
     },
   } as unknown as Parameters<typeof animation>[0]);
 
-  const addCircle = () =>
-    scene.push({ id: 'circle-1', at: { x: 0, y: 0 }, radius: 10 });
+  const addCircle = () => scene.push({ id: 'circle-1', fillColor: '#ff0000' });
 
-  return { ...plugin.controls, autoAnimate, addCircle, playedDurations };
+  const moveNode = (nodeId: string, x: number, y: number) =>
+    committed.set(nodeId, { x, y, z: 0 });
+
+  const recolorNode = (nodeId: string, fillColor: string) => {
+    const node = scene.find(({ id }) => id === nodeId);
+    if (node) node.fillColor = fillColor;
+  };
+
+  return {
+    ...plugin.controls,
+    autoAnimate,
+    addCircle,
+    moveNode,
+    recolorNode,
+    positions,
+    playedDurations,
+    playedTimelines,
+  };
 };
 
 describe(animation, () => {
@@ -123,6 +192,48 @@ describe(animation, () => {
     expect(autoAnimate.animationDuration).toBe(
       DEFAULT_AUTO_ANIMATE_DURATION_MS,
     );
+  });
+
+  it('leaves a pure move to the position layer', () => {
+    const { capture, addCircle, moveNode, playedTimelines } = setup();
+    addCircle();
+
+    capture(() => moveNode('circle-1', 100, 100));
+
+    expect(playedTimelines).toEqual([]);
+  });
+
+  it('presents a moved node where it was, not where it landed', () => {
+    const { capture, addCircle, moveNode, positions } = setup();
+    addCircle();
+
+    capture(() => moveNode('circle-1', 100, 100));
+
+    expect(positions.presented.get('circle-1')).toMatchObject({ x: 0, y: 0 });
+    expect(positions.get('circle-1')).toMatchObject({ x: 100, y: 100 });
+  });
+
+  it('still animates a colour change on a node that moved', () => {
+    const { capture, addCircle, moveNode, recolorNode, playedTimelines } =
+      setup();
+    addCircle();
+
+    capture(() => {
+      moveNode('circle-1', 100, 100);
+      recolorNode('circle-1', '#00ff00');
+    });
+
+    expect(playedTimelines).toHaveLength(1);
+    expect(animatedProperties(playedTimelines[0])).toEqual(['fillColor']);
+  });
+
+  it('still plays an entrance for a node that appeared', () => {
+    const { capture, addCircle, playedTimelines } = setup();
+
+    capture(addCircle);
+
+    expect(playedTimelines).toHaveLength(1);
+    expect(animatedProperties(playedTimelines[0])).toContain('radius');
   });
 
   it('leaves the signal alone when the renderer refuses the duration', () => {

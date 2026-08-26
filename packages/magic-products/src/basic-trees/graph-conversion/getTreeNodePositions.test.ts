@@ -36,8 +36,8 @@ const perfectTree = (
 
 const place = (node: TreeNode, xOffset = X_OFFSET, origin = ORIGIN) =>
   getTreeNodePositions({
-    node,
-    nodeCoordinates: origin,
+    root: node,
+    rootPosition: origin,
     xOffset,
     yOffset: Y_OFFSET,
   });

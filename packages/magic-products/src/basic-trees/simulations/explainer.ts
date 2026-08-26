@@ -41,6 +41,11 @@ export const explainer = (frame: AVLFrame): Explainer | undefined => {
       ],
     };
   }
+  if (frame.action === 'rotation') {
+    return {
+      content: 'Rotating ' + frame.side,
+    };
+  }
   if (frame.action === 'insert') {
     return {
       content: `Inserting {${frame.targetNode.id}}`,
@@ -55,8 +60,8 @@ export const explainer = (frame: AVLFrame): Explainer | undefined => {
   if (frame.action === 'compare-removal') {
     return {
       content:
-        `Comparing {${frame.targetNode?.id}} to {${frame.comparedNode.id}}` +
-        (frame.targetNode?.id === frame.comparedNode.id ? '. Found It!' : ''),
+        `Comparing {${frame.targetNode.id}} to {${frame.comparedNode.id}}` +
+        (frame.targetNode.id === frame.comparedNode.id ? '. Found It!' : ''),
     };
   }
 };

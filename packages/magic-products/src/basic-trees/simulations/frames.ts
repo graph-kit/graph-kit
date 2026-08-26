@@ -3,6 +3,8 @@ import { NodePayload, TreeNode } from '../tree/TreeNode.ts';
 export type BalanceMethod =
   'left-left' | 'right-right' | 'left-right' | 'right-left';
 
+export type RotationSide = 'left' | 'right';
+
 export type CompareFrame = {
   action: 'compare';
   comparedNode: TreeNode;
@@ -12,7 +14,7 @@ export type CompareFrame = {
 type CompareForRemovalFrame = {
   action: 'compare-removal';
   comparedNode: TreeNode;
-  targetNode: NodePayload | undefined;
+  targetNode: NodePayload;
 };
 
 type CompareDuplicateFound = {
@@ -23,6 +25,11 @@ type CompareDuplicateFound = {
 type BalanceFrame = {
   action: 'balance';
   method: BalanceMethod;
+};
+
+type RotationFrame = {
+  action: 'rotation';
+  side: RotationSide;
 };
 
 type InsertFrame = {
@@ -41,6 +48,7 @@ export type AVLFrameNoRoot =
   | CompareForRemovalFrame
   | CompareDuplicateFound
   | BalanceFrame
+  | RotationFrame
   | InsertFrame
   | RemoveFrame;
 

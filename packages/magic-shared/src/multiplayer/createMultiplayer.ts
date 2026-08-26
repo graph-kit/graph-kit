@@ -1,7 +1,11 @@
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { DocUpdate, toDocUpdate } from '@multiplayer/protocol/doc';
-import { JoinResult, ProductEntryState } from '@multiplayer/protocol/events';
+import {
+  DisbandReason,
+  JoinResult,
+  ProductEntryState,
+} from '@multiplayer/protocol/events';
 import {
   ProductId,
   ProductPresence,
@@ -17,7 +21,11 @@ import * as Y from 'yjs';
 
 import { computed, ref, shallowRef } from 'vue';
 
+import { isProductId } from '../product/manifests/isValidProductId.ts';
+import { getNavigationName } from '../product/manifests/navigationName.ts';
 import { DocBindMode } from '../product/types.ts';
+import { ToastOptions } from '../ui/toast/types.ts';
+import { toast } from '../ui/toast/useToastState.ts';
 import { REMOTE_ORIGIN, getDisplayName } from './constants.ts';
 import { createMultiplayerEventRegistry } from './events.ts';
 import { clearSeat, readSeat, writeSeat } from './seat.ts';
@@ -38,6 +46,38 @@ type CreateMultiplayerOptions = {
 };
 
 const ACK_TIMEOUT_MS = 10_000;
+
+/** an ending arrives unasked for, so it stays up long enough to be read on the way past */
+const SESSION_ENDED_TOAST_MS = 10_000;
+
+const MOVED_TOAST_MS = 6_000;
+
+/**
+ * exhaustive, so a disband reason added to the union is a compile error here rather than
+ * a session that ends without saying why
+ */
+const DISBAND_MESSAGE: Record<
+  DisbandReason,
+  { title: string; description: string; duration: ToastOptions['duration'] }
+> = {
+  hostLeft: {
+    title: 'The Session Ended',
+    description:
+      'The host closed it. What is on screen is still yours to edit.',
+    duration: SESSION_ENDED_TOAST_MS,
+  },
+  inactivity: {
+    title: 'The Session Timed Out',
+    description:
+      'It closed after going quiet for too long. What is on screen is still yours to edit.',
+    // the room only goes quiet because nobody was watching, so this one waits to be read
+    duration: 'persistent',
+  },
+};
+
+/** the name a product goes by on screen, falling back to the raw id for one we cannot place */
+const productName = (productId: ProductId) =>
+  isProductId(productId) ? getNavigationName(productId) : productId;
 
 export const createMultiplayer = ({
   serverUrl,
@@ -307,27 +347,22 @@ export const createMultiplayer = ({
       });
     });
 
-    // the room is gone, so the id in the url and the seat behind it are both dead. no
-    // error state: the same quiet fallback a bad id gets on the way in
+    // the room is gone, so the id in the url and the seat behind it are both dead
     activeSocket.on('roomDisbanded', ({ reason }) => {
-      // TODO tell the user rather than the console, once there is a toast component
-      // https://github.com/graph-kit/graph-kit/issues/783
-      if (reason === 'inactivity') {
-        console.warn(
-          'multiplayer: the room closed after going quiet for too long',
-        );
-      }
+      toast.show({ ...DISBAND_MESSAGE[reason], severity: 'info' });
       releaseRoom();
       events.emit('onRoomDisbanded', reason);
     });
     // the seat is gone but not spent: it belongs to the tab that took it, and clearing
     // what is stored here would strand them the next time they had to reconnect
     activeSocket.on('seatTaken', () => {
-      // TODO tell the user rather than the console, once there is a toast component
-      // https://github.com/graph-kit/graph-kit/issues/783
-      console.warn(
-        'multiplayer: this session was taken over by another tab on the same room',
-      );
+      toast.show({
+        title: 'The Session Moved To Another Tab',
+        description:
+          'Another tab on this browser took over the session, so this one left it.',
+        severity: 'warn',
+        duration: SESSION_ENDED_TOAST_MS,
+      });
       abandonRoom();
       events.emit('onSeatTaken');
     });
@@ -335,17 +370,23 @@ export const createMultiplayer = ({
     // the same teardown a disband gets, except this one is worth announcing: the room
     // carried on without them, so silence would read as the session having ended
     activeSocket.on('kicked', ({ by }) => {
-      // TODO tell the user rather than the console, once there is a toast component
-      // https://github.com/graph-kit/graph-kit/issues/783
-      console.warn(`multiplayer: removed from the room by ${by.displayName}`);
+      toast.show({
+        title: 'Removed From The Session',
+        description: `${by.displayName} removed you from the session.`,
+        severity: 'warn',
+        duration: SESSION_ENDED_TOAST_MS,
+      });
       releaseRoom();
       events.emit('onKicked', by);
     });
 
     activeSocket.on('movedToProduct', ({ productId, by }) => {
-      // TODO tell the user rather than the console, once there is a toast component
-      // https://github.com/graph-kit/graph-kit/issues/783
-      console.warn(`multiplayer: moved to "${productId}" by ${by.displayName}`);
+      toast.show({
+        title: `Moved To ${productName(productId)}`,
+        description: `${by.displayName} brought the session here.`,
+        severity: 'info',
+        duration: MOVED_TOAST_MS,
+      });
       onMovedToProduct?.(productId);
     });
   };

@@ -14,11 +14,12 @@
 
   const tree = new AVLTree();
 
-  const graph = useGraphShell({
+  const { graph, shell } = useGraphShell({
     productId: 'avl-trees',
     flags: {
       history: false,
       localStorage: false,
+      adjustAnimationSpeed: true,
     },
     core: {
       weighted: false,
@@ -39,7 +40,7 @@
             id: 'balance-factor',
           },
           name: () => {
-            const sim = graph.shell.simulation.current.value;
+            const sim = shell.simulation.current.value;
             const frame: AVLFrame | undefined = sim?.frames?.at(
               sim.playhead.position,
             );
@@ -53,7 +54,7 @@
             id: 'tree-height',
           },
           name: () => {
-            const sim = graph.shell.simulation.current.value;
+            const sim = shell.simulation.current.value;
             const frame: AVLFrame | undefined = sim?.frames?.at(
               sim.playhead.position,
             );

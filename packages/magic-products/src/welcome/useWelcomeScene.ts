@@ -10,15 +10,13 @@ import { computed, inject, onMounted, onUnmounted, provide, ref } from 'vue';
 
 import {
   NODE_RADIUS,
-  WelcomeNode,
   edgeIdOf,
   edges,
   nodeIdOf,
   welcomeNodes,
 } from './scene.ts';
 
-/** how long each node waits before popping in, so the ring assembles itself */
-const STAGGER_MS = 0; // TODO set back to 160 when auto animate stabilizes
+const SEED_DURATION_MS = 300;
 
 const KEY = 'WELCOME_SCENE';
 
@@ -75,40 +73,23 @@ const createWelcomeScene = (graph: Graph) => {
       : undefined;
   };
 
-  const timeouts: ReturnType<typeof setTimeout>[] = [];
-
-  const schedule = (task: () => void, delayMs: number) => {
-    timeouts.push(setTimeout(task, delayMs));
-  };
-
-  const addProductNode = ({ productId, position }: WelcomeNode) =>
-    graph.animation.capture(() =>
-      graph.actions.addNode({
-        id: nodeIdOf(productId),
-        label: manifests[productId].abbreviatedName,
-        position,
-      }),
+  const seed = () =>
+    graph.animation.capture(
+      () =>
+        graph.actions.addElements({
+          nodes: welcomeNodes.map(({ productId, position }) => ({
+            id: nodeIdOf(productId),
+            label: manifests[productId].abbreviatedName,
+            position,
+          })),
+          edges: edges.map(([source, target], index) => ({
+            id: edgeIdOf(index),
+            source: nodeIdOf(source),
+            target: nodeIdOf(target),
+          })),
+        }),
+      { durationMs: SEED_DURATION_MS },
     );
-
-  const connectProducts = () =>
-    graph.animation.capture(() =>
-      graph.actions.addElements({
-        nodes: [],
-        edges: edges.map(([source, target], index) => ({
-          id: edgeIdOf(index),
-          source: nodeIdOf(source),
-          target: nodeIdOf(target),
-        })),
-      }),
-    );
-
-  const seed = () => {
-    for (const [index, welcomeNode] of welcomeNodes.entries()) {
-      schedule(() => addProductNode(welcomeNode), index * STAGGER_MS);
-    }
-
-    schedule(connectProducts, welcomeNodes.length * STAGGER_MS);
-  };
 
   onMounted(() => {
     seed();
@@ -119,7 +100,6 @@ const createWelcomeScene = (graph: Graph) => {
   });
 
   onUnmounted(() => {
-    for (const timeout of timeouts) clearTimeout(timeout);
     graph.surface.events.elements.unsubscribe(
       'onHoveredElementChange',
       trackHover,

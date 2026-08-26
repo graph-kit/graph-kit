@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { devWarning } from '@core/utils/debugging';
   import { mdiCheck, mdiClipboard, mdiContentCopy } from '@mdi/js';
 
   import { computed, ref } from 'vue';
@@ -6,11 +7,14 @@
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
+  import { toast } from '../toast/index.ts';
 
   const { room } = useConnectedMultiplayer();
 
   // 3 seconds of code copied confirmation state
   const CODE_COPIED_FEEDBACK_DURATION_MS = 3_000;
+
+  const COPY_FAILED_TOAST_MS = 6_000;
 
   let codeCopiedResetTimer: NodeJS.Timeout;
 
@@ -28,9 +32,16 @@
         CODE_COPIED_FEEDBACK_DURATION_MS,
       );
     } catch (err) {
-      // TODO handle code copy failure with a toast
-      // https://github.com/graph-kit/graph-kit/issues/783
-      console.error('Failed to copy to clipboard!', err);
+      devWarning(
+        'multiplayer: the clipboard turned down the session code',
+        err,
+      );
+      toast.show({
+        title: 'Could Not Copy The Session Code',
+        description: `Your browser turned down access to the clipboard. The code is ${sessionCode.value}.`,
+        severity: 'error',
+        duration: COPY_FAILED_TOAST_MS,
+      });
     }
   };
 

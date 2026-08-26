@@ -2,28 +2,8 @@ import { withScratchCanvas } from './offscreen.ts';
 import type { Shape } from './types/index.ts';
 
 /**
- * Draws a group of shapes with their text areas cleanly layered on top,
- * using a single shared offscreen canvas to handle compositing correctly
- * even when shapes cross each other's text areas.
- *
- * ## Why this is necessary
- *
- * When shapes are drawn independently, each shape's text area matte covers
- * whatever was drawn before it — including lines from other shapes crossing
- * through that text area. For straight edges on a graph this is especially
- * visible: a crossing edge gets cut off at the text label boundary.
- *
- * ## How it works
- *
- * 1. All shapes are drawn to a single offscreen canvas.
- * 2. Every text area is punched transparent using `destination-out` compositing.
- *    Because all shapes share the same offscreen canvas, a crossing edge's
- *    line is already present when the hole is punched — it gets erased along
- *    with the label's own edge, leaving clean transparency.
- * 3. The offscreen canvas is composited onto the main canvas. Whatever was
- *    drawn beneath (background pattern, shapes outside the group) shows through
- *    the transparent holes naturally.
- * 4. Text labels are drawn directly on the main canvas on top of everything.
+ * Draws a group of shapes with their text areas layered on
+ * top to handle compositing.
  *
  * @param ctx - The main canvas rendering context
  * @param shapes - Shapes to draw as a group (e.g. all edges on a graph)
@@ -43,19 +23,11 @@ export const drawGroup = (ctx: CanvasRenderingContext2D, shapes: Shape[]) => {
 
   const punchesHoles = group.some(({ drawHole }) => drawHole);
 
-  /*
-    the isolated surface only earns its cost when there is a hole to punch:
-    without one, the group is drawn and then blitted over unchanged, which
-    lands exactly the same pixels as drawing onto the main canvas directly.
-    node groups never punch (their text areas take the matte path), and every
-    node is its own priority group, so this is the common case by a wide margin
-  */
   if (!punchesHoles) {
     for (const { shape } of group) shape.drawShape(ctx);
   } else {
     withScratchCanvas(ctx, (scratchCtx) => {
       for (const { shape } of group) shape.drawShape(scratchCtx);
-
       scratchCtx.globalCompositeOperation = 'destination-out';
       for (const { drawHole } of group) drawHole?.(scratchCtx);
     });

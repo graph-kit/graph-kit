@@ -7,6 +7,10 @@ import { useShellShortcuts } from '../shortcuts/useShellShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import SimulationButtonGroup from '../simulation/start-buttons/ButtonGroup.vue';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
+import {
+  ANIMATION_SPEED_DURATION_MS,
+  readAnimationSpeed,
+} from '../ui/animation-speed/speeds.ts';
 import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
 import { useShellAppearance } from '../ui/appearance/useShellAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
@@ -81,6 +85,13 @@ export const useShell = (
     'onCameraChange',
     localStorage.invalidate,
   );
+
+  const savedAnimationSpeed = readAnimationSpeed();
+  if (savedAnimationSpeed) {
+    host.surface.renderer.autoAnimate.setAnimationDuration(
+      ANIMATION_SPEED_DURATION_MS[savedAnimationSpeed],
+    );
+  }
 
   // read-only has nothing to draw with, so the tools come out of standby with it and
   // the panel closes behind them on `onDeactivated`

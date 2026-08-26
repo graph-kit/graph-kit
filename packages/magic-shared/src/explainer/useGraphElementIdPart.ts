@@ -2,6 +2,7 @@ import { Graph } from '../graph/types.ts';
 import { useEdgeStyles, useNodeStyles } from '../theme/index.ts';
 import { ExplainerSegment } from './explainerSegments.ts';
 import { ExplainerHighlight } from './types.ts';
+import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
 
 const useGraphElementExplainerHighlight = (
   graph: Graph,
@@ -47,14 +48,8 @@ export const useGraphElementRefExplainerSegment = (
   const inGraph = graph.isNode(id) || graph.isEdge(id);
 
   if (!inGraph) {
-    return {
-      id: crypto.randomUUID(),
-      text: '?',
-      highlight: {
-        tooltipLabel: `Graph Element With ID ${id} Not In Graph`,
-        classes: 'bg-red-500 hover:bg-red-700 text-white',
-      },
-    };
+    console.error(`explainer: no graph element under the id "${id}"`);
+    return unparsedExplainerSegment(`Graph Element With ID ${id} Not In Graph`);
   }
 
   return {

@@ -1,5 +1,7 @@
+import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { jsonClone } from '@core/utils/clone';
+import { devWarning } from '@core/utils/debugging';
 import { delta } from '@core/utils/delta/index';
 import { DeepPartial } from 'ts-essentials';
 
@@ -9,7 +11,7 @@ import type {
   ShapeName,
 } from '../../types/index.ts';
 import { type GetAnimatedSchema, resolveSchemaWithDefaults } from '../index.ts';
-import type { DefineTimeline, Timeline } from '../timeline/define.ts';
+import type { DefineTimeline } from '../timeline/define.ts';
 import type { LooseSchema, LooseSchemaValue } from '../types.ts';
 import { arrowAdd } from './arrow/add.ts';
 import { arrowRemove } from './arrow/remove.ts';
@@ -17,19 +19,23 @@ import { circleAdd } from './circle/add.ts';
 import { circleRemove } from './circle/remove.ts';
 import {
   AUTO_ANIMATED_PROPERTIES,
-  AUTO_ANIMATE_DURATION_MS,
+  DEFAULT_AUTO_ANIMATE_DURATION_MS,
+  GHOST_REDRAW,
 } from './constants.ts';
-import { LooseSchemaWithName } from './types.ts';
+import { createAutoAnimateEventRegistry } from './events.ts';
+import { AutoAnimateTimeline, LooseSchemaWithName } from './types.ts';
 
 /**
- * a shape that was removed from the graph but is still mid-removal-animation.
- * `orderIndex` is this shape's position among everything drawn during the
- * capture's "before" snapshot, so it can be redrawn in the right z-order
- * relative to shapes still being drawn normally.
+ * a shape that was removed but is still mid-removal-animation
  */
 export type GhostShape = {
   id: SchemaId;
   schema: LooseSchemaWithName;
+  /**
+   * shape's position among everything drawn during the
+   * capture's "before" snapshot, so it can be redrawn in the right z-order
+   * relative to shapes still being drawn normally
+   */
   orderIndex: number;
 };
 
@@ -49,16 +55,16 @@ export const createAutoAnimate = (
   let capturedSchemas: Map<SchemaId, LooseSchemaWithName> = new Map();
   let captureState: CaptureState;
 
+  let animationDuration = DEFAULT_AUTO_ANIMATE_DURATION_MS;
+
+  const events = createEventHub(createAutoAnimateEventRegistry());
+
   const snapshotMap: Map<
     SchemaId,
     Partial<{ before: LooseSchemaWithName; after: LooseSchemaWithName }>
   > = new Map();
 
-  // shapes removed from the graph that are still playing their remove
-  // animation. rendering keeps drawing these from their last known schema
-  // (with the remove timeline's live values applied) until the remove
-  // timeline's own `onComplete` clears them, at `orderIndex`'s position
-  // relative to everything else drawn.
+  /** removed shapes that are still playing their remove animation */
   const ghosts: Map<SchemaId, GhostShape> = new Map();
 
   // position of each shape within the overall draw order captured during the
@@ -81,7 +87,6 @@ export const createAutoAnimate = (
 
     return {
       forShapes: [shapeName],
-      durationMs: AUTO_ANIMATE_DURATION_MS,
       keyframes: [
         {
           progress: 0,
@@ -96,81 +101,81 @@ export const createAutoAnimate = (
   };
 
   const runAnimation = (
-    timeline: Timeline<any>,
+    timeline: AutoAnimateTimeline<any>,
     schemaId: string,
     onOver?: () => void,
   ) => {
-    // a shape can carry animations auto-animate never started itself (e.g.
-    // one played directly via `defineTimeline` outside auto-animate).
-    // leaving any prior animation running lets its properties keep blending
-    // into `getAnimatedSchema`'s output alongside the sequence starting
-    // here, which causes a visible snap/flicker.
+    // a shape can carry animations auto-animate never started itself.
+    // replace it with the auto-animates timeline instead of running them in parallel.
     stopAllAnimations(schemaId);
 
-    const { play } = defineTimeline(timeline);
+    const { play } = defineTimeline({
+      ...timeline,
+      durationMs: animationDuration,
+    });
     play({ shapeId: schemaId, runCount: 1, onOver });
   };
 
   return {
-    captureSchemaState: (schema: LooseSchema, shapeName: ShapeName) => {
-      if (!captureState) return;
-      // we only care about capturing each schema once, the rest of the calls should be ignored
-      if (capturedSchemas.has(schema.id)) return;
-      const schemaWithDefaults = resolveSchemaWithDefaults(schema, shapeName);
-      // if capture state is "before", use the shape's live (currently animating) schema instead, to prevent snap-backs.
-      const liveSchema =
-        captureState === 'before'
-          ? (getAnimatedSchema(schema.id) ?? schemaWithDefaults)
-          : schemaWithDefaults;
+    events,
 
-      const capturedSchema = jsonClone({ ...liveSchema, shapeName });
-      capturedSchemas.set(schema.id, capturedSchema);
+    /** how long an auto animated capture takes to play out, in ms */
+    get animationDuration() {
+      return animationDuration;
+    },
+
+    /**
+     * sets how long an auto animated capture takes to play out.
+     * animations already in flight keep the duration they started with
+     */
+    setAnimationDuration: (durationMs: number) => {
+      if (!Number.isFinite(durationMs) || durationMs <= 0) {
+        devWarning(
+          `Auto animate duration must be a positive number, got ${durationMs}. ignoring`,
+        );
+        return;
+      }
+
+      if (durationMs === animationDuration) return;
+
+      const oldDurationMs = animationDuration;
+      animationDuration = durationMs;
+      events.emit('onAnimationDurationChanged', durationMs, oldDurationMs);
+    },
+
+    captureSchemaState: (schema: LooseSchema, shapeName: ShapeName) => {
+      if (!captureState) return captureState;
+      // we only care about capturing each schema once, the rest of the calls should be ignored
+      if (capturedSchemas.has(schema.id)) return captureState;
+
+      // a ghost redraws itself under the id of the shape it replaced, so the
+      // marker rather than the id is what separates it from a shape the
+      // consumer added back under that same id
+      if (GHOST_REDRAW in schema) return captureState;
+
+      let schemaWithDefaults = resolveSchemaWithDefaults(schema, shapeName);
 
       if (captureState === 'before') {
         beforeCaptureOrder.set(schema.id, beforeCaptureOrderCounter++);
+
+        // use the shape's currently animating schema if there is one
+        const animatedSchema = getAnimatedSchema(schema.id);
+        if (animatedSchema) schemaWithDefaults = animatedSchema;
       }
 
-      // write into snapshotMap immediately (not after flushDraw finishes) so
-      // getCaptureOverride sees this shape's entry within the same draw pass,
-      // suppressing newly added shapes before they get a chance to flash.
+      const capturedSchema = jsonClone({ ...schemaWithDefaults, shapeName });
+      capturedSchemas.set(schema.id, capturedSchema);
+
       const shapeSchemaEntry = snapshotMap.get(schema.id) ?? {};
       snapshotMap.set(schema.id, {
         ...shapeSchemaEntry,
         [captureState]: capturedSchema,
       });
-    },
-
-    /**
-     * While a capture window is open (between captureFrame's before/after snapshots),
-     * shape rendering must not jump to live/mutated values or the transition
-     * being diffed for animation will visibly pop. This freezes rendering on the
-     * pre-mutation schema, or suppresses it entirely for a shape with no "before"
-     * (i.e. one newly added during this capture).
-     */
-    getCaptureOverride: (
-      schemaId: SchemaId,
-    ): { schema: LooseSchemaWithName } | 'suppress' | undefined => {
-      const snapshotMapEntry = snapshotMap.get(schemaId);
-      if (!snapshotMapEntry) return undefined;
-
-      const { before: beforeSnapshot } = snapshotMapEntry;
-      if (!beforeSnapshot) return 'suppress';
-
-      return { schema: beforeSnapshot };
+      return captureState;
     },
 
     /**
      * Captures a pair of "before" and "after" snapshots of the given shapes' schemas
-     * by invoking the provided `flushDraw` function twice.
-     *
-     * This enables automatic animations to be generated by diffing the two states.
-     *
-     * @param ids - The IDs of shapes to track during this animation frame.
-     * @param flushDraw - A function that triggers a draw cycle. This is called:
-     *   - once immediately to capture the "before" state, and
-     *   - again inside the returned `finalize()` function to capture the "after" state.
-     *
-     * @returns A function that, when called, finalizes the capture and triggers animation.
      *
      * @example
      * const finalize = autoAnimate.captureFrame(() => draw());
@@ -208,55 +213,67 @@ export const createAutoAnimate = (
         for (const snapshot of schemasCapturedInSnapshots) {
           const { beforeSchema, afterSchema } = snapshot;
 
-          // this shape was added
+          // this shape was added during the snapshot
           if (!beforeSchema) {
             const schema = nullThrows(
               afterSchema,
-              'after schema must be defined',
+              'After schema must be defined',
             );
 
-            // this id is re-appearing while its remove animation was still
-            // playing (e.g. removed then immediately re-added). treat it as
-            // a continuation from wherever the ghost currently is instead of
-            // a fresh entrance animation, so it doesn't snap straight to its
-            // final state
+            // shape is re-appearing while its remove animation is still playing
             const ghost = ghosts.get(schema.id);
             if (ghost) {
-              // getAnimatedSchema returns a bare LooseSchema (no shapeName);
-              // re-attach it so it doesn't register as a spurious diff below
-              const ghostLiveSchema: LooseSchemaWithName = {
-                ...(getAnimatedSchema(schema.id) ?? ghost.schema),
-                shapeName: ghost.schema.shapeName,
-              };
-              const schemaDifference: DeepPartial<LooseSchemaWithName> | null =
-                delta(ghostLiveSchema, schema);
+              const ghostLiveSchema = getAnimatedSchema(schema.id);
 
-              if (schemaDifference && !schemaDifference.shapeName) {
-                const schemaPropNames = Object.keys(
-                  schemaDifference,
-                ) as EverySchemaPropName[];
-                const supportedSchemaProperties = schemaPropNames.filter(
-                  (name) => AUTO_ANIMATED_PROPERTIES.has(name),
+              if (!ghostLiveSchema) {
+                devWarning(
+                  `Ghost ${schema.id} has no animation to clear it and would have outlived the shape it stood in for. dropping it`,
                 );
-                const timelineValues = supportedSchemaProperties.map(
-                  (name): CreateTimelineValue => ({
-                    schemaPropertyName: name,
-                    startValue: ghostLiveSchema[name],
-                    endValue: schema[name],
-                  }),
-                );
-                const timeline = createTimeline(
-                  schema.shapeName,
-                  timelineValues,
-                );
-                // also stops the ghost's remove animation and clears it via
-                // its onOver, since this timeline takes over from here
-                runAnimation(timeline, schema.id);
-              } else {
-                // no meaningful difference (or an unsupported shape change):
-                // just stop the remove animation and clear the ghost
-                stopAllAnimations(schema.id);
+                ghosts.delete(schema.id);
+                continue;
               }
+
+              // getAnimatedSchema returns a LooseSchema without shapeName,
+              // re-attach it so its not caught as a diff
+              const schemaDifference: DeepPartial<LooseSchemaWithName> | null =
+                delta(
+                  { ...ghostLiveSchema, shapeName: ghost.schema.shapeName },
+                  schema,
+                );
+
+              // the ghosts schema and the freshly added shape do not share a common shape
+              // which means we cannot animate between them
+              if (schemaDifference?.shapeName) {
+                devWarning(
+                  'Illegal shape name difference mid animation in shape with ID',
+                  schema.id,
+                );
+                stopAllAnimations(schema.id);
+                continue;
+              }
+
+              // it came back exactly as it left, so there is nothing to
+              // animate and the removal just gets called off
+              if (!schemaDifference) {
+                stopAllAnimations(schema.id);
+                continue;
+              }
+
+              const schemaPropNames = Object.keys(
+                schemaDifference,
+              ) as EverySchemaPropName[];
+              const supportedSchemaProperties = schemaPropNames.filter((name) =>
+                AUTO_ANIMATED_PROPERTIES.has(name),
+              );
+              const timelineValues = supportedSchemaProperties.map(
+                (name): CreateTimelineValue => ({
+                  schemaPropertyName: name,
+                  startValue: ghostLiveSchema[name],
+                  endValue: schema[name],
+                }),
+              );
+              const timeline = createTimeline(schema.shapeName, timelineValues);
+              runAnimation(timeline, schema.id);
               continue;
             }
 
@@ -276,7 +293,10 @@ export const createAutoAnimate = (
             ghosts.set(snapshot.schemaId, {
               id: snapshot.schemaId,
               schema: beforeSchema,
-              orderIndex: beforeCaptureOrder.get(snapshot.schemaId) ?? 0,
+              orderIndex: nullThrows(
+                beforeCaptureOrder.get(snapshot.schemaId),
+                'Did not capture order in snapshot',
+              ),
             });
 
             const clearGhost = () => ghosts.delete(snapshot.schemaId);
@@ -301,8 +321,8 @@ export const createAutoAnimate = (
           // animation between shapes is not supported
           const { shapeName } = schemaDifference;
           if (shapeName) {
-            console.warn(
-              `shape with ID ${snapshot.schemaId} transformed from a ${beforeSchema.shapeName} to an ${afterSchema.shapeName}. Animating between shapes is unsupported and breaks the engine, therefore auto-animate has ignored it`,
+            devWarning(
+              `Shape with ID ${snapshot.schemaId} changed from a ${beforeSchema.shapeName} to an ${afterSchema.shapeName}. Animating between shapes is unsupported`,
             );
             continue;
           }
@@ -344,9 +364,7 @@ export const createAutoAnimate = (
 
     /**
      * whether this schema is currently a ghost (removed from the graph but
-     * still mid-removal-animation). must be checked before calling
-     * `getAnimatedSchema`, which can synchronously clear the ghost via its
-     * `onOver` callback once the remove animation's runCount is exhausted.
+     * still mid-removal-animation).
      */
     isGhost: (schemaId: SchemaId): boolean => ghosts.has(schemaId),
   };

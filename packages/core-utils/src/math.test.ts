@@ -3,10 +3,12 @@ import { describe, expect, test } from 'vitest';
 
 import {
   average,
+  displayNumber,
   fractionIsInteger,
   fractionToDecimal,
   gcd,
   getPrimeFactors,
+  isFractionDivisionByZero,
   lowestPrimeFactor,
   roundToNearestN,
 } from './math.ts';
@@ -78,6 +80,173 @@ describe('fractionIsInteger', () => {
 
   test('edge case: 0', () => {
     expect(fractionIsInteger(new Fraction(0))).toBe(true);
+  });
+});
+
+describe('isFractionDivisionByZero', () => {
+  test('recognises a zero denominator', () => {
+    expect(() => new Fraction('1/0')).toThrow();
+    try {
+      new Fraction('1/0');
+    } catch (error) {
+      expect(isFractionDivisionByZero(error)).toBe(true);
+    }
+  });
+
+  test('does not claim unparseable input, which throws the same type', () => {
+    try {
+      new Fraction('half');
+    } catch (error) {
+      expect(isFractionDivisionByZero(error)).toBe(false);
+    }
+  });
+
+  test('edge case: a thrown value that is not an Error', () => {
+    expect(isFractionDivisionByZero('Division by Zero')).toBe(false);
+    expect(isFractionDivisionByZero(undefined)).toBe(false);
+  });
+});
+
+describe('displayNumber', () => {
+  test('pairs a fraction with its decimal', () => {
+    expect(displayNumber('5/2')).toEqual({
+      primary: '5/2',
+      secondary: '2.5',
+    });
+  });
+
+  test('marks a decimal that lost precision as approximate', () => {
+    expect(displayNumber('1/3')).toEqual({
+      primary: '1/3',
+      secondary: '~0.333',
+    });
+  });
+
+  test('honours the requested decimal places', () => {
+    expect(displayNumber('1/3', 1)).toEqual({
+      primary: '1/3',
+      secondary: '~0.3',
+    });
+  });
+
+  test('leaves an integer without a decimal to approximate', () => {
+    expect(displayNumber('4/2')).toEqual({
+      primary: '2',
+      secondary: undefined,
+    });
+  });
+
+  test('turns a decimal into the fraction it came from', () => {
+    expect(displayNumber(3.5)).toEqual({
+      primary: '7/2',
+      secondary: '3.5',
+    });
+  });
+
+  test('accepts an already built fraction', () => {
+    expect(displayNumber(new Fraction(1, 3))).toEqual({
+      primary: '1/3',
+      secondary: '~0.333',
+    });
+  });
+
+  test('honours the requested decimal places for a built fraction', () => {
+    expect(displayNumber(new Fraction(1, 3), 1)).toEqual({
+      primary: '1/3',
+      secondary: '~0.3',
+    });
+  });
+
+  test('leaves a built integer fraction without a decimal to approximate', () => {
+    expect(displayNumber(new Fraction(4, 2))).toEqual({
+      primary: '2',
+      secondary: undefined,
+    });
+  });
+
+  test('a built fraction cannot fail, so its result needs no narrowing', () => {
+    // reaching .primary without an `'error' in` check only typechecks while the
+    // Fraction overload rules an error out
+    const { primary } = displayNumber(new Fraction(5, 2));
+    expect(primary).toBe('5/2');
+  });
+
+  test('reads numbers written in exponent notation', () => {
+    expect(displayNumber(1e-7)).toEqual({
+      primary: '1/10000000',
+      secondary: '~0',
+    });
+  });
+
+  test('ignores surrounding whitespace', () => {
+    expect(displayNumber('  3.5  ')).toEqual({
+      primary: '7/2',
+      secondary: '3.5',
+    });
+  });
+
+  test('parses string fraction notation', () => {
+    expect(displayNumber(`0.(3)`)).toEqual({
+      primary: '1/3',
+      secondary: '~0.333',
+    });
+  });
+
+  test('shows infinity as a symbol that needs no decimal', () => {
+    for (const infinity of ['∞', String(Infinity), Infinity] as const) {
+      expect(displayNumber(infinity)).toEqual({
+        primary: '∞',
+        secondary: undefined,
+      });
+    }
+  });
+
+  test('shows negative infinity as a signed symbol', () => {
+    for (const infinity of ['-∞', String(-Infinity), -Infinity] as const) {
+      expect(displayNumber(infinity)).toEqual({
+        primary: '-∞',
+        secondary: undefined,
+      });
+    }
+  });
+
+  test('reports a zero denominator as its own failure', () => {
+    expect(displayNumber('1/0')).toEqual({
+      error: 'divide-by-zero',
+      raw: '1/0',
+    });
+  });
+
+  test('reports input it cannot read as a number, handing back what it saw', () => {
+    expect(displayNumber('half')).toEqual({
+      error: 'unparseable',
+      raw: 'half',
+    });
+    expect(displayNumber(NaN)).toEqual({
+      error: 'unparseable',
+      raw: 'NaN',
+    });
+  });
+
+  test('hands back the trimmed input, not the original spacing', () => {
+    expect(displayNumber('  half  ')).toEqual({
+      error: 'unparseable',
+      raw: 'half',
+    });
+  });
+
+  test('carries a negative sign into both halves', () => {
+    expect(displayNumber('-1/3')).toEqual({
+      primary: '-1/3',
+      secondary: '~-0.333',
+    });
+  });
+
+  test('edge case: 0', () => {
+    expect(displayNumber(0)).toEqual({
+      primary: '0',
+      secondary: undefined,
+    });
   });
 });
 

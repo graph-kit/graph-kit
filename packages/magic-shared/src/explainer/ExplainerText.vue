@@ -51,7 +51,7 @@
             <Button
               :class="
                 cn(
-                  'text-2xl font-bold px-2 py-0',
+                  'text-2xl font-bold px-2 py-0 bg-gray-900 text-white hover:bg-gray-700 active:bg-gray-700',
                   getValue(segment.highlight.classes, context),
                 )
               "

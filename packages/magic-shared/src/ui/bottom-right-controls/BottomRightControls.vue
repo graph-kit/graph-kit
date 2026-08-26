@@ -7,6 +7,7 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import { useProvidedShell } from '../../product/context.ts';
+  import AnimationSpeedMenu from '../animation-speed/AnimationSpeedMenu.vue';
   import AnnotationToggle from '../annotations/AnnotationToggle.vue';
   import AppearanceToggle from '../appearance/AppearanceToggle.vue';
   import FullscreenButton from '../fullscreen/FullscreenButton.vue';
@@ -36,8 +37,8 @@
         <VStack gap="0">
           <MultiplayerButton v-if="shell.multiplayer" />
           <LinkSharingButton v-if="shell.flags.linkSharing" />
-
           <FullscreenButton />
+          <AnimationSpeedMenu v-if="shell.flags.adjustAnimationSpeed" />
           <AppearanceToggle />
         </VStack>
       </Dropdown>

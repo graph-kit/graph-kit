@@ -1,6 +1,7 @@
 import { nullThrows } from '@core/utils/assert';
 import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 
+import { numberExplainerSegment } from './numberExplainerSegment.ts';
 import { parseTextSegments } from './parseTextSegments.ts';
 import { Explainer, ExplainerContext, ExplainerHighlight } from './types.ts';
 import { useGraphElementRefExplainerSegment } from './useGraphElementIdPart.ts';
@@ -39,6 +40,10 @@ export const explainerSegments = (
       explainerSegments.push(
         useGraphElementRefExplainerSegment(context.graph, text),
       );
+      continue;
+    }
+    if (bracketType === 'angle') {
+      explainerSegments.push(numberExplainerSegment(text));
       continue;
     }
     const highlight = nullThrows(

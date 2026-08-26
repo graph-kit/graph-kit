@@ -1,11 +1,9 @@
 import tinycolor from 'tinycolor2';
 
-import { Timeline } from '../../timeline/define.ts';
-import { AUTO_ANIMATE_DURATION_MS } from '../constants.ts';
+import { AutoAnimateTimeline } from '../types.ts';
 
-export const arrowAdd: Timeline<'arrow'> = {
+export const arrowAdd: AutoAnimateTimeline<'arrow'> = {
   forShapes: ['arrow'],
-  durationMs: AUTO_ANIMATE_DURATION_MS,
   easing: {
     lineWidth: 'in-out',
     textArea: 'in-out',

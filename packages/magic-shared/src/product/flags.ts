@@ -22,6 +22,11 @@ export type ShellFlags = {
    * @default true
    */
   linkSharing: boolean;
+  /**
+   * adds the animation speed submenu to the "more options" menu
+   * @default false
+   */
+  adjustAnimationSpeed: boolean;
 };
 
 const DEFAULTS: ShellFlags = {
@@ -29,6 +34,7 @@ const DEFAULTS: ShellFlags = {
   localStorage: true,
   annotations: true,
   linkSharing: true,
+  adjustAnimationSpeed: false,
 };
 
 /** what a product author writes: only what differs from {@link ShellFlags} defaults */

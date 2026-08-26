@@ -8,7 +8,12 @@
 
   // the trigger loses hover once the pointer crosses into the submenu, so the open state carries the highlight.
   // keyed off aria-expanded rather than data-state, which Button's own tooltip trigger owns
-  const triggerClasses = `${menuItemClasses} aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-900`;
+  const highlightClasses =
+    'aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-900';
+
+  // the panel is positioned against this button's box, so the press scale every other
+  // button gets would drag the open submenu a few pixels in and back out again
+  const triggerClasses = `${menuItemClasses} ${highlightClasses} active:scale-100`;
 
   defineSlots<{
     default: () => unknown;

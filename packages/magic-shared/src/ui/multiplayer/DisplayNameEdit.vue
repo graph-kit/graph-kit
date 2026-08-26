@@ -3,7 +3,7 @@
   import { mdiTagEdit } from '@mdi/js';
   import { RosterEntry } from '@multiplayer/protocol/room';
 
-  import { ref } from 'vue';
+  import { computed, ref } from 'vue';
 
   import Button from '../../components/button/Button.vue';
   import DropdownItem from '../../components/dropdown/DropdownItem.vue';
@@ -22,7 +22,8 @@
 
   const { room } = useConnectedMultiplayer();
 
-  const displayName = ref(props.member.displayName);
+  const displayNameInput = ref(props.member.displayName);
+  const displayName = computed(() => displayNameInput.value.trim());
 
   const setDisplayName = () => {
     if (!displayName.value) return;
@@ -39,7 +40,7 @@
     </template>
     <VStack>
       <TextInput
-        v-model.trim="displayName"
+        v-model="displayNameInput"
         @vue:mounted="({ el }) => el?.focus()"
         @keyup.enter="setDisplayName"
         placeholder="Name"

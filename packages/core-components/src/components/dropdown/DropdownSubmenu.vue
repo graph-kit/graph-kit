@@ -6,7 +6,7 @@
     DropdownMenuSubTrigger,
   } from 'reka-ui';
 
-  import { computed, inject, useAttrs } from 'vue';
+  import { computed, inject, onUnmounted, ref, useAttrs } from 'vue';
 
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
@@ -28,6 +28,34 @@
     if (usingPointer) usingPointer.value = isPointer;
   };
 
+  const open = ref(false);
+
+  /**
+   * pressing a submenu row asks for that submenu, so a close reached for while the press
+   * is still on the trigger is the click taking back what the row just asked for
+   */
+  const pressingTrigger = ref(false);
+
+  // the click rides the release, so the hold has to outlast the task that carries it
+  const releaseOnPointerUp = () =>
+    setTimeout(() => (pressingTrigger.value = false));
+
+  const holdOpenThroughPress = () => {
+    pressingTrigger.value = true;
+    // the release can land anywhere, so window owns it rather than the trigger
+    window.addEventListener('pointerup', releaseOnPointerUp, { once: true });
+  };
+
+  // a press the menu outlives removes itself, one that closes the menu does not
+  onUnmounted(() =>
+    window.removeEventListener('pointerup', releaseOnPointerUp),
+  );
+
+  const onOpenChange = (isOpen: boolean) => {
+    if (!isOpen && pressingTrigger.value) return;
+    open.value = isOpen;
+  };
+
   defineSlots<{
     default: () => unknown;
     trigger: () => unknown;
@@ -39,8 +67,14 @@
     reka places the panel on whichever side has room and opens it on hover, keys
     and click, so the submenu takes no side or trigger props of its own.
   -->
-  <DropdownMenuSub>
-    <DropdownMenuSubTrigger as-child>
+  <DropdownMenuSub
+    :open="open"
+    @update:open="onOpenChange"
+  >
+    <DropdownMenuSubTrigger
+      as-child
+      @pointerdown="holdOpenThroughPress"
+    >
       <slot name="trigger" />
     </DropdownMenuSubTrigger>
     <DropdownMenuPortal>

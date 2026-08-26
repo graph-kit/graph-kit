@@ -110,6 +110,85 @@ export const fractionIsInteger = (fraction: Fraction) => {
   return fraction.d === 1n;
 };
 
+export const isFractionDivisionByZero = (error: unknown) =>
+  error instanceof Error && error.message === 'Division by Zero';
+
+export type DisplayNumber = {
+  primary: string;
+  secondary?: string;
+};
+
+export type DisplayNumberErrorReason = 'divide-by-zero' | 'unparseable';
+
+export type DisplayNumberError = {
+  error: DisplayNumberErrorReason;
+  raw: string;
+};
+
+const displayFraction = (
+  fraction: Fraction,
+  approximationDigits?: number,
+): DisplayNumber => ({
+  primary: fraction.toFraction(),
+  secondary: fractionIsInteger(fraction)
+    ? undefined
+    : fractionToDecimal(fraction, approximationDigits),
+});
+
+const INFINITY_TEXTS = ['∞', String(Infinity)];
+const NEGATIVE_INFINITY_TEXTS = INFINITY_TEXTS.map((text) => `-${text}`);
+
+/**
+ * formats number into main user-facing number and secondary decimal approximation
+ *
+ * @param valueToDisplay the number, written as a decimal, a `numerator/denominator`
+ * string, a symbol like `∞`, or a Fraction
+ * @param approximationDigits how many decimal places the approximation keeps
+ * @returns the primary and secondary forms, or, for a number or string that
+ * could not be read, an `error` reason alongside the input that carried it,
+ * narrowed apart with `'error' in`. a Fraction is already built, so it cannot
+ * fail and needs no narrowing
+ * @example displayNumber('1/3') // '1/3' and '~0.333'
+ * displayNumber(Infinity) // '∞', the symbol needs no decimal
+ * displayNumber('1/0') // errors, 'divide-by-zero'
+ * displayNumber('half') // errors, 'unparseable'
+ */
+export function displayNumber(
+  valueToDisplay: Fraction,
+  approximationDigits?: number,
+): DisplayNumber;
+export function displayNumber(
+  valueToDisplay: number | string,
+  approximationDigits?: number,
+): DisplayNumber | DisplayNumberError;
+export function displayNumber(
+  valueToDisplay: number | string | Fraction,
+  approximationDigits?: number,
+): DisplayNumber | DisplayNumberError {
+  if (valueToDisplay instanceof Fraction)
+    return displayFraction(valueToDisplay, approximationDigits);
+
+  const raw = String(valueToDisplay).trim();
+
+  if (INFINITY_TEXTS.includes(raw)) return { primary: '∞' };
+  if (NEGATIVE_INFINITY_TEXTS.includes(raw)) return { primary: '-∞' };
+
+  let fraction: Fraction;
+  try {
+    // numbers go in unstringified, fraction.js reads 1e-7 but not '1e-7'
+    fraction = new Fraction(
+      typeof valueToDisplay === 'string' ? raw : valueToDisplay,
+    );
+  } catch (error) {
+    return {
+      error: isFractionDivisionByZero(error) ? 'divide-by-zero' : 'unparseable',
+      raw,
+    };
+  }
+
+  return displayFraction(fraction, approximationDigits);
+}
+
 /**
  * get the average of an array of numbers
  *

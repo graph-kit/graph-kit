@@ -92,7 +92,7 @@ export const primsExplainer =
         .map((id) => graph.getEdge(id).weight)
         .reduce((sum, weight) => sum.add(weight));
       return {
-        content: `Done! The [Tree] is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of ${cost.toFraction()}`,
+        content: `Done! The [Tree] is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of <${cost}>`,
         highlights: [highlights.tree],
       };
     }
@@ -174,7 +174,7 @@ export const kruskalsExplainer =
         .reduce((sum, weight) => sum.add(weight), new Fraction(0));
       const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `Done! The ${isConnected ? '[Tree]' : '[Forest]'} is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of ${cost.toFraction()}`,
+        content: `Done! The ${isConnected ? '[Tree]' : '[Forest]'} is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of <${cost}>`,
         highlights: isConnected
           ? [kruskalsHighlights.tree]
           : [kruskalsHighlights.forest],

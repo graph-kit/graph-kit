@@ -11,6 +11,7 @@ import Fraction from 'fraction.js';
  */
 export type Distance = Fraction | undefined;
 
+// because this function is also used in the UI, it can't leave the parsing up to the angle brackets, therefore has to use .toFraction()
 export const formatDistance = (distance: Distance) =>
   distance === undefined ? '∞' : distance.toFraction();
 

@@ -1,5 +1,5 @@
 import { Color } from '@core/utils/colors';
-import { fractionIsInteger, fractionToDecimal } from '@core/utils/math';
+import { displayNumber } from '@core/utils/math';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
@@ -42,15 +42,17 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
     },
   });
 
+  const displayCost = computed(() => displayNumber(totalMstCost.value));
+
   const costExplanation =
     'The total cost if you sum up all the edges making up the minimum spanning tree.';
 
   return {
-    name: () => `Total Cost: ${totalMstCost.value.toFraction()}`,
-    tooltipLabel: () =>
-      fractionIsInteger(totalMstCost.value)
-        ? costExplanation
-        : `${fractionToDecimal(totalMstCost.value)}: ${costExplanation}`,
+    name: () => `Total Cost: ${displayCost.value.primary}`,
+    tooltipLabel: () => {
+      const { secondary } = displayCost.value;
+      return secondary ? `${secondary}: ${costExplanation}` : costExplanation;
+    },
     lens: {
       id: 'total-mst-cost',
       ...themer,

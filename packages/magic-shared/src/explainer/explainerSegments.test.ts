@@ -1,4 +1,5 @@
 import { getValue } from '@core/utils/maybeGetter/index';
+import Fraction from 'fraction.js';
 import { describe, expect, test, vi } from 'vitest';
 
 import { GEdge, Graph } from '../graph/types.ts';
@@ -294,6 +295,109 @@ describe(explainerSegments, () => {
     expect(segments[1].highlight?.tooltipLabel).toBe(
       'Graph Element With ID ghost-a Not In Graph',
     );
+  });
+
+  test('resolves an angled fraction to a hoverable decimal', () => {
+    const explainer: Explainer = {
+      content: 'The cost is <5/2>',
+    };
+
+    const segments = explainerSegments(context, explainer);
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'The cost is ',
+      '5/2',
+    ]);
+    expect(segments[1].highlight?.tooltipLabel).toBe('2.5');
+  });
+
+  test('resolves an angled decimal to the same fraction and hint', () => {
+    const segments = explainerSegments(context, { content: 'This is <3.5>' });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'This is ',
+      '7/2',
+    ]);
+    expect(segments[1].highlight?.tooltipLabel).toBe('3.5');
+  });
+
+  test('resolves an angled repeating decimal, as a stringified Fraction gives', () => {
+    const segments = explainerSegments(context, {
+      content: `This is <${new Fraction(1, 3)}>`,
+    });
+
+    expect(getValue(segments[1].text)).toBe('1/3');
+    expect(segments[1].highlight?.tooltipLabel).toBe('~0.333');
+  });
+
+  test('rounds a repeating fraction and marks it as approximate', () => {
+    const segments = explainerSegments(context, { content: '<1/3>' });
+
+    expect(segments[0].highlight?.tooltipLabel).toBe('~0.333');
+  });
+
+  test('leaves an angled fraction that is an integer unhighlighted', () => {
+    const segments = explainerSegments(context, { content: 'costs <4/2>' });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'costs ',
+      '2',
+    ]);
+    expect(segments[1].highlight).toBeUndefined();
+  });
+
+  test('resolves an angled infinity, written either way', () => {
+    const segments = explainerSegments(context, {
+      content: `<∞> and <${Infinity}>`,
+    });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      '∞',
+      ' and ',
+      '∞',
+    ]);
+    expect(segments[0].highlight).toBeUndefined();
+    expect(segments[2].highlight).toBeUndefined();
+  });
+
+  test('angled fractions do not consume bracket highlights', () => {
+    const h = highlight();
+    const explainer: Explainer = {
+      content: '<1/3> and <2/3> for [Reason]',
+      highlights: [h],
+    };
+
+    const segments = explainerSegments(context, explainer);
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      '1/3',
+      ' and ',
+      '2/3',
+      ' for ',
+      'Reason',
+    ]);
+    expect(segments.at(-1)?.highlight).toBe(h);
+  });
+
+  test('marks an angled number it cannot read with a hoverable reason', () => {
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const segments = explainerSegments(context, { content: 'costs <half>' });
+
+    expect(segments.map((segment) => getValue(segment.text))).toEqual([
+      'costs ',
+      '?',
+    ]);
+    expect(segments[1].highlight?.tooltipLabel).toBe(
+      'Cannot Parse half As A Number',
+    );
+    expect(consoleError).toHaveBeenCalledWith(
+      'explainer: cannot parse "half" as a number',
+    );
+
+    consoleError.mockRestore();
   });
 
   test('defaults to an empty array when highlights is undefined', () => {

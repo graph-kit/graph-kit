@@ -28,7 +28,7 @@ export const trackDraggedNodes = (graph: Graph): DraggedNodes => {
   const elementsAt = (nodeIds: Iterable<string>): DraggedElement[] => {
     const elements: DraggedElement[] = [];
     for (const nodeId of nodeIds) {
-      const { x, y } = graph.positions.get(nodeId);
+      const { x, y } = graph.positions.presented.get(nodeId);
       elements.push({ id: nodeId, position: { x, y } });
     }
     return elements;

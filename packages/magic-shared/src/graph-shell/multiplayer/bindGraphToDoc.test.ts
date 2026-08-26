@@ -222,7 +222,7 @@ const createClient = (room?: Y.Doc) => {
     annotationEvents,
     annotationsOf,
     positionOf: (nodeId: string) => {
-      const { x, y } = graph.positions.get(nodeId);
+      const { x, y } = graph.positions.presented.get(nodeId);
       return { x, y };
     },
     setLocallyDragged: (nodeIds: string[]) => {

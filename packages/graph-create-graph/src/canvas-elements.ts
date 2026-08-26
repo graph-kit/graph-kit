@@ -53,7 +53,11 @@ export const createCanvasElementFactories = (
         edge.target.id,
       ),
     neighborPositions: (edge) =>
-      getNeighborPositions(edge, controls.edges(), controls.positions.get),
+      getNeighborPositions(
+        edge,
+        controls.edges(),
+        controls.positions.presented.get,
+      ),
     layout: {
       labelled: controls.metadata.weighted,
     },
@@ -70,7 +74,7 @@ export const createCanvasElementFactories = (
     shape: nodeRenderFunction()({
       id: node.id,
       position: nullThrows(
-        controls.positions.get(node.id),
+        controls.positions.presented.get(node.id),
         `could not resolve position for node with id ${node.id}`,
       ),
     }),
@@ -87,11 +91,11 @@ export const createCanvasElementFactories = (
       id: edge.id,
       source: {
         id: edge.source,
-        position: controls.positions.get(edge.source),
+        position: controls.positions.presented.get(edge.source),
       },
       target: {
         id: edge.target,
-        position: controls.positions.get(edge.target),
+        position: controls.positions.presented.get(edge.target),
       },
     }),
     priority: EDGE_RENDER_PRIORITY,

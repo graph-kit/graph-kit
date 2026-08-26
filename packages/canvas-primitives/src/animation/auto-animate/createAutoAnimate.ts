@@ -23,6 +23,8 @@ import {
   GHOST_REDRAW,
 } from './constants.ts';
 import { createAutoAnimateEventRegistry } from './events.ts';
+import { lineAdd } from './line/add.ts';
+import { lineRemove } from './line/remove.ts';
 import { AutoAnimateTimeline, LooseSchemaWithName } from './types.ts';
 
 /**
@@ -283,6 +285,9 @@ export const createAutoAnimate = (
             if (schema.shapeName === 'arrow') {
               runAnimation(arrowAdd, schema.id);
             }
+            if (schema.shapeName === 'line') {
+              runAnimation(lineAdd, schema.id);
+            }
             continue;
           }
 
@@ -305,6 +310,9 @@ export const createAutoAnimate = (
             }
             if (beforeSchema.shapeName === 'arrow') {
               runAnimation(arrowRemove, snapshot.schemaId, clearGhost);
+            }
+            if (beforeSchema.shapeName === 'line') {
+              runAnimation(lineRemove, snapshot.schemaId, clearGhost);
             }
 
             continue;

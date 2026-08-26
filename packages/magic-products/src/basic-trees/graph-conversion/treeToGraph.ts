@@ -10,7 +10,7 @@ const Y_OFFSET = 200;
 const newEdge = (source: string, target: string): AddGEdgeOptions => ({
   source,
   target,
-  id: `${source}-${target}`,
+  id: [source, target].sort().join('-'),
 });
 
 /** one edge per parent to child link, read off the position each index encodes */

@@ -5,23 +5,39 @@ import { describe, expect, it, vi } from 'vitest';
 import { animation } from './index.ts';
 
 const setup = () => {
+  const playedDurations: number[] = [];
+
   const autoAnimate = createAutoAnimate(
-    (() => ({ play: () => {} })) as any,
+    ((timeline: { durationMs: number }) => ({
+      play: () => playedDurations.push(timeline.durationMs),
+    })) as any,
     () => undefined,
     () => {},
   );
+
+  /** shapes the draw pass reports, so a capture has something to animate */
+  const scene: { id: string; at: { x: number; y: number }; radius: number }[] =
+    [];
+
+  const draw = () => {
+    for (const schema of scene)
+      autoAnimate.captureSchemaState(schema, 'circle');
+  };
 
   const plugin = animation({
     controls: {
       surface: {
         renderer: { autoAnimate },
-        aggregator: { draw: () => {} },
-        canvas: undefined,
+        aggregator: { draw },
+        canvas: { getContext: () => ({}) },
       },
     },
   } as unknown as Parameters<typeof animation>[0]);
 
-  return { ...plugin.controls, autoAnimate };
+  const addCircle = () =>
+    scene.push({ id: 'circle-1', at: { x: 0, y: 0 }, radius: 10 });
+
+  return { ...plugin.controls, autoAnimate, addCircle, playedDurations };
 };
 
 describe(animation, () => {
@@ -60,6 +76,53 @@ describe(animation, () => {
     setDuration(DEFAULT_AUTO_ANIMATE_DURATION_MS);
 
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('plays a capture at the duration it was handed', () => {
+    const { capture, addCircle, playedDurations } = setup();
+
+    capture(addCircle, { durationMs: 300 });
+
+    expect(playedDurations).toEqual([300]);
+  });
+
+  it('plays a capture at the set duration when handed none', () => {
+    const { capture, addCircle, playedDurations } = setup();
+
+    capture(addCircle);
+
+    expect(playedDurations).toEqual([DEFAULT_AUTO_ANIMATE_DURATION_MS]);
+  });
+
+  it('keeps a capture override off the signal and the events', () => {
+    const { capture, duration, events, autoAnimate, addCircle } = setup();
+    const onChange = vi.fn();
+    events.subscribe('onAnimationDurationChanged', onChange);
+
+    capture(addCircle, { durationMs: 300 });
+
+    expect(duration()).toBe(DEFAULT_AUTO_ANIMATE_DURATION_MS);
+    expect(autoAnimate.animationDuration).toBe(
+      DEFAULT_AUTO_ANIMATE_DURATION_MS,
+    );
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('hands the duration back even when the mutation throws', () => {
+    const { capture, autoAnimate } = setup();
+
+    expect(() =>
+      capture(
+        () => {
+          throw new Error('mutation blew up');
+        },
+        { durationMs: 300 },
+      ),
+    ).toThrow('mutation blew up');
+
+    expect(autoAnimate.animationDuration).toBe(
+      DEFAULT_AUTO_ANIMATE_DURATION_MS,
+    );
   });
 
   it('leaves the signal alone when the renderer refuses the duration', () => {

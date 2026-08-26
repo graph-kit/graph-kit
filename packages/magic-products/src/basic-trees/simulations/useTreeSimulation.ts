@@ -23,10 +23,11 @@ const useAVLControls = () => {
 
 export type TreeControls = ReturnType<typeof useAVLControls>;
 
-export const useTreeSimulation = (graph: Graph): TreeSimulation => {
+export const useTreeSimulation = (
+  tree: AVLTree,
+  graph: Graph,
+): TreeSimulation => {
   const avlControls = useAVLControls();
-
-  const tree = new AVLTree();
 
   const sync = createSync(graph);
 

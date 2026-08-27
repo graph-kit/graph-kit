@@ -5,6 +5,7 @@ import { FrameCollector } from '@magic/shared/simulation';
 import { AVLFrame, AVLFrameNoRoot } from '../simulations/frames.ts';
 import { NodePayload, TreeNode } from './TreeNode.ts';
 import { getBalanceFactor } from './getBalanceFactor.ts';
+import { getNodeById } from './getNodeById.ts';
 
 export class AVLTree {
   root: TreeNode | undefined;
@@ -45,19 +46,9 @@ export class AVLTree {
     return current;
   }
 
-  getNodeById(id: string): TreeNode | undefined {
-    const search = (node: TreeNode | undefined): TreeNode | undefined => {
-      if (!node) return;
-      if (node.id === id) return node;
-      return search(node.left) ?? search(node.right);
-    };
-
-    return search(this.root);
-  }
-
   remove(id: string) {
     const target = nullThrows(
-      this.getNodeById(id),
+      getNodeById(this.root, id),
       `cant remove ${id}, no node with that id is in the tree`,
     );
     const { value } = target;

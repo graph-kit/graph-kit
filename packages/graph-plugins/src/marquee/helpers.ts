@@ -35,7 +35,7 @@ export const getSelectionBox = (
       node,
     );
     const nodeArea = nodeRadius + nodeBorderWidth / 2;
-    const { x, y } = controls.positions.get(node.id);
+    const { x, y } = controls.positions.presented.get(node.id);
 
     minX = Math.min(minX, x - nodeArea);
     minY = Math.min(minY, y - nodeArea);

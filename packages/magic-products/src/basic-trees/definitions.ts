@@ -23,9 +23,13 @@ export const definitions = {
       `${unbalanced.value} is right-heavy and its right child, ${child.value}, is left-heavy.`,
   },
   replacement: {
-    noChildren: '',
-    onlyLeftChild: '',
-    onlyRightChild: '',
-    bothChildren: '',
+    noChildren: (removed: TreeNode) =>
+      `${removed.value} has nothing underneath it, so it can be removed outright and no node moves up.`,
+    onlyLeftChild: (removed: TreeNode, replacement: TreeNode) =>
+      `${removed.value} has nothing on its right, so its left child, ${replacement.value}, moves straight up without disturbing the ordering.`,
+    onlyRightChild: (removed: TreeNode, replacement: TreeNode) =>
+      `${removed.value} has nothing on its left, so its right child, ${replacement.value}, moves straight up without disturbing the ordering.`,
+    bothChildren: (removed: TreeNode, replacement: TreeNode) =>
+      `${replacement.value} is the smallest value in the right subtree of ${removed.value}, so it is larger than everything on the left and smaller than everything else on the right.`,
   },
 };

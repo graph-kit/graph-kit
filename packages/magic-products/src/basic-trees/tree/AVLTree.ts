@@ -280,10 +280,12 @@ export class AVLTree {
         action: 'insert',
         targetNode: this.root,
       });
+      this.addFrame({ action: 'insert-complete' });
       return this.root;
     }
 
     let justInserted = false;
+    let duplicateFound = false;
 
     const insertHelper = (
       parent: TreeNode | undefined,
@@ -326,6 +328,7 @@ export class AVLTree {
           action: 'compare-duplicate-found',
           preexistingNode: node,
         });
+        duplicateFound = true;
         return node;
       }
 
@@ -333,6 +336,9 @@ export class AVLTree {
     };
 
     this.root = insertHelper(undefined, this.root, payload, false);
+
+    if (!duplicateFound) this.addFrame({ action: 'insert-complete' });
+
     return this.root;
   }
 }

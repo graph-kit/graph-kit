@@ -10,7 +10,7 @@ export type RotatingNodes = {
   promotedNode: TreeNode;
 };
 
-/** paints the node moving down and the child taking its slot */
+/** paints the node moving down and the child taking its place */
 export const createRotationThemer = (
   graph: Graph,
   rotatingNodes: () => RotatingNodes | undefined,

@@ -284,7 +284,7 @@ describe('AVLTree', () => {
       expect(inOrder(replacementFrame.root)).toEqual([10, 20, 25, 30, 40]);
     });
 
-    test('a leaf removal reports that nothing fills its slot', () => {
+    test('a leaf removal reports that nothing takes its place', () => {
       const tree = new AVLTree();
       const frames = collectFrames(tree);
 
@@ -343,6 +343,45 @@ describe('AVLTree', () => {
         (node) => Math.abs(getBalanceFactor(node)) > 1,
       );
       expect(unbalanced.map((node) => node.id)).toEqual(['n-50']);
+    });
+
+    test('the insertion ends on a confirmation frame with a balanced snapshot', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [30, 20]);
+
+      frames.length = 0;
+      tree.insert({ value: 10, id: 'n-10' });
+
+      const completions = frames.filter(
+        (frame) => frame.action === 'insert-complete',
+      );
+
+      expect(completions).toHaveLength(1);
+      expect(frames.at(-1)).toBe(completions[0]);
+
+      const unbalanced = everyNode(completions[0].root).filter(
+        (node) => Math.abs(getBalanceFactor(node)) > 1,
+      );
+      expect(unbalanced).toEqual([]);
+    });
+
+    test('a rejected duplicate does not report a completed insertion', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [30, 20]);
+
+      frames.length = 0;
+      tree.insert({ value: 20, id: 'n-20-again' });
+
+      expect(
+        frames.some((frame) => frame.action === 'compare-duplicate-found'),
+      ).toBe(true);
+      expect(frames.some((frame) => frame.action === 'insert-complete')).toBe(
+        false,
+      );
     });
 
     test('the removal ends on a confirmation frame with a balanced snapshot', () => {

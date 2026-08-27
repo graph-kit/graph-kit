@@ -11,7 +11,7 @@ export type CompareFrame = {
   targetNode: NodePayload;
 };
 
-/** where the node filling a removed node's slot comes from */
+/** where the node taking a removed node's place comes from */
 export type ReplacementMethod =
   'leaf' | 'only-left-child' | 'only-right-child' | 'successor';
 
@@ -66,6 +66,10 @@ type RemoveCompleteFrame = {
   action: 'remove-complete';
 };
 
+type InsertCompleteFrame = {
+  action: 'insert-complete';
+};
+
 export type AVLFrameNoRoot =
   | CompareFrame
   | CompareDuplicateFound
@@ -75,7 +79,8 @@ export type AVLFrameNoRoot =
   | RotationFrame
   | InsertFrame
   | RemoveFrame
-  | RemoveCompleteFrame;
+  | RemoveCompleteFrame
+  | InsertCompleteFrame;
 
 export type AVLFrame = AVLFrameNoRoot & { root: TreeNode | undefined };
 

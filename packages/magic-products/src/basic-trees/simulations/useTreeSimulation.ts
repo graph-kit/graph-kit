@@ -40,12 +40,12 @@ export const useTreeSimulation = (
         avlControls.target.value,
         'cant start sim without a target node id',
       );
-      const targetValue = Number(graph.getNode(targetId).label);
 
       if (avlControls.mode.value === 'insert') {
+        const targetValue = Number(graph.getNode(targetId).label);
         tree.insert({ id: targetId, value: targetValue });
       } else {
-        tree.remove(targetValue);
+        tree.remove(targetId);
       }
     },
     setup: (context) => {

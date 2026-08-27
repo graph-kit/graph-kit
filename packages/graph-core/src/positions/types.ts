@@ -27,11 +27,22 @@ export type NodePositionStreamControls = {
    * store can report the commit without re-deriving it. Empty if already stopped.
    */
   stop: () => NodePositionEntry[];
+  /** ends the stream without committing, dropping whatever it was presenting */
+  cancel: () => void;
+};
+
+export type PresentedPositionControls = {
+  get: (nodeId: CoreNode['id']) => Position;
+  set: (nodeId: CoreNode['id'], position: Partial<Position>) => void;
+  clear: (nodeId: CoreNode['id']) => void;
+  clearAll: () => void;
+  has: (nodeId: CoreNode['id']) => boolean;
 };
 
 export type NodePositionStoreControls = {
   /** Returns the current position of a node. */
   get: (nodeId: string) => Position;
+  presented: PresentedPositionControls;
   /** Updates a single node's position and triggers {@link NodePositionStoreEventMap.onNodePositionsCommitted onNodePositionsCommitted}. */
   set: (position: NodePositionUpdate) => NodePositionEntry;
   /** Updates multiple nodes' positions and triggers {@link NodePositionStoreEventMap.onNodePositionsCommitted onNodePositionsCommitted}. */

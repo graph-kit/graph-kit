@@ -11,6 +11,8 @@ export type CaptureOptions = {
    * @default the duration set via `setDuration`
    */
   durationMs?: number;
+  /** ids this capture leaves alone. node movement is owned by the position layer and never needs listing */
+  ignore?: Iterable<string>;
 };
 
 type BaseAnimationControls = {

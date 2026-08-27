@@ -10,7 +10,7 @@ const Y_OFFSET = 200;
 const newEdge = (source: string, target: string): AddGEdgeOptions => ({
   source,
   target,
-  id: `${source}-${target}`,
+  id: [source, target].sort().join('-'),
 });
 
 /** one edge per parent to child link, read off the position each index encodes */
@@ -36,21 +36,20 @@ export type GraphState = {
   edges: AddGEdgeOptions[];
 };
 
-/** lays out `node` and its descendants as graph elements, with `node` at `nodePosition` */
 export const treeToGraph = (
-  node: TreeNode | undefined,
-  nodePosition: Coordinate,
+  root: TreeNode | undefined,
+  rootPosition: Coordinate,
 ): GraphState => {
-  if (!node) return { edges: [], nodes: [] };
+  if (!root) return { edges: [], nodes: [] };
 
   const positions = getTreeNodePositions({
-    node,
-    nodeCoordinates: nodePosition,
+    root: root,
+    rootPosition: rootPosition,
     xOffset: X_OFFSET,
     yOffset: Y_OFFSET,
   });
 
-  const nodes = treeNodeToArray(node);
+  const nodes = treeNodeToArray(root);
 
   return {
     edges: edgesBetweenNodes(nodes),

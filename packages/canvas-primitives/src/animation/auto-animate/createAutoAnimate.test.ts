@@ -9,6 +9,8 @@ import { circleAdd } from './circle/add.ts';
 import { circleRemove } from './circle/remove.ts';
 import { DEFAULT_AUTO_ANIMATE_DURATION_MS } from './constants.ts';
 import { createAutoAnimate } from './createAutoAnimate.ts';
+import { lineAdd } from './line/add.ts';
+import { lineRemove } from './line/remove.ts';
 
 type PlayedAnimation = {
   shapeId: SchemaId;
@@ -164,6 +166,14 @@ const circle = (
 });
 
 const arrow = (id: SchemaId, overrides: SchemaOverrides = {}): LooseSchema => ({
+  id,
+  start: { x: 0, y: 0 },
+  end: { x: 100, y: 100 },
+  lineWidth: 4,
+  ...overrides,
+});
+
+const line = (id: SchemaId, overrides: SchemaOverrides = {}): LooseSchema => ({
   id,
   start: { x: 0, y: 0 },
   end: { x: 100, y: 100 },
@@ -340,6 +350,12 @@ describe('shapes that appeared', () => {
     expect(harness.played[0].timeline).toMatchObject(arrowAdd);
   });
 
+  test('plays the entrance timeline for a line', () => {
+    harness.mutate(() => harness.put('line', line('line-1')));
+
+    expect(harness.played[0].timeline).toMatchObject(lineAdd);
+  });
+
   test('leaves a shape with no entrance timeline alone', () => {
     harness.mutate(() =>
       harness.put('rect', {
@@ -385,6 +401,15 @@ describe('shapes that disappeared', () => {
     harness.mutate(() => harness.drop('arrow-1'));
 
     expect(harness.played[0].timeline).toMatchObject(arrowRemove);
+  });
+
+  test('plays the exit timeline for a line', () => {
+    harness.put('line', line('line-1'));
+
+    harness.mutate(() => harness.drop('line-1'));
+
+    expect(harness.played[0].timeline).toMatchObject(lineRemove);
+    expect(harness.autoAnimate.isGhost('line-1')).toBe(true);
   });
 
   test('drops the ghost once the exit animation is over', () => {

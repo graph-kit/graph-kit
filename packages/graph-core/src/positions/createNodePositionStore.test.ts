@@ -57,6 +57,99 @@ describe(createNodePositionStore, () => {
     });
   });
 
+  describe('presented', () => {
+    it('reads through to the committed position when nothing is overridden', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a', position: { x: 10, y: 20 } }]);
+      expect(store.presented.get('a')).toEqual(store.get('a'));
+      expect(store.presented.has('a')).toBe(false);
+    });
+
+    it('returns the override once one is installed', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a', position: { x: 10, y: 20 } }]);
+
+      store.presented.set('a', { x: 99 });
+
+      expect(store.presented.get('a')).toEqual({
+        ...DEFAULT_POSITION,
+        x: 99,
+        y: 20,
+      });
+      expect(store.presented.has('a')).toBe(true);
+    });
+
+    it('leaves the committed position untouched while overridden', () => {
+      const { store, hub } = makeStore();
+      store._internal.add([{ id: 'a', position: { x: 10, y: 20 } }]);
+
+      store.presented.set('a', { x: 99, y: 99 });
+
+      expect(store.get('a')).toEqual({ ...DEFAULT_POSITION, x: 10, y: 20 });
+      expect(hub.emit).not.toHaveBeenCalled();
+    });
+
+    it('composes successive partial writes', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a' }]);
+
+      store.presented.set('a', { x: 5 });
+      store.presented.set('a', { y: 7 });
+
+      expect(store.presented.get('a')).toEqual({
+        ...DEFAULT_POSITION,
+        x: 5,
+        y: 7,
+      });
+    });
+
+    it('falls back to the committed position after clearing', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a', position: { x: 10 } }]);
+      store.presented.set('a', { x: 99 });
+
+      store.presented.clear('a');
+
+      expect(store.presented.get('a')).toEqual({ ...DEFAULT_POSITION, x: 10 });
+      expect(store.presented.has('a')).toBe(false);
+    });
+
+    it('picks up committed moves that happened while overridden, once cleared', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a', position: { x: 10 } }]);
+      store.presented.set('a', { x: 99 });
+
+      store.set({ nodeId: 'a', update: { x: 50 } });
+
+      expect(store.presented.get('a').x).toBe(99);
+      store.presented.clear('a');
+      expect(store.presented.get('a').x).toBe(50);
+    });
+
+    it('drops overrides for nodes that leave the graph', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a' }]);
+      store.presented.set('a', { x: 99 });
+
+      store._internal.remove(['a']);
+
+      expect(store.presented.has('a')).toBe(false);
+      expect(() => store.presented.get('a')).toThrow();
+    });
+
+    it('clearAll releases every override at once', () => {
+      const { store } = makeStore();
+      store._internal.add([{ id: 'a' }, { id: 'b' }]);
+      store.presented.set('a', { x: 1 });
+      store.presented.set('b', { x: 2 });
+
+      store.presented.clearAll();
+
+      expect(store.presented.has('a')).toBe(false);
+      expect(store.presented.has('b')).toBe(false);
+    });
+  });
+
   describe('set', () => {
     it('updates the position of a node', () => {
       const { store } = makeStore();
@@ -182,8 +275,25 @@ describe(createNodePositionStore, () => {
         first.stop();
 
         second.set({ nodeId: 'a', update: { x: 7 } });
-        expect(store.get('a').x).toBe(7);
+        expect(store.presented.get('a').x).toBe(7);
         expect(second.stop()).toHaveLength(1);
+        expect(store.get('a').x).toBe(7);
+      });
+
+      it('takes over a node that was already overridden, and commits its own value', () => {
+        const { store } = makeStore();
+        store._internal.add([{ id: 'a' }]);
+        store.presented.set('a', { x: 100 });
+
+        const stream = store.createStream();
+        stream.set({ nodeId: 'a', update: { x: 7 } });
+
+        expect(store.presented.get('a').x).toBe(7);
+        expect(stream.stop()).toEqual([
+          { nodeId: 'a', position: expect.objectContaining({ x: 7 }) },
+        ]);
+        expect(store.get('a').x).toBe(7);
+        expect(store.presented.has('a')).toBe(false);
       });
 
       // a position arriving from elsewhere is a legitimate concurrent write, not a
@@ -208,12 +318,27 @@ describe(createNodePositionStore, () => {
     });
 
     describe('stream.set', () => {
-      it('updates the node position', () => {
+      it('moves the presented position and leaves the committed one alone', () => {
+        const { store } = makeStore();
+        store._internal.add([{ id: 'a' }]);
+        const stream = store.createStream();
+
+        stream.set({ nodeId: 'a', update: { x: 42 } });
+
+        expect(store.presented.get('a').x).toBe(42);
+        expect(store.get('a').x).toBe(DEFAULT_POSITION.x);
+      });
+
+      it('commits the presented position and releases the override on stop', () => {
         const { store } = makeStore();
         store._internal.add([{ id: 'a' }]);
         const stream = store.createStream();
         stream.set({ nodeId: 'a', update: { x: 42 } });
+
+        stream.stop();
+
         expect(store.get('a').x).toBe(42);
+        expect(store.presented.has('a')).toBe(false);
       });
 
       it('emits onNodeMoveStream with updated entries', () => {
@@ -236,8 +361,16 @@ describe(createNodePositionStore, () => {
           { nodeId: 'a', update: { x: 1 } },
           { nodeId: 'b', update: { x: 2 } },
         ]);
+
+        expect(store.presented.get('a').x).toBe(1);
+        expect(store.presented.get('b').x).toBe(2);
+
+        stream.stop();
+
         expect(store.get('a').x).toBe(1);
         expect(store.get('b').x).toBe(2);
+        expect(store.presented.has('a')).toBe(false);
+        expect(store.presented.has('b')).toBe(false);
       });
     });
 

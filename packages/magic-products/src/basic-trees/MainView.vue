@@ -23,6 +23,7 @@
     },
     core: {
       weighted: false,
+      directed: false,
     },
     simulationButtons: (graph) => {
       const node = useFocusedNode(graph);

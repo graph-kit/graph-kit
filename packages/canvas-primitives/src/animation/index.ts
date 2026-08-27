@@ -17,8 +17,11 @@ import type {
   WithId,
 } from '../types/index.ts';
 import { shapeProps } from '../types/index.ts';
-import { GHOST_REDRAW } from './auto-animate/constants.ts';
-import { createAutoAnimate } from './auto-animate/createAutoAnimate.ts';
+import { GEOMETRY_PROPERTIES, GHOST_REDRAW } from './auto-animate/constants.ts';
+import {
+  type FinalizeCaptureOptions,
+  createAutoAnimate,
+} from './auto-animate/createAutoAnimate.ts';
 import type { AutoAnimateEventMap } from './auto-animate/events.ts';
 import type { DefineTimeline } from './timeline/define.ts';
 import { createDefineTimeline } from './timeline/define.ts';
@@ -67,7 +70,9 @@ export type ShapeRenderer = {
      * snapshots schemas either side of a mutation by invoking `flushDraw`
      * twice, animating the difference. returns the finalizer for the "after"
      */
-    captureFrame: (flushDraw: () => void) => () => void;
+    captureFrame: (
+      flushDraw: () => void,
+    ) => (options?: FinalizeCaptureOptions) => void;
     /** how long an auto animated capture takes to play out, in ms */
     readonly animationDuration: number;
     /**
@@ -320,6 +325,17 @@ export const createAnimatedShapes = (): AnimatedShapes => {
               schema,
               shapeName,
             );
+          }
+
+          // geometry belongs to whoever produced the schema, so it is re-read
+          // rather than held at whatever it was when the animation started
+          const baseline = animations[0].schemaWithDefaults as LooseSchema;
+          for (const geometryProp of GEOMETRY_PROPERTIES) {
+            if (geometryProp in schema) {
+              baseline[geometryProp] = schema[
+                geometryProp as keyof typeof schema
+              ] as LooseSchema[EverySchemaPropName];
+            }
           }
 
           if (prop === 'startTextAreaEdit') {

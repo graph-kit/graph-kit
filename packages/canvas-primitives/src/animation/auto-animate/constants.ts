@@ -10,6 +10,13 @@ export const GHOST_REDRAW = Symbol('ghost redraw');
  *
  * ⚠️ **only properties listed here will be animated with `createAutoAnimate`**
  */
+/** the properties a consumer can take ownership of by passing `ignoreGeometry` */
+export const GEOMETRY_PROPERTIES = new Set<EverySchemaPropName>([
+  'at',
+  'start',
+  'end',
+]);
+
 export const AUTO_ANIMATED_PROPERTIES = new Set<EverySchemaPropName>([
   'at',
   'start',

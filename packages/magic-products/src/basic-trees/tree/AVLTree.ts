@@ -1,4 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
+import { jsonClone } from '@core/utils/clone';
 import { FrameCollector } from '@magic/shared/simulation';
 
 import { AVLFrame, AVLFrameNoRoot } from '../simulations/frames.ts';
@@ -22,7 +23,7 @@ export class AVLTree {
 
     collector.add({
       ...entry,
-      root: this.root ? JSON.parse(JSON.stringify(this.root)) : undefined,
+      root: jsonClone(this.root),
     });
   }
 
@@ -46,7 +47,7 @@ export class AVLTree {
 
   getNodeById(id: string): TreeNode | undefined {
     const search = (node: TreeNode | undefined): TreeNode | undefined => {
-      if (!node) return undefined;
+      if (!node) return;
       if (node.id === id) return node;
       return search(node.left) ?? search(node.right);
     };
@@ -54,101 +55,74 @@ export class AVLTree {
     return search(this.root);
   }
 
-  getNodeByValue(value: number): TreeNode | undefined {
-    const search = (node: TreeNode | undefined): TreeNode | undefined => {
-      if (!node) return undefined;
-      if (node.value === value) return node;
-      return search(node.left) ?? search(node.right);
-    };
-
-    return search(this.root);
-  }
-
-  remove(value: number) {
-    if (!this.root) return;
-
-    let targetFound = false;
+  remove(id: string) {
+    const target = nullThrows(
+      this.getNodeById(id),
+      `cant remove ${id}, no node with that id is in the tree`,
+    );
+    const { value } = target;
 
     const removeHelper = (
       parent: TreeNode | undefined,
       node: TreeNode | undefined,
-      value: number,
       isLeft: boolean,
     ): TreeNode | undefined => {
       if (!node) {
         return undefined;
       }
 
-      if (!targetFound) {
-        this.addFrame({
-          action: 'compare-removal',
-          targetNode: this.getNodeByValue(value),
-          comparedNode: node,
-        });
+      this.addFrame({
+        action: 'compare-removal',
+        targetNode: target,
+        comparedNode: node,
+      });
+
+      if (value < node.value) {
+        node.left = removeHelper(node, node.left, true);
+        return node;
       }
 
-      if (value < node.value && !targetFound) {
-        node.left = removeHelper(node, node.left, value, true);
-      } else if (value > node.value && !targetFound) {
-        node.right = removeHelper(node, node.right, value, false);
+      if (value > node.value) {
+        node.right = removeHelper(node, node.right, false);
+        return node;
+      }
+
+      let replacementNode: TreeNode | undefined;
+
+      if (!node.left && !node.right) {
+        // Case 1: Leaf node
+        replacementNode = undefined;
+      } else if (!node.left) {
+        // Case 2: Only right child
+        replacementNode = node.right;
+      } else if (!node.right) {
+        // Case 3: Only left child
+        replacementNode = node.left;
       } else {
-        targetFound = true;
+        // Case 4: Two children, the successor takes the removed node's place
+        const successor = this.findMin(node.right);
 
-        // Handle removal
-        let replacementNode: TreeNode | undefined;
-
-        if (!node.left && !node.right) {
-          // Case 1: Leaf node
-          replacementNode = undefined;
-        } else if (!node.left) {
-          // Case 2: Only right child
-          replacementNode = node.right;
-        } else if (!node.right) {
-          // Case 3: Only left child
-          replacementNode = node.left;
-        } else {
-          // Case 4: Two children
-          const successor = this.findMin(node.right);
-
-          // Create a new node with the successor's value
-          replacementNode = new TreeNode(successor);
-          replacementNode.left = node.left;
-          // Remove the successor and attach the remaining right subtree
-          replacementNode.right = this.removeMin(node.right);
-        }
-
-        // Update the parent or root reference
-        if (parent) {
-          if (isLeft) parent.left = replacementNode;
-          else parent.right = replacementNode;
-        } else {
-          this.root = replacementNode;
-        }
-
-        this.addFrame({
-          action: 'remove',
-          targetNodeValue: value,
-        });
-
-        // Restore the tree for further processing
-        if (parent) {
-          if (isLeft) parent.left = node;
-          else parent.right = node;
-        } else {
-          this.root = node;
-        }
-
-        return replacementNode;
+        replacementNode = new TreeNode(successor);
+        replacementNode.left = node.left;
+        replacementNode.right = this.removeMin(node.right);
       }
 
-      if (node) {
-        return this.rebalance(parent, node, isLeft);
-      }
+      this.attach(parent, replacementNode, isLeft);
 
-      return node;
+      this.addFrame({
+        action: 'remove',
+        targetNodeValue: value,
+      });
+
+      return replacementNode;
     };
 
-    this.root = removeHelper(undefined, this.root, value, false);
+    this.root = removeHelper(undefined, this.root, false);
+
+    // removal can unbalance the whole path it touched, including the subtree
+    // removeMin rewrote, so the repair runs as its own pass over the result
+    this.balance();
+
     return this.root;
   }
 
@@ -159,94 +133,46 @@ export class AVLTree {
   ): TreeNode {
     const balance = getBalanceFactor(node);
 
-    // Left Left Case
     if (balance > 1 && getBalanceFactor(node.left) >= 0) {
-      const result = this.rotateRight(node);
-      if (parent) {
-        if (isLeft) parent.left = result;
-        else parent.right = result;
-      } else {
-        this.root = result;
-      }
       this.addFrame({
         action: 'balance',
         method: 'left-left',
       });
-      if (parent) {
-        if (isLeft) parent.left = node;
-        else parent.right = node;
-      } else {
-        this.root = node;
-      }
-      return result;
+      return this.rotateRight(parent, node, isLeft);
     }
 
-    // Right Right Case
-    if (balance < -1 && getBalanceFactor(node.right!) <= 0) {
-      const result = this.rotateLeft(node);
-      if (parent) {
-        if (isLeft) parent.left = result;
-        else parent.right = result;
-      } else {
-        this.root = result;
-      }
+    if (balance < -1 && getBalanceFactor(node.right) <= 0) {
       this.addFrame({
         action: 'balance',
         method: 'right-right',
       });
-      if (parent) {
-        if (isLeft) parent.left = node;
-        else parent.right = node;
-      } else {
-        this.root = node;
-      }
-      return result;
+      return this.rotateLeft(parent, node, isLeft);
     }
 
-    // Left Right Case
-    if (balance > 1 && getBalanceFactor(node.left!) < 0) {
-      node.left = this.rotateLeft(node.left!);
-      const result = this.rotateRight(node);
-      if (parent) {
-        if (isLeft) parent.left = result;
-        else parent.right = result;
-      } else {
-        this.root = result;
-      }
+    if (balance > 1 && getBalanceFactor(node.left) < 0) {
       this.addFrame({
         action: 'balance',
         method: 'left-right',
       });
-      if (parent) {
-        if (isLeft) parent.left = node;
-        else parent.right = node;
-      } else {
-        this.root = node;
-      }
-      return result;
+      this.rotateLeft(
+        node,
+        nullThrows(node.left, 'left child is undefined'),
+        true,
+      );
+      return this.rotateRight(parent, node, isLeft);
     }
 
-    // Right Left Case
-    if (balance < -1 && getBalanceFactor(node.right!) > 0) {
-      node.right = this.rotateRight(node.right!);
-      const result = this.rotateLeft(node);
-      if (parent) {
-        if (isLeft) parent.left = result;
-        else parent.right = result;
-      } else {
-        this.root = result;
-      }
+    if (balance < -1 && getBalanceFactor(node.right) > 0) {
       this.addFrame({
         action: 'balance',
         method: 'right-left',
       });
-      if (parent) {
-        if (isLeft) parent.left = node;
-        else parent.right = node;
-      } else {
-        this.root = node;
-      }
-      return result;
+      this.rotateRight(
+        node,
+        nullThrows(node.right, 'right child is undefined'),
+        false,
+      );
+      return this.rotateLeft(parent, node, isLeft);
     }
 
     return node;
@@ -271,24 +197,61 @@ export class AVLTree {
     this.root = balanceNode(undefined, this.root, false);
   }
 
-  private rotateRight(y: TreeNode): TreeNode {
-    const x = y.left!;
-    const T2 = x.right;
+  private attach(
+    parent: TreeNode | undefined,
+    node: TreeNode | undefined,
+    isLeft: boolean,
+  ) {
+    if (!parent) {
+      this.root = node;
+      return;
+    }
 
-    x.right = y;
-    y.left = T2;
-
-    return x;
+    if (isLeft) parent.left = node;
+    else parent.right = node;
   }
 
-  private rotateLeft(x: TreeNode): TreeNode {
-    const y = x.right!;
-    const T2 = y.left;
+  private rotateRight(
+    parent: TreeNode | undefined,
+    node: TreeNode,
+    isLeft: boolean,
+  ): TreeNode {
+    const newRoot = nullThrows(node.left, 'right rotation needs a left child');
+    const movedSubtree = newRoot.right;
 
-    y.left = x;
-    x.right = T2;
+    newRoot.right = node;
+    node.left = movedSubtree;
 
-    return y;
+    // frames snapshot from this.root, so the rotation has to be wired in first
+    this.attach(parent, newRoot, isLeft);
+
+    this.addFrame({
+      action: 'rotation',
+      side: 'right',
+    });
+
+    return newRoot;
+  }
+
+  private rotateLeft(
+    parent: TreeNode | undefined,
+    node: TreeNode,
+    isLeft: boolean,
+  ): TreeNode {
+    const newRoot = nullThrows(node.right, 'left rotation needs a right child');
+    const movedSubtree = newRoot.left;
+
+    newRoot.left = node;
+    node.right = movedSubtree;
+
+    this.attach(parent, newRoot, isLeft);
+
+    this.addFrame({
+      action: 'rotation',
+      side: 'left',
+    });
+
+    return newRoot;
   }
 
   insert(payload: NodePayload, rebalance = true) {

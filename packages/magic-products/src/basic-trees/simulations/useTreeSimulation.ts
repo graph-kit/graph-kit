@@ -7,7 +7,7 @@ import { ref } from 'vue';
 import { graphToTree } from '../graph-conversion/graphToTree.ts';
 import { AVLTree } from '../tree/AVLTree.ts';
 import { createSync } from './createSync.ts';
-import { explainer } from './explainer.ts';
+import { treeExplainer } from './explainer.ts';
 import { AVLFrame, AVLMode } from './frames.ts';
 
 export type TreeSimulation = {
@@ -30,6 +30,7 @@ export const useTreeSimulation = (
   const avlControls = useAVLControls();
 
   const sync = createSync(graph);
+  const explainer = treeExplainer(graph);
 
   const definition: SimulationDefinition<AVLFrame> = {
     name: 'AVL Tree',

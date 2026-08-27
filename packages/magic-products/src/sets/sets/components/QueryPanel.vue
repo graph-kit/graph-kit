@@ -13,9 +13,15 @@
   import InsertSetOpButtons from './InsertSetOpButtons.vue';
   import Query from './Query.vue';
 
+  const MAX_NUMBER_OF_QUERIES = 5;
+
   const {
     queries: { queries, addQuery },
   } = useProvidedSetsProductState();
+
+  const canAddQuery = computed(
+    () => queries.value.length < MAX_NUMBER_OF_QUERIES,
+  );
 
   // the mathfield is the focus target itself, so descending into its shadow root would look past it
   const activeElement = useActiveElement({ deep: false });
@@ -32,8 +38,6 @@
     const query = addQuery();
     query.editor.onMounted((editorRef) => editorRef.focus());
   };
-
-  const MAX_NUMBER_OF_QUERIES = 5;
 </script>
 
 <template>
@@ -48,11 +52,11 @@
       <InsertSetOpButtons :queryId="focusedQueryId" />
     </Well>
     <div>
-      <Well class="p-0 w-14 h-6 rounded-b-none rounded-t-xl overflow-hidden">
-        <Tooltip
-          v-if="queries.length < MAX_NUMBER_OF_QUERIES"
-          label="Add highlight region"
-        >
+      <Well
+        v-if="canAddQuery"
+        class="p-0 w-14 h-6 rounded-b-none rounded-t-xl overflow-hidden"
+      >
+        <Tooltip label="Add highlight region">
           <template #trigger>
             <Button
               @click="addAndFocusQuery"
@@ -64,7 +68,7 @@
           </template>
         </Tooltip>
       </Well>
-      <Well class="rounded-tl-none">
+      <Well :class="{ 'rounded-tl-none': canAddQuery }">
         <VStack class="flex-col-reverse">
           <Query
             v-for="{ id } in queries"

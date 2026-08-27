@@ -1,10 +1,13 @@
 <script setup lang="ts">
   import Shell from '@magic/shared/Shell';
   import { useGraphShell } from '@magic/shared/graph-shell';
+  import { createNodeThemer } from '@magic/shared/theme';
   import { useFocusedNode } from '@magic/shared/utilities';
 
   import InsertNode from './InsertNode.vue';
   import RemoveNode from './RemoveNode.vue';
+  import { createBalanceFactorThemer } from './createBalanceFactorThemer.ts';
+  import { createTreeHeightThemer } from './createTreeHeightThemer.ts';
   import { AVLFrame } from './simulations/frames.ts';
   import { useTreeSimulation } from './simulations/useTreeSimulation.ts';
   import { AVLTree } from './tree/AVLTree.ts';
@@ -34,33 +37,32 @@
       };
       return [{ disabled, render: RemoveNode }, { render: InsertNode }];
     },
-    lensChips: () => {
+    lensChips: (graph) => {
+      const root = () => {
+        const sim = shell.simulation.current.value;
+        const frame: AVLFrame | undefined = sim?.frames.at(
+          sim.playhead.position,
+        );
+        return frame?.root ?? tree.root;
+      };
+
+      const balanceFactorTheme = createBalanceFactorThemer(graph, root);
+      const treeHeightTheme = createTreeHeightThemer(graph, root);
+
       return [
         {
           lens: {
             id: 'balance-factor',
+            ...balanceFactorTheme,
           },
-          name: () => {
-            const sim = shell.simulation.current.value;
-            const frame: AVLFrame | undefined = sim?.frames?.at(
-              sim.playhead.position,
-            );
-            return (
-              'Balance Factor: ' + getBalanceFactor(frame?.root ?? tree.root)
-            );
-          },
+          name: () => 'Balance Factor: ' + getBalanceFactor(root()),
         },
         {
           lens: {
             id: 'tree-height',
+            ...treeHeightTheme,
           },
-          name: () => {
-            const sim = shell.simulation.current.value;
-            const frame: AVLFrame | undefined = sim?.frames?.at(
-              sim.playhead.position,
-            );
-            return 'Tree Height: ' + getTreeHeight(frame?.root ?? tree.root);
-          },
+          name: () => 'Tree Height: ' + getTreeHeight(root()),
         },
       ];
     },

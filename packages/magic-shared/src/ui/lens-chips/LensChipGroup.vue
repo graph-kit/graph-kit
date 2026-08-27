@@ -15,6 +15,7 @@
 
   const pinnedLensId = ref<string>();
   const hoveredLensId = ref<string>();
+  const hoverSuppressedLensId = ref<string>();
 
   const chips = computed(() =>
     nullThrows(
@@ -24,12 +25,30 @@
   );
 
   const togglePinnedLens = (lensId: string) => {
-    pinnedLensId.value = lensId === pinnedLensId.value ? undefined : lensId;
+    const wasPinned = lensId === pinnedLensId.value;
+    pinnedLensId.value = wasPinned ? undefined : lensId;
+    // unpinning has to read as off right away, so the hover the click came with
+    // is ignored until the cursor leaves the chip
+    hoverSuppressedLensId.value = wasPinned ? lensId : undefined;
   };
 
-  const displayedChipId = computed(
-    () => hoveredLensId.value ?? pinnedLensId.value,
-  );
+  const setHovered = (lensId: string, hovered: boolean) => {
+    if (hovered) {
+      hoveredLensId.value = lensId;
+      return;
+    }
+    if (hoveredLensId.value !== lensId) return;
+    hoveredLensId.value = undefined;
+    hoverSuppressedLensId.value = undefined;
+  };
+
+  const displayedChipId = computed(() => {
+    const hovered =
+      hoveredLensId.value === hoverSuppressedLensId.value
+        ? undefined
+        : hoveredLensId.value;
+    return hovered ?? pinnedLensId.value;
+  });
 
   const displayedChip = computed(() => {
     if (!displayedChipId.value) return;
@@ -56,13 +75,9 @@
         <LensChip
           v-bind="chip"
           @click="togglePinnedLens(chipId(chip))"
-          @focus="hoveredLensId = chipId(chip)"
-          @blur="hoveredLensId = undefined"
-          @update:active="
-            $event
-              ? (hoveredLensId = chipId(chip))
-              : hoveredLensId === chipId(chip) && (hoveredLensId = undefined)
-          "
+          @focus="setHovered(chipId(chip), true)"
+          @blur="setHovered(chipId(chip), false)"
+          @update:active="setHovered(chipId(chip), $event ?? false)"
           :model-value="chipId(chip) === pinnedLensId"
         />
       </template>

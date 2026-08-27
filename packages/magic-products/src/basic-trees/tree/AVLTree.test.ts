@@ -5,6 +5,7 @@ import { AVLFrame } from '../simulations/frames.ts';
 import { AVLTree } from './AVLTree.ts';
 import { TreeNode } from './TreeNode.ts';
 import { getBalanceFactor } from './getBalanceFactor.ts';
+import { getNodeById } from './getNodeById.ts';
 
 /** attaches a collector and hands back the frames it accumulates */
 const collectFrames = (tree: AVLTree) => {
@@ -256,6 +257,92 @@ describe('AVLTree', () => {
 
       expect(removeFrame).toBeDefined();
       expect(inOrder(removeFrame?.root)).toEqual([20, 30]);
+    });
+
+    test('the replacement is reported before the removal, tree still intact', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [20, 10, 30, 25, 40]);
+
+      frames.length = 0;
+      tree.remove('n-30');
+
+      const replacementIndex = frames.findIndex(
+        (frame) => frame.action === 'find-replacement',
+      );
+      const removeIndex = frames.findIndex(
+        (frame) => frame.action === 'remove',
+      );
+      const replacementFrame = frames[replacementIndex];
+
+      expect(removeIndex).toBe(replacementIndex + 1);
+      expect(replacementFrame).toMatchObject({
+        method: 'successor',
+        removedNode: { id: 'n-30' },
+        replacementNode: { id: 'n-40' },
+      });
+      expect(inOrder(replacementFrame.root)).toEqual([10, 20, 25, 30, 40]);
+    });
+
+    test('a leaf removal reports that nothing fills its slot', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [20, 10, 30]);
+
+      frames.length = 0;
+      tree.remove('n-10');
+
+      const replacementFrame = frames.find(
+        (frame) => frame.action === 'find-replacement',
+      );
+
+      expect(replacementFrame).toMatchObject({
+        method: 'leaf',
+        removedNode: { id: 'n-10' },
+      });
+    });
+
+    test('every surviving node gets a balance check after the removal', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [50, 25, 75, 10, 30, 60, 90, 5]);
+
+      frames.length = 0;
+      tree.remove('n-60');
+
+      const removeIndex = frames.findIndex(
+        (frame) => frame.action === 'remove',
+      );
+      const checks = frames.filter(
+        (frame) => frame.action === 'balance-check',
+      );
+
+      expect(checks).toHaveLength(everyNode(tree.root).length);
+      for (const check of checks) {
+        expect(frames.indexOf(check)).toBeGreaterThan(removeIndex);
+      }
+    });
+
+    test('a balance check snapshots a root the checked node is still reachable in', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [50, 25, 75, 10, 30, 60, 90, 5]);
+
+      frames.length = 0;
+      tree.remove('n-90');
+
+      const checks = frames.filter(
+        (frame) => frame.action === 'balance-check',
+      );
+
+      expect(checks.length).toBeGreaterThan(0);
+      for (const check of checks) {
+        expect(getNodeById(check.root, check.checkedNode.id)).toBeDefined();
+      }
     });
 
     test('rebalancing rotations are reported after the removal', () => {

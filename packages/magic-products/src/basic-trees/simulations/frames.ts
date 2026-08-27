@@ -11,10 +11,29 @@ export type CompareFrame = {
   targetNode: NodePayload;
 };
 
-type CompareForRemovalFrame = {
-  action: 'compare-removal';
-  comparedNode: TreeNode;
-  targetNode: NodePayload;
+/** where the node filling a removed node's slot comes from */
+export type ReplacementMethod =
+  | 'leaf'
+  | 'only-left-child'
+  | 'only-right-child'
+  | 'successor';
+
+type FindReplacementFrame =
+  | {
+      action: 'find-replacement';
+      method: 'leaf';
+      removedNode: TreeNode;
+    }
+  | {
+      action: 'find-replacement';
+      method: Exclude<ReplacementMethod, 'leaf'>;
+      removedNode: TreeNode;
+      replacementNode: TreeNode;
+    };
+
+type BalanceCheckFrame = {
+  action: 'balance-check';
+  checkedNode: TreeNode;
 };
 
 type CompareDuplicateFound = {
@@ -45,8 +64,9 @@ type RemoveFrame = {
 
 export type AVLFrameNoRoot =
   | CompareFrame
-  | CompareForRemovalFrame
   | CompareDuplicateFound
+  | FindReplacementFrame
+  | BalanceCheckFrame
   | BalanceFrame
   | RotationFrame
   | InsertFrame

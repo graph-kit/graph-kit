@@ -5,6 +5,7 @@ import { FrameCollector } from '@magic/shared/simulation';
 import { AVLFrame, AVLFrameNoRoot } from '../simulations/frames.ts';
 import { NodePayload, TreeNode } from './TreeNode.ts';
 import { getBalanceFactor } from './getBalanceFactor.ts';
+import { getNodeById } from './getNodeById.ts';
 
 export class AVLTree {
   root: TreeNode | undefined;
@@ -45,22 +46,11 @@ export class AVLTree {
     return current;
   }
 
-  getNodeById(id: string): TreeNode | undefined {
-    const search = (node: TreeNode | undefined): TreeNode | undefined => {
-      if (!node) return;
-      if (node.id === id) return node;
-      return search(node.left) ?? search(node.right);
-    };
-
-    return search(this.root);
-  }
-
   remove(id: string) {
-    const target = nullThrows(
-      this.getNodeById(id),
+    const { value } = nullThrows(
+      getNodeById(this.root, id),
       `cant remove ${id}, no node with that id is in the tree`,
     );
-    const { value } = target;
 
     const removeHelper = (
       parent: TreeNode | undefined,
@@ -70,12 +60,6 @@ export class AVLTree {
       if (!node) {
         return undefined;
       }
-
-      this.addFrame({
-        action: 'compare-removal',
-        targetNode: target,
-        comparedNode: node,
-      });
 
       if (value < node.value) {
         node.left = removeHelper(node, node.left, true);
@@ -89,22 +73,47 @@ export class AVLTree {
 
       let replacementNode: TreeNode | undefined;
 
-      if (!node.left && !node.right) {
-        // Case 1: Leaf node
-        replacementNode = undefined;
-      } else if (!node.left) {
-        // Case 2: Only right child
-        replacementNode = node.right;
-      } else if (!node.right) {
-        // Case 3: Only left child
-        replacementNode = node.left;
-      } else {
-        // Case 4: Two children, the successor takes the removed node's place
+      // every branch reports its replacement before touching the tree, so the
+      // frame snapshots the node still in place next to the node taking over
+      if (node.left && node.right) {
         const successor = this.findMin(node.right);
+
+        this.addFrame({
+          action: 'find-replacement',
+          method: 'successor',
+          removedNode: node,
+          replacementNode: successor,
+        });
 
         replacementNode = new TreeNode(successor);
         replacementNode.left = node.left;
         replacementNode.right = this.removeMin(node.right);
+      } else if (node.left) {
+        this.addFrame({
+          action: 'find-replacement',
+          method: 'only-left-child',
+          removedNode: node,
+          replacementNode: node.left,
+        });
+
+        replacementNode = node.left;
+      } else if (node.right) {
+        this.addFrame({
+          action: 'find-replacement',
+          method: 'only-right-child',
+          removedNode: node,
+          replacementNode: node.right,
+        });
+
+        replacementNode = node.right;
+      } else {
+        this.addFrame({
+          action: 'find-replacement',
+          method: 'leaf',
+          removedNode: node,
+        });
+
+        replacementNode = undefined;
       }
 
       this.attach(parent, replacementNode, isLeft);
@@ -186,11 +195,14 @@ export class AVLTree {
     ): TreeNode | undefined => {
       if (!node) return undefined;
 
-      // Recursively balance left and right subtrees
       node.left = balanceNode(node, node.left, true);
       node.right = balanceNode(node, node.right, false);
 
-      // Use existing rebalance method
+      this.addFrame({
+        action: 'balance-check',
+        checkedNode: node,
+      });
+
       return this.rebalance(parent, node, isLeft);
     };
 

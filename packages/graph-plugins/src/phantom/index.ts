@@ -22,7 +22,7 @@ export const phantom: PhantomPlugin = ({
   let edges: PhantomEdge[] = [];
 
   const getNodePosition = (id: string) => {
-    if (controls.isNode(id)) return controls.positions.get(id);
+    if (controls.isNode(id)) return controls.positions.presented.get(id);
     return nullThrows(
       nodes.find((node) => node.id === id),
       `could not resolve position for node with id ${id}`,

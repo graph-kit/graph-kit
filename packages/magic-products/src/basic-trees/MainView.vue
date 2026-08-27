@@ -8,6 +8,7 @@
   import RemoveNode from './RemoveNode.vue';
   import { createBalanceFactorThemer } from './createBalanceFactorThemer.ts';
   import { createTreeHeightThemer } from './createTreeHeightThemer.ts';
+  import { definitions } from './definitions.ts';
   import { AVLFrame } from './simulations/frames.ts';
   import { useTreeSimulation } from './simulations/useTreeSimulation.ts';
   import { AVLTree } from './tree/AVLTree.ts';
@@ -55,6 +56,7 @@
             id: 'balance-factor',
             ...balanceFactorTheme,
           },
+          tooltipLabel: definitions.balanceFactor,
           name: () => 'Balance Factor: ' + getBalanceFactor(root()),
         },
         {

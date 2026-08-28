@@ -39,9 +39,11 @@
 <template>
   <Dropdown>
     <template #trigger>
-      <Well class="p-0">
-        <Button class="px-4 text-xl text-magic dark:text-magic">
-          {{ activeProduct.name }}
+      <Well class="p-0 relative w-fit max-w-[20vw]">
+        <Button class="px-4 text-xl text-magic dark:text-magic w-full">
+          <span class="truncate w-full">
+            {{ activeProduct.name }}
+          </span>
         </Button>
       </Well>
     </template>

@@ -40,6 +40,10 @@
       "types": "./dist/types/components/layout/HStack.vue.d.ts",
       "default": "./src/components/layout/HStack.vue"
     },
+    "./OverflowRow": {
+      "types": "./dist/types/components/layout/OverflowRow.vue.d.ts",
+      "default": "./src/components/layout/OverflowRow.vue"
+    },
     "./VStack": {
       "types": "./dist/types/components/layout/VStack.vue.d.ts",
       "default": "./src/components/layout/VStack.vue"

@@ -1,9 +1,10 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
+  import { useMounted } from '@vueuse/core';
 
   import { computed, ref, watch } from 'vue';
 
-  import HStack from '../../components/layout/HStack.vue';
+  import OverflowRow from '../../components/layout/OverflowRow.vue';
   import Well from '../../components/layout/Well.vue';
   import { useProvidedShell } from '../../product/context.ts';
   import LensChip from './LensChip.vue';
@@ -11,7 +12,13 @@
 
   const chipId = (chip: LensChipDefinition) => chip.lens.id;
 
+  // the chips keep their shape on the menu, which only needs the light half lifted off
+  // the panel it shares a colour with. dark already separates them
+  const menuChipClasses = 'bg-gray-200 dark:bg-gray-900';
+
   const shell = useProvidedShell();
+
+  const isMounted = useMounted();
 
   const pinnedLensId = ref<string>();
   const hoveredLensId = ref<string>();
@@ -69,9 +76,14 @@
 </script>
 
 <template>
-  <Well v-if="chips.length > 0">
-    <HStack class="flex-wrap">
-      <template v-for="chip of chips">
+  <Well v-if="isMounted && chips.length > 0">
+    <OverflowRow
+      :items="chips"
+      :key-of="chipId"
+      label="More"
+      class="max-w-[calc(50vw-2rem)]"
+    >
+      <template #default="{ item: chip, inMenu }">
         <LensChip
           v-bind="chip"
           @click="togglePinnedLens(chipId(chip))"
@@ -79,8 +91,9 @@
           @blur="setHovered(chipId(chip), false)"
           @update:active="setHovered(chipId(chip), $event ?? false)"
           :model-value="chipId(chip) === pinnedLensId"
+          :class="inMenu ? menuChipClasses : undefined"
         />
       </template>
-    </HStack>
+    </OverflowRow>
   </Well>
 </template>

@@ -19,6 +19,8 @@
   interface Props {
     side?: DropdownMenuContentProps['side'];
     align?: DropdownMenuContentProps['align'];
+    /** the gap the menu keeps from its trigger, which is also the hover path between them */
+    sideOffset?: DropdownMenuContentProps['sideOffset'];
     /** hover adds pointer intent on top of the click and keyboard paths rather than replacing them */
     openOn?: 'click' | 'hover';
   }
@@ -26,6 +28,7 @@
   const props = withDefaults(defineProps<Props>(), {
     side: 'bottom',
     align: 'start',
+    sideOffset: 6,
     openOn: 'click',
   });
 
@@ -115,7 +118,7 @@
       <DropdownMenuContent
         :side="side"
         :align="align"
-        :side-offset="6"
+        :side-offset="sideOffset"
         v-bind="{ ...attrs, class: undefined }"
         :class="classes"
         @pointerenter="cancelPendingClose"

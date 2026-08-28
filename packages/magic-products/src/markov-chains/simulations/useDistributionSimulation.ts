@@ -61,7 +61,9 @@ export const distributionSimulationDefinition = (
 
     setup: (context) => {
       const stopOnStructureChange = () => context.stopSimulation();
-      graph.events.subscribe('onStructureChange', stopOnStructureChange);
+      // rawEvents because this runs outside a component, and graph.events ties
+      // every subscribe to an onUnmounted
+      graph.rawEvents.subscribe('onStructureChange', stopOnStructureChange);
 
       return {
         lens: {
@@ -72,7 +74,10 @@ export const distributionSimulationDefinition = (
         onSetupCompleted: (frame) => (currentFrame.value = frame),
         onFrameTransition: (frame) => (currentFrame.value = frame),
         onTeardownCompleted: () =>
-          graph.events.unsubscribe('onStructureChange', stopOnStructureChange),
+          graph.rawEvents.unsubscribe(
+            'onStructureChange',
+            stopOnStructureChange,
+          ),
       };
     },
   };

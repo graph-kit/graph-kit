@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { nullThrows } from '@core/utils/assert';
   import Button from '@magic/shared/Button';
   import Dropdown from '@magic/shared/Dropdown';
   import HStack from '@magic/shared/HStack';

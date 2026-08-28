@@ -14,10 +14,18 @@
   import { mdiPlay } from '@mdi/js';
   import Fraction from 'fraction.js';
 
-  import { computed, ref } from 'vue';
+  import { computed, ref, shallowRef } from 'vue';
+
+  import { distributionSimulationDefinition } from './simulations/useDistributionSimulation.ts';
 
   const graph = useProvidedGraph();
   const shell = useProvidedShell();
+
+  const startingDistribution = shallowRef<Fraction[]>([]);
+  const definition = distributionSimulationDefinition(
+    graph,
+    startingDistribution,
+  );
 
   const initRawInput = () => graph.nodes.value.map((_) => '');
 
@@ -75,7 +83,12 @@
     return false;
   });
 
-  const start = () => {};
+  const start = () => {
+    const distribution = parsedInput.value;
+    if (!distribution || parsedInputInvalid.value) return;
+    startingDistribution.value = distribution;
+    shell.simulation.start(definition);
+  };
 </script>
 
 <template>
@@ -91,7 +104,7 @@
     <Well>
       <VStack>
         <div class="font-bold text-xl mb-2">Starting Distribution</div>
-        <HStack class="flex-wrap w-100">
+        <HStack class="flex-wrap max-w-100">
           <HStack
             v-for="(node, i) in graph.nodes.value"
             :key="node.id"

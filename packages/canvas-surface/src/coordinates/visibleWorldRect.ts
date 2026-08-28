@@ -10,8 +10,7 @@ type CanvasSize = {
 };
 
 /**
- * the slice of the world the canvas currently shows. the canvas is measured
- * only when it resizes, so reading this per frame never touches the layout path
+ * the slice of the world the canvas currently shows.
  */
 export const useVisibleWorldRect = (
   { panX, panY, zoom }: Camera['state'],

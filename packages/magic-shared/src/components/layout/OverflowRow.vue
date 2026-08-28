@@ -53,13 +53,10 @@
       />
     </div>
 
-    <!--
-      last in the flow, so it sits against the last item still in it. it is measured
-      whether or not it is being shown, so it stays mounted either way
-    -->
     <div
+      v-if="overflowing.length > 0"
       ref="trigger"
-      :class="overflowing.length > 0 ? 'shrink-0' : parked"
+      class="shrink-0"
     >
       <Dropdown
         align="end"
@@ -71,7 +68,6 @@
             :label="label"
           />
         </template>
-        <!-- wide enough to fit two typical items across before wrapping -->
         <Well class="max-w-240">
           <HStack class="flex-wrap">
             <template

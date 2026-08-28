@@ -52,7 +52,6 @@ export const useOverflowRow = ({ row, trigger }: OverflowRowElements) => {
     const rowElement = unrefElement(row);
     const triggerElement = unrefElement(trigger);
     if (!(rowElement instanceof HTMLElement)) return;
-    if (!(triggerElement instanceof HTMLElement)) return;
 
     const items = [
       ...rowElement.querySelectorAll<HTMLElement>(
@@ -72,7 +71,16 @@ export const useOverflowRow = ({ row, trigger }: OverflowRowElements) => {
       widthOfFirst.push(previous + gapBefore + width);
     }
 
-    const triggerSpace = gap + triggerElement.getBoundingClientRect().width;
+    /**
+     * the trigger is only in the row while it has something to open, so the pass that
+     * first finds an overflow has nothing to measure and reserves nothing. it comes back
+     * an item too generous, and the render it causes brings the trigger in for the pass
+     * that settles it
+     */
+    const triggerSpace =
+      triggerElement instanceof HTMLElement
+        ? gap + triggerElement.getBoundingClientRect().width
+        : 0;
 
     // showing everything is the one case that owes the trigger no room
     const fits = (count: number) => {

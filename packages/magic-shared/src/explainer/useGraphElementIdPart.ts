@@ -55,17 +55,9 @@ export const useGraphElementRefExplainerSegment = (
   return {
     id: crypto.randomUUID(),
     text: () => {
-      if (graph.isNode(id)) {
-        return graph.theme.tokenResolver('node.text.content', { id });
-      }
-      const edge = graph.getEdge(id);
-      const source = graph.theme.tokenResolver('node.text.content', {
-        id: edge.source,
-      });
-      const target = graph.theme.tokenResolver('node.text.content', {
-        id: edge.target,
-      });
-      return `${source}${target}`;
+      if (graph.isNode(id)) return graph.getNode(id).label;
+      const { source, target } = graph.getEdge(id);
+      return `${graph.getNode(source).label}${graph.getNode(target).label}`;
     },
     highlight: useGraphElementExplainerHighlight(graph, id),
   };

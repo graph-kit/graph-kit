@@ -1,7 +1,7 @@
 import { Graph } from '../graph/types.ts';
 import { useGraph } from '../graph/useGraph.ts';
 import { resolveShellFlags } from '../product/flags.ts';
-import { ProductControls, Shell } from '../product/types.ts';
+import { ContentPredicate, ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
 import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
@@ -20,7 +20,13 @@ export const useGraphShell = (
 
   const draggedNodes = trackDraggedNodes(graph);
 
-  const flags = resolveShellFlags(options.flags, graph);
+  const isContent: ContentPredicate = ({ id }) =>
+    graph.isNode(id) || graph.isEdge(id);
+
+  const flags = resolveShellFlags(options.flags, {
+    transit: graph.transit,
+    isContent,
+  });
 
   if (!flags.history) graph.history.lifecycle.disable();
   if (!flags.annotations) graph.annotations.lifecycle.disable();
@@ -30,6 +36,7 @@ export const useGraphShell = (
     transit: graph.transit,
     annotations: flags.annotations ? graph.annotations : undefined,
     history: flags.history ? graph.history : undefined,
+    isContent,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {

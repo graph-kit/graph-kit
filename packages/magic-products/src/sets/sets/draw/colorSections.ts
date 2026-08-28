@@ -1,4 +1,4 @@
-import type { WorldRect } from '@core/utils/canvas/index';
+import type { BoundingBox } from '@core/utils/canvas/index';
 
 import type { Section, SetDefinition } from '../../types.ts';
 import { type SectionKey, getSectionKey } from '../other/sectionKey.ts';
@@ -10,7 +10,7 @@ type ColorSectionsProps = {
   /** colors painted over a section, keyed by the sets forming it */
   sectionKeyToColors: Map<SectionKey, string[]>;
   /** the area to paint within, which every clip is taken against */
-  bounds: WorldRect;
+  bounds: BoundingBox;
 };
 
 const clipInsideCircle = (
@@ -25,12 +25,12 @@ const clipInsideCircle = (
 const clipOutsideCircle = (
   ctx: CanvasRenderingContext2D,
   { display }: SetDefinition,
-  rect: WorldRect,
+  rect: BoundingBox,
 ) => {
   const { at, radius } = display;
   // the circle punches a hole in the visible world under the even odd rule
   const path = new Path2D();
-  path.rect(rect.x, rect.y, rect.width, rect.height);
+  path.rect(rect.at.x, rect.at.y, rect.width, rect.height);
   path.moveTo(at.x + radius, at.y);
   path.arc(at.x, at.y, radius, 0, 2 * Math.PI);
   ctx.clip(path, 'evenodd');
@@ -42,7 +42,7 @@ type ColorSectionOptions = {
   section: Section;
   colors: string[];
   /** the area to paint within, which every clip is taken against */
-  bounds: WorldRect;
+  bounds: BoundingBox;
 };
 
 /**
@@ -63,7 +63,7 @@ const colorSection = (options: ColorSectionOptions) => {
 
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = hatchPattern(ctx, colors);
-  ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+  ctx.fillRect(bounds.at.x, bounds.at.y, bounds.width, bounds.height);
 
   ctx.restore();
 };

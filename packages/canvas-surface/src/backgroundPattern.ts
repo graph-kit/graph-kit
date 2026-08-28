@@ -1,4 +1,4 @@
-import type { WorldRect } from '@core/utils/canvas/index';
+import type { BoundingBox } from '@core/utils/canvas/index';
 
 import type { ComputedRef } from 'vue';
 
@@ -39,12 +39,16 @@ export type DrawPattern = (
 export const useBackgroundPattern = (
   { panX, panY, zoom }: Camera['state'],
   drawPattern: DrawFns['backgroundPattern'],
-  visibleWorldRect: ComputedRef<WorldRect>,
+  visibleWorldRect: ComputedRef<BoundingBox>,
 ) => {
   const draw = (ctx: CanvasRenderingContext2D) => {
     if (zoom.value <= PATTERN_FULLY_FADED_OUT) return;
 
-    const { x, y, width, height } = visibleWorldRect.value;
+    const {
+      at: { x, y },
+      width,
+      height,
+    } = visibleWorldRect.value;
 
     // one cell of overscan keeps the partly visible row and column at the far edge drawn
     const endX = x + width + STAGGER;

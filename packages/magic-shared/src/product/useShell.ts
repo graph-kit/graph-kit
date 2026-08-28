@@ -14,12 +14,14 @@ import {
 import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
 import { useShellAppearance } from '../ui/appearance/useShellAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
+import JumpToContentButton from '../ui/jump-to-content/JumpToContentButton.vue';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useToastState } from '../ui/toast/useToastState.ts';
 import { useShellUI } from '../ui/useShellUI.ts';
 import { provideShell } from './context.ts';
 import { resolveShellFlags } from './flags.ts';
+import { useJumpToContent } from './internals/useJumpToContent.ts';
 import { useShellHistory } from './internals/useShellHistory.ts';
 import { useShellLocalStorage } from './internals/useShellLocalStorage.ts';
 import { manifests } from './manifests/index.ts';
@@ -48,6 +50,7 @@ export const useShell = (
   const manifest = manifests[options.productId];
 
   const localStorage = useShellLocalStorage(manifest.id, host, flags);
+  const jumpToContent = useJumpToContent(host, flags);
 
   const { product: multiplayer, roomHistory } = useMultiplayer({
     host,
@@ -79,6 +82,7 @@ export const useShell = (
     history,
     localStorage,
     multiplayer,
+    jumpToContent,
   };
 
   shell.surface.camera.events.subscribe(
@@ -111,6 +115,15 @@ export const useShell = (
       component: LensChipGroup,
       position: 'top-middle',
       // should always be stuck to the top
+      priority: -Infinity,
+    });
+  }
+
+  if (shell.jumpToContent) {
+    shell.componentSlots.add({
+      id: 'shell/jump-to-content',
+      component: JumpToContentButton,
+      position: 'bottom-middle',
       priority: -Infinity,
     });
   }

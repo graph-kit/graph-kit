@@ -3,8 +3,11 @@ import { Graph } from '@magic/shared/graph';
 import { useChainProperties } from './computations/useChainProperties.ts';
 import { useChainValidity } from './computations/useChainValidity.ts';
 import { useCommunicatingClasses } from './computations/useCommunicatingClasses.ts';
+import { useMeanRecurrenceTimes } from './computations/useMeanRecurrenceTimes.ts';
 import { usePeriodicity } from './computations/usePeriodicity.ts';
+import { useReversibility } from './computations/useReversibility.ts';
 import { useStateClassification } from './computations/useStateClassification.ts';
+import { useStationaryDistribution } from './computations/useStationaryDistribution.ts';
 
 export const useMarkovChain = (graph: Graph) => {
   const communicatingClasses = useCommunicatingClasses(graph);
@@ -21,13 +24,34 @@ export const useMarkovChain = (graph: Graph) => {
     recurrentClasses,
   );
 
-  const { isReducible, isChainAbsorbing, isErgodic } = useChainProperties(
-    communicatingClasses,
+  const { invalidStates, isValid } = useChainValidity(graph);
+
+  const { isReducible, isChainAbsorbing, isErgodic, isDoublyStochastic } =
+    useChainProperties(
+      graph,
+      communicatingClasses,
+      recurrentClasses,
+      isPeriodic,
+      isValid,
+    );
+
+  const {
+    hasUniqueStationaryDistribution,
+    convergesToStationaryDistribution,
+    stationaryDistribution,
+  } = useStationaryDistribution(
+    graph,
     recurrentClasses,
-    isPeriodic,
+    recurrentClassPeriods,
+    isValid,
   );
 
-  const { invalidStates, isValid } = useChainValidity(graph);
+  const meanRecurrenceTimes = useMeanRecurrenceTimes(stationaryDistribution);
+  const isReversible = useReversibility(
+    graph,
+    stationaryDistribution,
+    isReducible,
+  );
 
   return {
     communicatingClasses,
@@ -40,7 +64,13 @@ export const useMarkovChain = (graph: Graph) => {
     isReducible,
     isChainAbsorbing,
     isErgodic,
+    isDoublyStochastic,
     invalidStates,
     isValid,
+    hasUniqueStationaryDistribution,
+    convergesToStationaryDistribution,
+    stationaryDistribution,
+    meanRecurrenceTimes,
+    isReversible,
   };
 };

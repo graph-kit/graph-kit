@@ -1,11 +1,20 @@
+import Fraction from 'fraction.js';
 import { describe, expect, it } from 'vitest';
 
-import { isAbsorbing, isErgodic, isReducible } from './useChainProperties.ts';
+import {
+  isAbsorbing,
+  isDoublyStochastic,
+  isErgodic,
+  isReducible,
+} from './useChainProperties.ts';
 
 const communicatingClass = (...states: string[]) => ({
   states: new Set(states),
   closed: true,
 });
+
+const matrix = (rows: string[][]) =>
+  rows.map((row) => row.map((entry) => new Fraction(entry)));
 
 describe('isReducible', () => {
   it('is true once the chain breaks into more than one class', () => {
@@ -50,5 +59,52 @@ describe('isErgodic', () => {
 
   it('is false for an empty chain', () => {
     expect(isErgodic([], false)).toBe(false);
+  });
+});
+
+describe('isDoublyStochastic', () => {
+  it('is true when the columns sum to one alongside the rows', () => {
+    const doublyStochastic = isDoublyStochastic(
+      matrix([
+        ['1/2', '1/2'],
+        ['1/2', '1/2'],
+      ]),
+      true,
+    );
+
+    expect(doublyStochastic).toBe(true);
+  });
+
+  it('is true for a cycle, which enters each state as often as it leaves', () => {
+    const doublyStochastic = isDoublyStochastic(
+      matrix([
+        ['0', '1', '0'],
+        ['0', '0', '1'],
+        ['1', '0', '0'],
+      ]),
+      true,
+    );
+
+    expect(doublyStochastic).toBe(true);
+  });
+
+  it('is false when a state is entered more often than it is left', () => {
+    const doublyStochastic = isDoublyStochastic(
+      matrix([
+        ['1/2', '1/2'],
+        ['1/4', '3/4'],
+      ]),
+      true,
+    );
+
+    expect(doublyStochastic).toBe(false);
+  });
+
+  it('is false for a chain whose rows are not probabilities to begin with', () => {
+    expect(isDoublyStochastic(matrix([['1']]), false)).toBe(false);
+  });
+
+  it('is false for an empty chain', () => {
+    expect(isDoublyStochastic([], true)).toBe(false);
   });
 });

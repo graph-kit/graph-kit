@@ -9,6 +9,7 @@
     defineProps<{
       id: GNode['id'];
       scale?: number;
+      overrideText?: string;
     }>(),
     { scale: 1 },
   );
@@ -41,7 +42,7 @@
     class="rounded-full cursor-pointer"
     :style="nodeStyle"
   >
-    <span class="label">{{ styles.text.content }}</span>
+    <span class="label">{{ overrideText ?? styles.text.content }}</span>
   </button>
 </template>
 

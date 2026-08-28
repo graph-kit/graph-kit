@@ -11,12 +11,24 @@
 
   const COPIED_TOAST_MS = 4_000;
 
-  const COPY_FAILED_TOAST_MS = 6_000;
+  const PROBLEM_TOAST_MS = 6_000;
 
   // awaited, because a clipboard the browser turns down rejects rather than throwing
   const copyLinkToClipboard = async () => {
+    const result = getLink(shell);
+
+    if (!result.ok) {
+      toast.show({
+        title: 'Could Not Make A Link',
+        description: result.reason,
+        severity: 'warn',
+        duration: PROBLEM_TOAST_MS,
+      });
+      return;
+    }
+
     try {
-      await navigator.clipboard.writeText(getLink(shell));
+      await navigator.clipboard.writeText(result.link);
       toast.show({
         title: 'Link Copied',
         description: 'The link carries a copy of what is on screen.',
@@ -29,7 +41,7 @@
         title: 'Could Not Copy The Link',
         description: 'Your browser turned down access to the clipboard.',
         severity: 'error',
-        duration: COPY_FAILED_TOAST_MS,
+        duration: PROBLEM_TOAST_MS,
       });
     }
   };

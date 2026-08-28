@@ -9,6 +9,8 @@ import { queryParam, stripQueryParam } from '../../url/index.ts';
 
 const sharePayloadQueryParam = 'data';
 
+const MAX_PAYLOAD_CHARS = 2_600;
+
 // both sides are unreachable without transit, which is what gates the linkSharing flag
 const transitOf = (shell: Shell) =>
   nullThrows(shell.transit, 'link sharing requires host transit');
@@ -19,13 +21,24 @@ const getLinkPayload = (shell: Shell) => {
   return compressToEncodedURIComponent(stringEncoding);
 };
 
-export const getLink = (shell: Shell) => {
+/** a link, or why what is on screen could not become one */
+export type LinkResult =
+  { ok: true; link: string } | { ok: false; reason: string };
+
+export const getLink = (shell: Shell): LinkResult => {
   const { origin } = window.location;
   const { slug } = shell.manifest.navigation;
   const payload = getLinkPayload(shell);
+
+  if (payload.length > MAX_PAYLOAD_CHARS)
+    return {
+      ok: false,
+      reason: 'There is too much on screen to fit into a link.',
+    };
+
   const query = `${sharePayloadQueryParam}=${payload}`;
 
-  return `${origin}/${slug}?${query}`;
+  return { ok: true, link: `${origin}/${slug}?${query}` };
 };
 
 export const loadFromLinkPayload = (shell: Shell) => {

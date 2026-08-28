@@ -9,7 +9,7 @@ export type Transition = {
   weight: Fraction;
 };
 
-export const getInvalidStates = (
+export const getOutboundTotals = (
   stateIds: GNode['id'][],
   transitions: Transition[],
 ) => {
@@ -25,7 +25,14 @@ export const getInvalidStates = (
     outboundTotals.set(transition.source, total.add(transition.weight));
   }
 
+  return outboundTotals;
+};
+
+export const getInvalidStates = (
+  outboundTotals: Map<GNode['id'], Fraction>,
+) => {
   const invalidStates = new Set<GNode['id']>();
+
   for (const [stateId, total] of outboundTotals) {
     if (!total.equals(1)) invalidStates.add(stateId);
   }
@@ -34,8 +41,8 @@ export const getInvalidStates = (
 };
 
 export const useChainValidity = (graph: Graph) => {
-  const invalidStates = computed(() =>
-    getInvalidStates(
+  const outboundTotals = computed(() =>
+    getOutboundTotals(
       graph.nodes.value.map((node) => node.id),
       graph.edges.value.map((edge) => {
         const { weight } = graph.getEdge(edge.id);
@@ -44,7 +51,9 @@ export const useChainValidity = (graph: Graph) => {
     ),
   );
 
+  const invalidStates = computed(() => getInvalidStates(outboundTotals.value));
+
   const isValid = computed(() => invalidStates.value.size === 0);
 
-  return { invalidStates, isValid };
+  return { outboundTotals, invalidStates, isValid };
 };

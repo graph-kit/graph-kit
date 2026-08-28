@@ -1,6 +1,7 @@
+import colors from '@core/utils/colors';
 import { CoreNode } from '@graph/primitives/types';
 import { GNode, Graph } from '@magic/shared/graph';
-import { Themer, createNodeThemer, nodeRoleColors } from '@magic/shared/theme';
+import { Themer, createNodeThemer } from '@magic/shared/theme';
 
 import { ComputedRef } from 'vue';
 
@@ -10,5 +11,5 @@ export const recurrentStatesThemer = (
   recurrentStates: ComputedRef<Set<GNode['id']>>,
 ): Themer =>
   createNodeThemer(graph, ({ id }: CoreNode) =>
-    recurrentStates.value.has(id) ? nodeRoleColors.settled : undefined,
+    recurrentStates.value.has(id) ? colors.AMBER_500 : undefined,
   );

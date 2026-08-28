@@ -6,11 +6,9 @@ export const definitions = {
   absorbingStates:
     'A state whose only transition is back to itself. Once the chain arrives it can never leave.',
   absorbingChain:
-    'A chain where every place it can end up is a single absorbing state, so wherever it starts it eventually gets stuck.',
-  period:
-    'The greatest common divisor of the lengths of every cycle through a state. A period of 1 means the chain can return after any number of steps, while a period of 3 means it can only return on multiples of 3.',
+    'A chain where every state can reach an absorbing state, so wherever it starts it ends up stuck in one of them.',
   periodic:
-    'A chain is periodic when any recurrent class has a period above 1.',
+    'The greatest common divisor of the cycle lengths through a state. Every state in a communicating class shares the same one, so the period belongs to the class. A chain is periodic when any recurrent class has a period above 1.',
   reducible:
     'A chain is reducible when it contains more than 1 communicating class. Chains with 1 communicating class are irreducible.',
   ergodic:

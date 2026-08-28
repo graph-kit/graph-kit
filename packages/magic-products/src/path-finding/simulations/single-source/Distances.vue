@@ -25,7 +25,11 @@
     if (!distances) return [];
     return graph.nodes.value
       .filter((node) => node.id in distances)
-      .map((node) => ({ id: node.id, distance: distances[node.id] }));
+      .map((node) => ({
+        id: node.id,
+        label: node.label,
+        distance: distances[node.id],
+      }));
   });
 </script>
 
@@ -42,6 +46,7 @@
           <Node
             :id="row.id"
             :scale="0.6"
+            :override-text="row.label"
           />
           <span class="font-bold tabular-nums">
             {{ formatDistance(row.distance) }}

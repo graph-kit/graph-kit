@@ -14,10 +14,11 @@ import {
   createNodeIdThemer,
 } from '@magic/shared/theme';
 
-import { Ref } from 'vue';
+import { Ref, ref } from 'vue';
 
 import Distances from './Distances.vue';
 import Frontier from './Frontier.vue';
+import { createDistanceThemer } from './createDistanceThemer.ts';
 import {
   distancesSlotId,
   frontierSlotId,
@@ -73,6 +74,8 @@ const singleSourceEffects = (
   const discarded = createEdgeIdThemer(graph, edgeRoles.discarded);
   const relaxing = createEdgeIdThemer(graph, edgeRoles.relaxing);
 
+  const currentFrame = ref<SingleSourceFrame>();
+
   // order matters: latter elements take priority over earlier ones. the source
   // sits below the two roles that describe what is happening right now, so the
   // node the user picked gives up its pink for the frame it is being worked on
@@ -85,6 +88,7 @@ const singleSourceEffects = (
     shortestPath,
     discarded,
     relaxing,
+    { themer: createDistanceThemer(graph, currentFrame) },
   ];
 
   const lens: Lens = {
@@ -110,6 +114,7 @@ const singleSourceEffects = (
   };
 
   const syncToFrame = (frame: SingleSourceFrame) => {
+    currentFrame.value = frame;
     exploring.setId(frame.activeNodeId);
     weighing.setIds(frame.candidateNodeIds ?? []);
     finalized.setIds(frame.settledNodeIds ?? []);

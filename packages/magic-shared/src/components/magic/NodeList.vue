@@ -21,6 +21,7 @@
       ids: readonly string[];
       /** which edge the panel slides out past when the list empties */
       exitSide?: 'left' | 'right';
+      textOf?: (id: string) => string | undefined;
     }>(),
     { exitSide: 'right' },
   );
@@ -177,6 +178,7 @@
             v-for="nodeId in nodeIds"
             :key="nodeId"
             :id="nodeId"
+            :override-text="textOf?.(nodeId)"
             class="queue-item shrink-0"
           />
         </TransitionGroup>

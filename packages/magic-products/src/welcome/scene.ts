@@ -1,50 +1,76 @@
+import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import colors, { Color } from '@core/utils/colors';
 import { ProductId } from '@magic/shared/product';
 
 export type WelcomeNode = {
   productId: ProductId;
-  /** canvas coordinates, placed by hand */
-  position: { x: number; y: number };
+  /**
+   * placement relative to the other nodes, in world units. the origin these are
+   * written against is arbitrary, only the distances between them matter
+   */
+  offset: Coordinate;
   color: Color;
 };
 
-/**
- * one row per node on the landing page, in the order they animate in. placed by
- * hand rather than computed so any single node can be moved or recolored without
- * disturbing the others
- */
 export const welcomeNodes = [
   {
     productId: 'avl-trees',
-    position: { x: 960, y: 320 },
+    offset: { x: 240, y: -130 },
     color: colors.PURPLE_500,
   },
   {
     productId: 'traversals',
-    position: { x: 960, y: 580 },
+    offset: { x: 240, y: 130 },
     color: colors.PINK_500,
   },
   {
     productId: 'path-finding',
-    position: { x: 480, y: 580 },
+    offset: { x: -240, y: 130 },
     color: colors.ORANGE_500,
   },
   {
     productId: 'min-spanning-trees',
-    position: { x: 480, y: 320 },
+    offset: { x: -240, y: -130 },
     color: colors.CYAN_500,
   },
   {
     productId: 'markov-chains',
-    position: { x: 1280, y: 420 },
+    offset: { x: 560, y: -30 },
     color: colors.SKY_500,
   },
   {
     productId: 'sets',
-    position: { x: 50, y: 420 },
+    offset: { x: -670, y: -30 },
     color: colors.SKY_500,
   },
 ] as const satisfies WelcomeNode[];
+
+const midpointOf = (values: number[]) =>
+  (Math.min(...values) + Math.max(...values)) / 2;
+
+/**
+ * lands the scene's bounding box on the center of whatever the canvas is showing,
+ * so the graph arrives centered at any window size
+ */
+export const resolvePositions = (viewport: BoundingBox) => {
+  const offsets = welcomeNodes.map(({ offset }) => offset);
+
+  const origin: Coordinate = {
+    x:
+      viewport.at.x +
+      viewport.width / 2 -
+      midpointOf(offsets.map(({ x }) => x)),
+    y:
+      viewport.at.y +
+      viewport.height / 2 -
+      midpointOf(offsets.map(({ y }) => y)),
+  };
+
+  return welcomeNodes.map(({ productId, offset }) => ({
+    productId,
+    position: { x: origin.x + offset.x, y: origin.y + offset.y },
+  }));
+};
 
 /** only the products the scene places, so no edge can name a node that is absent */
 type WelcomeProductId = (typeof welcomeNodes)[number]['productId'];

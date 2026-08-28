@@ -19,12 +19,11 @@ export type ClientCoords = Pick<MouseEvent, 'clientX' | 'clientY'>;
 export type Coords = Coordinate;
 
 /**
- * a rectangle in the canvas world, most often the slice of it the canvas
- * currently shows. see `visibleWorldRect` on the canvas surface
+ * a rectangle in the canvas world, anchored at its top left corner. what a shape
+ * measures out to, and what the canvas currently shows, are both one of these
  */
-export type WorldRect = {
-  x: number;
-  y: number;
+export type BoundingBox = {
+  at: Coordinate;
   width: number;
   height: number;
 };

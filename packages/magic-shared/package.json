@@ -209,6 +209,7 @@
   },
   "devDependencies": {
     "nuxt": "^4.1.2",
+    "ts-essentials": "^10.2.0",
     "vue": "catalog:"
   }
 }

@@ -3,7 +3,7 @@ import type {
   AnimatedShapeFactories,
   ShapeRenderer,
 } from '@canvas/primitives/animation/index';
-import type { Coordinate, WorldRect } from '@core/utils/canvas/index';
+import type { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import { DeepReadonly } from 'ts-essentials';
 
 import type { ComputedRef, Ref } from 'vue';
@@ -12,7 +12,7 @@ import type { DrawPattern } from './backgroundPattern.ts';
 import type { Camera } from './camera/index.ts';
 import type { ElementsUnderCursor, SurfaceEvents } from './events/index.ts';
 
-export type { Coordinate, WorldRect };
+export type { BoundingBox, Coordinate };
 
 export type DrawContent = (ctx: CanvasRenderingContext2D) => void;
 
@@ -39,7 +39,7 @@ export type CanvasSurface = {
   /** where a mouse event landed in world coordinates, for hit tests against the event itself */
   toWorldCoordinates: (ev: MouseEvent) => Coordinate;
   /** the slice of the world on screen, for fills and clips that cover everything visible */
-  visibleWorldRect: ComputedRef<WorldRect>;
+  visibleWorldRect: ComputedRef<BoundingBox>;
   ref: CanvasRef;
   draw: DrawFns;
   /** every canvas element this surface paints, and the hit test over them */

@@ -1,10 +1,6 @@
-import type { Coordinate } from '@core/utils/canvas/index';
+import type { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 
-import type { RectSchema } from '../shapes/rect/types.ts';
-
-export type { Coordinate };
-
-export type BoundingBox = Pick<RectSchema, 'at' | 'width' | 'height'>;
+export type { BoundingBox, Coordinate };
 
 export type BoundingBoxCorners = {
   topLeft: Coordinate;

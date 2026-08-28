@@ -1,4 +1,4 @@
-import type { WorldRect } from '@core/utils/canvas/index';
+import type { BoundingBox } from '@core/utils/canvas/index';
 
 import { type Ref, computed } from 'vue';
 
@@ -16,9 +16,11 @@ export const useVisibleWorldRect = (
   { panX, panY, zoom }: Camera['state'],
   canvasSize: CanvasSize,
 ) =>
-  computed<WorldRect>(() => ({
-    x: -panX.value / zoom.value,
-    y: -panY.value / zoom.value,
+  computed<BoundingBox>(() => ({
+    at: {
+      x: -panX.value / zoom.value,
+      y: -panY.value / zoom.value,
+    },
     width: canvasSize.width.value / zoom.value,
     height: canvasSize.height.value / zoom.value,
   }));

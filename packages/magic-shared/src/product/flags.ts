@@ -27,6 +27,11 @@ export type ShellFlags = {
    * @default false
    */
   adjustAnimationSpeed: boolean;
+  /**
+   * offers a way back when the camera is left somewhere its content is not
+   * @default true
+   */
+  jumpToContent: boolean;
 };
 
 const DEFAULTS: ShellFlags = {
@@ -35,6 +40,7 @@ const DEFAULTS: ShellFlags = {
   annotations: true,
   linkSharing: true,
   adjustAnimationSpeed: false,
+  jumpToContent: true,
 };
 
 /** what a product author writes: only what differs from {@link ShellFlags} defaults */
@@ -49,19 +55,22 @@ const TRANSIT_BACKED = [
 /** what the product asked for, narrowed to what its controls can actually support */
 export const resolveShellFlags = (
   flags: ShellFlagOptions = {},
-  host: Pick<ProductControls, 'transit'>,
+  host: Pick<ProductControls, 'transit' | 'isContent'>,
 ): ShellFlags => {
   // an explicit undefined means no opinion, same as omitting the flag
   const set = Object.entries(flags).filter(([, value]) => value !== undefined);
   const resolved: ShellFlags = { ...DEFAULTS, ...Object.fromEntries(set) };
 
-  if (host.transit) return resolved;
-
-  for (const flag of TRANSIT_BACKED) {
+  const withoutHostSupport = (flag: keyof ShellFlags, missing: string) => {
     if (flags[flag] && import.meta.env.DEV)
-      console.warn(`[shell] ${flag} needs host transit, ignoring`);
+      console.warn(`[shell] ${flag} needs host ${missing}, ignoring`);
     resolved[flag] = false;
-  }
+  };
+
+  if (!host.transit)
+    for (const flag of TRANSIT_BACKED) withoutHostSupport(flag, 'transit');
+
+  if (!host.isContent) withoutHostSupport('jumpToContent', 'isContent');
 
   return resolved;
 };

@@ -73,7 +73,7 @@ const allPairsEffects = (
 export const allPairsSimulationDefinition = (
   algorithm: AllPairsFunction,
   options: AllPairsOptions,
-): Omit<SimulationDefinition<AllPairsFrame>, 'name'> => ({
+): SimulationDefinition<AllPairsFrame> => ({
   guard: new SimulationGuardBuilder(options.graph).minNodes(1).build(),
   collectFrames: (collector) => {
     algorithm(options.graph)(collector);

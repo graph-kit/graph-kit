@@ -23,9 +23,10 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   };
 
   return [
-    { definition: dijkstras, beforeStarting, disabled },
-    { definition: bellmanFord, beforeStarting, disabled },
+    { name: "Dijkstra's", definition: dijkstras, beforeStarting, disabled },
+    { name: 'Bellman-Ford', definition: bellmanFord, beforeStarting, disabled },
     {
+      name: 'Floyd-Warshall',
       definition: floydWarshall,
       disabled: () => noNodes() && 'No nodes in graph',
     },

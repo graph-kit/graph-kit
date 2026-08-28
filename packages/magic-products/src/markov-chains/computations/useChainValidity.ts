@@ -41,15 +41,14 @@ export const getInvalidStates = (
 };
 
 export const useChainValidity = (graph: Graph) => {
-  const outboundTotals = computed(() =>
-    getOutboundTotals(
-      graph.nodes.value.map((node) => node.id),
-      graph.edges.value.map((edge) => {
-        const { weight } = graph.getEdge(edge.id);
-        return { source: edge.source, weight };
-      }),
-    ),
-  );
+  const outboundTotals = computed(() => {
+    const stateIds = graph.nodes.value.map((node) => node.id);
+    const transitions = graph.edges.value.map((edge) => {
+      const { weight } = graph.getEdge(edge.id);
+      return { source: edge.source, weight };
+    });
+    return getOutboundTotals(stateIds, transitions);
+  });
 
   const invalidStates = computed(() => getInvalidStates(outboundTotals.value));
 

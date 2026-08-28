@@ -51,6 +51,10 @@
       "types": "./dist/types/components/dropdown/DropdownSubmenu.vue.d.ts",
       "default": "./src/components/dropdown/DropdownSubmenu.vue"
     },
+    "./Switch": {
+      "types": "./dist/types/components/switch/Switch.vue.d.ts",
+      "default": "./src/components/switch/Switch.vue"
+    },
     "./ToggleButton": {
       "types": "./dist/types/components/toggle-button/ToggleButton.vue.d.ts",
       "default": "./src/components/toggle-button/ToggleButton.vue"

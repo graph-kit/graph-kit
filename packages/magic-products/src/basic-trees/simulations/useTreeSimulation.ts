@@ -33,7 +33,6 @@ export const useTreeSimulation = (
   const explainer = treeExplainer(graph);
 
   const definition: SimulationDefinition<AVLFrame> = {
-    name: 'AVL Tree',
     collectFrames: (collector) => {
       tree.attachFrameCollector(collector);
 
@@ -50,13 +49,12 @@ export const useTreeSimulation = (
       }
     },
     setup: (context) => {
-      const { currentFrame, frames } = context;
+      const { currentFrame, getFrame, frameCount } = context;
       return {
         explainer,
         onSetupCompleted: () => sync(currentFrame.value),
         onFrameTransition: () => sync(currentFrame.value),
-        onBeforeTeardown: () =>
-          sync(nullThrows(frames.value.at(-1), 'last frame undefined')),
+        onBeforeTeardown: () => sync(getFrame(frameCount.value - 1)),
       };
     },
     recomputeFramesOnStructureChange: false,

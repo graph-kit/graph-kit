@@ -128,9 +128,15 @@ export class AVLTree {
 
     this.root = removeHelper(undefined, this.root, false);
 
+    if (!this.root) return;
+
+    this.addFrame({ action: 'balance-check' });
+
     // removal can unbalance the whole path it touched, including the subtree
     // removeMin rewrote, so the repair runs as its own pass over the result
     this.balance();
+
+    this.addFrame({ action: 'remove-complete' });
 
     return this.root;
   }
@@ -146,6 +152,8 @@ export class AVLTree {
       this.addFrame({
         action: 'balance',
         method: 'left-left',
+        unbalancedNode: node,
+        childNode: nullThrows(node.left, 'left left needs a left child'),
       });
       return this.rotateRight(parent, node, isLeft);
     }
@@ -154,33 +162,33 @@ export class AVLTree {
       this.addFrame({
         action: 'balance',
         method: 'right-right',
+        unbalancedNode: node,
+        childNode: nullThrows(node.right, 'right right needs a right child'),
       });
       return this.rotateLeft(parent, node, isLeft);
     }
 
     if (balance > 1 && getBalanceFactor(node.left) < 0) {
+      const leftChild = nullThrows(node.left, 'left child is undefined');
       this.addFrame({
         action: 'balance',
         method: 'left-right',
+        unbalancedNode: node,
+        childNode: leftChild,
       });
-      this.rotateLeft(
-        node,
-        nullThrows(node.left, 'left child is undefined'),
-        true,
-      );
+      this.rotateLeft(node, leftChild, true);
       return this.rotateRight(parent, node, isLeft);
     }
 
     if (balance < -1 && getBalanceFactor(node.right) > 0) {
+      const rightChild = nullThrows(node.right, 'right child is undefined');
       this.addFrame({
         action: 'balance',
         method: 'right-left',
+        unbalancedNode: node,
+        childNode: rightChild,
       });
-      this.rotateRight(
-        node,
-        nullThrows(node.right, 'right child is undefined'),
-        false,
-      );
+      this.rotateRight(node, rightChild, false);
       return this.rotateLeft(parent, node, isLeft);
     }
 
@@ -197,11 +205,6 @@ export class AVLTree {
 
       node.left = balanceNode(node, node.left, true);
       node.right = balanceNode(node, node.right, false);
-
-      this.addFrame({
-        action: 'balance-check',
-        checkedNode: node,
-      });
 
       return this.rebalance(parent, node, isLeft);
     };
@@ -240,6 +243,8 @@ export class AVLTree {
     this.addFrame({
       action: 'rotation',
       side: 'right',
+      rotatedNode: node,
+      promotedNode: newRoot,
     });
 
     return newRoot;
@@ -261,6 +266,8 @@ export class AVLTree {
     this.addFrame({
       action: 'rotation',
       side: 'left',
+      rotatedNode: node,
+      promotedNode: newRoot,
     });
 
     return newRoot;
@@ -273,10 +280,12 @@ export class AVLTree {
         action: 'insert',
         targetNode: this.root,
       });
+      this.addFrame({ action: 'insert-complete' });
       return this.root;
     }
 
     let justInserted = false;
+    let duplicateFound = false;
 
     const insertHelper = (
       parent: TreeNode | undefined,
@@ -319,6 +328,7 @@ export class AVLTree {
           action: 'compare-duplicate-found',
           preexistingNode: node,
         });
+        duplicateFound = true;
         return node;
       }
 
@@ -326,6 +336,9 @@ export class AVLTree {
     };
 
     this.root = insertHelper(undefined, this.root, payload, false);
+
+    if (!duplicateFound) this.addFrame({ action: 'insert-complete' });
+
     return this.root;
   }
 }

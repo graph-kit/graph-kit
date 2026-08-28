@@ -11,12 +11,9 @@ export type CompareFrame = {
   targetNode: NodePayload;
 };
 
-/** where the node filling a removed node's slot comes from */
+/** where the node taking a removed node's place comes from */
 export type ReplacementMethod =
-  | 'leaf'
-  | 'only-left-child'
-  | 'only-right-child'
-  | 'successor';
+  'leaf' | 'only-left-child' | 'only-right-child' | 'successor';
 
 type FindReplacementFrame =
   | {
@@ -33,7 +30,6 @@ type FindReplacementFrame =
 
 type BalanceCheckFrame = {
   action: 'balance-check';
-  checkedNode: TreeNode;
 };
 
 type CompareDuplicateFound = {
@@ -44,11 +40,15 @@ type CompareDuplicateFound = {
 type BalanceFrame = {
   action: 'balance';
   method: BalanceMethod;
+  unbalancedNode: TreeNode;
+  childNode: TreeNode;
 };
 
 type RotationFrame = {
   action: 'rotation';
   side: RotationSide;
+  rotatedNode: TreeNode;
+  promotedNode: TreeNode;
 };
 
 type InsertFrame = {
@@ -62,6 +62,14 @@ type RemoveFrame = {
   targetNodeValue: NodePayload['value'] | undefined;
 };
 
+type RemoveCompleteFrame = {
+  action: 'remove-complete';
+};
+
+type InsertCompleteFrame = {
+  action: 'insert-complete';
+};
+
 export type AVLFrameNoRoot =
   | CompareFrame
   | CompareDuplicateFound
@@ -70,7 +78,9 @@ export type AVLFrameNoRoot =
   | BalanceFrame
   | RotationFrame
   | InsertFrame
-  | RemoveFrame;
+  | RemoveFrame
+  | RemoveCompleteFrame
+  | InsertCompleteFrame;
 
 export type AVLFrame = AVLFrameNoRoot & { root: TreeNode | undefined };
 

@@ -9,6 +9,7 @@
 
   const props = defineProps<{
     definition: SimulationDefinition<any> | undefined;
+    name: string | undefined;
     disabled: string | false;
     beforeStarting?: () => void;
   }>();
@@ -25,14 +26,14 @@
 
 <template>
   <Button
-    v-if="definition"
+    v-if="definition && name"
     :disabled="disabled"
     @click="start"
   >
     <template #start>
       <Icon :path="mdiPlay" />
     </template>
-    {{ definition.name }}
+    {{ name }}
   </Button>
   <Button
     v-else

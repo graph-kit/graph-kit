@@ -114,7 +114,7 @@ const traversalThemers = (graph: Graph): TraversalThemers => {
 export const traversalSimulationDefinition = (
   traversal: TraversalFunction,
   options: TraversalSimulationOptions,
-): Omit<SimulationDefinition<TraversalFrame>, 'name'> => {
+): SimulationDefinition<TraversalFrame> => {
   return {
     guard: new SimulationGuardBuilder(options.graph)
       .custom(() => {

@@ -16,7 +16,12 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   };
 
   return [
-    { definition: bfs, beforeStarting, disabled },
-    { definition: dfs, beforeStarting, disabled },
+    {
+      name: 'Breath-First Search',
+      definition: bfs,
+      beforeStarting,
+      disabled,
+    },
+    { name: 'Depth-First Search', definition: dfs, beforeStarting, disabled },
   ];
 };

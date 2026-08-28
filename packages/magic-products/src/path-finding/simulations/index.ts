@@ -20,18 +20,9 @@ export const usePathFindingSimulations = (graph: Graph) => {
   const singleSource = { graph, sourceNodeId };
 
   return {
-    dijkstras: {
-      name: "Dijkstra's",
-      ...singleSourceSimulationDefinition(dijkstras, singleSource),
-    },
-    bellmanFord: {
-      name: 'Bellman-Ford',
-      ...singleSourceSimulationDefinition(bellmanFord, singleSource),
-    },
-    floydWarshall: {
-      name: 'Floyd-Warshall',
-      ...allPairsSimulationDefinition(floydWarshall, { graph }),
-    },
+    dijkstras: singleSourceSimulationDefinition(dijkstras, singleSource),
+    bellmanFord: singleSourceSimulationDefinition(bellmanFord, singleSource),
+    floydWarshall: allPairsSimulationDefinition(floydWarshall, { graph }),
     sourceNodeId,
   };
 };

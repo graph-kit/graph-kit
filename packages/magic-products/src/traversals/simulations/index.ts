@@ -16,14 +16,8 @@ export const useTraversalSimulations = (graph: Graph) => {
   const options: TraversalSimulationOptions = { graph, startNodeId };
 
   return {
-    bfs: {
-      name: 'Breath-First Search',
-      ...traversalSimulationDefinition(bfs, options),
-    },
-    dfs: {
-      name: 'Depth-First Search',
-      ...traversalSimulationDefinition(dfs, options),
-    },
+    bfs: traversalSimulationDefinition(bfs, options),
+    dfs: traversalSimulationDefinition(dfs, options),
     startNodeId,
   };
 };

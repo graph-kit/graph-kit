@@ -46,7 +46,9 @@ type Playhead = {
 
 export type Simulation<Frame> = {
   definition: SimulationDefinition<Frame>;
-  frames: Frame[];
+  getFrame: (position: number) => Frame;
+  /** `Infinity` for simulations declared with `frameAt`. */
+  frameCount: number;
   playhead: Playhead;
   /** Set while the simulation's guard is failing; `undefined` when valid. */
   violation: Violation | undefined;
@@ -73,10 +75,8 @@ export const useSimulationState = (
     simulation.value = { ...getSimulation(), ...fields };
   };
 
-  const allFrames = computed(() => getSimulation().frames);
-
-  const getFrame = (index: number) =>
-    nullThrows(allFrames.value[index], `no frame at position ${index}`);
+  const getFrame = (position: number) => getSimulation().getFrame(position);
+  const frameCount = computed(() => getSimulation().frameCount);
 
   const currentFrame = computed(() => {
     const sim = simulation.value;
@@ -84,7 +84,18 @@ export const useSimulationState = (
     return getFrame(sim.playhead.position);
   });
 
-  const initFrames = <Frame>(definition: SimulationDefinition<Frame>) => {
+  const initFrameSource = <Frame>(definition: SimulationDefinition<Frame>) => {
+    if (definition.frameAt) {
+      const { frameAt } = definition;
+      // surface a broken generator at start() rather than on some later step
+      nullThrows(frameAt(0), 'simulation must produce a frame at position 0!');
+      return {
+        getFrame: (position: number) =>
+          nullThrows(frameAt(position), `no frame at position ${position}`),
+        frameCount: Infinity,
+      };
+    }
+
     const frames: Frame[] = [];
     definition.collectFrames({
       add: (frame) => frames.push(frame),
@@ -93,7 +104,11 @@ export const useSimulationState = (
       frames.at(0),
       'simulation must produce at least one frame to be valid!',
     );
-    return frames;
+    return {
+      getFrame: (position: number) =>
+        nullThrows(frames[position], `no frame at position ${position}`),
+      frameCount: frames.length,
+    };
   };
 
   const initPlayhead = (frameCount: number, previousPosition = 0): Playhead => {
@@ -150,9 +165,9 @@ export const useSimulationState = (
     definition: SimulationDefinition<Frame>,
     previousPosition = 0,
   ) => {
-    const frames = initFrames(definition);
-    const playhead = initPlayhead(frames.length, previousPosition);
-    return { frames, playhead };
+    const source = initFrameSource(definition);
+    const playhead = initPlayhead(source.frameCount, previousPosition);
+    return { ...source, playhead };
   };
 
   const start = <Frame>(definition: SimulationDefinition<Frame>) => {
@@ -167,18 +182,18 @@ export const useSimulationState = (
       `cannot start simulation: guard is already failing (${violation?.id})`,
     );
 
-    const { frames, playhead } = computeRun(definition);
+    const run = computeRun(definition);
 
     const setupContext: SetupContext<Frame> = {
       stopSimulation: stop,
       currentFrame,
-      frames: allFrames,
+      getFrame,
+      frameCount,
     };
     const simulationEffects = definition.setup(setupContext);
 
     simulation.value = {
-      frames,
-      playhead,
+      ...run,
       definition,
       violation: undefined,
       ...simulationEffects,
@@ -271,14 +286,11 @@ export const useSimulationState = (
       return;
     }
 
-    const { frames, playhead } = computeRun(
-      sim.definition,
-      sim.playhead.position,
-    );
+    const run = computeRun(sim.definition, sim.playhead.position);
 
     const oldFrame = currentFrame.value;
 
-    patchSimulation({ frames, playhead });
+    patchSimulation(run);
 
     const newFrame = currentFrame.value;
 

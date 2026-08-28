@@ -25,6 +25,7 @@
             disabled = () => false as const,
             beforeStarting,
             definition,
+            name,
             render,
           },
           index
@@ -41,6 +42,7 @@
         <StartButton
           v-else
           :definition="definition"
+          :name="name"
           :disabled="disabled()"
           :before-starting="beforeStarting"
         />

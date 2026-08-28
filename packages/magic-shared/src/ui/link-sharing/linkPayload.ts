@@ -21,9 +21,8 @@ const getLinkPayload = (shell: Shell) => {
   return compressToEncodedURIComponent(stringEncoding);
 };
 
-/** a link, or why what is on screen could not become one */
 export type LinkResult =
-  { ok: true; link: string } | { ok: false; reason: string };
+  { success: true; link: string } | { success: false; reason: string };
 
 export const getLink = (shell: Shell): LinkResult => {
   const { origin } = window.location;
@@ -32,13 +31,13 @@ export const getLink = (shell: Shell): LinkResult => {
 
   if (payload.length > MAX_PAYLOAD_CHARS)
     return {
-      ok: false,
+      success: false,
       reason: 'There is too much on screen to fit into a link.',
     };
 
   const query = `${sharePayloadQueryParam}=${payload}`;
 
-  return { ok: true, link: `${origin}/${slug}?${query}` };
+  return { success: true, link: `${origin}/${slug}?${query}` };
 };
 
 export const loadFromLinkPayload = (shell: Shell) => {

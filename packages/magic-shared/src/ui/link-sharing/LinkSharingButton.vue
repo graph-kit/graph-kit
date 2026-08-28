@@ -17,7 +17,7 @@
   const copyLinkToClipboard = async () => {
     const result = getLink(shell);
 
-    if (!result.ok) {
+    if (!result.success) {
       toast.show({
         title: 'Could Not Make A Link',
         description: result.reason,

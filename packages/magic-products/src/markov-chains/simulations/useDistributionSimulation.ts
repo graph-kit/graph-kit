@@ -35,6 +35,7 @@ const distributionExplainer = (): Explainer => ({
 export const distributionSimulationDefinition = (
   graph: Graph,
   startingDistribution: Ref<Fraction[]>,
+  simplify: Ref<boolean>,
 ): SimulationDefinition<DistributionFrame> => {
   const currentFrame = shallowRef<DistributionFrame>();
   const distribution = computed(() => currentFrame.value);
@@ -65,7 +66,7 @@ export const distributionSimulationDefinition = (
       return {
         lens: {
           id: 'distribution',
-          ...layered(distributionThemer(graph, distribution)),
+          ...layered(distributionThemer(graph, distribution, simplify)),
         },
         explainer: distributionExplainer,
         onSetupCompleted: (frame) => (currentFrame.value = frame),

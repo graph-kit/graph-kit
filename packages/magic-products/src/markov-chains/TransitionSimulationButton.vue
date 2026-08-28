@@ -5,6 +5,7 @@
   import HStack from '@magic/shared/HStack';
   import Icon from '@magic/shared/Icon';
   import NodeVue from '@magic/shared/Node';
+  import SwitchVue from '@magic/shared/Switch';
   import TextInput from '@magic/shared/TextInput';
   import Tooltip from '@magic/shared/Tooltip';
   import VStack from '@magic/shared/VStack';
@@ -22,9 +23,11 @@
   const shell = useProvidedShell();
 
   const startingDistribution = shallowRef<Fraction[]>([]);
+  const simplify = ref(true);
   const definition = distributionSimulationDefinition(
     graph,
     startingDistribution,
+    simplify,
   );
 
   const initRawInput = () => graph.nodes.value.map((_) => '');
@@ -98,7 +101,7 @@
         <template #start>
           <Icon :path="mdiPlay" />
         </template>
-        Step Through Distribution
+        Step The Distribution
       </Button>
     </template>
     <Well>
@@ -127,7 +130,8 @@
             </Tooltip>
           </HStack>
         </HStack>
-        <div>
+
+        <HStack class="justify-between">
           <Button
             @click="start"
             :disabled="parsedInputInvalid"
@@ -138,7 +142,15 @@
             </template>
             Start
           </Button>
-        </div>
+          <Tooltip label="Simplify each state to the nearest 100th">
+            <template #trigger>
+              <HStack class="items-center gap-2 mt-3 text-sm">
+                <SwitchVue v-model="simplify" />
+                <span class="font-bold">Simplify</span>
+              </HStack>
+            </template>
+          </Tooltip>
+        </HStack>
       </VStack>
     </Well>
   </Dropdown>

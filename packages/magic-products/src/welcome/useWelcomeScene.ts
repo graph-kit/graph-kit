@@ -13,6 +13,7 @@ import {
   edgeIdOf,
   edges,
   nodeIdOf,
+  resolvePositions,
   welcomeNodes,
 } from './scene.ts';
 
@@ -77,11 +78,13 @@ const createWelcomeScene = (graph: Graph) => {
     graph.animation.capture(
       () =>
         graph.actions.addElements({
-          nodes: welcomeNodes.map(({ productId, position }) => ({
-            id: nodeIdOf(productId),
-            label: manifests[productId].abbreviatedName,
-            position,
-          })),
+          nodes: resolvePositions(graph.surface.visibleWorldRect.value).map(
+            ({ productId, position }) => ({
+              id: nodeIdOf(productId),
+              label: manifests[productId].abbreviatedName,
+              position,
+            }),
+          ),
           edges: edges.map(([source, target], index) => ({
             id: edgeIdOf(index),
             source: nodeIdOf(source),

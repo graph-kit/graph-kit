@@ -57,14 +57,14 @@
             ...balanceFactorTheme,
           },
           tooltipLabel: definitions.balanceFactor,
-          name: () => 'Balance Factor: ' + getBalanceFactor(root()),
+          name: () => 'Root Balance Factor: ' + getBalanceFactor(root()),
         },
         {
           lens: {
             id: 'tree-height',
             ...treeHeightTheme,
           },
-          name: () => 'Tree Height: ' + getTreeHeight(root()),
+          name: () => 'Root Height: ' + getTreeHeight(root()),
         },
       ];
     },

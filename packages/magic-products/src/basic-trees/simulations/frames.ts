@@ -42,6 +42,8 @@ type BalanceFrame = {
   method: BalanceMethod;
   unbalancedNode: TreeNode;
   childNode: TreeNode;
+  // captured here because childNode is a live reference that later rotations mutate
+  childBalanceFactor: number;
 };
 
 type RotationFrame = {

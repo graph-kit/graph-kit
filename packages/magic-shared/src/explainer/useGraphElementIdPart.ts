@@ -1,6 +1,10 @@
 import { Graph } from '../graph/types.ts';
 import { useEdgeStyles, useNodeStyles } from '../theme/index.ts';
 import { ExplainerSegment } from './explainerSegments.ts';
+import {
+  clearHighlightedExplainerElement,
+  setHighlightedExplainerElement,
+} from './highlightedElement.ts';
 import { ExplainerHighlight } from './types.ts';
 import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
 
@@ -28,8 +32,14 @@ const useGraphElementExplainerHighlight = (
       node?.dispose();
       edge?.dispose();
     },
-    activate: themer.activate,
-    deactivate: themer.deactivate,
+    activate: () => {
+      setHighlightedExplainerElement(id);
+      themer.activate();
+    },
+    deactivate: () => {
+      clearHighlightedExplainerElement(id);
+      themer.deactivate();
+    },
     classes: 'text-white',
     styles: () => {
       return {

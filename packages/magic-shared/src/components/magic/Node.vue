@@ -9,7 +9,6 @@
     defineProps<{
       id: GNode['id'];
       scale?: number;
-      overrideText?: string;
     }>(),
     { scale: 1 },
   );
@@ -33,6 +32,8 @@
     placeItems: 'center',
   }));
 
+  const label = computed(() => graph.nodeLabel.get(props.id) ?? '?');
+
   onUnmounted(dispose);
 </script>
 
@@ -42,7 +43,7 @@
     class="rounded-full cursor-pointer"
     :style="nodeStyle"
   >
-    <span class="label">{{ overrideText ?? styles.text.content }}</span>
+    <span class="label">{{ label }}</span>
   </button>
 </template>
 

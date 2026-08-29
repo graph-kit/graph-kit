@@ -7,6 +7,7 @@ import { provideGraph } from './context.ts';
 import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
 import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
+import { graphTransitCompression } from './transit-compression.ts';
 import { GraphShellOptions } from './types.ts';
 
 /** adapts a graph to the shell's controls interface, see {@link useShell} */
@@ -24,7 +25,7 @@ export const useGraphShell = (
     graph.isNode(id) || graph.isEdge(id);
 
   const flags = resolveShellFlags(options.flags, {
-    transit: graph.transit,
+    transit: { ...graph.transit, compression: graphTransitCompression },
     isContent,
   });
 
@@ -33,7 +34,7 @@ export const useGraphShell = (
 
   const host: ProductControls = {
     surface: graph.surface,
-    transit: graph.transit,
+    transit: { ...graph.transit, compression: graphTransitCompression },
     annotations: flags.annotations ? graph.annotations : undefined,
     history: flags.history ? graph.history : undefined,
     isContent,

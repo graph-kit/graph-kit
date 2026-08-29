@@ -1,4 +1,5 @@
 import { nullThrows } from '@core/utils/assert';
+import { devWarning } from '@core/utils/debugging';
 import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
@@ -6,18 +7,31 @@ import {
 
 import { Shell } from '../../product/types.ts';
 import { queryParam, stripQueryParam } from '../../url/index.ts';
+import { toast } from '../toast/index.ts';
 
 const sharePayloadQueryParam = 'share';
 
 const MAX_PAYLOAD_CHARS = 2_600;
 
+const PROBLEM_TOAST_MS = 6_000;
+
+/** host provided a compressed encoding */
+const HOST_SCHEME = 'c';
+/** the shell encoded the url via the json fallback */
+const JSON_SCHEME = 'j';
+
 const transitOf = (shell: Shell) =>
   nullThrows(shell.transit, 'link sharing requires host transit');
 
 const getLinkPayload = (shell: Shell) => {
-  const encoding = transitOf(shell).encode();
-  const stringEncoding = JSON.stringify(encoding);
-  return compressToEncodedURIComponent(stringEncoding);
+  const { encode, compression } = transitOf(shell);
+  const encoding = encode();
+
+  const text = compression
+    ? HOST_SCHEME + compression.compress(encoding)
+    : JSON_SCHEME + JSON.stringify(encoding);
+
+  return compressToEncodedURIComponent(text);
 };
 
 export type LinkResult =
@@ -39,15 +53,39 @@ export const getLink = (shell: Shell): LinkResult => {
   return { success: true, link: `${origin}/${slug}?${query}` };
 };
 
+const readPayload = (shell: Shell, text: string) => {
+  const { compression } = transitOf(shell);
+  const scheme = text.slice(0, 1);
+
+  if (scheme === HOST_SCHEME) {
+    const host = nullThrows(
+      compression,
+      'link sharing: the link is compressed but the host cannot read it',
+    );
+    return host.decompress(text.slice(1));
+  }
+
+  return JSON.parse(scheme === JSON_SCHEME ? text.slice(1) : text);
+};
+
 export const loadFromLinkPayload = (shell: Shell) => {
   const payload = queryParam(sharePayloadQueryParam);
   if (!payload) return;
 
   stripQueryParam(sharePayloadQueryParam);
 
-  const stringEncoding = decompressFromEncodedURIComponent(payload);
-  if (!stringEncoding) return;
+  const text = decompressFromEncodedURIComponent(payload);
+  if (!text) return;
 
-  const parsedEncoding = JSON.parse(stringEncoding);
-  transitOf(shell).decode(parsedEncoding);
+  try {
+    transitOf(shell).decode(readPayload(shell, text));
+  } catch (err) {
+    devWarning('link sharing: the link did not carry a readable payload', err);
+    toast.show({
+      title: 'Could Not Open The Link',
+      description: 'The link did not carry anything this page could read.',
+      severity: 'warn',
+      duration: PROBLEM_TOAST_MS,
+    });
+  }
 };

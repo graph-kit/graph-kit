@@ -30,6 +30,12 @@
   // without it a parked item shrinks to the narrowed row
   const parked = 'absolute left-0 top-0 invisible w-max';
 
+  // the button parks rather than leaving when there is nothing to open, so the pass that
+  // decides the lineup can already read the room it will need. with nothing there to
+  // measure, the first pass reserves nothing, hands back a count an item too generous,
+  // and paints the trigger hanging off the row until something re-renders
+  const hasOverflow = computed(() => overflowing.value.length > 0);
+
   defineSlots<{
     default: (props: { item: TItem; inMenu: boolean }) => unknown;
   }>();
@@ -54,11 +60,13 @@
     </div>
 
     <div
-      v-if="overflowing.length > 0"
       ref="trigger"
-      class="shrink-0"
+      :class="hasOverflow ? 'shrink-0' : parked"
     >
+      <!-- the menu goes with the overflow that filled it, so a row that grows back
+           never leaves an empty one hanging open -->
       <Dropdown
+        v-if="hasOverflow"
         align="end"
         :side-offset="20"
       >
@@ -82,6 +90,15 @@
           </HStack>
         </Well>
       </Dropdown>
+
+      <!-- the same button with nothing behind it, so the room the trigger will need is
+           readable before there is a menu to open. `as-child` means the dropdown adds no
+           box of its own, so the two measure alike -->
+      <IconButton
+        v-else
+        :path="mdiDotsVertical"
+        :label="label"
+      />
     </div>
   </HStack>
 </template>

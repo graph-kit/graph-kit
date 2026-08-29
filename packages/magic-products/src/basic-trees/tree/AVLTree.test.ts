@@ -245,6 +245,45 @@ describe('AVLTree', () => {
       ]);
     });
 
+    test('a balance frame carries the balance factor of the child it leans on', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [30, 20, 10]);
+
+      const balanceFrames = frames.filter(
+        (frame) => frame.action === 'balance',
+      );
+
+      expect(balanceFrames).toHaveLength(1);
+      expect(balanceFrames[0]).toMatchObject({
+        method: 'left-left',
+        childBalanceFactor: 1,
+      });
+    });
+
+    test('removal can leave a left left child perfectly balanced', () => {
+      const tree = new AVLTree();
+      const frames = collectFrames(tree);
+
+      insertAll(tree, [50, 30, 70, 20, 40]);
+      frames.length = 0;
+
+      // 50 loses its only right child, so it leans left on a child holding 20 and 40
+      tree.remove('n-70');
+
+      const balanceFrames = frames.filter(
+        (frame) => frame.action === 'balance',
+      );
+
+      expect(balanceFrames).toHaveLength(1);
+      expect(balanceFrames[0]).toMatchObject({
+        method: 'left-left',
+        childBalanceFactor: 0,
+      });
+      expectValidAvl(tree, [50, 30, 20, 40]);
+    });
+
     test('the removed node is gone from the remove frame snapshot', () => {
       const tree = new AVLTree();
       const frames = collectFrames(tree);

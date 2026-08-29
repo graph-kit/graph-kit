@@ -13,12 +13,24 @@ export const definitions = {
       `${rotated.value} was left-heavy, so we moved it down and to the right, hence a right rotation. Its left child, ${promoted.value}, takes its place.`,
   },
   unbalance: {
-    leftLeft: (unbalanced: TreeNode, child: TreeNode) =>
-      `${unbalanced.value} is left-heavy and its left child, ${child.value}, is either left-heavy or perfectly balanced.`,
+    leftLeft: (
+      unbalanced: TreeNode,
+      child: TreeNode,
+      childBalanceFactor: number,
+    ) =>
+      childBalanceFactor === 0
+        ? `${unbalanced.value} is left-heavy and its left child, ${child.value}, is perfectly balanced. That only happens after a removal, and moving ${unbalanced.value} down to the right still fixes it.`
+        : `${unbalanced.value} is left-heavy and its left child, ${child.value}, leans left as well.`,
     leftRight: (unbalanced: TreeNode, child: TreeNode) =>
       `${unbalanced.value} is left-heavy and its left child, ${child.value}, is right-heavy.`,
-    rightRight: (unbalanced: TreeNode, child: TreeNode) =>
-      `${unbalanced.value} is right-heavy and its right child, ${child.value}, is either right-heavy or perfectly balanced.`,
+    rightRight: (
+      unbalanced: TreeNode,
+      child: TreeNode,
+      childBalanceFactor: number,
+    ) =>
+      childBalanceFactor === 0
+        ? `${unbalanced.value} is right-heavy and its right child, ${child.value}, is perfectly balanced. That only happens after a removal, and moving ${unbalanced.value} down to the left still fixes it.`
+        : `${unbalanced.value} is right-heavy and its right child, ${child.value}, leans right as well.`,
     rightLeft: (unbalanced: TreeNode, child: TreeNode) =>
       `${unbalanced.value} is right-heavy and its right child, ${child.value}, is left-heavy.`,
   },

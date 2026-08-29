@@ -39,7 +39,7 @@ const BALANCE_METHOD_TO_STRING: Record<BalanceMethod, string> = {
 
 const BALANCE_METHOD_TO_DEFINITION: Record<
   BalanceMethod,
-  (unbalanced: TreeNode, child: TreeNode) => string
+  (unbalanced: TreeNode, child: TreeNode, childBalanceFactor: number) => string
 > = {
   'left-left': definitions.unbalance.leftLeft,
   'left-right': definitions.unbalance.leftRight,
@@ -85,6 +85,7 @@ export const treeExplainer = (graph: Graph) => {
             tooltipLabel: BALANCE_METHOD_TO_DEFINITION[frame.method](
               frame.unbalancedNode,
               frame.childNode,
+              frame.childBalanceFactor,
             ),
             activate: () => {
               unbalancedNodes = frame;

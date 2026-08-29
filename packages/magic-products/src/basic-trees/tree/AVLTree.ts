@@ -147,46 +147,52 @@ export class AVLTree {
     isLeft: boolean,
   ): TreeNode {
     const balance = getBalanceFactor(node);
+    const leftBalance = getBalanceFactor(node.left);
+    const rightBalance = getBalanceFactor(node.right);
 
-    if (balance > 1 && getBalanceFactor(node.left) >= 0) {
+    if (balance > 1 && leftBalance >= 0) {
       this.addFrame({
         action: 'balance',
         method: 'left-left',
         unbalancedNode: node,
         childNode: nullThrows(node.left, 'left left needs a left child'),
+        childBalanceFactor: leftBalance,
       });
       return this.rotateRight(parent, node, isLeft);
     }
 
-    if (balance < -1 && getBalanceFactor(node.right) <= 0) {
+    if (balance < -1 && rightBalance <= 0) {
       this.addFrame({
         action: 'balance',
         method: 'right-right',
         unbalancedNode: node,
         childNode: nullThrows(node.right, 'right right needs a right child'),
+        childBalanceFactor: rightBalance,
       });
       return this.rotateLeft(parent, node, isLeft);
     }
 
-    if (balance > 1 && getBalanceFactor(node.left) < 0) {
+    if (balance > 1 && leftBalance < 0) {
       const leftChild = nullThrows(node.left, 'left child is undefined');
       this.addFrame({
         action: 'balance',
         method: 'left-right',
         unbalancedNode: node,
         childNode: leftChild,
+        childBalanceFactor: leftBalance,
       });
       this.rotateLeft(node, leftChild, true);
       return this.rotateRight(parent, node, isLeft);
     }
 
-    if (balance < -1 && getBalanceFactor(node.right) > 0) {
+    if (balance < -1 && rightBalance > 0) {
       const rightChild = nullThrows(node.right, 'right child is undefined');
       this.addFrame({
         action: 'balance',
         method: 'right-left',
         unbalancedNode: node,
         childNode: rightChild,
+        childBalanceFactor: rightBalance,
       });
       this.rotateRight(node, rightChild, false);
       return this.rotateLeft(parent, node, isLeft);

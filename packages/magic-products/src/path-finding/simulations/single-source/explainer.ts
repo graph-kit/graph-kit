@@ -121,6 +121,11 @@ export const singleSourceExplainer =
           ? `the Single Edge Leaving {${frame.node}}`
           : `Each of the ${frame.edgeCount} Edges Leaving {${frame.node}}`;
 
+      //  only for the start node we dont ask how going through "0 cost" will improve the cost of other nodes
+      if (frame.node === frame.anchorNodeId) {
+        return { content: `Now Follow ${edges} to See How Far They Reach` };
+      }
+
       return {
         content: `Now Follow ${edges}, and See Whether Going Through It at <${formatDistance(frame.distance)}> Beats What We Already Have`,
       };
@@ -129,7 +134,7 @@ export const singleSourceExplainer =
     if (frame.type === 'relax-edge') {
       const { weight } = graph.getEdge(frame.edge);
       return {
-        content: `Taking the Edge from {${frame.from}} to {${frame.to}}, Which Costs <${weight}>`,
+        content: `Taking the Edge {${frame.edge}}, Which Costs <${weight}>`,
       };
     }
 

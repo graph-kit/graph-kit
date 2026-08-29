@@ -18,10 +18,37 @@ type EndFrame = {
   type: 'end';
 };
 
+type FrontierEntry = {
+  node: GNode['id'];
+  distance: Fraction;
+};
+
+type SafeToSettleFrame = {
+  type: 'safe-to-settle';
+  node: GNode['id'];
+  distance: Fraction;
+  runnerUp?: FrontierEntry;
+  allWeightsNonNegative: boolean;
+};
+
 type SettleNodeFrame = {
   type: 'settle-node';
   node: GNode['id'];
   distance: Fraction;
+  allWeightsNonNegative: boolean;
+};
+
+type StillTentativeFrame = {
+  type: 'still-tentative';
+  waiting: readonly FrontierEntry[];
+  via: GNode['id'];
+};
+
+type ExploreNodeFrame = {
+  type: 'explore-node';
+  node: GNode['id'];
+  distance: Fraction;
+  edgeCount: number;
 };
 
 type RelaxEdgeFrame = {
@@ -69,7 +96,10 @@ type NegativeCycleFrame = {
 export type SingleSourceStep =
   | StartFrame
   | EndFrame
+  | SafeToSettleFrame
   | SettleNodeFrame
+  | StillTentativeFrame
+  | ExploreNodeFrame
   | RelaxEdgeFrame
   | ImproveDistanceFrame
   | KeepDistanceFrame

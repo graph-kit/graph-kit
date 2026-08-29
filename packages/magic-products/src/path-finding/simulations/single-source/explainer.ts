@@ -50,10 +50,79 @@ export const singleSourceExplainer =
       };
     }
 
-    if (frame.type === 'settle-node') {
+    if (frame.type === 'safe-to-settle') {
+      const here = formatDistance(frame.distance);
+
+      const mustPass = `Every Other Route to {${frame.node}} Has to Leave Through the [Frontier].`;
+
+      const waiting =
+        frame.runnerUp === undefined
+          ? 'Nothing Else Is Waiting There.'
+          : `The Cheapest Thing Waiting There Is {${frame.runnerUp.node}} at <${formatDistance(frame.runnerUp.distance)}>.`;
+
+      const conclusion = frame.allWeightsNonNegative
+        ? `And No Edge Costs Less Than <0>. So Nothing Can Reach {${frame.node}} for Less Than <${here}>`
+        : `But an Edge Here Costs Less Than <0>, So a Later Route Could Still Reach {${frame.node}} for Less Than <${here}>`;
+
       return {
-        content: `Cheapest in the [Frontier] is {${frame.node}} at <${formatDistance(frame.distance)}>, So That Distance Is Final`,
+        content: `${mustPass} ${waiting} ${conclusion}`,
         highlights: [highlights.frontier],
+      };
+    }
+
+    if (frame.type === 'settle-node') {
+      if (frame.node === frame.anchorNodeId) {
+        return {
+          content: `{${frame.node}} Is Where We Started, So <${formatDistance(frame.distance)}> Is Already as Short as It Gets`,
+        };
+      }
+
+      if (!frame.allWeightsNonNegative) {
+        return {
+          content: `Dijkstra Calls {${frame.node}} Final at <${formatDistance(frame.distance)}> Anyway, Because That Is What It Does`,
+        };
+      }
+
+      return {
+        content: `So {${frame.node}} Is Final at <${formatDistance(frame.distance)}>`,
+      };
+    }
+
+    if (frame.type === 'still-tentative') {
+      const named = frame.waiting.map(
+        ({ node, distance }) => `{${node}} at <${formatDistance(distance)}>`,
+      );
+
+      if (named.length === 1) {
+        return {
+          content: `${named[0]} Is Still Waiting. A Route Through {${frame.via}} Could Still Reach It for Less, So It Is Not Final Yet`,
+        };
+      }
+
+      const list =
+        named.length === 2
+          ? `${named[0]} and ${named[1]}`
+          : `${named.slice(0, -1).join(', ')}, and ${named[named.length - 1]}`;
+
+      return {
+        content: `${list} Are Still Waiting. A Route Through {${frame.via}} Could Still Reach Any of Them for Less, So None of Them Is Final Yet`,
+      };
+    }
+
+    if (frame.type === 'explore-node') {
+      if (frame.edgeCount === 0) {
+        return {
+          content: `Nothing Leaves {${frame.node}}, So There Is Nothing to Check`,
+        };
+      }
+
+      const edges =
+        frame.edgeCount === 1
+          ? `the Single Edge Leaving {${frame.node}}`
+          : `Each of the ${frame.edgeCount} Edges Leaving {${frame.node}}`;
+
+      return {
+        content: `Now Follow ${edges}, and See Whether Going Through It at <${formatDistance(frame.distance)}> Beats What We Already Have`,
       };
     }
 

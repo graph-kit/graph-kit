@@ -45,21 +45,75 @@ export const dijkstras: SingleSourceFunction =
       ...fields,
     });
 
+    const allWeightsNonNegative = !graph.edges.value.some((edge) =>
+      edge.weight.lt(0),
+    );
+
     frameCollector.add(frame({ type: 'start', source: sourceNodeId }));
 
-    for (let nearest = frontier().at(0); nearest; nearest = frontier().at(0)) {
+    let settleCount = 0;
+
+    for (;;) {
+      const queue = frontier();
+      const nearest = queue.at(0);
+      if (!nearest) break;
+
+      const holding = (ids: readonly GNode['id'][]) =>
+        ids.map((node) => ({ node, distance: distances[node]! }));
+
+      if (settleCount > 0) {
+        const runnerUp = queue.at(1);
+        frameCollector.add(
+          frame({
+            type: 'safe-to-settle',
+            node: nearest,
+            distance: distances[nearest]!,
+            runnerUp:
+              runnerUp === undefined ? undefined : holding([runnerUp])[0],
+            allWeightsNonNegative,
+            activeNodeId: nearest,
+          }),
+        );
+      }
+
       settled.add(nearest);
+      settleCount++;
 
       frameCollector.add(
         frame({
           type: 'settle-node',
           node: nearest,
           distance: distances[nearest]!,
+          allWeightsNonNegative,
           activeNodeId: nearest,
         }),
       );
 
-      for (const arc of outgoing[nearest] ?? []) {
+      const leaving = outgoing[nearest] ?? [];
+      const waiting = queue.slice(1);
+
+      if (waiting.length > 0 && leaving.length > 0) {
+        frameCollector.add(
+          frame({
+            type: 'still-tentative',
+            waiting: holding(waiting),
+            via: nearest,
+            candidateNodeIds: waiting,
+          }),
+        );
+      }
+
+      frameCollector.add(
+        frame({
+          type: 'explore-node',
+          node: nearest,
+          distance: distances[nearest]!,
+          edgeCount: leaving.length,
+          activeNodeId: nearest,
+        }),
+      );
+
+      for (const arc of leaving) {
         const offered = distances[nearest]!.add(arc.weight);
         const current = distances[arc.to];
 

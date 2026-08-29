@@ -16,19 +16,22 @@ const componentSlotHighlight = (
 
 const highlights = {
   distances: {
-    tooltipLabel: 'The cheapest trip we know to each node so far',
+    tooltipLabel: 'The cheapest distance to the node so far',
     ...componentSlotHighlight(distancesSlotId),
   },
   improve: {
-    tooltipLabel: 'A cheaper way in! Write the new distance down',
+    tooltipLabel:
+      'The distance we just found is cheaper than what we had before, so we update the distance',
     ...componentSlotHighlight(distancesSlotId),
   },
   keep: {
-    tooltipLabel: 'The trip we already had is no worse, so nothing changes',
+    tooltipLabel:
+      'The distance we just found is not cheaper than what we had before, so we keep the distance we already had',
     ...componentSlotHighlight(distancesSlotId),
   },
   frontier: {
-    tooltipLabel: 'Everything discovered but not yet finalized, cheapest first',
+    tooltipLabel:
+      'All nodes that have been explored but not finalized yet. The distances may be improved with a different path.',
     ...componentSlotHighlight(frontierSlotId),
   },
 } as const satisfies Record<string, ExplainerHighlight>;
@@ -38,34 +41,28 @@ export const singleSourceExplainer =
   (frame: SingleSourceFrame): Explainer | undefined => {
     if (frame.type === 'start') {
       return {
-        content: `Starting at {${frame.source}}. Every Other Node Is an <∞> Away in [Distances]`,
+        content: `Starting at {${frame.source}}. Every other node starts at a [Distance] of ∞`,
         highlights: [highlights.distances],
       };
     }
 
     if (frame.type === 'end') {
       return {
-        content: `Done! The [Distances] from {${frame.anchorNodeId}} Are as Short as They Get`,
+        content: `Done! The [Distances] from {${frame.anchorNodeId}} are as cheap as they can get`,
         highlights: [highlights.distances],
       };
     }
 
     if (frame.type === 'safe-to-settle') {
-      const here = formatDistance(frame.distance);
-
-      const mustPass = `Every Other Route to {${frame.node}} Has to Leave Through the [Frontier].`;
+      const mustPass = `Every other path to {${frame.node}} has to leave through the [Frontier].`;
 
       const waiting =
         frame.runnerUp === undefined
-          ? 'Nothing Else Is Waiting There.'
-          : `The Cheapest Thing Waiting There Is {${frame.runnerUp.node}} at <${formatDistance(frame.runnerUp.distance)}>.`;
-
-      const conclusion = frame.allWeightsNonNegative
-        ? `And No Edge Costs Less Than <0>. So Nothing Can Reach {${frame.node}} for Less Than <${here}>`
-        : `But an Edge Here Costs Less Than <0>, So a Later Route Could Still Reach {${frame.node}} for Less Than <${here}>`;
+          ? `There are no other paths to {${frame.node}}`
+          : `The cheapest upstream node is {${frame.runnerUp.node}} with a current cost of <${frame.runnerUp.distance}>. Edge costs cannot be negative, so nothing can reach {${frame.node}} for less than <${frame.distance}>`;
 
       return {
-        content: `${mustPass} ${waiting} ${conclusion}`,
+        content: `${mustPass} ${waiting}`,
         highlights: [highlights.frontier],
       };
     }
@@ -73,29 +70,25 @@ export const singleSourceExplainer =
     if (frame.type === 'settle-node') {
       if (frame.node === frame.anchorNodeId) {
         return {
-          content: `{${frame.node}} Is Where We Started, So <${formatDistance(frame.distance)}> Is Already as Short as It Gets`,
-        };
-      }
-
-      if (!frame.allWeightsNonNegative) {
-        return {
-          content: `Dijkstra Calls {${frame.node}} Final at <${formatDistance(frame.distance)}> Anyway, Because That Is What It Does`,
+          content: `{${frame.node}} is the start node so it gets assigned a distance of <${frame.distance}>`,
         };
       }
 
       return {
-        content: `So {${frame.node}} Is Final at <${formatDistance(frame.distance)}>`,
+        content: `{${frame.node}} becomes finalized with a cost of <${frame.distance}>`,
       };
     }
 
     if (frame.type === 'still-tentative') {
       const named = frame.waiting.map(
-        ({ node, distance }) => `{${node}} at <${formatDistance(distance)}>`,
+        ({ node, distance }) =>
+          `{${node}} with a current cost of <${distance}>`,
       );
 
       if (named.length === 1) {
         return {
-          content: `${named[0]} Is Still Waiting. A Route Through {${frame.via}} Could Still Reach It for Less, So It Is Not Final Yet`,
+          // TODO: SOMETHING LIKE because the base cost of frame.via is less than the current cost of the unfinalized node
+          content: `${named[0]} cannot yet be finalized. A path through {${frame.via}} could reduce the cost of reaching it`,
         };
       }
 
@@ -105,60 +98,67 @@ export const singleSourceExplainer =
           : `${named.slice(0, -1).join(', ')}, and ${named[named.length - 1]}`;
 
       return {
-        content: `${list} Are Still Waiting. A Route Through {${frame.via}} Could Still Reach Any of Them for Less, So None of Them Is Final Yet`,
+        content: `${list} cannot yet be finalized. A path through {${frame.via}} could reduce the cost of reaching them`,
       };
     }
 
     if (frame.type === 'explore-node') {
       if (frame.edgeCount === 0) {
         return {
-          content: `Nothing Leaves {${frame.node}}, So There Is Nothing to Check`,
+          content: `{${frame.node}} has no outbound edges, so pathing through it cannot improve any cost`,
         };
       }
 
       const edges =
         frame.edgeCount === 1
-          ? `the Single Edge Leaving {${frame.node}}`
-          : `Each of the ${frame.edgeCount} Edges Leaving {${frame.node}}`;
+          ? `the single edge leaving {${frame.node}}`
+          : `each of the ${frame.edgeCount} edges leaving {${frame.node}}`;
 
       //  only for the start node we dont ask how going through "0 cost" will improve the cost of other nodes
       if (frame.node === frame.anchorNodeId) {
-        return { content: `Now Follow ${edges} to See How Far They Reach` };
+        return {
+          content: `Now follow ${edges} to see the cost of connecting adjacent nodes`,
+        };
       }
-
+      // TODO: should definitaly say where the distances are coming from (explain how they are added up)
       return {
-        content: `Now Follow ${edges}, and See Whether Going Through It at <${formatDistance(frame.distance)}> Beats What We Already Have`,
+        content: `Now follow ${edges}, and see whether going through it with a base cost of <${frame.distance}> reduces the current cost of downstream nodes`,
       };
     }
 
     if (frame.type === 'relax-edge') {
       const { weight } = graph.getEdge(frame.edge);
       return {
-        content: `Taking the Edge {${frame.edge}}, Which Costs <${weight}>`,
+        content: `Pathing through {${frame.edge}} costs <${weight}>`,
       };
     }
 
     if (frame.type === 'improve-distance') {
       return {
-        content: `<${formatDistance(frame.newDistance)}> Beats <${formatDistance(frame.oldDistance)}>, So [Improving] {${frame.node}}`,
+        // TODO: should definitaly say where the distances are coming from (explain how they are added up)
+
+        content: `<${frame.newDistance}> Beats <${formatDistance(frame.oldDistance)}>, So [Improving] {${frame.node}}`,
         highlights: [highlights.improve],
       };
     }
 
     if (frame.type === 'keep-distance') {
       return {
-        content: `{${frame.node}} Is Already <${formatDistance(frame.distance)}> Away and <${formatDistance(frame.offered)}> Is No Better, So [Keeping] It`,
+        content: `<${frame.offered}> does not decrease the cost of reaching {${frame.node}} which currently costs <${frame.distance}>. Therefore the current cost [Remains]`,
         highlights: [highlights.keep],
       };
     }
 
     if (frame.type === 'unreachable') {
       const count = frame.nodes.length;
+      const plural = count === 1;
       return {
-        content: `${count} Node${count === 1 ? '' : 's'} Stayed at <∞> in [Distances]: Nothing Leads There`,
+        content: `${count} node${plural ? 's' : ''} stayed at a [Distance] of ∞ since no edges lead to ${plural ? 'them' : 'it'}`,
         highlights: [highlights.distances],
       };
     }
+
+    // not dijkstras below here, so we can ignore these frames for now
 
     if (frame.type === 'begin-pass') {
       return {

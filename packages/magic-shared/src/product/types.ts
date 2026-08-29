@@ -27,9 +27,17 @@ import { LocalStorageControls } from './internals/useShellLocalStorage.ts';
 import { ProductId } from './manifests/index.ts';
 import { ProductManifest } from './manifests/types.ts';
 
+/** turns an encoded payload into a string light enough to fit somewhere tight, like a link */
+export type TransitCompression = {
+  compress: (payload: any) => string;
+  decompress: (text: string) => any;
+};
+
 export type TransitField = {
   encode: () => any;
   decode: (payload: any) => void;
+  /** absent when the host has nothing better than JSON to offer, see {@link TransitCompression} */
+  compression?: TransitCompression;
 };
 
 /** a product's drag, in the three moments the room cares about */

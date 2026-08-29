@@ -57,7 +57,10 @@ export const nodeLabel: NodeLabelPlugin = ({
           nodeId,
           label,
         })),
-      decode: (data) => setNodeLabels(data),
+      decode: (data) => {
+        nodeIdToLabel.clear();
+        setNodeLabels(data);
+      },
       validate: (data) => true,
     },
     getters: {

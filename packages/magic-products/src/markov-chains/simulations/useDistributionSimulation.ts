@@ -7,6 +7,7 @@ import Fraction from 'fraction.js';
 import { Ref, computed, shallowRef } from 'vue';
 
 import { distributionThemer } from '../themers/distribution.ts';
+import { distributionHeatThemer } from '../themers/distributionHeat.ts';
 import { layered } from '../themers/layered.ts';
 import { advance } from './advance.ts';
 import { DistributionFrame } from './frame.ts';
@@ -68,7 +69,10 @@ export const distributionSimulationDefinition = (
       return {
         lens: {
           id: 'distribution',
-          ...layered(distributionThemer(graph, distribution, simplify)),
+          ...layered(
+            distributionHeatThemer(graph, distribution),
+            distributionThemer(graph, distribution, simplify),
+          ),
         },
         explainer: distributionExplainer,
         onSetupCompleted: (frame) => (currentFrame.value = frame),

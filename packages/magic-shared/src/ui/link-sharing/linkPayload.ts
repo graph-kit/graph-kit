@@ -1,10 +1,11 @@
-import { nullThrows } from '@core/utils/assert';
+import { assert, nullThrows } from '@core/utils/assert';
 import { devWarning } from '@core/utils/debugging';
 import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
 } from 'lz-string';
 
+import { getNavigationName } from '../../product/manifests/navigationName.ts';
 import { Shell } from '../../product/types.ts';
 import { queryParam, stripQueryParam } from '../../url/index.ts';
 import { toast } from '../toast/index.ts';
@@ -74,16 +75,15 @@ export const loadFromLinkPayload = (shell: Shell) => {
 
   stripQueryParam(sharePayloadQueryParam);
 
-  const text = decompressFromEncodedURIComponent(payload);
-  if (!text) return;
-
   try {
+    const text = decompressFromEncodedURIComponent(payload);
+    assert(text, 'link sharing: the query param is not a readable encoding');
     transitOf(shell).decode(readPayload(shell, text));
   } catch (err) {
     devWarning('link sharing: the link did not carry a readable payload', err);
     toast.show({
-      title: 'Could Not Open The Link',
-      description: 'The link did not carry anything this page could read.',
+      title: 'Could Not Read The Link',
+      description: `This link is not carrying anything ${getNavigationName(shell.manifest.id)} can read.`,
       severity: 'warn',
       duration: PROBLEM_TOAST_MS,
     });

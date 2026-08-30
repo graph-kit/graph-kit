@@ -4,6 +4,7 @@ import { useSignals } from '@graph/vue/utils/useSignal';
 import { useComponent } from '../../component-slot/useComponent.ts';
 import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
 import AnnotationsPanel from './AnnotationPanel.vue';
+import AnnotationPanelVertical from './AnnotationPanelVertical.vue';
 
 const ANNOTATION_PANEL_SLOT_ID = 'shell/annotations/panel';
 
@@ -12,7 +13,7 @@ export const useAnnotationsUI = (
   componentSlots: ComponentSlotControls,
 ) => {
   const panel = useComponent(componentSlots, {
-    component: AnnotationsPanel,
+    component: AnnotationPanelVertical,
     id: ANNOTATION_PANEL_SLOT_ID,
     position: 'center-left',
   });

@@ -1,22 +1,21 @@
 <script setup lang="ts">
   import { mdiBroom } from '@mdi/js';
 
-  import Button from '../../../components/button/Button.vue';
-  import Icon from '../../../components/icon/Icon.vue';
+  import IconButton from '../../../components/icon-button/IconButton.vue';
   import { useClearAnnotations } from '../panel-shared/useClearAnnotations.ts';
+  import { spotShape } from './classes.ts';
 
   const { clear, disabledReason } = useClearAnnotations();
 </script>
 
 <template>
-  <Button
-    @click="clear"
+  <IconButton
+    :class="spotShape"
+    :path="mdiBroom"
+    :size="22"
     label="Clear Annotations"
     :disabled="disabledReason"
-  >
-    <template #start>
-      <Icon :path="mdiBroom" />
-    </template>
-    Clear Annotations</Button
-  >
+    side="right"
+    @click="clear"
+  />
 </template>

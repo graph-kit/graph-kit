@@ -10,10 +10,11 @@
   import { type ButtonVariant, buttonVariants } from '../button/variants.ts';
   import Icon from '../icon/Icon.vue';
   import Tooltip from '../tooltip/Tooltip.vue';
+  import { type TooltipOptions } from '../tooltip/types.ts';
 
   defineOptions({ inheritAttrs: false });
 
-  interface Props extends PrimitiveProps {
+  interface Props extends PrimitiveProps, Omit<TooltipOptions, 'class'> {
     // the icon to render, e.g. an mdi path from '@mdi/js'
     path: string;
     /**
@@ -75,7 +76,11 @@
 </script>
 
 <template>
-  <Tooltip :label="tooltipLabel">
+  <Tooltip
+    :label="tooltipLabel"
+    :side="side"
+    :delay="delay"
+  >
     <template #trigger>
       <Primitive
         :as="as"

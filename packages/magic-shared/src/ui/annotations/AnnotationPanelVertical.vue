@@ -2,20 +2,20 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import PanelDivider from './panel-shared/PanelDivider.vue';
-  import BrushWeightPicker from './panel/BrushWeightPicker.vue';
-  import ColorPicker from './panel/ColorPicker.vue';
-  import PanelActions from './panel/PanelActions.vue';
-  import ToolPicker from './panel/ToolPicker.vue';
+  import BrushWeightPicker from './vertical-panel/BrushWeightPicker.vue';
+  import ClearButton from './vertical-panel/ClearButton.vue';
+  import ColorPicker from './vertical-panel/ColorPicker.vue';
+  import ToolPicker from './vertical-panel/ToolPicker.vue';
 </script>
 
 <template>
-  <Well class="w-72 p-4">
-    <VStack :gap="4">
+  <Well class="w-fit rounded-2xl p-1">
+    <VStack :gap="1">
       <ToolPicker />
       <ColorPicker />
       <BrushWeightPicker />
       <PanelDivider />
-      <PanelActions />
+      <ClearButton />
     </VStack>
   </Well>
 </template>

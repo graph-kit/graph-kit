@@ -8,14 +8,12 @@
   import Icon from '../../../components/icon/Icon.vue';
   import Tooltip from '../../../components/tooltip/Tooltip.vue';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
-  import { ColorSwatch } from './types.ts';
-
-  const props = defineProps<{ swatches: readonly ColorSwatch[] }>();
+  import { SWATCH_COLORS } from './options.ts';
 
   const controls = useAnnotationControls();
 
   const isSelected = computed(() =>
-    props.swatches.every((swatch) => swatch.value !== controls.color.value),
+    SWATCH_COLORS.every((swatch) => swatch.value !== controls.color.value),
   );
 
   const iconColor = computed(() => contrastingTextColor(controls.color.value));

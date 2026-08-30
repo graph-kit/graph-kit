@@ -18,20 +18,15 @@
     :disabled="disabled"
   >
     <HStack
-      :gap="2"
-      class="px-1"
+      :gap="1"
+      class="justify-between"
     >
-      <HStack
-        :gap="2"
-        class="grow"
-      >
-        <ColorSwatch
-          v-for="color of SWATCH_COLORS"
-          :key="color.value"
-          :name="color.name"
-          :hex="color.value"
-        />
-      </HStack>
+      <ColorSwatch
+        v-for="color of SWATCH_COLORS"
+        :key="color.value"
+        :name="color.name"
+        :hex="color.value"
+      />
       <CustomColorSwatch />
     </HStack>
   </PanelSection>

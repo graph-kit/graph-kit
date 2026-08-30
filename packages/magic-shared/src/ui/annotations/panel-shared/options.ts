@@ -32,6 +32,7 @@ export type BrushWeight = {
 export const BRUSH_WEIGHTS: BrushWeight[] = [
   { name: 'Small', value: DEFAULT_BRUSH_WEIGHT },
   { name: 'Medium', value: DEFAULT_BRUSH_WEIGHT + 3 },
-  { name: 'Large', value: DEFAULT_BRUSH_WEIGHT + 6 },
-  { name: 'Extra Large', value: DEFAULT_BRUSH_WEIGHT + 9 },
+  { name: 'Large', value: DEFAULT_BRUSH_WEIGHT + 8 },
+  { name: 'Extra Large', value: DEFAULT_BRUSH_WEIGHT + 15 },
+  { name: 'Extra Extra Large', value: DEFAULT_BRUSH_WEIGHT + 30 },
 ];

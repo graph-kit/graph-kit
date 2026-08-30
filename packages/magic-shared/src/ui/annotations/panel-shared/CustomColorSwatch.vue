@@ -1,67 +1,51 @@
 <script setup lang="ts">
-  import { cn } from '@core/components/cn';
-  import { Color, contrastingTextColor } from '@core/utils/colors';
+  import { contrastingTextColor } from '@core/utils/colors';
   import { mdiEyedropperVariant } from '@mdi/js';
 
-  import { computed } from 'vue';
+  import { computed, useTemplateRef } from 'vue';
 
   import Icon from '../../../components/icon/Icon.vue';
-  import Tooltip from '../../../components/tooltip/Tooltip.vue';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
+  import Swatch from './Swatch.vue';
   import { SWATCH_COLORS } from './options.ts';
 
   const controls = useAnnotationControls();
 
+  const picker = useTemplateRef('picker');
+
   const isSelected = computed(() =>
-    SWATCH_COLORS.every((swatch) => swatch.value !== controls.color.value),
+    SWATCH_COLORS.every((color) => color.value !== controls.color.value),
   );
 
   const iconColor = computed(() => contrastingTextColor(controls.color.value));
-
-  const classes = computed(() =>
-    cn(
-      'size-10 shrink-0 cursor-pointer appearance-none rounded-xl bg-transparent p-0 transition-transform hover:scale-105 dark:border-gray-400',
-      isSelected.value &&
-        'outline-3 outline-offset-2 outline-gray-900 dark:outline-white',
-    ),
-  );
 </script>
 
 <template>
-  <Tooltip label="Custom">
-    <template #trigger>
-      <div class="relative size-10 shrink-0">
-        <input
-          type="color"
-          aria-label="Custom"
-          :class="classes"
-          :value="controls.color.value"
-          @input="controls.setColor(($event.target as HTMLInputElement).value)"
-        />
-        <Icon
-          class="pointer-events-none absolute inset-0 m-auto"
-          :style="{ color: iconColor }"
-          :path="mdiEyedropperVariant"
-          :size="20"
-        />
-      </div>
-    </template>
-  </Tooltip>
+  <Swatch
+    label="Custom"
+    :pressed="isSelected"
+    @click="picker?.click()"
+  >
+    <span
+      class="relative size-9 rounded-xl"
+      :style="{ backgroundColor: controls.color.value }"
+    >
+      <Icon
+        class="absolute inset-0 m-auto"
+        :style="{ color: iconColor }"
+        :path="mdiEyedropperVariant"
+        :size="20"
+      />
+    </span>
+  </Swatch>
+  <!-- the native swatch is a rectangle inset in a chrome the page has no say over, so it stays clipped and the button above stands in for it -->
+  <input
+    ref="picker"
+    type="color"
+    class="sr-only"
+    tabindex="-1"
+    aria-hidden="true"
+    :value="controls.color.value"
+    @input="controls.setColor(($event.target as HTMLInputElement).value)"
+  />
 </template>
-
-<style scoped>
-  /* the native swatch is a rectangle inset in a chrome the wrapper has no say over */
-  input[type='color']::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-
-  input[type='color']::-webkit-color-swatch {
-    border: none;
-    border-radius: calc(var(--radius-xl) - 2px);
-  }
-
-  input[type='color']::-moz-color-swatch {
-    border: none;
-    border-radius: calc(var(--radius-xl) - 2px);
-  }
-</style>

@@ -28,19 +28,17 @@
         />
       </PanelSpot>
     </template>
-    <Well>
-      <HStack :gap="2">
-        <DropdownItem
-          v-for="color of SWATCH_COLORS"
-          :key="color.value"
-        >
-          <ColorSwatch
-            :name="color.name"
-            :hex="color.value"
-          />
-        </DropdownItem>
-        <CustomColorSwatch />
-      </HStack>
-    </Well>
+    <HStack :gap="1">
+      <DropdownItem
+        v-for="color of SWATCH_COLORS"
+        :key="color.value"
+      >
+        <ColorSwatch
+          :name="color.name"
+          :hex="color.value"
+        />
+      </DropdownItem>
+      <CustomColorSwatch />
+    </HStack>
   </Dropdown>
 </template>

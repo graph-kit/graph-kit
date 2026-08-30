@@ -70,8 +70,6 @@ export type PrimsSimulationOptions = {
   startNodeId: StartNodeId;
 };
 
-// shared by both algorithms: an edge the algorithm is not acting on fades
-// instead of disappearing, so it stays legible without competing for attention
 const createFadedEdgeThemer = (graph: Graph) => {
   const fadedIds = new Set<string>();
   const fade = (edge: CoreEdge, resolveUnderneath: () => Color) => {
@@ -221,24 +219,21 @@ const kruskalsEdgeRoles = {
   crossing: 'crossing',
 } as const satisfies Record<KruskalsEdgeConcept, EdgeRole>;
 
-// a decision paints an edge and both of its endpoints one color, which no
-// single role covers, and neither vocabulary has a green or a red to give, so
-// kruskals names its two decision colors itself
 const createDecisionThemer = (graph: Graph, color: Color) => {
-  let edgeId: GEdge['id'] | undefined;
+  let edgeIds: readonly GEdge['id'][] = [];
   let nodeIds: readonly GNode['id'][] = [];
 
   return {
     themers: [
       createEdgeThemer(graph, (edge) =>
-        edge.id === edgeId ? color : undefined,
+        edgeIds.includes(edge.id) ? color : undefined,
       ),
       createNodeThemer(graph, (node) =>
         nodeIds.includes(node.id) ? color : undefined,
       ),
     ],
-    set: (edge: GEdge['id'] | undefined, nodes: readonly GNode['id'][]) => {
-      edgeId = edge;
+    set: (edges: readonly GEdge['id'][], nodes: readonly GNode['id'][]) => {
+      edgeIds = edges;
       nodeIds = nodes;
     },
   };
@@ -257,19 +252,14 @@ const kruskalsEffects = (
   const consideringEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.crossing);
   const accepted = createDecisionThemer(graph, colors.GREEN_600);
   const excluded = createDecisionThemer(graph, colors.RED_600);
-  // an edge the tree has not taken stays faded, so the tree reads as the edges
-  // left at full strength rather than as a color of its own
-  const untakenEdge = createFadedEdgeThemer(graph);
+  const dimmedEdge = createFadedEdgeThemer(graph);
 
-  // activation order is paint order (later wins on overlapping ids), so the
-  // decision themers must activate after untaken to stay solid on the frame
-  // that decides their edge
   const themers: Themer[] = [
     active.themer,
-    untakenEdge.themer,
     consideringEdge.themer,
     ...accepted.themers,
     ...excluded.themers,
+    dimmedEdge.themer,
   ];
 
   const syncToFrame = (frame: KruskalsFrame) => {
@@ -278,20 +268,15 @@ const kruskalsEffects = (
     const isExclude = frame.type === 'exclude-edge';
     const endpoints = frame.activeNodeIds ?? [];
 
-    // amber marks the edge only while it is still a question, then the decision
-    // color takes over both it and the nodes it runs between
     active.setIds(frame.type === 'consider-edge' ? endpoints : []);
-    accepted.set(isAccept ? frame.edge : undefined, isAccept ? endpoints : []);
-    excluded.set(
-      isExclude ? frame.edge : undefined,
-      isExclude ? endpoints : [],
-    );
+    accepted.set(isAccept ? [frame.edge] : [], isAccept ? endpoints : []);
+    excluded.set(frame.excludedEdgeIds, isExclude ? endpoints : []);
+
     consideringEdge.setId(
       frame.type === 'consider-edge' ? frame.edge : undefined,
     );
-    // the edge under decision holds its color for as long as it is the subject,
-    // then falls back to the tree/faded split like every other edge
-    untakenEdge.setIds(
+
+    dimmedEdge.setIds(
       graph.edges.value
         .filter(
           (edge) => !treeEdgeIds.has(edge.id) && edge.id !== frame.selectedEdge,

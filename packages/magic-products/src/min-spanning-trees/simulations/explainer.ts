@@ -169,7 +169,6 @@ export const kruskalsExplainer =
     }
 
     if (frame.type === 'end') {
-      const edges = frame.treeEdgeIds.length;
       const cost = frame.treeEdgeIds
         .map((id) => graph.getEdge(id).weight)
         .reduce((sum, weight) => sum.add(weight), new Fraction(0));

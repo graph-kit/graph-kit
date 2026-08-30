@@ -1,7 +1,7 @@
 import { nullThrows } from '@core/utils/assert';
-import { Color } from '@core/utils/colors';
+import colors, { Color } from '@core/utils/colors';
 import { CoreEdge } from '@graph/primitives/types';
-import { GNode, Graph } from '@magic/shared/graph';
+import { GEdge, GNode, Graph } from '@magic/shared/graph';
 import { Lens } from '@magic/shared/lens';
 import { SimulationGuardBuilder } from '@magic/shared/simulation';
 import type {
@@ -12,8 +12,11 @@ import type {
 import {
   EdgeRole,
   NodeRole,
+  type Themer,
   createEdgeIdThemer,
+  createEdgeThemer,
   createNodeIdThemer,
+  createNodeThemer,
 } from '@magic/shared/theme';
 import tinycolor from 'tinycolor2';
 
@@ -211,14 +214,35 @@ const kruskalsNodeRoles = {
   active: 'active',
 } as const satisfies Record<KruskalsNodeConcept, NodeRole>;
 
-// crossing = the edge being added to the tree right now
-// excluding = the edge being ruled out right now
-type KruskalsEdgeConcept = 'crossing' | 'excluding';
+// crossing = the edge the algorithm is looking at right now
+type KruskalsEdgeConcept = 'crossing';
 
 const kruskalsEdgeRoles = {
   crossing: 'crossing',
-  excluding: 'rejected',
 } as const satisfies Record<KruskalsEdgeConcept, EdgeRole>;
+
+// a decision paints an edge and both of its endpoints one color, which no
+// single role covers, and neither vocabulary has a green or a red to give, so
+// kruskals names its two decision colors itself
+const createDecisionThemer = (graph: Graph, color: Color) => {
+  let edgeId: GEdge['id'] | undefined;
+  let nodeIds: readonly GNode['id'][] = [];
+
+  return {
+    themers: [
+      createEdgeThemer(graph, (edge) =>
+        edge.id === edgeId ? color : undefined,
+      ),
+      createNodeThemer(graph, (node) =>
+        nodeIds.includes(node.id) ? color : undefined,
+      ),
+    ],
+    set: (edge: GEdge['id'] | undefined, nodes: readonly GNode['id'][]) => {
+      edgeId = edge;
+      nodeIds = nodes;
+    },
+  };
+};
 
 export type KruskalsSimulationOptions = {
   graph: Graph;
@@ -230,35 +254,49 @@ const kruskalsEffects = (
 ): SimulationEffects<KruskalsFrame> => {
   const active = createNodeIdThemer(graph, kruskalsNodeRoles.active);
 
-  const crossingEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.crossing);
-  const excludingEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.excluding);
+  const consideringEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.crossing);
+  const accepted = createDecisionThemer(graph, colors.GREEN_600);
+  const excluded = createDecisionThemer(graph, colors.RED_600);
   // an edge the tree has not taken stays faded, so the tree reads as the edges
   // left at full strength rather than as a color of its own
   const untakenEdge = createFadedEdgeThemer(graph);
 
-  // activation order is paint order (later wins on overlapping ids), so the two
+  // activation order is paint order (later wins on overlapping ids), so the
   // decision themers must activate after untaken to stay solid on the frame
   // that decides their edge
-  const themers = [active, untakenEdge, crossingEdge, excludingEdge];
+  const themers: Themer[] = [
+    active.themer,
+    untakenEdge.themer,
+    consideringEdge.themer,
+    ...accepted.themers,
+    ...excluded.themers,
+  ];
 
   const syncToFrame = (frame: KruskalsFrame) => {
     const treeEdgeIds = new Set(frame.treeEdgeIds);
-    const decidedEdge =
-      frame.type === 'accept-edge' || frame.type === 'exclude-edge'
-        ? frame.edge
-        : undefined;
+    const isAccept = frame.type === 'accept-edge';
+    const isExclude = frame.type === 'exclude-edge';
+    const endpoints = frame.activeNodeIds ?? [];
 
-    active.setIds(frame.activeNodeIds ?? []);
-    // the edge under decision holds its color for the frame it is decided on,
+    // amber marks the edge only while it is still a question, then the decision
+    // color takes over both it and the nodes it runs between
+    active.setIds(frame.type === 'consider-edge' ? endpoints : []);
+    accepted.set(isAccept ? frame.edge : undefined, isAccept ? endpoints : []);
+    excluded.set(
+      isExclude ? frame.edge : undefined,
+      isExclude ? endpoints : [],
+    );
+    consideringEdge.setId(
+      frame.type === 'consider-edge' ? frame.edge : undefined,
+    );
+    // the edge under decision holds its color for as long as it is the subject,
     // then falls back to the tree/faded split like every other edge
     untakenEdge.setIds(
       graph.edges.value
-        .filter((edge) => !treeEdgeIds.has(edge.id) && edge.id !== decidedEdge)
+        .filter(
+          (edge) => !treeEdgeIds.has(edge.id) && edge.id !== frame.selectedEdge,
+        )
         .map((edge) => edge.id),
-    );
-    crossingEdge.setId(frame.type === 'accept-edge' ? decidedEdge : undefined);
-    excludingEdge.setId(
-      frame.type === 'exclude-edge' ? decidedEdge : undefined,
     );
   };
 
@@ -277,10 +315,10 @@ const kruskalsEffects = (
       },
     ],
     activate: () => {
-      for (const { themer } of themers) themer.activate();
+      for (const themer of themers) themer.activate();
     },
     deactivate: () => {
-      for (const { themer } of themers) themer.deactivate();
+      for (const themer of themers) themer.deactivate();
     },
   };
 

@@ -84,6 +84,12 @@ type KruskalsEndFrame = {
   type: 'end';
 };
 
+// the cheapest edge left, up for a decision
+type ConsiderEdgeFrame = {
+  type: 'consider-edge';
+  edge: GEdge['id'];
+};
+
 // the edge connects two components that were still separate, so it grows the forest
 type AcceptEdgeFrame = {
   type: 'accept-edge';
@@ -105,6 +111,7 @@ type KruskalsUnreachableFrame = {
 export type KruskalsStep =
   | KruskalsStartFrame
   | KruskalsEndFrame
+  | ConsiderEdgeFrame
   | AcceptEdgeFrame
   | ExcludeEdgeFrame
   | KruskalsUnreachableFrame;

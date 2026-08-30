@@ -1,5 +1,6 @@
 import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
+import { createNodeIdThemer } from '@magic/shared/theme';
 import Fraction from 'fraction.js';
 
 import { KruskalsFrame, PrimsFrame } from './frame.ts';
@@ -28,9 +29,12 @@ const componentSlotHighlight = (slotId: string): ExplainerHighlight => ({
   deactivate: ({ shell }) => shell.componentSlots.clearHighlighted(),
 });
 
+const highlightNodes = (graph: Graph, nodeIds: readonly string[]) =>
+  createNodeIdThemer(graph, 'active', nodeIds).themer;
+
 const sharedHighlights = {
   tree: {
-    tooltipLabel: 'The edges already in the minimum spanning tree',
+    tooltipLabel: 'The edges in the minimum spanning tree',
   },
   nonTree: {
     tooltipLabel: 'The edges not yet in the minimum spanning tree',
@@ -171,47 +175,45 @@ export const kruskalsExplainer =
         .map((id) => graph.getEdge(id).weight)
         .reduce((sum, weight) => sum.add(weight), new Fraction(0));
       const isConnected = graph.characteristics.connected.value.isConnected;
-      const reach = isConnected
-        ? 'Every node is connected'
-        : 'Every node that can be reached is connected';
       return {
-        content: `Done! ${reach}, so the ${isConnected ? '[Tree]' : '[Forest]'} is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of <${cost}>`,
+        content: `Done! The Final ${isConnected ? '[Tree]' : '[Forest]'} Costs <${cost}>`,
         highlights: isConnected
           ? [kruskalsHighlights.tree]
           : [kruskalsHighlights.forest],
+      };
+    }
+
+    if (frame.type === 'consider-edge') {
+      return {
+        content: `Next [In Consideration] Is {${frame.edge}}`,
+        highlights: [kruskalsHighlights.considering],
       };
     }
 
     if (frame.type === 'accept-edge') {
       return {
-        content: `Next [In Consideration] Is {${frame.edge}}, Which Connects Two [Components], So It's [Added]`,
-        highlights: [
-          kruskalsHighlights.considering,
-          kruskalsHighlights.components,
-          kruskalsHighlights.added,
-        ],
+        content: `{${frame.edge}} Connects Two [Components], So It's [Added]`,
+        highlights: [kruskalsHighlights.components, kruskalsHighlights.added],
       };
     }
 
     if (frame.type === 'exclude-edge') {
       return {
-        content: `Next Down [In Consideration], {${frame.edge}} Would Create A Cycle, So It's [Excluded]`,
-        highlights: [
-          kruskalsHighlights.considering,
-          kruskalsHighlights.excluded,
-        ],
+        content: `{${frame.edge}} Would Create A Cycle, So It's [Excluded]`,
+        highlights: [kruskalsHighlights.excluded],
       };
     }
 
+    // nodes only go unreached if graph is disconnected (a forest)
     if (frame.type === 'unreachable') {
       const count = frame.nodes.length;
-      const plural = count > 1;
-      const isConnected = graph.characteristics.connected.value.isConnected;
+      const themer = highlightNodes(graph, frame.nodes);
       return {
-        content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the ${isConnected ? '[Tree]' : '[Forest]'} because it has no edges attached to it.`,
-        highlights: isConnected
-          ? [kruskalsHighlights.tree]
-          : [kruskalsHighlights.forest],
+        content:
+          count === 1
+            ? `[1 Node] Has No Edges, So It Is Left Out`
+            : `[${count} Nodes] Have No Edges, So They Are Left Out`,
+        highlights: [themer],
       };
     }
   };

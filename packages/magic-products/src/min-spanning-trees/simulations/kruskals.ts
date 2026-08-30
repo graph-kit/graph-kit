@@ -76,6 +76,8 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
       selectedEdge: edge.id,
     };
 
+    frameCollector.add(frame({ type: 'consider-edge', ...decision }));
+
     if (!union(edge.source, edge.target)) {
       excludedEdges.push(edge.id);
       frameCollector.add(frame({ type: 'exclude-edge', ...decision }));

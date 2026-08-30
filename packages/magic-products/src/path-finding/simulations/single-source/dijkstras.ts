@@ -45,9 +45,20 @@ export const dijkstras: SingleSourceFunction =
       ...fields,
     });
 
-    const allWeightsNonNegative = !graph.edges.value.some((edge) =>
-      edge.weight.lt(0),
-    );
+    const pathTo = (node: GNode['id']) => {
+      const edges: Arc['edgeId'][] = [];
+      const seen = new Set<GNode['id']>();
+
+      for (let at = node; !seen.has(at);) {
+        seen.add(at);
+        const arc = arrivedOn.get(at);
+        if (!arc) break;
+        edges.push(arc.edgeId);
+        at = arc.from;
+      }
+
+      return edges.reverse();
+    };
 
     frameCollector.add(frame({ type: 'start', source: sourceNodeId }));
 
@@ -70,7 +81,6 @@ export const dijkstras: SingleSourceFunction =
             distance: distances[nearest]!,
             runnerUp:
               runnerUp === undefined ? undefined : holding([runnerUp])[0],
-            allWeightsNonNegative,
             activeNodeId: nearest,
           }),
         );
@@ -84,7 +94,6 @@ export const dijkstras: SingleSourceFunction =
           type: 'settle-node',
           node: nearest,
           distance: distances[nearest]!,
-          allWeightsNonNegative,
           activeNodeId: nearest,
         }),
       );
@@ -97,7 +106,7 @@ export const dijkstras: SingleSourceFunction =
           frame({
             type: 'still-tentative',
             waiting: holding(waiting),
-            via: nearest,
+            via: holding([nearest])[0],
             candidateNodeIds: waiting,
           }),
         );
@@ -109,6 +118,7 @@ export const dijkstras: SingleSourceFunction =
           node: nearest,
           distance: distances[nearest]!,
           edgeCount: leaving.length,
+          basePath: pathTo(nearest),
           activeNodeId: nearest,
         }),
       );
@@ -117,12 +127,28 @@ export const dijkstras: SingleSourceFunction =
         const offered = distances[nearest]!.add(arc.weight);
         const current = distances[arc.to];
 
+        if (settled.has(arc.to)) {
+          frameCollector.add(
+            frame({
+              type: 'skip-settled',
+              edge: arc.edgeId,
+              node: arc.to,
+              distance: current!,
+              activeNodeId: nearest,
+              rejectedEdgeIds: [arc.edgeId],
+            }),
+          );
+          continue;
+        }
+
         frameCollector.add(
           frame({
             type: 'relax-edge',
             edge: arc.edgeId,
             from: arc.from,
             to: arc.to,
+            base: distances[nearest]!,
+            offered,
             activeNodeId: nearest,
             candidateNodeIds: [arc.to],
             relaxingEdgeIds: [arc.edgeId],

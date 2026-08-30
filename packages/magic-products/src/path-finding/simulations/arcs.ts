@@ -43,3 +43,14 @@ export const arcsBySource = (graph: Graph): Record<GNode['id'], Arc[]> => {
   for (const arc of arcs(graph)) bySource[arc.from]?.push(arc);
   return bySource;
 };
+
+/**
+ * the first edge that costs less than nothing, if there is one.
+ *
+ * dijkstra's whole claim is that a settled cost cannot be beaten, and a
+ * negative edge is exactly what beats one. bellman ford and floyd warshall are
+ * built for them, so this is a question about one algorithm rather than about
+ * the graph being wrong
+ */
+export const negativeWeightEdge = (graph: Graph) =>
+  graph.edges.value.find((edge) => edge.weight.lt(0));

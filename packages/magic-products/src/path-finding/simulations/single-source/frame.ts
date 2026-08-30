@@ -28,20 +28,23 @@ type SafeToSettleFrame = {
   node: GNode['id'];
   distance: Fraction;
   runnerUp?: FrontierEntry;
-  allWeightsNonNegative: boolean;
 };
 
 type SettleNodeFrame = {
   type: 'settle-node';
   node: GNode['id'];
   distance: Fraction;
-  allWeightsNonNegative: boolean;
 };
 
 type StillTentativeFrame = {
   type: 'still-tentative';
   waiting: readonly FrontierEntry[];
-  via: GNode['id'];
+  /**
+   * the node just settled, carried with its cost since that is the reason the
+   * others are still open: it is cheaper than they are, so edges out of it can
+   * still land under them
+   */
+  via: FrontierEntry;
 };
 
 type ExploreNodeFrame = {
@@ -49,6 +52,14 @@ type ExploreNodeFrame = {
   node: GNode['id'];
   distance: Fraction;
   edgeCount: number;
+  basePath: readonly GEdge['id'][];
+};
+
+type SkipSettledFrame = {
+  type: 'skip-settled';
+  edge: GEdge['id'];
+  node: GNode['id'];
+  distance: Fraction;
 };
 
 type RelaxEdgeFrame = {
@@ -56,6 +67,8 @@ type RelaxEdgeFrame = {
   edge: GEdge['id'];
   from: GNode['id'];
   to: GNode['id'];
+  base: Fraction;
+  offered: Fraction;
 };
 
 type ImproveDistanceFrame = {
@@ -100,6 +113,7 @@ export type SingleSourceStep =
   | SettleNodeFrame
   | StillTentativeFrame
   | ExploreNodeFrame
+  | SkipSettledFrame
   | RelaxEdgeFrame
   | ImproveDistanceFrame
   | KeepDistanceFrame

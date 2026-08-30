@@ -36,6 +36,24 @@ const highlights = {
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 
+const costBreakdown = (
+  graph: Graph,
+  path: readonly string[],
+  total: string,
+): ExplainerHighlight => ({
+  tooltipLabel: () => {
+    if (path.length === 0)
+      return 'The start node, which costs nothing to reach';
+
+    const edgeName = (id: string) => {
+      const { source, target } = graph.getEdge(id);
+      return `${graph.getNode(source).label}${graph.getNode(target).label}`;
+    };
+
+    return `${path.map(edgeName).join(' + ')} = ${total}, the cheapest path found so far`;
+  },
+});
+
 export const singleSourceExplainer =
   (graph: Graph) =>
   (frame: SingleSourceFrame): Explainer | undefined => {
@@ -85,10 +103,11 @@ export const singleSourceExplainer =
           `{${node}} with a current cost of <${distance}>`,
       );
 
+      const cheaper = `{${frame.via.node}} costs only <${frame.via.distance}> to reach, which is less than`;
+
       if (named.length === 1) {
         return {
-          // TODO: SOMETHING LIKE because the base cost of frame.via is less than the current cost of the unfinalized node
-          content: `${named[0]} cannot yet be finalized. A path through {${frame.via}} could reduce the cost of reaching it`,
+          content: `${named[0]} cannot yet be finalized. ${cheaper} that, so an edge out of {${frame.via.node}}, or a chain of them, could still arrive for less`,
         };
       }
 
@@ -98,7 +117,7 @@ export const singleSourceExplainer =
           : `${named.slice(0, -1).join(', ')}, and ${named[named.length - 1]}`;
 
       return {
-        content: `${list} cannot yet be finalized. A path through {${frame.via}} could reduce the cost of reaching them`,
+        content: `${list} cannot yet be finalized. ${cheaper} any of them, so an edge out of {${frame.via.node}}, or a chain of them, could still arrive for less`,
       };
     }
 
@@ -120,23 +139,29 @@ export const singleSourceExplainer =
           content: `Now follow ${edges} to see the cost of connecting adjacent nodes`,
         };
       }
-      // TODO: should definitaly say where the distances are coming from (explain how they are added up)
       return {
-        content: `Now follow ${edges}, and see whether going through it with a base cost of <${frame.distance}> reduces the current cost of downstream nodes`,
+        content: `Now follow ${edges}, and see whether going through it with a [base cost] of <${frame.distance}> reduces the current cost of downstream nodes`,
+        highlights: [
+          costBreakdown(graph, frame.basePath, String(frame.distance)),
+        ],
+      };
+    }
+
+    if (frame.type === 'skip-settled') {
+      return {
+        content: `{${frame.edge}} is not followed, because {${frame.node}} is already finalized at <${frame.distance}> and no path can beat a finalized cost`,
       };
     }
 
     if (frame.type === 'relax-edge') {
       const { weight } = graph.getEdge(frame.edge);
       return {
-        content: `Pathing through {${frame.edge}} costs <${weight}>`,
+        content: `Pathing through {${frame.edge}} costs <${weight}>, on top of the <${frame.base}> already spent reaching {${frame.from}}, for a total of <${frame.offered}>`,
       };
     }
 
     if (frame.type === 'improve-distance') {
       return {
-        // TODO: should definitaly say where the distances are coming from (explain how they are added up)
-
         content: `<${frame.newDistance}> Beats <${formatDistance(frame.oldDistance)}>, So [Improving] {${frame.node}}`,
         highlights: [highlights.improve],
       };

@@ -16,8 +16,6 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   const disabled = () => {
     if (noNodes()) return 'No nodes in graph';
     if (!node.value) return 'Click a node to start from';
-    if (negativeWeightEdge(graph))
-      return 'Cannot run with negative edge weights';
     return false;
   };
 
@@ -25,8 +23,15 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
     sourceNodeId.value = nullThrows(node.value?.id, 'no source node');
   };
 
+  const dijkstrasDisabled = () => {
+    const shared = disabled();
+    if (shared) return shared;
+    if (!negativeWeightEdge(graph)) return false;
+    return "Dijkstra's cannot run with a negative edge weight. Try Bellman-Ford";
+  };
+
   return [
-    { definition: dijkstras, beforeStarting, disabled },
+    { definition: dijkstras, beforeStarting, disabled: dijkstrasDisabled },
     { definition: bellmanFord, beforeStarting, disabled },
     {
       definition: floydWarshall,

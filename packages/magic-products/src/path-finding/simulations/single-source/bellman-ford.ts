@@ -62,6 +62,8 @@ export const bellmanFord: SingleSourceFunction =
             edge: arc.edgeId,
             from: arc.from,
             to: arc.to,
+            base: reachedFrom,
+            offered,
             activeNodeId: arc.from,
             candidateNodeIds: [arc.to],
             relaxingEdgeIds: [arc.edgeId],

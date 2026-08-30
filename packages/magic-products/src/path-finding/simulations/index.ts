@@ -22,7 +22,10 @@ export const usePathFindingSimulations = (graph: Graph) => {
   return {
     dijkstras: {
       name: "Dijkstra's",
-      ...singleSourceSimulationDefinition(dijkstras, singleSource),
+      ...singleSourceSimulationDefinition(dijkstras, {
+        ...singleSource,
+        requiresNonNegativeWeights: true,
+      }),
     },
     bellmanFord: {
       name: 'Bellman-Ford',

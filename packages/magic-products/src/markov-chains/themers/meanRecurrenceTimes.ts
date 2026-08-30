@@ -23,7 +23,6 @@ export const meanRecurrenceTimesThemer = (
   return graph.theme.createThemer({
     surface: {
       'node.default.text.content': timeText,
-      'node.hover.text.content': timeText,
     },
   });
 };

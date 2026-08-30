@@ -1,7 +1,6 @@
 import { GNode } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
-import { arcs } from '../arcs.ts';
 import { Distance } from '../distance.ts';
 import {
   AllPairsFrame,
@@ -26,10 +25,10 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
     loop is allowed to undercut the zero on the diagonal, which is how the
     cheapest cycle through a node shows up there
   */
-  for (const arc of arcs(graph)) {
-    const known = matrix[arc.from]?.[arc.to];
-    if (known !== undefined && known.lte(arc.weight)) continue;
-    matrix[arc.from][arc.to] = arc.weight;
+  for (const edge of graph.edges.value) {
+    const known = matrix[edge.source]?.[edge.target];
+    if (known !== undefined && known.lte(edge.weight)) continue;
+    matrix[edge.source][edge.target] = edge.weight;
   }
 
   const frame = <T extends AllPairsStep>(
@@ -124,14 +123,14 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
     a node that can reach itself for less than nothing is sitting on a cycle
     that gets cheaper every lap, so no shortest path through it exists
   */
-  const looping = nodeIds.find((id) => matrix[id][id]?.lt(0));
+  const nodeOnNegativeCycle = nodeIds.find((id) => matrix[id][id]?.lt(0));
 
-  if (looping) {
+  if (nodeOnNegativeCycle) {
     frameCollector.add(
       frame({
         type: 'negative-cycle',
-        node: looping,
-        candidateNodeIds: [looping],
+        node: nodeOnNegativeCycle,
+        candidateNodeIds: [nodeOnNegativeCycle],
       }),
     );
   }

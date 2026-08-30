@@ -1,8 +1,8 @@
-import { GNode } from '@magic/shared/graph';
+import { GEdge, GNode } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
-import { Arc, arcsBySource, pathTo } from '../arcs.ts';
 import { Distance } from '../distance.ts';
+import { edgeIdsAlongPathTo, edgesLeavingEachNode } from '../edges.ts';
 import {
   SingleSourceFrame,
   SingleSourceFunction,
@@ -12,23 +12,16 @@ import {
 
 export const dijkstras: SingleSourceFunction =
   (graph, sourceNodeId) => (frameCollector) => {
-    const outgoing = arcsBySource(graph);
-    if (!(sourceNodeId in outgoing)) return;
+    const edgesLeaving = edgesLeavingEachNode(graph);
+    if (!edgesLeaving.has(sourceNodeId)) return;
 
     const distances: Record<GNode['id'], Distance> = {};
     for (const node of graph.nodes.value) distances[node.id] = undefined;
     distances[sourceNodeId] = new Fraction(0);
 
     const settled = new Set<GNode['id']>();
-    /** the arc each node's best distance arrived on, which is what draws the tree */
-    const arrivedOn = new Map<GNode['id'], Arc>();
+    const arrivalEdgeByNode = new Map<GNode['id'], GEdge>();
 
-    /*
-      the frontier is derived rather than kept, so it can never disagree with the
-      distances it is ordered by. a real implementation would reach for a heap;
-      at this size a sort per frame is cheaper than the bookkeeping a heap needs
-      to stay correct as distances improve underneath it
-    */
     const frontier = () =>
       Object.keys(distances)
         .filter((id) => !settled.has(id) && distances[id] !== undefined)
@@ -40,7 +33,7 @@ export const dijkstras: SingleSourceFunction =
       distances: { ...distances },
       settledNodeIds: [...settled],
       pendingNodeIds: frontier(),
-      treeEdgeIds: [...arrivedOn.values()].map((arc) => arc.edgeId),
+      treeEdgeIds: [...arrivalEdgeByNode.values()].map((edge) => edge.id),
       anchorNodeId: sourceNodeId,
       ...fields,
     });
@@ -58,7 +51,7 @@ export const dijkstras: SingleSourceFunction =
         ids.map((node) => ({
           node,
           distance: distances[node]!,
-          path: pathTo(arrivedOn, node),
+          path: edgeIdsAlongPathTo(arrivalEdgeByNode, node),
         }));
 
       if (settleCount > 0) {
@@ -68,7 +61,7 @@ export const dijkstras: SingleSourceFunction =
             type: 'safe-to-settle',
             node: nearest,
             distance: distances[nearest]!,
-            path: pathTo(arrivedOn, nearest),
+            path: edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
             runnerUp:
               runnerUp === undefined ? undefined : holding([runnerUp])[0],
             activeNodeId: nearest,
@@ -84,20 +77,13 @@ export const dijkstras: SingleSourceFunction =
           type: 'settle-node',
           node: nearest,
           distance: distances[nearest]!,
-          path: pathTo(arrivedOn, nearest),
+          path: edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
           activeNodeId: nearest,
         }),
       );
 
-      const leaving = outgoing[nearest] ?? [];
+      const leaving = edgesLeaving.get(nearest) ?? [];
 
-      /*
-        only nodes that cost strictly more than the one just settled are still
-        waiting on it. a node tied with it is already as cheap as it can get,
-        since a path leaving `nearest` can only add non negative weight on top
-        of a cost that already matches, so naming it here would claim a doubt
-        that does not exist
-      */
       const waiting = queue
         .slice(1)
         .filter((id) => distances[id]!.gt(distances[nearest]!));
@@ -118,26 +104,26 @@ export const dijkstras: SingleSourceFunction =
           type: 'explore-node',
           node: nearest,
           distance: distances[nearest]!,
-          edges: leaving.map((arc) => arc.edgeId),
-          basePath: pathTo(arrivedOn, nearest),
+          edges: leaving.map((edge) => edge.id),
+          basePath: edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
           activeNodeId: nearest,
         }),
       );
 
-      for (const arc of leaving) {
-        const offered = distances[nearest]!.add(arc.weight);
-        const current = distances[arc.to];
+      for (const edge of leaving) {
+        const offered = distances[nearest]!.add(edge.weight);
+        const current = distances[edge.target];
 
-        if (settled.has(arc.to)) {
+        if (settled.has(edge.target)) {
           frameCollector.add(
             frame({
               type: 'skip-settled',
-              edge: arc.edgeId,
-              node: arc.to,
+              edge: edge.id,
+              node: edge.target,
               distance: current!,
-              path: pathTo(arrivedOn, arc.to),
+              path: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target),
               activeNodeId: nearest,
-              rejectedEdgeIds: [arc.edgeId],
+              rejectedEdgeIds: [edge.id],
             }),
           );
           continue;
@@ -146,14 +132,14 @@ export const dijkstras: SingleSourceFunction =
         frameCollector.add(
           frame({
             type: 'relax-edge',
-            edge: arc.edgeId,
-            from: arc.from,
-            to: arc.to,
+            edge: edge.id,
+            from: edge.source,
+            to: edge.target,
             base: distances[nearest]!,
             offered,
             activeNodeId: nearest,
-            candidateNodeIds: [arc.to],
-            relaxingEdgeIds: [arc.edgeId],
+            candidateNodeIds: [edge.target],
+            relaxingEdgeIds: [edge.id],
           }),
         );
 
@@ -161,48 +147,42 @@ export const dijkstras: SingleSourceFunction =
           frameCollector.add(
             frame({
               type: 'keep-distance',
-              node: arc.to,
+              node: edge.target,
               distance: current,
               offered,
-              edge: arc.edgeId,
-              basePath: pathTo(arrivedOn, nearest),
-              currentPath: pathTo(arrivedOn, arc.to),
+              edge: edge.id,
+              basePath: edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
+              currentPath: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target),
               activeNodeId: nearest,
-              candidateNodeIds: [arc.to],
-              rejectedEdgeIds: [arc.edgeId],
+              candidateNodeIds: [edge.target],
+              rejectedEdgeIds: [edge.id],
             }),
           );
           continue;
         }
 
-        /*
-          a settled neighbor is relaxed like any other rather than skipped. with
-          non negative weights it always keeps its distance, so the skip would
-          save nothing; with a negative weight it improves, and watching a
-          finalized node move is the whole reason dijkstra bans them
-        */
-        // read before the arc is replaced, or the route being beaten is already
-        // gone, and the route the new cost is built on already rewritten
-        const oldPath = pathTo(arrivedOn, arc.to);
-        const basePath = pathTo(arrivedOn, nearest);
+        // read before the arrival edge is replaced, or the route being beaten is
+        // already gone, and the route the new cost is built on already rewritten
+        const oldPath = edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target);
+        const basePath = edgeIdsAlongPathTo(arrivalEdgeByNode, nearest);
 
-        distances[arc.to] = offered;
-        arrivedOn.set(arc.to, arc);
+        distances[edge.target] = offered;
+        arrivalEdgeByNode.set(edge.target, edge);
 
         frameCollector.add(
           frame({
             type: 'improve-distance',
-            node: arc.to,
+            node: edge.target,
             oldDistance: current,
             newDistance: offered,
             via: nearest,
             base: distances[nearest]!,
             basePath,
-            edge: arc.edgeId,
+            edge: edge.id,
             oldPath,
             activeNodeId: nearest,
-            candidateNodeIds: [arc.to],
-            relaxingEdgeIds: [arc.edgeId],
+            candidateNodeIds: [edge.target],
+            relaxingEdgeIds: [edge.id],
           }),
         );
       }

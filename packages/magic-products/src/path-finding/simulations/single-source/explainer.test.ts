@@ -26,7 +26,6 @@ const makeGraph = (nodeIds: string[], edgeSpecs: EdgeSpec[]) => {
   return {
     nodes: { value: nodeIds.map((id) => ({ id })) },
     edges: { value: edges },
-    metadata: { directed: true },
     getNode: (id: string) => ({ id, label: id.toUpperCase() }),
     getEdge: (id: string) => edges.find((edge) => edge.id === id),
     theme: {

@@ -21,9 +21,9 @@ export const usePathFindingSimulations = (graph: Graph) => {
 
   return {
     dijkstras: singleSourceSimulationDefinition(dijkstras, {
-        ...singleSource,
-        requiresNonNegativeWeights: true,
-      }),
+      ...singleSource,
+      requiresNonNegativeWeights: true,
+    }),
     bellmanFord: singleSourceSimulationDefinition(bellmanFord, singleSource),
     floydWarshall: allPairsSimulationDefinition(floydWarshall, { graph }),
     sourceNodeId,

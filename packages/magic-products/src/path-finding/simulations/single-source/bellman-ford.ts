@@ -1,8 +1,8 @@
-import { GNode } from '@magic/shared/graph';
+import { GEdge, GNode } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
-import { Arc, arcs, pathTo } from '../arcs.ts';
 import { Distance } from '../distance.ts';
+import { edgeIdsAlongPathTo } from '../edges.ts';
 import {
   SingleSourceFrame,
   SingleSourceFunction,
@@ -15,14 +15,13 @@ export const bellmanFord: SingleSourceFunction =
     const nodeIds = graph.nodes.value.map((node) => node.id);
     if (!nodeIds.includes(sourceNodeId)) return;
 
-    const allArcs = arcs(graph);
+    const allEdges = graph.edges.value;
 
     const distances: Record<GNode['id'], Distance> = {};
     for (const id of nodeIds) distances[id] = undefined;
     distances[sourceNodeId] = new Fraction(0);
 
-    /** the arc each node's best distance arrived on, which is what draws the tree */
-    const arrivedOn = new Map<GNode['id'], Arc>();
+    const arrivalEdgeByNode = new Map<GNode['id'], GEdge>();
 
     /*
       no frontier and no settled set: bellman ford has neither. it sweeps every
@@ -33,7 +32,7 @@ export const bellmanFord: SingleSourceFunction =
       fields: T & SingleSourceHighlights,
     ): SingleSourceFrame => ({
       distances: { ...distances },
-      treeEdgeIds: [...arrivedOn.values()].map((arc) => arc.edgeId),
+      treeEdgeIds: [...arrivalEdgeByNode.values()].map((edge) => edge.id),
       anchorNodeId: sourceNodeId,
       ...fields,
     });
@@ -47,26 +46,26 @@ export const bellmanFord: SingleSourceFunction =
 
       let improvedThisPass = false;
 
-      for (const arc of allArcs) {
-        const reachedFrom = distances[arc.from];
-        // an arc leaving a node we cannot reach yet offers nothing, and a frame
-        // per such arc would bury the passes that do move under ones that cannot
+      for (const edge of allEdges) {
+        const reachedFrom = distances[edge.source];
+        // an edge leaving a node we cannot reach yet offers nothing, and a frame
+        // per such edge would bury the passes that do move under ones that cannot
         if (reachedFrom === undefined) continue;
 
-        const offered = reachedFrom.add(arc.weight);
-        const current = distances[arc.to];
+        const offered = reachedFrom.add(edge.weight);
+        const current = distances[edge.target];
 
         frameCollector.add(
           frame({
             type: 'relax-edge',
-            edge: arc.edgeId,
-            from: arc.from,
-            to: arc.to,
+            edge: edge.id,
+            from: edge.source,
+            to: edge.target,
             base: reachedFrom,
             offered,
-            activeNodeId: arc.from,
-            candidateNodeIds: [arc.to],
-            relaxingEdgeIds: [arc.edgeId],
+            activeNodeId: edge.source,
+            candidateNodeIds: [edge.target],
+            relaxingEdgeIds: [edge.id],
           }),
         );
 
@@ -74,43 +73,43 @@ export const bellmanFord: SingleSourceFunction =
           frameCollector.add(
             frame({
               type: 'keep-distance',
-              node: arc.to,
+              node: edge.target,
               distance: current,
               offered,
-              edge: arc.edgeId,
-              basePath: pathTo(arrivedOn, arc.from),
-              currentPath: pathTo(arrivedOn, arc.to),
-              activeNodeId: arc.from,
-              candidateNodeIds: [arc.to],
-              rejectedEdgeIds: [arc.edgeId],
+              edge: edge.id,
+              basePath: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.source),
+              currentPath: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target),
+              activeNodeId: edge.source,
+              candidateNodeIds: [edge.target],
+              rejectedEdgeIds: [edge.id],
             }),
           );
           continue;
         }
 
-        // read before the arc is replaced, or the route being beaten is already
-        // gone, and the route the new cost is built on already rewritten
-        const oldPath = pathTo(arrivedOn, arc.to);
-        const basePath = pathTo(arrivedOn, arc.from);
+        // read before the arrival edge is replaced, or the route being beaten is
+        // already gone, and the route the new cost is built on already rewritten
+        const oldPath = edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target);
+        const basePath = edgeIdsAlongPathTo(arrivalEdgeByNode, edge.source);
 
-        distances[arc.to] = offered;
-        arrivedOn.set(arc.to, arc);
+        distances[edge.target] = offered;
+        arrivalEdgeByNode.set(edge.target, edge);
         improvedThisPass = true;
 
         frameCollector.add(
           frame({
             type: 'improve-distance',
-            node: arc.to,
+            node: edge.target,
             oldDistance: current,
             newDistance: offered,
-            via: arc.from,
+            via: edge.source,
             base: reachedFrom,
             basePath,
-            edge: arc.edgeId,
+            edge: edge.id,
             oldPath,
-            activeNodeId: arc.from,
-            candidateNodeIds: [arc.to],
-            relaxingEdgeIds: [arc.edgeId],
+            activeNodeId: edge.source,
+            candidateNodeIds: [edge.target],
+            relaxingEdgeIds: [edge.id],
           }),
         );
       }
@@ -123,24 +122,24 @@ export const bellmanFord: SingleSourceFunction =
 
     /*
       the extra sweep. after n-1 passes every shortest path that exists has been
-      found, so an arc that still improves proves a cycle a walker could loop
-      forever to keep getting cheaper. one such arc is proof enough
+      found, so an edge that still improves proves a cycle a walker could loop
+      forever to keep getting cheaper. one such edge is proof enough
     */
-    const looping = allArcs.find((arc) => {
-      const reachedFrom = distances[arc.from];
+    const stillImprovingEdge = allEdges.find((edge) => {
+      const reachedFrom = distances[edge.source];
       if (reachedFrom === undefined) return false;
-      const current = distances[arc.to];
-      return current === undefined || reachedFrom.add(arc.weight).lt(current);
+      const current = distances[edge.target];
+      return current === undefined || reachedFrom.add(edge.weight).lt(current);
     });
 
-    if (looping) {
+    if (stillImprovingEdge) {
       frameCollector.add(
         frame({
           type: 'negative-cycle',
-          node: looping.to,
-          activeNodeId: looping.from,
-          candidateNodeIds: [looping.to],
-          relaxingEdgeIds: [looping.edgeId],
+          node: stillImprovingEdge.target,
+          activeNodeId: stillImprovingEdge.source,
+          candidateNodeIds: [stillImprovingEdge.target],
+          relaxingEdgeIds: [stillImprovingEdge.id],
         }),
       );
       frameCollector.add(frame({ type: 'end' }));

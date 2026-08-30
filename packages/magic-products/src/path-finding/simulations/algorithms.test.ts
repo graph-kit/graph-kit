@@ -10,15 +10,11 @@ import { dijkstras } from './single-source/dijkstras.ts';
 type EdgeSpec = [string, string, number | string];
 
 /*
-  the algorithms read three things off a graph and nothing else: the node list,
-  the edge list, and whether it is directed. standing those up by hand keeps a
-  shortest path test from needing a canvas to run on
+  the algorithms read two things off a graph and nothing else: the node list and
+  the edge list. standing those up by hand keeps a shortest path test from
+  needing a canvas to run on
 */
-const makeGraph = (
-  nodeIds: string[],
-  edges: EdgeSpec[],
-  directed = true,
-): any => ({
+const makeGraph = (nodeIds: string[], edges: EdgeSpec[]): any => ({
   nodes: { value: nodeIds.map((id) => ({ id })) },
   edges: {
     value: edges.map(([source, target, weight], index) => ({
@@ -28,7 +24,6 @@ const makeGraph = (
       weight: new Fraction(weight),
     })),
   },
-  metadata: { directed },
 });
 
 // generic over the frame, so a single source run and an all pairs run each keep
@@ -90,20 +85,19 @@ describe('dijkstras', () => {
     });
   });
 
-  it('walks undirected edges both ways', () => {
+  it('does not walk an edge backwards', () => {
     const graph = makeGraph(
       ['a', 'b', 'c'],
       [
         ['a', 'b', 2],
         ['c', 'b', 3],
       ],
-      false,
     );
     const frames = collect(dijkstras(graph, 'a'));
     expect(readDistances(last(frames).distances)).toEqual({
       a: '0',
       b: '2',
-      c: '5',
+      c: '∞',
     });
   });
 

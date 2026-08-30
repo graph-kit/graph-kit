@@ -21,11 +21,7 @@ type EndFrame = {
 type FrontierEntry = {
   node: GNode['id'];
   distance: Fraction;
-  /**
-   * the edges of the route the distance arrived on. every cost the explainer
-   * writes points at the route behind it, so a frontier entry carries its own
-   * rather than leaving the reader to guess which way the number was measured
-   */
+  // the edges of the route the distance arrived on.
   path: readonly GEdge['id'][];
 };
 
@@ -33,7 +29,6 @@ type SafeToSettleFrame = {
   type: 'safe-to-settle';
   node: GNode['id'];
   distance: Fraction;
-  /** the edges of the route `distance` arrived on */
   path: readonly GEdge['id'][];
   runnerUp?: FrontierEntry;
 };
@@ -42,18 +37,13 @@ type SettleNodeFrame = {
   type: 'settle-node';
   node: GNode['id'];
   distance: Fraction;
-  /** the edges of the route `distance` arrived on, empty for the start node */
   path: readonly GEdge['id'][];
 };
 
 type StillTentativeFrame = {
   type: 'still-tentative';
   waiting: readonly FrontierEntry[];
-  /**
-   * the node just settled, carried with its cost since that is the reason the
-   * others are still open: it is cheaper than they are, so edges out of it can
-   * still land under them
-   */
+  // the node it went through to desitination
   via: FrontierEntry;
 };
 
@@ -61,11 +51,7 @@ type ExploreNodeFrame = {
   type: 'explore-node';
   node: GNode['id'];
   distance: Fraction;
-  /**
-   * the edges about to be followed, in the order they will be. arcs rather than
-   * neighbours: a parallel pair is two edges to check, and an undirected edge
-   * is one of them from whichever end the walk arrives at
-   */
+  /** the edges about to be followed, in the order they will be */
   edges: readonly GEdge['id'][];
   basePath: readonly GEdge['id'][];
 };
@@ -93,22 +79,15 @@ type ImproveDistanceFrame = {
   node: GNode['id'];
   oldDistance: Distance;
   newDistance: Fraction;
-  /** the node the cheaper route arrives from, and what it already cost to stand there */
+  /** the node the cheaper route arrives from */
   via: GNode['id'];
   base: Fraction;
   /**
-   * the edges of the route to `via`, which is the half of the sum `base` names.
-   * the route the new distance takes is this plus `edge`, so both numbers in
-   * the sentence can be hovered as paths rather than read as bare totals
+   * the edges of the route to `via`
    */
   basePath: readonly GEdge['id'][];
-  /** the edge that closes the new route, whose weight is added to the base */
+  /** the edge that closes the new route */
   edge: GEdge['id'];
-  /**
-   * the edges of the route the old distance came from, empty when there was
-   * none. the number being beaten is a sum too, and a reader who cannot see
-   * what it was made of has nothing to weigh the new one against
-   */
   oldPath: readonly GEdge['id'][];
 };
 
@@ -117,14 +96,11 @@ type KeepDistanceFrame = {
   node: GNode['id'];
   distance: Fraction;
   offered: Fraction;
-  /** the edge that would have closed the offered route, whose weight `offered` ends with */
+  /** the edge that would have closed the offered route */
   edge: GEdge['id'];
-  /** the edges of the route to the node the offer came from, so `offered` is this plus `edge` */
+  /** the edges of the route to the node the offer came from*/
   basePath: readonly GEdge['id'][];
-  /**
-   * the edges of the route `distance` came from, the one the offer failed to
-   * beat. the two routes are the whole comparison, so both are worth pointing at
-   */
+  // edges the distance value came from
   currentPath: readonly GEdge['id'][];
 };
 

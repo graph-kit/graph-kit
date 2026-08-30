@@ -16,7 +16,7 @@ import {
 
 import { Ref, ref } from 'vue';
 
-import { negativeWeightEdge } from '../arcs.ts';
+import { findNegativeWeightEdge } from '../edges.ts';
 import Distances from './Distances.vue';
 import Frontier from './Frontier.vue';
 import { createDistanceThemer } from './createDistanceThemer.ts';
@@ -168,7 +168,7 @@ export const singleSourceSimulationDefinition = (
     .custom(() => {
       if (!options.requiresNonNegativeWeights) return;
 
-      const negative = negativeWeightEdge(options.graph);
+      const negative = findNegativeWeightEdge(options.graph);
       if (!negative) return;
 
       return {

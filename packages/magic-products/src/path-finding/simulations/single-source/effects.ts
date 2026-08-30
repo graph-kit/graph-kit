@@ -157,7 +157,7 @@ const singleSourceEffects = (
 export const singleSourceSimulationDefinition = (
   algorithm: SingleSourceFunction,
   options: SingleSourceOptions,
-): Omit<SimulationDefinition<SingleSourceFrame>, 'name'> => ({
+): SimulationDefinition<SingleSourceFrame> => ({
   guard: new SimulationGuardBuilder(options.graph)
     /*
       checked again while the run is on screen, not only before it starts: an

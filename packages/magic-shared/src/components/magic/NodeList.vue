@@ -228,7 +228,8 @@
   .panel-enter-from,
   .panel-appear-from,
   .panel-leave-to {
-    transform: translateX(calc(var(--panel-exit) * (100% + 1.5rem)));
+    /* yona: adjusted this from (100% + 1.5rem) to (100% + 6rem) so it travels over the vertical space of the vertical AnnotationPanel if annotations are open */
+    transform: translateX(calc(var(--panel-exit) * (100% + 6rem)));
   }
 
   /*

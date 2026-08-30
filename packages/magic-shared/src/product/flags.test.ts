@@ -5,8 +5,10 @@ import { ProductControls, TransitField } from './types.ts';
 
 const transit: TransitField = { encode: () => ({}), decode: () => {} };
 
-const hosting: Pick<ProductControls, 'transit'> = { transit };
-const stateless: Pick<ProductControls, 'transit'> = {};
+type Host = Pick<ProductControls, 'transit' | 'isContent'>;
+
+const hosting: Host = { transit, isContent: () => true };
+const stateless: Host = {};
 
 const warnings = () => vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -20,6 +22,7 @@ describe('resolveShellFlags', () => {
       annotations: true,
       linkSharing: true,
       adjustAnimationSpeed: false,
+      jumpToContent: true,
     });
   });
 
@@ -92,6 +95,23 @@ describe('resolveShellFlags', () => {
       resolveShellFlags({ localStorage: false }, stateless);
 
       expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('without host isContent', () => {
+    it('forces off jump to content', () => {
+      const flags = resolveShellFlags({}, { transit });
+
+      expect(flags.jumpToContent).toBe(false);
+    });
+
+    it('overrules a product that asked for it anyway', () => {
+      const warn = warnings();
+
+      const flags = resolveShellFlags({ jumpToContent: true }, { transit });
+
+      expect(flags.jumpToContent).toBe(false);
+      expect(warn.mock.calls[0]?.[0]).toContain('jumpToContent');
     });
   });
 

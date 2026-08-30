@@ -17,6 +17,7 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
 
   return [
     {
+      name: "Prim's",
       definition: prims,
       beforeStarting: () => {
         startNodeId.value = nullThrows(node.value?.id, 'no start node');
@@ -27,6 +28,10 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
         return false;
       },
     },
-    { definition: kruskals, disabled: () => noNodes() && 'No nodes in graph' },
+    {
+      name: "Kruskal's",
+      definition: kruskals,
+      disabled: () => noNodes() && 'No nodes in graph',
+    },
   ];
 };

@@ -1,12 +1,13 @@
 import { Graph } from '../graph/types.ts';
 import { useGraph } from '../graph/useGraph.ts';
 import { resolveShellFlags } from '../product/flags.ts';
-import { ProductControls, Shell } from '../product/types.ts';
+import { ContentPredicate, ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
 import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
 import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
+import { graphTransitCompression } from './transit-compression.ts';
 import { GraphShellOptions } from './types.ts';
 
 /** adapts a graph to the shell's controls interface, see {@link useShell} */
@@ -20,16 +21,23 @@ export const useGraphShell = (
 
   const draggedNodes = trackDraggedNodes(graph);
 
-  const flags = resolveShellFlags(options.flags, graph);
+  const isContent: ContentPredicate = ({ id }) =>
+    graph.isNode(id) || graph.isEdge(id);
+
+  const flags = resolveShellFlags(options.flags, {
+    transit: { ...graph.transit, compression: graphTransitCompression },
+    isContent,
+  });
 
   if (!flags.history) graph.history.lifecycle.disable();
   if (!flags.annotations) graph.annotations.lifecycle.disable();
 
   const host: ProductControls = {
     surface: graph.surface,
-    transit: graph.transit,
+    transit: { ...graph.transit, compression: graphTransitCompression },
     annotations: flags.annotations ? graph.annotations : undefined,
     history: flags.history ? graph.history : undefined,
+    isContent,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
     multiplayer: {

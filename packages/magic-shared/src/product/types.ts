@@ -1,9 +1,11 @@
+import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
 import { ReadonlyEventHub } from '@core/events/createEventHub';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { Tier } from '@multiplayer/protocol/tiers';
 import { BasicColorMode } from '@vueuse/core';
+import { DeepReadonly } from 'ts-essentials';
 import * as Y from 'yjs';
 
 import { ComputedRef } from 'vue';
@@ -20,13 +22,22 @@ import { DebugControls } from '../ui/debug/useDebugState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
 import { ShellFlagOptions, ShellFlags } from './flags.ts';
+import { JumpToContentControls } from './internals/useJumpToContent.ts';
 import { LocalStorageControls } from './internals/useShellLocalStorage.ts';
 import { ProductId } from './manifests/index.ts';
 import { ProductManifest } from './manifests/types.ts';
 
+/** turns an encoded payload into a string light enough to fit somewhere tight, like a link */
+export type TransitCompression = {
+  compress: (payload: any) => string;
+  decompress: (text: string) => any;
+};
+
 export type TransitField = {
   encode: () => any;
   decode: (payload: any) => void;
+  /** absent when the host has nothing better than JSON to offer, see {@link TransitCompression} */
+  compression?: TransitCompression;
 };
 
 /** a product's drag, in the three moments the room cares about */
@@ -78,7 +89,14 @@ export type ProductControls = {
   onAppearanceChanged: (color: BasicColorMode) => void;
   multiplayer: MultiplayerControls;
   history?: HistoryField;
+  /** absent when the product has no content worth jumping back to, see {@link ShellFlags} */
+  isContent?: ContentPredicate;
 };
+
+/** which canvas elements are the product's content, and which are painted alongside it */
+export type ContentPredicate = (
+  element: DeepReadonly<CanvasElement>,
+) => boolean;
 
 /** what a product does as the local user takes a tier on and gives it up */
 export type TierBehavior = {
@@ -165,6 +183,8 @@ export type Shell = {
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
   localStorage: LocalStorageControls;
+  /** absent when the host named no content, see {@link ProductControls.isContent} */
+  jumpToContent?: JumpToContentControls;
   /**
    * The room connection, or undefined if
    * 1. product has opted-out of multiplayer in its manifest or

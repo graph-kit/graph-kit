@@ -1,20 +1,44 @@
 <script setup lang="ts">
-  import VStack from '../../components/layout/VStack.vue';
-  import Well from '../../components/layout/Well.vue';
-  import BrushWeightPicker from './panel/BrushWeightPicker.vue';
-  import ColorPicker from './panel/ColorPicker.vue';
-  import PanelActions from './panel/PanelActions.vue';
-  import ToolPicker from './panel/ToolPicker.vue';
+  import { useResizeObserver } from '@vueuse/core';
+
+  import { onMounted, ref, useTemplateRef } from 'vue';
+
+  import AnnotationPanelHorizontal from './AnnotationPanelHorizontal.vue';
+  import AnnotationPanelVertical from './AnnotationPanelVertical.vue';
+
+  const panel = useTemplateRef('panel');
+
+  const selfElement = () => {
+    const element = panel.value?.$el;
+    return element instanceof HTMLElement ? element : undefined;
+  };
+
+  /** a slot can there but render nothing, so we must use actual width */
+  const isSharingSpace = ref(false);
+
+  const measure = () => {
+    const self = selfElement();
+    const slot = self?.parentElement;
+    if (!self || !slot) return;
+
+    isSharingSpace.value = [...slot.children].some(
+      (neighbor) =>
+        neighbor !== self && neighbor.getBoundingClientRect().width > 0,
+    );
+  };
+
+  onMounted(measure);
+
+  useResizeObserver(() => selfElement()?.parentElement, measure);
 </script>
 
 <template>
-  <Well class="w-72 p-4">
-    <VStack :gap="4">
-      <ToolPicker />
-      <ColorPicker />
-      <BrushWeightPicker />
-      <div class="h-px w-full rounded-full bg-black/10 dark:bg-white/15"></div>
-      <PanelActions />
-    </VStack>
-  </Well>
+  <AnnotationPanelVertical
+    v-if="isSharingSpace"
+    ref="panel"
+  />
+  <AnnotationPanelHorizontal
+    v-else
+    ref="panel"
+  />
 </template>

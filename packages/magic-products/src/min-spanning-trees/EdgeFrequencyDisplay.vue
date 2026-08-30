@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import Well from '@magic/shared/Well';
+  import { ExplainerText } from '@magic/shared/explainer';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
 
   import { computed, ref } from 'vue';
@@ -13,7 +13,7 @@
 
   const { totalMsts, frequencyOf } = useEdgeFrequency(graph);
 
-  const edgeId = ref();
+  const edgeId = ref<string>();
 
   graph.surface.events.elements.subscribe(
     'onHoveredElementChange',
@@ -24,12 +24,18 @@
     },
   );
 
-  const displayString = computed(
-    () => `In ${frequencyOf(edgeId.value)} of ${totalMsts.value} Minimum Spanning
-    ${isGraphConnected.value ? 'Trees' : 'Forests'}`,
-  );
+  const displayString = computed(() => {
+    if (!edgeId.value) return;
+    return `{${edgeId.value}} Is In ${frequencyOf(edgeId.value)}/${totalMsts.value} Of This Graphs Minimum Spanning
+    ${isGraphConnected.value ? 'Trees' : 'Forests'}`;
+  });
 </script>
 
 <template>
-  <Well v-if="edgeId">{{ displayString }}</Well>
+  <ExplainerText
+    v-if="displayString"
+    :explainer="{
+      content: displayString,
+    }"
+  />
 </template>

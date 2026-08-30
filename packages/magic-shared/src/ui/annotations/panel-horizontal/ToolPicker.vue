@@ -1,19 +1,13 @@
 <script setup lang="ts">
-  import { ANNOTATION_MODES, AnnotationMode } from '@core/annotations/index';
-  import { mdiEraser, mdiLaserPointer, mdiPencil } from '@mdi/js';
+  import { ANNOTATION_MODES } from '@core/annotations/index';
 
   import Icon from '../../../components/icon/Icon.vue';
   import HStack from '../../../components/layout/HStack.vue';
   import ToggleButton from '../../../components/toggle-button/ToggleButton.vue';
+  import { MODE_TO_TOOL } from '../panel-shared/options.ts';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
 
   const controls = useAnnotationControls();
-
-  const modeToTool: Record<AnnotationMode, { icon: string; name: string }> = {
-    drawing: { icon: mdiPencil, name: 'Draw' },
-    erasing: { icon: mdiEraser, name: 'Erase' },
-    laser: { icon: mdiLaserPointer, name: 'Laser' },
-  };
 </script>
 
 <template>
@@ -26,10 +20,10 @@
       @click="controls.setMode(mode)"
     >
       <Icon
-        :path="modeToTool[mode].icon"
+        :path="MODE_TO_TOOL[mode].icon"
         :size="20"
       />
-      <span class="text-sm leading-4">{{ modeToTool[mode].name }}</span>
+      <span class="text-sm leading-4">{{ MODE_TO_TOOL[mode].name }}</span>
     </ToggleButton>
   </HStack>
 </template>

@@ -1,9 +1,11 @@
+import { nullThrows } from '@core/utils/assert';
 import { describe, expect, it } from 'vitest';
 
 import { defineComponent, isProxy, nextTick } from 'vue';
 
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
+import { SimulationDefinition } from './types.ts';
 import { useSimulationState } from './useSimulationState.ts';
 
 const SlotComponent = defineComponent({ template: '<div />' });
@@ -11,7 +13,6 @@ const SlotComponent = defineComponent({ template: '<div />' });
 type Frame = { step: number };
 
 const definition = (frameCount = 3) => ({
-  name: 'test-simulation',
   collectFrames: (collector: { add: (frame: Frame) => void }) => {
     for (let i = 0; i < frameCount; i++) collector.add({ step: i });
   },
@@ -57,13 +58,13 @@ describe('useSimulationState', () => {
     simulation.start(definition(3));
     await nextTick();
 
-    expect(simulation.current.value?.frames).toHaveLength(3);
+    expect(simulation.current.value?.frameCount).toBe(3);
 
     simulation.current.value?.playhead.next();
     expect(simulation.current.value?.playhead.position).toBe(1);
 
     simulation.invalidate();
-    expect(simulation.current.value?.frames).toHaveLength(3);
+    expect(simulation.current.value?.frameCount).toBe(3);
     expect(simulation.current.value?.playhead.position).toBe(1);
   });
 
@@ -90,5 +91,74 @@ describe('useSimulationState', () => {
     simulation.stop();
     await nextTick();
     expect(componentSlots.entries.value).toHaveLength(0);
+  });
+});
+
+describe('useSimulationState with a generated frame source', () => {
+  const generated = () => ({
+    frameAt: (position: number): Frame => ({ step: position }),
+    setup: () => undefined,
+  });
+
+  it('reports an unbounded frame count and never reaches a last frame', async () => {
+    const { simulation } = harness();
+
+    simulation.start(generated());
+    await nextTick();
+
+    const sim = nullThrows(simulation.current.value, 'no simulation');
+    expect(sim.frameCount).toBe(Infinity);
+    expect(sim.playhead.isFirst()).toBe(true);
+    expect(sim.playhead.isLast()).toBe(false);
+
+    for (let i = 0; i < 500; i++) sim.playhead.next();
+
+    expect(sim.playhead.position).toBe(500);
+    expect(sim.playhead.isLast()).toBe(false);
+    expect(sim.getFrame(sim.playhead.position)).toEqual({ step: 500 });
+  });
+
+  it('seeks to any non-negative position', async () => {
+    const { simulation } = harness();
+
+    simulation.start(generated());
+    await nextTick();
+
+    const sim = nullThrows(simulation.current.value, 'no simulation');
+    sim.playhead.seek(1000);
+    expect(sim.playhead.position).toBe(1000);
+    expect(() => sim.playhead.seek(-1)).toThrow();
+  });
+
+  it('keeps its position across a recompute and re-reads the frame', async () => {
+    const { simulation } = harness();
+
+    let offset = 0;
+    simulation.start({
+      frameAt: (position: number): Frame => ({ step: position + offset }),
+      setup: () => undefined,
+    });
+    await nextTick();
+
+    simulation.current.value?.playhead.seek(7);
+    expect(simulation.current.value?.getFrame(7)).toEqual({ step: 7 });
+
+    offset = 100;
+    simulation.invalidate();
+
+    expect(simulation.current.value?.playhead.position).toBe(7);
+    expect(simulation.current.value?.getFrame(7)).toEqual({ step: 107 });
+  });
+
+  it('rejects a definition supplying both frame sources', () => {
+    // @ts-expect-error a definition supplies exactly one frame source
+    const both: SimulationDefinition<Frame> = {
+      collectFrames: (collector: { add: (frame: Frame) => void }) =>
+        collector.add({ step: 0 }),
+      frameAt: (position: number): Frame => ({ step: position }),
+      setup: () => undefined,
+    };
+
+    expect(both).toBeDefined();
   });
 });

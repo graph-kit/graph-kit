@@ -29,10 +29,15 @@
   const iconButtonClasses =
     'bg-transparent dark:bg-transparent px-8 rounded-full';
 
+  // sims declared with frameAt never end, so there is no progress to show
+  const isBounded = computed(() =>
+    Number.isFinite(simulation.value.frameCount),
+  );
+
   const percentageComplete = computed(() => {
-    const totalFrames = simulation.value.frames.length;
-    const playhead = simulation.value.playhead.position;
-    return (playhead / (totalFrames - 1)) * 100;
+    const lastPosition = simulation.value.frameCount - 1;
+    if (lastPosition <= 0) return 100;
+    return (simulation.value.playhead.position / lastPosition) * 100;
   });
 
   const shell = useProvidedShell();
@@ -70,7 +75,10 @@
       <SimulationExplainerText />
     </div>
 
-    <div class="w-90 h-4">
+    <div
+      v-if="isBounded"
+      class="w-90 h-4"
+    >
       <div class="absolute rounded-full">
         <div
           :class="

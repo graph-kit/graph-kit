@@ -184,7 +184,6 @@ export const primsSimulationDefinition = (
   prims: PrimsFunction,
   options: PrimsSimulationOptions,
 ): SimulationDefinition<PrimsFrame> => ({
-  name: "Prim's",
   guard: new SimulationGuardBuilder(options.graph)
     .custom(() => {
       const startNodeInNodes = options.graph.nodes.value.some(
@@ -300,7 +299,6 @@ export const kruskalsSimulationDefinition = (
   kruskals: KruskalsFunction,
   options: KruskalsSimulationOptions,
 ): SimulationDefinition<KruskalsFrame> => ({
-  name: "Kruskal's",
   guard: new SimulationGuardBuilder(options.graph)
     .minNodes(2)
     .custom(() => {

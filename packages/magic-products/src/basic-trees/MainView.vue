@@ -41,7 +41,7 @@
     lensChips: (graph) => {
       const root = () => {
         const sim = shell.simulation.current.value;
-        const frame: AVLFrame | undefined = sim?.frames.at(
+        const frame: AVLFrame | undefined = sim?.getFrame(
           sim.playhead.position,
         );
         return frame?.root ?? tree.root;
@@ -57,14 +57,14 @@
             ...balanceFactorTheme,
           },
           tooltipLabel: definitions.balanceFactor,
-          name: () => 'Balance Factor: ' + getBalanceFactor(root()),
+          name: () => 'Root Balance Factor: ' + getBalanceFactor(root()),
         },
         {
           lens: {
             id: 'tree-height',
             ...treeHeightTheme,
           },
-          name: () => 'Tree Height: ' + getTreeHeight(root()),
+          name: () => 'Root Height: ' + getTreeHeight(root()),
         },
       ];
     },

@@ -8,6 +8,6 @@ export const useCurrentFrame = <Frame = any>() => {
   return computed(() => {
     const simulation = shell.simulation.current.value;
     if (!simulation) return;
-    return simulation.frames[simulation.playhead.position];
+    return simulation.getFrame(simulation.playhead.position);
   });
 };

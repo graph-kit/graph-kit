@@ -23,7 +23,6 @@ export const periodicityThemer = (
   return graph.theme.createThemer({
     surface: {
       'node.default.text.content': periodText,
-      'node.hover.text.content': periodText,
     },
   });
 };

@@ -66,7 +66,7 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
       components: [
         {
           component: EdgeFrequencyDisplay,
-          position: 'center-left',
+          position: 'bottom-middle',
         },
       ],
     },

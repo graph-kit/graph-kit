@@ -10,8 +10,10 @@ export type FrameCollector<Frame> = {
 
 export type SetupContext<Frame> = {
   stopSimulation: () => void;
-  frames: ComputedRef<Frame[]>;
   currentFrame: ComputedRef<Frame>;
+  getFrame: (position: number) => Frame;
+  /** `Infinity` for simulations declared with `frameAt`. */
+  frameCount: ComputedRef<number>;
 };
 
 export type SimulationLifecycle<Frame> = {
@@ -31,6 +33,13 @@ export type FrameCollectorFn<Frame> = (
   collector: FrameCollector<Frame>,
 ) => void;
 
+/** Must return a frame for every number from 0 to infinity. */
+export type FrameGeneratorFn<Frame> = (playheadPosition: number) => Frame;
+
+type FrameSourceDefinition<Frame> =
+  | { collectFrames: FrameCollectorFn<Frame>; frameAt?: never }
+  | { frameAt: FrameGeneratorFn<Frame>; collectFrames?: never };
+
 export type SimulationDefinition<Frame> = {
   /**
    * Runs before frames are (re)computed on every graph structure
@@ -40,12 +49,7 @@ export type SimulationDefinition<Frame> = {
    */
   guard?: GuardCheck;
 
-  collectFrames: FrameCollectorFn<Frame>;
   setup: (context: SetupContext<Frame>) => SimulationEffects<Frame> | undefined;
 
-  // TODO add mutations (add, remove, move etc) that may occur at a given step, not just structure change
   recomputeFramesOnStructureChange?: boolean;
-
-  /** user facing name of the simulation */
-  name: string;
-};
+} & FrameSourceDefinition<Frame>;

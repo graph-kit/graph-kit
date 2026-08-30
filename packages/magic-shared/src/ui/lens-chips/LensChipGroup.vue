@@ -2,7 +2,7 @@
   import { nullThrows } from '@core/utils/assert';
   import { useMounted } from '@vueuse/core';
 
-  import { computed, ref, watch } from 'vue';
+  import { computed, onUnmounted, ref, watch } from 'vue';
 
   import OverflowRow from '../../components/layout/OverflowRow.vue';
   import Well from '../../components/layout/Well.vue';
@@ -48,6 +48,17 @@
     hoveredLensId.value = undefined;
     hoverSuppressedLensId.value = undefined;
   };
+
+  const clearActiveChip = () => {
+    pinnedLensId.value = undefined;
+    hoveredLensId.value = undefined;
+    hoverSuppressedLensId.value = undefined;
+  };
+
+  shell.simulation.events.subscribe('onSimulationStarted', clearActiveChip);
+  onUnmounted(() =>
+    shell.simulation.events.unsubscribe('onSimulationStarted', clearActiveChip),
+  );
 
   const displayedChipId = computed(() => {
     const hovered =

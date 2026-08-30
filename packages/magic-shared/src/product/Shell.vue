@@ -11,10 +11,13 @@
   const pointerEvents = useDisablePointerEvents(shell);
 
   const slotSharedClasses = computed(
-    () => `absolute flex flex-col gap-2 ${pointerEvents.value}`,
+    () => `absolute flex gap-2 ${pointerEvents.value}`,
+  );
+  const slotStackClasses = computed(
+    () => `${slotSharedClasses.value} flex-col`,
   );
   const slotCenterClasses = computed(
-    () => `${slotSharedClasses.value} top-1/2 -translate-y-1/2`,
+    () => `${slotSharedClasses.value} flex-row top-1/2 -translate-y-1/2`,
   );
   const alignStart = 'items-start';
   const alignEnd = 'items-end';
@@ -35,14 +38,14 @@
     class="fixed inset-0 overflow-hidden pointer-events-none"
   >
     <ComponentSlots
-      :top-left="`${slotSharedClasses} ${alignStart} top-6 left-6`"
-      :top-middle="`${slotSharedClasses} ${alignCenter} top-6 left-1/2 -translate-x-1/2`"
-      :top-right="`${slotSharedClasses} ${alignEnd} top-6 right-6`"
-      :center-left="`${slotCenterClasses} ${alignStart} left-6`"
-      :center-right="`${slotCenterClasses} ${alignEnd} right-6`"
-      :bottom-left="`${slotSharedClasses} ${alignStart} bottom-6 left-6`"
-      :bottom-middle="`${slotSharedClasses} ${alignCenter} bottom-6 left-1/2 -translate-x-1/2`"
-      :bottom-right="`${slotSharedClasses} ${alignEnd} bottom-6 right-6`"
+      :top-left="`${slotStackClasses} ${alignStart} top-6 left-6`"
+      :top-middle="`${slotStackClasses} ${alignCenter} top-6 left-1/2 -translate-x-1/2`"
+      :top-right="`${slotStackClasses} ${alignEnd} top-6 right-6`"
+      :center-left="`${slotCenterClasses} ${alignCenter} left-6`"
+      :center-right="`${slotCenterClasses} ${alignCenter} right-6`"
+      :bottom-left="`${slotStackClasses} ${alignStart} bottom-6 left-6`"
+      :bottom-middle="`${slotStackClasses} ${alignCenter} bottom-6 left-1/2 -translate-x-1/2`"
+      :bottom-right="`${slotStackClasses} ${alignEnd} bottom-6 right-6`"
     />
   </div>
 

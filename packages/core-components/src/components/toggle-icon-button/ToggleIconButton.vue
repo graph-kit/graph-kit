@@ -10,10 +10,11 @@
   import { type ButtonVariant, buttonVariants } from '../button/variants.ts';
   import Icon from '../icon/Icon.vue';
   import Tooltip from '../tooltip/Tooltip.vue';
+  import { type TooltipOptions } from '../tooltip/types.ts';
 
   defineOptions({ inheritAttrs: false });
 
-  interface Props {
+  interface Props extends Omit<TooltipOptions, 'class'> {
     // the icon to render, e.g. an mdi path from '@mdi/js'
     path: string;
     /**
@@ -73,7 +74,11 @@
 </script>
 
 <template>
-  <Tooltip :label="disabledReason ?? label">
+  <Tooltip
+    :label="disabledReason ?? label"
+    :side="side"
+    :delay="delay"
+  >
     <template #trigger>
       <Toggle
         :model-value="pressed"

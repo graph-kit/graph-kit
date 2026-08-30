@@ -1,3 +1,4 @@
+export { compressAnnotations, decompressAnnotations } from './compression.ts';
 export { createAnnotations } from './createAnnotations.ts';
 export {
   ANNOTATION_IN_PROGRESS_PRIORITY,

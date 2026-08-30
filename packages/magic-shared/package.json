@@ -76,6 +76,10 @@
       "types": "./dist/types/components/dropdown/DropdownItem.vue.d.ts",
       "default": "./src/components/dropdown/DropdownItem.vue"
     },
+    "./Switch": {
+      "types": "./dist/types/components/switch/Switch.vue.d.ts",
+      "default": "./src/components/switch/Switch.vue"
+    },
     "./ToggleButton": {
       "types": "./dist/types/components/toggle-button/ToggleButton.vue.d.ts",
       "default": "./src/components/toggle-button/ToggleButton.vue"
@@ -205,6 +209,7 @@
   },
   "devDependencies": {
     "nuxt": "^4.1.2",
+    "ts-essentials": "^10.2.0",
     "vue": "catalog:"
   }
 }

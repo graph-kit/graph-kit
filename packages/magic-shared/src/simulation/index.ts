@@ -1,5 +1,6 @@
 export type {
   FrameCollector,
+  FrameGeneratorFn,
   SimulationDefinition,
   SetupContext,
   SimulationEffects,

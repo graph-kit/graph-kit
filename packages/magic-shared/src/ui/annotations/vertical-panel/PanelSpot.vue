@@ -8,12 +8,10 @@
   import Tooltip from '../../../components/tooltip/Tooltip.vue';
   import { spot } from './classes.ts';
 
-  // the dropdown hands its trigger props down as attrs, and they belong on the button
-  // rather than on the tooltip this component happens to be rooted in
   defineOptions({ inheritAttrs: false });
 
   const props = defineProps<{
-    /** the accessible name, since the spot renders state rather than text */
+    /** the accessible name */
     label: string;
     disabled?: boolean;
   }>();
@@ -30,14 +28,10 @@
     ),
   );
 
-  // a menu hands this button its trigger props, so it arrives as a boolean rather
-  // than the string the DOM would hold
   const isExpanded = computed(
     () => attrs['aria-expanded'] === true || attrs['aria-expanded'] === 'true',
   );
 
-  // whatever this spot opened says more about it than the tooltip can, and the
-  // accessible name is on the button itself, so nothing is lost by standing down
   const tooltipLabel = computed(() =>
     isExpanded.value ? undefined : props.label,
   );

@@ -2,6 +2,7 @@ import { nullThrows } from '@core/utils/assert';
 import { GraphSimulationButtonOption } from '@magic/shared/graph-shell';
 import { useFocusedNode } from '@magic/shared/utilities';
 
+import { negativeWeightEdge } from './simulations/arcs.ts';
 import { usePathFindingSimulations } from './simulations/index.ts';
 
 export const simulationButtons: GraphSimulationButtonOption = (graph) => {
@@ -15,6 +16,8 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   const disabled = () => {
     if (noNodes()) return 'No nodes in graph';
     if (!node.value) return 'Click a node to start from';
+    if (negativeWeightEdge(graph))
+      return 'Cannot run with negative edge weights';
     return false;
   };
 

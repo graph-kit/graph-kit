@@ -16,6 +16,7 @@ import {
 
 import { Ref, ref } from 'vue';
 
+import { negativeWeightEdge } from '../arcs.ts';
 import Distances from './Distances.vue';
 import Frontier from './Frontier.vue';
 import { createDistanceThemer } from './createDistanceThemer.ts';
@@ -58,6 +59,7 @@ export type SourceNodeId = Ref<GNode['id'] | undefined>;
 export type SingleSourceOptions = {
   graph: Graph;
   sourceNodeId: SourceNodeId;
+  requiresNonNegativeWeights?: boolean;
 };
 
 const singleSourceEffects = (
@@ -139,6 +141,25 @@ export const singleSourceSimulationDefinition = (
   options: SingleSourceOptions,
 ): Omit<SimulationDefinition<SingleSourceFrame>, 'name'> => ({
   guard: new SimulationGuardBuilder(options.graph)
+    /*
+      checked again while the run is on screen, not only before it starts: an
+      edge weight change counts as a structure change, so a weight edited into
+      the negative mid run stops the simulation rather than quietly invalidating
+      everything already settled
+    */
+    .custom(() => {
+      if (!options.requiresNonNegativeWeights) return;
+
+      const negative = negativeWeightEdge(options.graph);
+      if (!negative) return;
+
+      return {
+        id: 'negative-weight',
+        explainer: {
+          content: `{${negative.id}} costs less than <0>. Dijkstra's finalizes a cost as soon as it is the cheapest, which a negative edge can undercut later, so it cannot run here. Bellman-Ford can`,
+        },
+      };
+    })
     .custom(() => {
       const sourceInNodes = options.graph.nodes.value.some(
         (node) => node.id === options.sourceNodeId.value,

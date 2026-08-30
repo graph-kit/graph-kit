@@ -92,10 +92,8 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
     if (treeEdges.length === nodeIds.length - 1) break;
   }
 
-  // the tree spans every node it can reach, so whatever never got its turn is
-  // excluded alongside the edges that would have closed a loop
-  const decided = new Set([...treeEdges, ...excludedEdges]);
-  excludedEdges.push(...sortedEdgeIds.filter((id) => !decided.has(id)));
+  // an edge the tree completed before reaching was never decided, so it is left
+  // out of both lists rather than counted as excluded
   considerFrom = sortedEdgeIds.length;
 
   const unreachable =

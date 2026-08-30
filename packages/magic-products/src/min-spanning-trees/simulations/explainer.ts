@@ -163,7 +163,7 @@ export const kruskalsExplainer =
   (frame: KruskalsFrame): Explainer | undefined => {
     if (frame.type === 'start') {
       return {
-        content: `Sort All Edges By Weight, Cheapest First, Adding It To [In Consideration]`,
+        content: `Sort All Edges By Weight, Cheapest First, Adding I Them To [In Consideration]`,
         highlights: [kruskalsHighlights.considering],
       };
     }

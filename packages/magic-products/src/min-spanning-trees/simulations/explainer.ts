@@ -65,6 +65,10 @@ const kruskalsHighlights = {
       'Edges ruled out because both ends are already connected to each other',
     ...componentSlotHighlight(kruskalsSlotIds.excluded),
   },
+  components: {
+    tooltipLabel:
+      'A group of nodes already reachable from each other. Every node starts as its own component, and each edge added merges two of them',
+  },
   forest: {
     tooltipLabel: 'A forest is multiple trees, since the graph is disconnected',
   },
@@ -179,22 +183,23 @@ export const kruskalsExplainer =
     }
 
     if (frame.type === 'accept-edge') {
-      const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `{${frame.edge}} is the cheapest edge left that connects two parts of the graph still separate, so it's [Added] to the ${isConnected ? '[Tree]' : '[Forest]'}`,
-        highlights: isConnected
-          ? [kruskalsHighlights.added, kruskalsHighlights.tree]
-          : [kruskalsHighlights.added, kruskalsHighlights.forest],
+        content: `Next [In Consideration] Is {${frame.edge}}, Which Connects Two [Components], So It's [Added]`,
+        highlights: [
+          kruskalsHighlights.considering,
+          kruskalsHighlights.components,
+          kruskalsHighlights.added,
+        ],
       };
     }
 
     if (frame.type === 'exclude-edge') {
-      const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `{${frame.edge}} is [Excluded] because both ends are already joined by the ${isConnected ? '[Tree]' : '[Forest]'}, so taking it would create a cycle`,
-        highlights: isConnected
-          ? [kruskalsHighlights.excluded, kruskalsHighlights.tree]
-          : [kruskalsHighlights.excluded, kruskalsHighlights.forest],
+        content: `Next Down [In Consideration], {${frame.edge}} Would Create A Cycle, So It's [Excluded]`,
+        highlights: [
+          kruskalsHighlights.considering,
+          kruskalsHighlights.excluded,
+        ],
       };
     }
 

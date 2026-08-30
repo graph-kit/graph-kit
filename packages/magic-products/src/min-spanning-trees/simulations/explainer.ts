@@ -65,8 +65,7 @@ const kruskalsHighlights = {
     ...componentSlotHighlight(kruskalsSlotIds.considering),
   },
   excluded: {
-    tooltipLabel:
-      'Edges ruled out because both ends are already connected to each other',
+    tooltipLabel: 'Edges left out of the minimum spanning tree',
     ...componentSlotHighlight(kruskalsSlotIds.excluded),
   },
   components: {
@@ -74,7 +73,7 @@ const kruskalsHighlights = {
       'A group of nodes already reachable from each other. Every node starts as its own component, and each edge added merges two of them',
   },
   forest: {
-    tooltipLabel: 'A forest is multiple trees, since the graph is disconnected',
+    tooltipLabel: 'Multiple trees, since the graph is disconnected',
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 

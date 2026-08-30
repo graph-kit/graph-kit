@@ -14,16 +14,11 @@ export const kruskalsSlotIds = {
   excluded: 'min-spanning-trees/kruskals/excluded',
 } as const;
 
-const describeEdge = (graph: Graph, edgeId: string) => {
-  const edge = graph.getEdge(edgeId);
-  return `{${edge.id}}`;
-};
-
 const listEdges = (graph: Graph, edgeIds: readonly string[]) => {
   const described = edgeIds
     .map((id) => graph.getEdge(id))
     .sort((a, b) => a.weight.compare(b.weight))
-    .map((edge) => describeEdge(graph, edge.id));
+    .map((edge) => `{${edge.id}}`);
   if (described.length <= 1) return described.join('');
   return `${described.slice(0, -1).join(', ')} and ${described.at(-1)}`;
 };
@@ -45,36 +40,35 @@ const sharedHighlights = {
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 
-const considerAndExcludeHighlights = (slotIds: {
-  considering: string;
-  excluded: string;
-}) =>
-  ({
-    considering: {
-      tooltipLabel:
-        'Every edge that connects a tree node to a non-tree node is currently eligible to be added to the minimum spanning tree',
-      ...componentSlotHighlight(slotIds.considering),
-    },
-    excluded: {
-      tooltipLabel:
-        'Edges ruled out because both ends are already in the minimum spanning tree and adding it would create a loop',
-      ...componentSlotHighlight(slotIds.excluded),
-    },
-  }) as const satisfies Record<string, ExplainerHighlight>;
-
 const highlights = {
   ...sharedHighlights,
-  ...considerAndExcludeHighlights(primsSlotIds),
-};
+  considering: {
+    tooltipLabel:
+      'Every edge that connects a tree node to a non-tree node is currently eligible to be added to the minimum spanning tree',
+    ...componentSlotHighlight(primsSlotIds.considering),
+  },
+  excluded: {
+    tooltipLabel:
+      'Edges ruled out because both ends are already in the minimum spanning tree and adding it would create a loop',
+    ...componentSlotHighlight(primsSlotIds.excluded),
+  },
+} as const satisfies Record<string, ExplainerHighlight>;
 
 const kruskalsHighlights = {
   ...sharedHighlights,
-  ...considerAndExcludeHighlights(kruskalsSlotIds),
-  forest: {
-    tooltipLabel:
-      'The edges already in the minimum spanning forest. A forest consists of multiple minimum spanning trees since the graph is disconnected',
+  considering: {
+    tooltipLabel: 'Every edge, cheapest first, waiting to be looked at',
+    ...componentSlotHighlight(kruskalsSlotIds.considering),
   },
-};
+  excluded: {
+    tooltipLabel:
+      'Edges ruled out because both ends are already connected to each other',
+    ...componentSlotHighlight(kruskalsSlotIds.excluded),
+  },
+  forest: {
+    tooltipLabel: 'A forest is multiple trees, since the graph is disconnected',
+  },
+} as const satisfies Record<string, ExplainerHighlight>;
 
 export const primsExplainer =
   (graph: Graph) =>
@@ -109,7 +103,7 @@ export const primsExplainer =
     }
 
     if (frame.type === 'select-edge') {
-      const winner = describeEdge(graph, frame.edge);
+      const winner = `{${frame.edge}}`;
 
       if (frame.tiedEdges) {
         const tied = listEdges(graph, frame.tiedEdges);
@@ -133,7 +127,7 @@ export const primsExplainer =
       const excluded = listEdges(graph, frame.edges);
       const plural = frame.edges.length > 1;
       return {
-        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} [Excluded] because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would cause a loop`,
+        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} [Excluded] because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would create a cycle`,
         highlights: [highlights.excluded, highlights.tree],
       };
     }
@@ -162,7 +156,7 @@ export const kruskalsExplainer =
   (frame: KruskalsFrame): Explainer | undefined => {
     if (frame.type === 'start') {
       return {
-        content: `Every edge is sorted by weight, cheapest first, and added to the [Considering] list`,
+        content: `Sort All Edged By Weight, Cheapest First, Adding It To [In Consideration]`,
         highlights: [kruskalsHighlights.considering],
       };
     }
@@ -173,48 +167,34 @@ export const kruskalsExplainer =
         .map((id) => graph.getEdge(id).weight)
         .reduce((sum, weight) => sum.add(weight), new Fraction(0));
       const isConnected = graph.characteristics.connected.value.isConnected;
+      const reach = isConnected
+        ? 'Every node is connected'
+        : 'Every node that can be reached is connected';
       return {
-        content: `Done! The ${isConnected ? '[Tree]' : '[Forest]'} is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of <${cost}>`,
+        content: `Done! ${reach}, so the ${isConnected ? '[Tree]' : '[Forest]'} is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of <${cost}>`,
         highlights: isConnected
           ? [kruskalsHighlights.tree]
           : [kruskalsHighlights.forest],
       };
     }
 
-    if (frame.type === 'consider-edge') {
-      return {
-        content: `Considering ${describeEdge(graph, frame.edge)}, the cheapest of the edges [In Consideration]`,
-        highlights: [kruskalsHighlights.considering],
-      };
-    }
-
     if (frame.type === 'accept-edge') {
       const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `${describeEdge(graph, frame.edge)} connects two parts of the graph that were still separate, so it's [Added] to the ${isConnected ? '[Tree]' : '[Forest]'}`,
+        content: `{${frame.edge}} is the cheapest edge left that connects two parts of the graph still separate, so it's [Added] to the ${isConnected ? '[Tree]' : '[Forest]'}`,
         highlights: isConnected
           ? [kruskalsHighlights.added, kruskalsHighlights.tree]
           : [kruskalsHighlights.added, kruskalsHighlights.forest],
       };
     }
 
-    if (frame.type === 'reject-edge') {
-      const excluded = describeEdge(graph, frame.edge);
+    if (frame.type === 'exclude-edge') {
       const isConnected = graph.characteristics.connected.value.isConnected;
       return {
-        content: `Edge ${excluded} is [Excluded] because both ends are already in the ${isConnected ? '[Tree]' : '[Forest]'}, therefore it would cause a loop`,
+        content: `{${frame.edge}} is [Excluded] because both ends are already joined by the ${isConnected ? '[Tree]' : '[Forest]'}, so taking it would create a cycle`,
         highlights: isConnected
           ? [kruskalsHighlights.excluded, kruskalsHighlights.tree]
           : [kruskalsHighlights.excluded, kruskalsHighlights.forest],
-      };
-    }
-
-    if (frame.type === 'all-connected') {
-      const count = frame.edges.length;
-      const plural = count > 1;
-      return {
-        content: `Every node is already connected, so the ${count} remaining edge${plural ? 's are' : ' is'} [Excluded] without needing a decision`,
-        highlights: [kruskalsHighlights.excluded],
       };
     }
 

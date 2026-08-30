@@ -205,9 +205,11 @@
     "lz-string": "^1.5.0",
     "mathlive": "^0.110.0",
     "socket.io-client": "^4.8.1",
-    "yjs": "^13.6.32"
+    "yjs": "^13.6.32",
+    "tinycolor2": "catalog:"
   },
   "devDependencies": {
+    "@types/tinycolor2": "catalog:",
     "nuxt": "^4.1.2",
     "ts-essentials": "^10.2.0",
     "vue": "catalog:"

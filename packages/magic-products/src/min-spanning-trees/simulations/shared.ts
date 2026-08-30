@@ -67,33 +67,28 @@ export type PrimsSimulationOptions = {
   startNodeId: StartNodeId;
 };
 
-// shared by both algorithms: an edge ruled out (closes a loop) fades instead
-// of disappearing, so it stays visible as "seen and rejected"
-const createExcludedEdgeThemer = (graph: Graph) => {
-  const excludedIds = new Set<string>();
-  const fadeExcluded = (edge: CoreEdge, resolveUnderneath: () => Color) => {
-    if (!excludedIds.has(edge.id)) return;
-    // TODO: does this have a default constant somewhere?
-    return tinycolor(resolveUnderneath()).setAlpha(0.25).toHex8String();
+// shared by both algorithms: an edge the algorithm is not acting on fades
+// instead of disappearing, so it stays legible without competing for attention
+const createFadedEdgeThemer = (graph: Graph) => {
+  const fadedIds = new Set<string>();
+  const fade = (edge: CoreEdge, resolveUnderneath: () => Color) => {
+    if (!fadedIds.has(edge.id)) return;
+    return tinycolor(resolveUnderneath()).setAlpha(0.35).toHex8String();
   };
   const themer = graph.theme.createThemer({
     surface: {
-      'edge.default.color': fadeExcluded,
-      'edge.default.text.color': fadeExcluded,
-      'edge.hover.color': fadeExcluded,
-      'edge.hover.text.color': fadeExcluded,
-    },
-    focus: {
-      'edge.focus.color': fadeExcluded,
-      'edge.focus.text.color': fadeExcluded,
+      'edge.default.color': fade,
+      'edge.default.text.color': fade,
+      'edge.hover.color': fade,
+      'edge.hover.text.color': fade,
     },
   });
 
   return {
     themer,
     setIds: (ids: readonly string[]) => {
-      excludedIds.clear();
-      for (const id of ids) excludedIds.add(id);
+      fadedIds.clear();
+      for (const id of ids) fadedIds.add(id);
     },
   };
 };
@@ -112,7 +107,7 @@ const primsEffects = (
   const crossingEdge = createEdgeIdThemer(graph, edgeRoles.crossing);
   // colored solid before excludedEdgeIds picks them up and fades them
   const excludingEdge = createEdgeIdThemer(graph, 'rejected');
-  const excludedEdge = createExcludedEdgeThemer(graph);
+  const excludedEdge = createFadedEdgeThemer(graph);
 
   const themers = [
     frontier,
@@ -208,22 +203,21 @@ export const primsSimulationDefinition = (
   setup: (context) => primsEffects(options.graph, context),
 });
 
-// active = the endpoints of the edge currently under consideration
-// settled = already grown into the tree
-type KruskalsNodeConcept = 'active' | 'settled';
+// active = the endpoints of the edge being added to the tree right now. a node
+// the tree already reached goes back to reading as a plain node
+type KruskalsNodeConcept = 'active';
 
 const kruskalsNodeRoles = {
   active: 'active',
-  settled: 'settled',
 } as const satisfies Record<KruskalsNodeConcept, NodeRole>;
 
-// crossing = the edge currently under consideration
-// tree = an edge accepted into the tree so far
-type KruskalsEdgeConcept = 'crossing' | 'tree';
+// crossing = the edge being added to the tree right now
+// excluding = the edge being ruled out right now
+type KruskalsEdgeConcept = 'crossing' | 'excluding';
 
 const kruskalsEdgeRoles = {
   crossing: 'crossing',
-  tree: 'tree',
+  excluding: 'rejected',
 } as const satisfies Record<KruskalsEdgeConcept, EdgeRole>;
 
 export type KruskalsSimulationOptions = {
@@ -235,33 +229,37 @@ const kruskalsEffects = (
   context: SetupContext<KruskalsFrame>,
 ): SimulationEffects<KruskalsFrame> => {
   const active = createNodeIdThemer(graph, kruskalsNodeRoles.active);
-  const settled = createNodeIdThemer(graph, kruskalsNodeRoles.settled);
 
-  const tree = createEdgeIdThemer(graph, kruskalsEdgeRoles.tree);
   const crossingEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.crossing);
-  // colored solid before excludedEdgeIds picks it up and fades it
-  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
-  const excludedEdge = createExcludedEdgeThemer(graph);
+  const excludingEdge = createEdgeIdThemer(graph, kruskalsEdgeRoles.excluding);
+  // an edge the tree has not taken stays faded, so the tree reads as the edges
+  // left at full strength rather than as a color of its own
+  const untakenEdge = createFadedEdgeThemer(graph);
 
-  // activation order is paint order (later wins on overlapping ids), so
-  // active/crossing must activate after settled/tree to stay visible when a
-  // node or edge is both newly touched and already part of the tree
-  const themers = [
-    settled,
-    active,
-    tree,
-    crossingEdge,
-    excludingEdge,
-    excludedEdge,
-  ];
+  // activation order is paint order (later wins on overlapping ids), so the two
+  // decision themers must activate after untaken to stay solid on the frame
+  // that decides their edge
+  const themers = [active, untakenEdge, crossingEdge, excludingEdge];
 
   const syncToFrame = (frame: KruskalsFrame) => {
+    const treeEdgeIds = new Set(frame.treeEdgeIds);
+    const decidedEdge =
+      frame.type === 'accept-edge' || frame.type === 'exclude-edge'
+        ? frame.edge
+        : undefined;
+
     active.setIds(frame.activeNodeIds ?? []);
-    settled.setIds(frame.treeNodeIds);
-    tree.setIds(frame.treeEdgeIds);
-    crossingEdge.setId(frame.activeEdgeId);
-    excludingEdge.setId(frame.excludingEdgeId);
-    excludedEdge.setIds(frame.dimmedEdgeIds);
+    // the edge under decision holds its color for the frame it is decided on,
+    // then falls back to the tree/faded split like every other edge
+    untakenEdge.setIds(
+      graph.edges.value
+        .filter((edge) => !treeEdgeIds.has(edge.id) && edge.id !== decidedEdge)
+        .map((edge) => edge.id),
+    );
+    crossingEdge.setId(frame.type === 'accept-edge' ? decidedEdge : undefined);
+    excludingEdge.setId(
+      frame.type === 'exclude-edge' ? decidedEdge : undefined,
+    );
   };
 
   const lens: Lens = {

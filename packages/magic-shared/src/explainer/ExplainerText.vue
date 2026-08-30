@@ -35,7 +35,9 @@
 </script>
 
 <template>
-  <div class="text-black dark:text-white text-2xl font-bold text-center">
+  <div
+    class="text-black dark:text-white text-2xl leading-9 font-bold text-center"
+  >
     <template
       v-for="segment in segments"
       :key="segment.id"

@@ -120,6 +120,42 @@ describe('dijkstras', () => {
   });
 
   /*
+    the frame names the nodes that cannot be finalized yet because the node just
+    settled is cheaper than they are. a node tied with it is not one of them: no
+    path out of a node costing the same can come back for less
+  */
+  it('leaves nodes tied with the settled node out of still-tentative', () => {
+    // b and c both cost 2, so settling b leaves only d genuinely waiting
+    const graph = makeGraph(
+      ['a', 'b', 'c', 'd'],
+      [
+        ['a', 'b', 2],
+        ['a', 'c', 2],
+        ['a', 'd', 6],
+        ['b', 'd', 1],
+      ],
+    );
+    const frames = collect(dijkstras(graph, 'a'));
+    const tentative = frames.filter((f) => f.type === 'still-tentative');
+
+    const waitingAfter = (node: string) =>
+      tentative
+        .filter((f) => 'via' in f && f.via.node === node)
+        .flatMap((f) => ('waiting' in f ? f.waiting : []))
+        .map((entry) => entry.node);
+
+    // c ties with b at 2, so settling b leaves d as the only node in doubt
+    expect(waitingAfter('b')).toEqual(['d']);
+    // and the same holds every time the frame is raised, not just that once
+    for (const frame of tentative) {
+      if (!('waiting' in frame) || !('via' in frame)) continue;
+      for (const entry of frame.waiting) {
+        expect(entry.distance.gt(frame.via.distance)).toBe(true);
+      }
+    }
+  });
+
+  /*
     the reason distances are fractions and not floats. three thirds are exactly
     one, but in floats they fall a hair short of it, which is enough to make an
     equal length detour look cheaper than the path it ties with

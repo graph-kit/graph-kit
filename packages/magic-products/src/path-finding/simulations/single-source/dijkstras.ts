@@ -84,7 +84,17 @@ export const dijkstras: SingleSourceFunction =
       );
 
       const leaving = outgoing[nearest] ?? [];
-      const waiting = queue.slice(1);
+
+      /*
+        only nodes that cost strictly more than the one just settled are still
+        waiting on it. a node tied with it is already as cheap as it can get,
+        since a path leaving `nearest` can only add non negative weight on top
+        of a cost that already matches, so naming it here would claim a doubt
+        that does not exist
+      */
+      const waiting = queue
+        .slice(1)
+        .filter((id) => distances[id]!.gt(distances[nearest]!));
 
       if (waiting.length > 0 && leaving.length > 0) {
         frameCollector.add(

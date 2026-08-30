@@ -84,6 +84,12 @@ type ImproveDistanceFrame = {
   /** the node the cheaper route arrives from, and what it already cost to stand there */
   via: GNode['id'];
   base: Fraction;
+  /**
+   * the edges of the route to `via`, which is the half of the sum `base` names.
+   * the route the new distance takes is this plus `edge`, so both numbers in
+   * the sentence can be hovered as paths rather than read as bare totals
+   */
+  basePath: readonly GEdge['id'][];
   /** the edge that closes the new route, whose weight is added to the base */
   edge: GEdge['id'];
   /**
@@ -99,6 +105,15 @@ type KeepDistanceFrame = {
   node: GNode['id'];
   distance: Fraction;
   offered: Fraction;
+  /** the edge that would have closed the offered route, whose weight `offered` ends with */
+  edge: GEdge['id'];
+  /** the edges of the route to the node the offer came from, so `offered` is this plus `edge` */
+  basePath: readonly GEdge['id'][];
+  /**
+   * the edges of the route `distance` came from, the one the offer failed to
+   * beat. the two routes are the whole comparison, so both are worth pointing at
+   */
+  currentPath: readonly GEdge['id'][];
 };
 
 type UnreachableFrame = {

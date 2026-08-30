@@ -77,6 +77,9 @@ export const bellmanFord: SingleSourceFunction =
               node: arc.to,
               distance: current,
               offered,
+              edge: arc.edgeId,
+              basePath: pathTo(arrivedOn, arc.from),
+              currentPath: pathTo(arrivedOn, arc.to),
               activeNodeId: arc.from,
               candidateNodeIds: [arc.to],
               rejectedEdgeIds: [arc.edgeId],
@@ -85,8 +88,10 @@ export const bellmanFord: SingleSourceFunction =
           continue;
         }
 
-        // read before the arc is replaced, or the route being beaten is already gone
+        // read before the arc is replaced, or the route being beaten is already
+        // gone, and the route the new cost is built on already rewritten
         const oldPath = pathTo(arrivedOn, arc.to);
+        const basePath = pathTo(arrivedOn, arc.from);
 
         distances[arc.to] = offered;
         arrivedOn.set(arc.to, arc);
@@ -100,6 +105,7 @@ export const bellmanFord: SingleSourceFunction =
             newDistance: offered,
             via: arc.from,
             base: reachedFrom,
+            basePath,
             edge: arc.edgeId,
             oldPath,
             activeNodeId: arc.from,

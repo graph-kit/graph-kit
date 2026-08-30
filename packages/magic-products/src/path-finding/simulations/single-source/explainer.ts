@@ -1,4 +1,9 @@
-import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
+import { displayNumber } from '@core/utils/math';
+import {
+  Explainer,
+  ExplainerHighlight,
+  createEdgeSetHighlight,
+} from '@magic/shared/explainer';
 import { GEdge, GNode, Graph } from '@magic/shared/graph';
 
 import { SingleSourceFrame } from './frame.ts';
@@ -36,25 +41,6 @@ const highlights = {
   ),
 } as const satisfies Record<string, ExplainerHighlight>;
 
-/**
- * spells a distance back out as the sum it came from, so a reader can see what
- * the number is made of rather than being handed a total to trust
- */
-const costBreakdown = (
-  graph: Graph,
-  path: readonly GEdge['id'][],
-  total: string,
-): ExplainerHighlight => ({
-  tooltipLabel: () => {
-    const edgeName = (id: GEdge['id']) => {
-      const { source, target } = graph.getEdge(id);
-      return `${graph.getNode(source).label}${graph.getNode(target).label}`;
-    };
-
-    return `${path.map(edgeName).join(' + ')} = ${total}, the cost from the start node to this node along the cheapest path found so far`;
-  },
-});
-
 /** `a`, `a and b`, `a, b, and c` */
 const listOf = (items: readonly string[]) => {
   if (items.length <= 2) return items.join(' and ');
@@ -90,8 +76,12 @@ export const singleSourceExplainer =
 
         return {
           content: `${mustPass} ${waiting}`,
-          // one per [Frontier] mention, the second only appears alongside a runner up
-          highlights: [highlights.frontier, highlights.frontier],
+          // one per [Frontier] mention, and the second is only mentioned when
+          // there is a runner up to name
+          highlights:
+            frame.runnerUp === undefined
+              ? [highlights.frontier]
+              : [highlights.frontier, highlights.frontier],
         };
       }
 
@@ -124,17 +114,27 @@ export const singleSourceExplainer =
           };
         }
 
-        const named = frame.edges.map(ref);
+        /*
+          past one edge the sentence names the count rather than the edges, and
+          hands the count a highlight that lights all of them up on the graph.
+          the list it replaces grew with the node's degree and said nothing the
+          graph was not already able to show
+        */
+        const single = frame.edges.length === 1;
 
-        const follow =
-          named.length === 1
-            ? `Now follow the single edge leaving ${ref(frame.node)}, ${named[0]}`
-            : `Now follow each of the ${named.length} edges leaving ${ref(frame.node)}, ${listOf(named)}`;
+        const follow = single
+          ? `Now follow the ${ref(frame.edges[0])}`
+          : `Now follow each of the [${frame.edges.length} edges] leaving ${ref(frame.node)}`;
+
+        const followHighlights = single
+          ? []
+          : [createEdgeSetHighlight(graph, frame.edges)];
 
         //  only for the start node we dont ask how going through "0 cost" will improve the cost of other nodes
         if (frame.node === frame.anchorNodeId) {
           return {
             content: `${follow}, to see the cost of connecting adjacent nodes`,
+            highlights: followHighlights,
           };
         }
 
@@ -142,10 +142,19 @@ export const singleSourceExplainer =
           frame.edges.map((edge) => ref(graph.getEdge(edge).target)),
         );
 
+        /*
+          the base cost is the number itself rather than a label beside it, so
+          hovering it paints the path the number was built from. the sum that
+          built it is dropped: the edges lighting up on the graph say the same
+          thing, and say it where the reader is already looking
+        */
+        const { primary, secondary } = displayNumber(frame.distance);
+
         return {
-          content: `${follow}, to see whether going through ${ref(frame.node)} with a [Base Cost] of <${frame.distance}> reduces the current cost of ${reached}`,
+          content: `${follow}, to see whether going through ${ref(frame.node)} with a [Base Cost of ${primary}] reduces the current cost of ${reached}`,
           highlights: [
-            costBreakdown(graph, frame.basePath, String(frame.distance)),
+            ...followHighlights,
+            createEdgeSetHighlight(graph, frame.basePath, secondary),
           ],
         };
       }
@@ -161,27 +170,33 @@ export const singleSourceExplainer =
         };
 
       case 'improve-distance': {
-        const { weight, source } = graph.getEdge(frame.edge);
+        const total = displayNumber(frame.newDistance);
 
-        // nothing was spent before the start node, so there is no sum to break down
-        const arrival =
-          source === frame.anchorNodeId
-            ? '.'
-            : `: the <${frame.base}> already spent getting to ${ref(frame.via)}, plus <${weight}> for ${ref(frame.edge)}.`;
+        const reached = `Reaching ${ref(frame.node)} through ${ref(frame.via)} costs [${total.primary}]`;
 
-        const reached = `Reaching ${ref(frame.node)} through ${ref(frame.via)} costs <${frame.newDistance}>${arrival}`;
+        // the route the sum just found: the way to `via`, plus the edge closing it
+        const reachedHighlight = createEdgeSetHighlight(
+          graph,
+          [...frame.basePath, frame.edge],
+          total.secondary,
+        );
 
         if (frame.oldDistance === undefined) {
           return {
             content: `${reached} Nothing has reached ${ref(frame.node)} before, so its cost [Improves] from ∞`,
-            highlights: [highlights.improve],
+            highlights: [reachedHighlight, highlights.improve],
           };
         }
 
+        // like the base cost, the number carries the highlight, and hovering it
+        // paints the route being beaten rather than spelling its sum out
+        const { primary, secondary } = displayNumber(frame.oldDistance);
+
         return {
-          content: `${reached} That beats its [Previous Cost] of <${frame.oldDistance}>, so ${ref(frame.node)} [Improves] to <${frame.newDistance}>`,
+          content: `${reached} That beats its [Previous Cost of ${primary}], so ${ref(frame.node)} [Improves] to <${frame.newDistance}>`,
           highlights: [
-            costBreakdown(graph, frame.oldPath, String(frame.oldDistance)),
+            reachedHighlight,
+            createEdgeSetHighlight(graph, frame.oldPath, secondary),
             highlights.improve,
           ],
         };

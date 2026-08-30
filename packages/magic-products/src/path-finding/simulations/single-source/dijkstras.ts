@@ -157,6 +157,9 @@ export const dijkstras: SingleSourceFunction =
               node: arc.to,
               distance: current,
               offered,
+              edge: arc.edgeId,
+              basePath: pathTo(arrivedOn, nearest),
+              currentPath: pathTo(arrivedOn, arc.to),
               activeNodeId: nearest,
               candidateNodeIds: [arc.to],
               rejectedEdgeIds: [arc.edgeId],
@@ -171,8 +174,10 @@ export const dijkstras: SingleSourceFunction =
           save nothing; with a negative weight it improves, and watching a
           finalized node move is the whole reason dijkstra bans them
         */
-        // read before the arc is replaced, or the route being beaten is already gone
+        // read before the arc is replaced, or the route being beaten is already
+        // gone, and the route the new cost is built on already rewritten
         const oldPath = pathTo(arrivedOn, arc.to);
+        const basePath = pathTo(arrivedOn, nearest);
 
         distances[arc.to] = offered;
         arrivedOn.set(arc.to, arc);
@@ -185,6 +190,7 @@ export const dijkstras: SingleSourceFunction =
             newDistance: offered,
             via: nearest,
             base: distances[nearest]!,
+            basePath,
             edge: arc.edgeId,
             oldPath,
             activeNodeId: nearest,

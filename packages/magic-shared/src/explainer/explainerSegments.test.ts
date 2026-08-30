@@ -26,6 +26,8 @@ const graph = {
   isEdge: (id: string): boolean => id.startsWith('edge-'),
   getEdge: (id: string) =>
     ({ id, source: 'node-a', target: 'node-b' }) as GEdge,
+  // undirected, so an edge label sorts its endpoints before joining them
+  metadata: { directed: false },
   theme: {
     createThemer: () => ({
       activate: vi.fn(),

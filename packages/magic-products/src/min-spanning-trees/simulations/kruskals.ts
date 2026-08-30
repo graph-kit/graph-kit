@@ -50,76 +50,51 @@ export const kruskals: KruskalsFunction = (graph) => (frameCollector) => {
   const sortedEdgeIds = edgesSortedByWeight.map((edge) => edge.id);
 
   const treeNodes = new Set<GNode['id']>();
-  const treeEdges: string[] = [];
-  const excludedEdges: string[] = [];
+  const treeEdges: GEdge['id'][] = [];
+  const excludedEdges: GEdge['id'][] = [];
+  // edges before this point have had their turn, so the consideration list is
+  // whatever is left from here on
+  let considerFrom = 0;
 
-  const frame = (
-    fields: KruskalsStep &
-      KruskalsHighlights &
-      Partial<Pick<KruskalsFrame, 'dimmedEdgeIds'>>,
-  ): KruskalsFrame => {
-    const decided = new Set([...treeEdges, ...excludedEdges]);
-    return {
-      treeNodeIds: [...treeNodes],
-      treeEdgeIds: [...treeEdges],
-      excludedEdgeIds: [...excludedEdges],
-      dimmedEdgeIds: [...excludedEdges],
-      candidateEdges: sortedEdgeIds.filter((id) => !decided.has(id)),
-      ...fields,
-    };
-  };
+  const frame = (fields: KruskalsStep & KruskalsHighlights): KruskalsFrame => ({
+    treeNodeIds: [...treeNodes],
+    treeEdgeIds: [...treeEdges],
+    excludedEdgeIds: [...excludedEdges],
+    candidateEdges: sortedEdgeIds.slice(considerFrom),
+    ...fields,
+  });
 
   frameCollector.add(frame({ type: 'start' }));
 
-  for (let i = 0; i < edgesSortedByWeight.length; i++) {
-    const edge = edgesSortedByWeight[i];
+  for (const [index, edge] of edgesSortedByWeight.entries()) {
+    // the edge stays in the consideration list for the frame that decides it,
+    // so it can be pointed at as it leaves
+    considerFrom = index;
+    const decision = {
+      edge: edge.id,
+      activeNodeIds: [edge.source, edge.target],
+      selectedEdge: edge.id,
+    };
 
-    frameCollector.add(
-      frame({
-        type: 'consider-edge',
-        edge: edge.id,
-        activeEdgeId: edge.id,
-        activeNodeIds: [edge.source, edge.target],
-        selectedEdge: edge.id,
-      }),
-    );
+    frameCollector.add(frame({ type: 'consider-edge', ...decision }));
 
-    if (union(edge.source, edge.target)) {
-      frameCollector.add(
-        frame({
-          type: 'accept-edge',
-          edge: edge.id,
-          activeEdgeId: edge.id,
-          activeNodeIds: [edge.source, edge.target],
-          selectedEdge: edge.id,
-        }),
-      );
-
-      treeEdges.push(edge.id);
-      treeNodes.add(edge.source);
-      treeNodes.add(edge.target);
-
-      if (treeEdges.length === nodeIds.length - 1) {
-        const skipped = edgesSortedByWeight.slice(i + 1).map((e) => e.id);
-        if (skipped.length > 0) {
-          excludedEdges.push(...skipped);
-          frameCollector.add(frame({ type: 'all-connected', edges: skipped }));
-        }
-        break;
-      }
-    } else {
+    if (!union(edge.source, edge.target)) {
       excludedEdges.push(edge.id);
-      frameCollector.add(
-        frame({
-          type: 'reject-edge',
-          edge: edge.id,
-          excludingEdgeId: edge.id,
-          activeNodeIds: [edge.source, edge.target],
-          dimmedEdgeIds: excludedEdges.slice(0, -1),
-        }),
-      );
+      frameCollector.add(frame({ type: 'exclude-edge', ...decision }));
+      continue;
     }
+
+    treeEdges.push(edge.id);
+    treeNodes.add(edge.source);
+    treeNodes.add(edge.target);
+    frameCollector.add(frame({ type: 'accept-edge', ...decision }));
+
+    if (treeEdges.length === nodeIds.length - 1) break;
   }
+
+  // an edge the tree completed before reaching was never decided, so it is left
+  // out of both lists rather than counted as excluded
+  considerFrom = sortedEdgeIds.length;
 
   const unreachable =
     nodeIds.length > 1 ? nodeIds.filter((id) => !treeNodes.has(id)) : [];

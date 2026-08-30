@@ -58,14 +58,21 @@ export const useGraphElementRefExplainerSegment = (
       if (graph.isNode(id)) {
         return graph.theme.tokenResolver('node.text.content', { id });
       }
+
       const edge = graph.getEdge(id);
+
       const source = graph.theme.tokenResolver('node.text.content', {
         id: edge.source,
       });
+
       const target = graph.theme.tokenResolver('node.text.content', {
         id: edge.target,
       });
-      return `${source}${target}`;
+
+      const pair = [source, target];
+      const labelReadyPair = graph.metadata.directed ? pair : pair.toSorted();
+
+      return labelReadyPair.join('');
     },
     highlight: useGraphElementExplainerHighlight(graph, id),
   };

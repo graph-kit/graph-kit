@@ -1,7 +1,11 @@
 <script setup lang="ts">
   import Dropdown from '../../../components/dropdown/Dropdown.vue';
+  import DropdownItem from '../../../components/dropdown/DropdownItem.vue';
+  import HStack from '../../../components/layout/HStack.vue';
   import Well from '../../../components/layout/Well.vue';
-  import ColorSwatches from '../panel-shared/ColorSwatches.vue';
+  import ColorSwatch from '../panel-shared/ColorSwatch.vue';
+  import CustomColorSwatch from '../panel-shared/CustomColorSwatch.vue';
+  import { SWATCH_COLORS } from '../panel-shared/options.ts';
   import { useDisabledWhileErasing } from '../panel-shared/useDisabledWhileErasing.ts';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
   import PanelSpot from './PanelSpot.vue';
@@ -25,7 +29,18 @@
       </PanelSpot>
     </template>
     <Well>
-      <ColorSwatches />
+      <HStack :gap="2">
+        <DropdownItem
+          v-for="color of SWATCH_COLORS"
+          :key="color.value"
+        >
+          <ColorSwatch
+            :name="color.name"
+            :hex="color.value"
+          />
+        </DropdownItem>
+        <CustomColorSwatch />
+      </HStack>
     </Well>
   </Dropdown>
 </template>

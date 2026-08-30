@@ -1,6 +1,9 @@
 <script setup lang="ts">
   import Dropdown from '../../../components/dropdown/Dropdown.vue';
-  import BrushWeightSwatches from '../panel-shared/BrushWeightSwatches.vue';
+  import DropdownItem from '../../../components/dropdown/DropdownItem.vue';
+  import HStack from '../../../components/layout/HStack.vue';
+  import BrushWeightSwatch from '../panel-shared/BrushWeightSwatch.vue';
+  import { BRUSH_WEIGHTS } from '../panel-shared/options.ts';
   import { useDisabledWhileErasing } from '../panel-shared/useDisabledWhileErasing.ts';
   import { useAnnotationControls } from '../useAnnotationControls.ts';
   import PanelSpot from './PanelSpot.vue';
@@ -23,6 +26,16 @@
         />
       </PanelSpot>
     </template>
-    <BrushWeightSwatches />
+    <HStack :gap="1">
+      <DropdownItem
+        v-for="weight of BRUSH_WEIGHTS"
+        :key="weight.value"
+      >
+        <BrushWeightSwatch
+          :name="weight.name"
+          :weight="weight.value"
+        />
+      </DropdownItem>
+    </HStack>
   </Dropdown>
 </template>

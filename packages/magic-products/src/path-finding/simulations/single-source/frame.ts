@@ -21,12 +21,20 @@ type EndFrame = {
 type FrontierEntry = {
   node: GNode['id'];
   distance: Fraction;
+  /**
+   * the edges of the route the distance arrived on. every cost the explainer
+   * writes points at the route behind it, so a frontier entry carries its own
+   * rather than leaving the reader to guess which way the number was measured
+   */
+  path: readonly GEdge['id'][];
 };
 
 type SafeToSettleFrame = {
   type: 'safe-to-settle';
   node: GNode['id'];
   distance: Fraction;
+  /** the edges of the route `distance` arrived on */
+  path: readonly GEdge['id'][];
   runnerUp?: FrontierEntry;
 };
 
@@ -34,6 +42,8 @@ type SettleNodeFrame = {
   type: 'settle-node';
   node: GNode['id'];
   distance: Fraction;
+  /** the edges of the route `distance` arrived on, empty for the start node */
+  path: readonly GEdge['id'][];
 };
 
 type StillTentativeFrame = {
@@ -65,6 +75,8 @@ type SkipSettledFrame = {
   edge: GEdge['id'];
   node: GNode['id'];
   distance: Fraction;
+  /** the edges of the finalized route `distance` arrived on */
+  path: readonly GEdge['id'][];
 };
 
 type RelaxEdgeFrame = {

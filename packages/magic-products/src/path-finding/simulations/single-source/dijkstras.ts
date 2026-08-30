@@ -55,7 +55,11 @@ export const dijkstras: SingleSourceFunction =
       if (!nearest) break;
 
       const holding = (ids: readonly GNode['id'][]) =>
-        ids.map((node) => ({ node, distance: distances[node]! }));
+        ids.map((node) => ({
+          node,
+          distance: distances[node]!,
+          path: pathTo(arrivedOn, node),
+        }));
 
       if (settleCount > 0) {
         const runnerUp = queue.at(1);
@@ -64,6 +68,7 @@ export const dijkstras: SingleSourceFunction =
             type: 'safe-to-settle',
             node: nearest,
             distance: distances[nearest]!,
+            path: pathTo(arrivedOn, nearest),
             runnerUp:
               runnerUp === undefined ? undefined : holding([runnerUp])[0],
             activeNodeId: nearest,
@@ -79,6 +84,7 @@ export const dijkstras: SingleSourceFunction =
           type: 'settle-node',
           node: nearest,
           distance: distances[nearest]!,
+          path: pathTo(arrivedOn, nearest),
           activeNodeId: nearest,
         }),
       );
@@ -129,6 +135,7 @@ export const dijkstras: SingleSourceFunction =
               edge: arc.edgeId,
               node: arc.to,
               distance: current!,
+              path: pathTo(arrivedOn, arc.to),
               activeNodeId: nearest,
               rejectedEdgeIds: [arc.edgeId],
             }),

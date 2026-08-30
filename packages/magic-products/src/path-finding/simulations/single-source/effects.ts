@@ -174,7 +174,7 @@ export const singleSourceSimulationDefinition = (
       return {
         id: RECOVERABLE_VIOLATION,
         explainer: {
-          content: `{${negative.id}} costs less than <0>. Dijkstra's finalizes a cost as soon as it is the cheapest, which a negative edge can undercut later, so it cannot run here. Bellman-Ford can`,
+          content: `{${negative.id}} costs less than <0>. Dijkstra's does not allow negative weights`,
         },
       };
     })

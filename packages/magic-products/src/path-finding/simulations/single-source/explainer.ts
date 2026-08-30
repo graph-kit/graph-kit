@@ -5,6 +5,7 @@ import {
   createEdgeSetHighlight,
 } from '@magic/shared/explainer';
 import { GEdge, GNode, Graph } from '@magic/shared/graph';
+import Fraction from 'fraction.js';
 
 import { SingleSourceFrame } from './frame.ts';
 
@@ -41,6 +42,31 @@ const highlights = {
   ),
 } as const satisfies Record<string, ExplainerHighlight>;
 
+/**
+ * a cost to reach a node, written as a [bracketed] segment carrying a highlight
+ * of the route the number was measured along, whether that route is the
+ * cheapest at this moment or not. the tooltip stays what the same number in
+ * <angle brackets> would have shown, its decimal approximation, so moving the
+ * bracket costs the reader nothing.
+ *
+ * a cost with no route behind it, the start node's own zero, has nothing to
+ * point at and stays an <angled> number. the highlights come back as a list for
+ * that reason: spread them in the order the text says them and every highlight
+ * lands on the segment it belongs to
+ */
+const cost = (graph: Graph, value: Fraction, path: readonly GEdge['id'][]) => {
+  const { primary, secondary } = displayNumber(value);
+
+  if (path.length === 0) {
+    return { text: `<${primary}>`, highlights: [] as ExplainerHighlight[] };
+  }
+
+  return {
+    text: `[${primary}]`,
+    highlights: [createEdgeSetHighlight(graph, path, secondary)],
+  };
+};
+
 /** `a`, `a and b`, `a, b, and c` */
 const listOf = (items: readonly string[]) => {
   if (items.length <= 2) return items.join(' and ');
@@ -67,43 +93,66 @@ export const singleSourceExplainer =
         };
 
       case 'safe-to-settle': {
-        const mustPass = `Every other path to ${ref(frame.node)} has to leave through the [Frontier].`;
+        const mustPass = `Every new path to ${ref(frame.node)} must leave through the [Frontier].`;
 
-        const waiting =
-          frame.runnerUp === undefined
-            ? `There are no other paths to ${ref(frame.node)} that can be cheaper`
-            : `The cheapest [Frontier] node is ${ref(frame.runnerUp.node)} with a current cost of <${frame.runnerUp.distance}>. Edge costs cannot be negative, so nothing can reach ${ref(frame.node)} for less than <${frame.distance}>`;
+        if (frame.runnerUp === undefined) {
+          return {
+            content: `${mustPass} There are no other paths to ${ref(frame.node)} that are cheaper`,
+            highlights: [highlights.frontier],
+          };
+        }
+
+        const runnerUp = cost(
+          graph,
+          frame.runnerUp.distance,
+          frame.runnerUp.path,
+        );
+        const settling = cost(graph, frame.distance, frame.path);
 
         return {
-          content: `${mustPass} ${waiting}`,
-          // one per [Frontier] mention, and the second is only mentioned when
-          // there is a runner up to name
-          highlights:
-            frame.runnerUp === undefined
-              ? [highlights.frontier]
-              : [highlights.frontier, highlights.frontier],
+          content: `${mustPass} The cheapest [Frontier] node is ${ref(frame.runnerUp.node)} costing ${runnerUp.text}. No path can reach ${ref(frame.node)} for less than ${settling.text}`,
+          // one per [Frontier] mention, then one per cost, in the order said
+          highlights: [
+            highlights.frontier,
+            highlights.frontier,
+            ...runnerUp.highlights,
+            ...settling.highlights,
+          ],
         };
       }
 
-      case 'settle-node':
+      case 'settle-node': {
+        const settled = cost(graph, frame.distance, frame.path);
+
         return {
           content:
             frame.node === frame.anchorNodeId
-              ? `${ref(frame.node)} is the start node so it gets assigned a distance of <${frame.distance}>`
-              : `${ref(frame.node)} becomes finalized with a cost of <${frame.distance}>`,
+              ? `${ref(frame.node)} is the start node so it gets assigned a distance of ${settled.text}`
+              : `${ref(frame.node)} becomes finalized with a cost of ${settled.text}`,
+          highlights: settled.highlights,
         };
+      }
 
       case 'still-tentative': {
-        const waiting = listOf(
-          frame.waiting.map(
-            ({ node, distance }) =>
-              `${ref(node)} with a current cost of <${distance}>`,
-          ),
-        );
-        const beaten = frame.waiting.length === 1 ? 'that' : 'them';
+        const held = frame.waiting.map((entry) => ({
+          node: entry.node,
+          shown: cost(graph, entry.distance, entry.path),
+        }));
+        const via = cost(graph, frame.via.distance, frame.via.path);
+
+        const waiting = [
+          listOf(held.map(({ node }) => ref(node))),
+          `with cost${held.length === 1 ? '' : 's'}`,
+          listOf(held.map(({ shown }) => shown.text)),
+          held.length === 1 ? '' : 'respectively',
+        ].join(' ');
 
         return {
-          content: `${waiting} cannot yet be finalized. ${ref(frame.via.node)} costs only <${frame.via.distance}> to reach, which is cheaper than ${beaten}, so a path leading from ${ref(frame.via.node)} could still be cheaper`,
+          content: `${waiting} cannot yet be finalized. ${ref(frame.via.node)} costs ${via.text} to reach, which is cheaper, so a path from ${ref(frame.via.node)} could be cheaper`,
+          highlights: [
+            ...held.flatMap(({ shown }) => shown.highlights),
+            ...via.highlights,
+          ],
         };
       }
 
@@ -123,8 +172,8 @@ export const singleSourceExplainer =
         const single = frame.edges.length === 1;
 
         const follow = single
-          ? `Now follow the ${ref(frame.edges[0])}`
-          : `Now follow each of the [${frame.edges.length} edges] leaving ${ref(frame.node)}`;
+          ? `Now path through ${ref(frame.edges[0])}`
+          : `Now path through the [${frame.edges.length} edges] leaving ${ref(frame.node)}`;
 
         const followHighlights = single
           ? []
@@ -133,7 +182,7 @@ export const singleSourceExplainer =
         //  only for the start node we dont ask how going through "0 cost" will improve the cost of other nodes
         if (frame.node === frame.anchorNodeId) {
           return {
-            content: `${follow}, to see the cost of connecting adjacent nodes`,
+            content: `${follow}`,
             highlights: followHighlights,
           };
         }
@@ -148,21 +197,22 @@ export const singleSourceExplainer =
           built it is dropped: the edges lighting up on the graph say the same
           thing, and say it where the reader is already looking
         */
-        const { primary, secondary } = displayNumber(frame.distance);
+        const initial = cost(graph, frame.distance, frame.basePath);
 
         return {
-          content: `${follow}, to see whether going through ${ref(frame.node)} with a [Base Cost of ${primary}] reduces the current cost of ${reached}`,
-          highlights: [
-            ...followHighlights,
-            createEdgeSetHighlight(graph, frame.basePath, secondary),
-          ],
+          content: `${follow}, to see if pathing through ${ref(frame.node)} with an initial cost of ${initial.text} reduces the current cost to ${reached}`,
+          highlights: [...followHighlights, ...initial.highlights],
         };
       }
 
-      case 'skip-settled':
+      case 'skip-settled': {
+        const finalized = cost(graph, frame.distance, frame.path);
+
         return {
-          content: `${ref(frame.edge)} is not followed, because ${ref(frame.node)} is already finalized at <${frame.distance}> and no path can beat a finalized cost`,
+          content: `${ref(frame.edge)} is not followed, because ${ref(frame.node)} is already finalized at ${finalized.text} and no path can beat a finalized cost`,
+          highlights: finalized.highlights,
         };
+      }
 
       case 'relax-edge':
         return {
@@ -170,43 +220,47 @@ export const singleSourceExplainer =
         };
 
       case 'improve-distance': {
-        const total = displayNumber(frame.newDistance);
-
-        const reached = `Reaching ${ref(frame.node)} through ${ref(frame.via)} costs [${total.primary}]`;
-
-        // the route the sum just found: the way to `via`, plus the edge closing it
-        const reachedHighlight = createEdgeSetHighlight(
-          graph,
-          [...frame.basePath, frame.edge],
-          total.secondary,
-        );
-
         if (frame.oldDistance === undefined) {
           return {
-            content: `${reached} Nothing has reached ${ref(frame.node)} before, so its cost [Improves] from ∞`,
-            highlights: [reachedHighlight, highlights.improve],
+            content: `Nothing has reached ${ref(frame.node)} before, so its cost [Improves] from ∞`,
+            highlights: [highlights.improve],
           };
         }
 
-        // like the base cost, the number carries the highlight, and hovering it
-        // paints the route being beaten rather than spelling its sum out
-        const { primary, secondary } = displayNumber(frame.oldDistance);
+        // the route being beaten, then the one that just beat it: the way to
+        // `via`, plus the edge that closes it
+        const previous = cost(graph, frame.oldDistance, frame.oldPath);
+        const improved = cost(graph, frame.newDistance, [
+          ...frame.basePath,
+          frame.edge,
+        ]);
 
         return {
-          content: `${reached} That beats its [Previous Cost of ${primary}], so ${ref(frame.node)} [Improves] to <${frame.newDistance}>`,
+          content: `That beats its previous cost of ${previous.text}, so ${ref(frame.node)} [Improves] to ${improved.text}`,
           highlights: [
-            reachedHighlight,
-            createEdgeSetHighlight(graph, frame.oldPath, secondary),
+            ...previous.highlights,
             highlights.improve,
+            ...improved.highlights,
           ],
         };
       }
 
-      case 'keep-distance':
+      case 'keep-distance': {
+        const offered = cost(graph, frame.offered, [
+          ...frame.basePath,
+          frame.edge,
+        ]);
+        const current = cost(graph, frame.distance, frame.currentPath);
+
         return {
-          content: `<${frame.offered}> does not decrease the cost of reaching ${ref(frame.node)} which currently costs <${frame.distance}>. Therefore the current cost [Remains]`,
-          highlights: [highlights.keep],
+          content: `${offered.text} does not decrease the cost of reaching ${ref(frame.node)} which currently costs ${current.text}. Therefore the current cost [Remains]`,
+          highlights: [
+            ...offered.highlights,
+            ...current.highlights,
+            highlights.keep,
+          ],
         };
+      }
 
       case 'unreachable': {
         const count = frame.nodes.length;

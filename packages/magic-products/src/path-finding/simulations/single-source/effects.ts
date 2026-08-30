@@ -54,10 +54,7 @@ export const edgeRoles = {
   discarded: 'rejected',
 } as const satisfies Record<SingleSourceEdgeConcept, EdgeRole>;
 
-/**
- * the one violation the run waits out rather than dies on, since the graph it
- * describes is one edit away from being valid again
- */
+// does not exit out of sim but shows user error
 const RECOVERABLE_VIOLATION = 'negative-weight';
 
 export type SourceNodeId = Ref<GNode['id'] | undefined>;
@@ -138,15 +135,6 @@ const singleSourceEffects = (
     explainer: singleSourceExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    /*
-      a negative weight is a fixable mistake, not a dead end: the graph is still
-      whole, the frames already computed are still the ones that were true, and
-      putting the weight back resumes the run where it paused. so the simulation
-      stays up wearing the violation, and the guard's explainer says what to fix
-
-      the rest are not recoverable in the same way. a graph with the source node
-      deleted has nothing left to narrate, so those tear down as before
-    */
     onViolation: (violation) => {
       if (violation.id === RECOVERABLE_VIOLATION) return;
       context.stopSimulation();
@@ -159,12 +147,6 @@ export const singleSourceSimulationDefinition = (
   options: SingleSourceOptions,
 ): SimulationDefinition<SingleSourceFrame> => ({
   guard: new SimulationGuardBuilder(options.graph)
-    /*
-      checked again while the run is on screen, not only before it starts: an
-      edge weight change counts as a structure change, so a weight edited into
-      the negative mid run stops the simulation rather than quietly invalidating
-      everything already settled
-    */
     .custom(() => {
       if (!options.requiresNonNegativeWeights) return;
 

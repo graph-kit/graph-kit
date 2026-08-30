@@ -4,7 +4,7 @@ import {
   ExplainerHighlight,
   createEdgeSetHighlight,
 } from '@magic/shared/explainer';
-import { GEdge, GNode, Graph } from '@magic/shared/graph';
+import { GEdge, Graph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
 import { SingleSourceFrame } from './frame.ts';
@@ -42,18 +42,6 @@ const highlights = {
   ),
 } as const satisfies Record<string, ExplainerHighlight>;
 
-/**
- * a cost to reach a node, written as a [bracketed] segment carrying a highlight
- * of the route the number was measured along, whether that route is the
- * cheapest at this moment or not. the tooltip stays what the same number in
- * <angle brackets> would have shown, its decimal approximation, so moving the
- * bracket costs the reader nothing.
- *
- * a cost with no route behind it, the start node's own zero, has nothing to
- * point at and stays an <angled> number. the highlights come back as a list for
- * that reason: spread them in the order the text says them and every highlight
- * lands on the segment it belongs to
- */
 const cost = (graph: Graph, value: Fraction, path: readonly GEdge['id'][]) => {
   const { primary, secondary } = displayNumber(value);
 
@@ -73,31 +61,28 @@ const listOf = (items: readonly string[]) => {
   return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
 };
 
-/** graph elements are referenced in explainer text by wrapping their id in `{}` */
-const ref = (id: GNode['id'] | GEdge['id']) => `{${id}}`;
-
 export const singleSourceExplainer =
   (graph: Graph) =>
   (frame: SingleSourceFrame): Explainer | undefined => {
     switch (frame.type) {
       case 'start':
         return {
-          content: `Starting at ${ref(frame.source)}. Every other node starts at a [Distance] of ∞`,
+          content: `Starting at {${frame.source}}. Every other node starts at a [Distance] of ∞`,
           highlights: [highlights.distances],
         };
 
       case 'end':
         return {
-          content: `Done! The [Distances] from ${ref(frame.anchorNodeId)} are as cheap as they can get`,
+          content: `Done! The [Distances] from {${frame.anchorNodeId}} are as cheap as they can get`,
           highlights: [highlights.distances],
         };
 
       case 'safe-to-settle': {
-        const mustPass = `Every new path to ${ref(frame.node)} must leave through the [Frontier].`;
+        const mustPass = `Every new path to {${frame.node}} must leave through the [Frontier].`;
 
         if (frame.runnerUp === undefined) {
           return {
-            content: `${mustPass} There are no other paths to ${ref(frame.node)} that are cheaper`,
+            content: `${mustPass} There are no other paths to {${frame.node}} that are cheaper`,
             highlights: [highlights.frontier],
           };
         }
@@ -110,7 +95,7 @@ export const singleSourceExplainer =
         const settling = cost(graph, frame.distance, frame.path);
 
         return {
-          content: `${mustPass} The cheapest [Frontier] node is ${ref(frame.runnerUp.node)} costing ${runnerUp.text}. No path can reach ${ref(frame.node)} for less than ${settling.text}`,
+          content: `${mustPass} The cheapest [Frontier] node is {${frame.runnerUp.node}} costing ${runnerUp.text}. No path can reach {${frame.node}} for less than ${settling.text}`,
           // one per [Frontier] mention, then one per cost, in the order said
           highlights: [
             highlights.frontier,
@@ -127,8 +112,8 @@ export const singleSourceExplainer =
         return {
           content:
             frame.node === frame.anchorNodeId
-              ? `${ref(frame.node)} is the start node so it gets assigned a distance of ${settled.text}`
-              : `${ref(frame.node)} becomes finalized with a cost of ${settled.text}`,
+              ? `{${frame.node}} is the start node so it gets assigned a distance of ${settled.text}`
+              : `{${frame.node}} becomes finalized with a cost of ${settled.text}`,
           highlights: settled.highlights,
         };
       }
@@ -141,14 +126,14 @@ export const singleSourceExplainer =
         const via = cost(graph, frame.via.distance, frame.via.path);
 
         const waiting = [
-          listOf(held.map(({ node }) => ref(node))),
+          listOf(held.map(({ node }) => `{${node}}`)),
           `with cost${held.length === 1 ? '' : 's'}`,
           listOf(held.map(({ shown }) => shown.text)),
           held.length === 1 ? '' : 'respectively',
         ].join(' ');
 
         return {
-          content: `${waiting} cannot yet be finalized. ${ref(frame.via.node)} costs ${via.text} to reach, which is cheaper, so a path from ${ref(frame.via.node)} could be cheaper`,
+          content: `${waiting} cannot yet be finalized. {${frame.via.node}} costs ${via.text} to reach, which is cheaper, so a path from {${frame.via.node}} could be cheaper`,
           highlights: [
             ...held.flatMap(({ shown }) => shown.highlights),
             ...via.highlights,
@@ -159,23 +144,17 @@ export const singleSourceExplainer =
       case 'explore-node': {
         if (frame.edges.length === 0) {
           return {
-            content: `${ref(frame.node)} has no outbound edges, so pathing through it cannot improve any cost`,
+            content: `{${frame.node}} has no outbound edges, so pathing through it cannot improve any cost`,
           };
         }
 
-        /*
-          past one edge the sentence names the count rather than the edges, and
-          hands the count a highlight that lights all of them up on the graph.
-          the list it replaces grew with the node's degree and said nothing the
-          graph was not already able to show
-        */
-        const single = frame.edges.length === 1;
+        const onlyOneEdge = frame.edges.length === 1;
 
-        const follow = single
-          ? `Now path through ${ref(frame.edges[0])}`
-          : `Now path through the [${frame.edges.length} edges] leaving ${ref(frame.node)}`;
+        const follow = onlyOneEdge
+          ? `Now path through {${frame.edges[0]}}`
+          : `Now path through the [${frame.edges.length} edges] leaving {${frame.node}}`;
 
-        const followHighlights = single
+        const followHighlights = onlyOneEdge
           ? []
           : [createEdgeSetHighlight(graph, frame.edges)];
 
@@ -187,20 +166,14 @@ export const singleSourceExplainer =
           };
         }
 
-        const reached = listOf(
-          frame.edges.map((edge) => ref(graph.getEdge(edge).target)),
+        const edgesReached = listOf(
+          frame.edges.map((edge) => `{${graph.getEdge(edge).target}}`),
         );
 
-        /*
-          the base cost is the number itself rather than a label beside it, so
-          hovering it paints the path the number was built from. the sum that
-          built it is dropped: the edges lighting up on the graph say the same
-          thing, and say it where the reader is already looking
-        */
         const initial = cost(graph, frame.distance, frame.basePath);
 
         return {
-          content: `${follow}, to see if pathing through ${ref(frame.node)} with an initial cost of ${initial.text} reduces the current cost to ${reached}`,
+          content: `${follow}, to see if pathing through {${frame.node}} with an initial cost of ${initial.text} reduces the current cost to ${edgesReached}`,
           highlights: [...followHighlights, ...initial.highlights],
         };
       }
@@ -209,38 +182,36 @@ export const singleSourceExplainer =
         const finalized = cost(graph, frame.distance, frame.path);
 
         return {
-          content: `${ref(frame.edge)} is not followed, because ${ref(frame.node)} is already finalized at ${finalized.text} and no path can beat a finalized cost`,
+          content: `{${frame.edge}} is not followed, because {${frame.node}} is already finalized at ${finalized.text} and no path can beat a finalized cost`,
           highlights: finalized.highlights,
         };
       }
 
       case 'relax-edge':
         return {
-          content: `Pathing through ${ref(frame.edge)} costs <${graph.getEdge(frame.edge).weight}>`,
+          content: `Pathing through {${frame.edge}} costs <${graph.getEdge(frame.edge).weight}>`,
         };
 
       case 'improve-distance': {
         if (frame.oldDistance === undefined) {
           return {
-            content: `Nothing has reached ${ref(frame.node)} before, so its cost [Improves] from ∞`,
+            content: `Nothing has reached {${frame.node}} before, so its cost [Improves] from ∞`,
             highlights: [highlights.improve],
           };
         }
 
-        // the route being beaten, then the one that just beat it: the way to
-        // `via`, plus the edge that closes it
-        const previous = cost(graph, frame.oldDistance, frame.oldPath);
-        const improved = cost(graph, frame.newDistance, [
+        const previousPath = cost(graph, frame.oldDistance, frame.oldPath);
+        const improvedPath = cost(graph, frame.newDistance, [
           ...frame.basePath,
           frame.edge,
         ]);
 
         return {
-          content: `That beats its previous cost of ${previous.text}, so ${ref(frame.node)} [Improves] to ${improved.text}`,
+          content: `That beats its previous cost of ${previousPath.text}, so {${frame.node}} [Improves] to ${improvedPath.text}`,
           highlights: [
-            ...previous.highlights,
+            ...previousPath.highlights,
             highlights.improve,
-            ...improved.highlights,
+            ...improvedPath.highlights,
           ],
         };
       }
@@ -253,7 +224,7 @@ export const singleSourceExplainer =
         const current = cost(graph, frame.distance, frame.currentPath);
 
         return {
-          content: `${offered.text} does not decrease the cost of reaching ${ref(frame.node)} which currently costs ${current.text}. Therefore the current cost [Remains]`,
+          content: `${offered.text} does not decrease the cost of reaching {${frame.node}} which currently costs ${current.text}. Therefore the current cost [Remains]`,
           highlights: [
             ...offered.highlights,
             ...current.highlights,
@@ -263,10 +234,10 @@ export const singleSourceExplainer =
       }
 
       case 'unreachable': {
-        const count = frame.nodes.length;
-        const singular = count === 1;
+        const nodesCount = frame.nodes.length;
+        const singular = nodesCount === 1;
         return {
-          content: `${count} node${singular ? '' : 's'} stayed at a [Distance] of ∞ since no edges lead to ${singular ? 'it' : 'them'}`,
+          content: `${nodesCount} node${singular ? '' : 's'} stayed at a [Distance] of ∞ since no edges lead to ${singular ? 'it' : 'them'}`,
           highlights: [highlights.distances],
         };
       }
@@ -286,7 +257,7 @@ export const singleSourceExplainer =
 
       case 'negative-cycle':
         return {
-          content: `${ref(frame.node)} Can Still Get Cheaper! A Negative Cycle Means No Shortest Path Exists`,
+          content: `{${frame.node}} Can Still Get Cheaper! A Negative Cycle Means No Shortest Path Exists`,
         };
     }
   };

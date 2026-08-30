@@ -16,7 +16,6 @@ export const outboundTotalsThemer = (
   return graph.theme.createThemer({
     surface: {
       'node.default.text.content': totalText,
-      'node.hover.text.content': totalText,
     },
   });
 };

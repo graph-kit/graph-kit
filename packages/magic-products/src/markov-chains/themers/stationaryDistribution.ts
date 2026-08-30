@@ -16,7 +16,6 @@ export const stationaryDistributionThemer = (
   return graph.theme.createThemer({
     surface: {
       'node.default.text.content': shareText,
-      'node.hover.text.content': shareText,
     },
   });
 };

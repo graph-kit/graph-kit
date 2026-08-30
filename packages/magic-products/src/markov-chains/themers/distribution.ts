@@ -23,7 +23,6 @@ export const distributionThemer = (
   return graph.theme.createThemer({
     surface: {
       'node.default.text.content': chanceText,
-      'node.hover.text.content': chanceText,
     },
   });
 };

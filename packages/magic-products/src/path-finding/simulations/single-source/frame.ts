@@ -51,7 +51,12 @@ type ExploreNodeFrame = {
   type: 'explore-node';
   node: GNode['id'];
   distance: Fraction;
-  edgeCount: number;
+  /**
+   * the edges about to be followed, in the order they will be. arcs rather than
+   * neighbours: a parallel pair is two edges to check, and an undirected edge
+   * is one of them from whichever end the walk arrives at
+   */
+  edges: readonly GEdge['id'][];
   basePath: readonly GEdge['id'][];
 };
 
@@ -76,6 +81,17 @@ type ImproveDistanceFrame = {
   node: GNode['id'];
   oldDistance: Distance;
   newDistance: Fraction;
+  /** the node the cheaper route arrives from, and what it already cost to stand there */
+  via: GNode['id'];
+  base: Fraction;
+  /** the edge that closes the new route, whose weight is added to the base */
+  edge: GEdge['id'];
+  /**
+   * the edges of the route the old distance came from, empty when there was
+   * none. the number being beaten is a sum too, and a reader who cannot see
+   * what it was made of has nothing to weigh the new one against
+   */
+  oldPath: readonly GEdge['id'][];
 };
 
 type KeepDistanceFrame = {

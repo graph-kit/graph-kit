@@ -27,7 +27,7 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
     const shared = disabled();
     if (shared) return shared;
     if (!negativeWeightEdge(graph)) return false;
-    return "Dijkstra's cannot run with a negative edge weight. Try Bellman-Ford";
+    return 'Cannot run with negative weights';
   };
 
   return [

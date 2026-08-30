@@ -12,5 +12,8 @@
 </script>
 
 <template>
-  <NodeList :ids="frontier" />
+  <NodeList
+    :ids="frontier"
+    title="Frontier"
+  />
 </template>

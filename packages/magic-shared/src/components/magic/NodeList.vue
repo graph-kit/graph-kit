@@ -19,6 +19,7 @@
   const props = withDefaults(
     defineProps<{
       ids: readonly string[];
+      title?: string;
       /** which edge the panel slides out past when the list empties */
       exitSide?: 'left' | 'right';
     }>(),
@@ -146,6 +147,11 @@
         )
       "
     >
+      <span
+        v-if="title"
+        class="text-lg font-bold"
+        >{{ title }}</span
+      >
       <!--
         the box is fixed rather than sized to the contents, so the panel holds
         still while the queue drains and fills. a container that resized every

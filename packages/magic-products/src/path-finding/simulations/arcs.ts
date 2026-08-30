@@ -54,3 +54,28 @@ export const arcsBySource = (graph: Graph): Record<GNode['id'], Arc[]> => {
  */
 export const negativeWeightEdge = (graph: Graph) =>
   graph.edges.value.find((edge) => edge.weight.lt(0));
+
+/**
+ * the edges of the path a distance arrived on, source first.
+ *
+ * the guard is not decoration: bellman ford keeps arriving arcs on a graph that
+ * may hold a negative cycle, and a chain that loops would spin here rather than
+ * anywhere a stack trace would point at
+ */
+export const pathTo = (
+  arrivedOn: ReadonlyMap<GNode['id'], Arc>,
+  node: GNode['id'],
+): GEdge['id'][] => {
+  const edges: GEdge['id'][] = [];
+  const seen = new Set<GNode['id']>();
+
+  for (let at = node; !seen.has(at);) {
+    seen.add(at);
+    const arc = arrivedOn.get(at);
+    if (!arc) break;
+    edges.push(arc.edgeId);
+    at = arc.from;
+  }
+
+  return edges.reverse();
+};

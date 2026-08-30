@@ -1,7 +1,7 @@
 import { GNode } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
-import { Arc, arcs } from '../arcs.ts';
+import { Arc, arcs, pathTo } from '../arcs.ts';
 import { Distance } from '../distance.ts';
 import {
   SingleSourceFrame,
@@ -85,6 +85,9 @@ export const bellmanFord: SingleSourceFunction =
           continue;
         }
 
+        // read before the arc is replaced, or the route being beaten is already gone
+        const oldPath = pathTo(arrivedOn, arc.to);
+
         distances[arc.to] = offered;
         arrivedOn.set(arc.to, arc);
         improvedThisPass = true;
@@ -95,6 +98,10 @@ export const bellmanFord: SingleSourceFunction =
             node: arc.to,
             oldDistance: current,
             newDistance: offered,
+            via: arc.from,
+            base: reachedFrom,
+            edge: arc.edgeId,
+            oldPath,
             activeNodeId: arc.from,
             candidateNodeIds: [arc.to],
             relaxingEdgeIds: [arc.edgeId],

@@ -1,7 +1,7 @@
 import { GNode } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
-import { Arc, arcsBySource } from '../arcs.ts';
+import { Arc, arcsBySource, pathTo } from '../arcs.ts';
 import { Distance } from '../distance.ts';
 import {
   SingleSourceFrame,
@@ -44,21 +44,6 @@ export const dijkstras: SingleSourceFunction =
       anchorNodeId: sourceNodeId,
       ...fields,
     });
-
-    const pathTo = (node: GNode['id']) => {
-      const edges: Arc['edgeId'][] = [];
-      const seen = new Set<GNode['id']>();
-
-      for (let at = node; !seen.has(at);) {
-        seen.add(at);
-        const arc = arrivedOn.get(at);
-        if (!arc) break;
-        edges.push(arc.edgeId);
-        at = arc.from;
-      }
-
-      return edges.reverse();
-    };
 
     frameCollector.add(frame({ type: 'start', source: sourceNodeId }));
 
@@ -117,8 +102,8 @@ export const dijkstras: SingleSourceFunction =
           type: 'explore-node',
           node: nearest,
           distance: distances[nearest]!,
-          edgeCount: leaving.length,
-          basePath: pathTo(nearest),
+          edges: leaving.map((arc) => arc.edgeId),
+          basePath: pathTo(arrivedOn, nearest),
           activeNodeId: nearest,
         }),
       );
@@ -176,6 +161,9 @@ export const dijkstras: SingleSourceFunction =
           save nothing; with a negative weight it improves, and watching a
           finalized node move is the whole reason dijkstra bans them
         */
+        // read before the arc is replaced, or the route being beaten is already gone
+        const oldPath = pathTo(arrivedOn, arc.to);
+
         distances[arc.to] = offered;
         arrivedOn.set(arc.to, arc);
 
@@ -185,6 +173,10 @@ export const dijkstras: SingleSourceFunction =
             node: arc.to,
             oldDistance: current,
             newDistance: offered,
+            via: nearest,
+            base: distances[nearest]!,
+            edge: arc.edgeId,
+            oldPath,
             activeNodeId: nearest,
             candidateNodeIds: [arc.to],
             relaxingEdgeIds: [arc.edgeId],

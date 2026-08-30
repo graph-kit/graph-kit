@@ -42,17 +42,20 @@ const costBreakdown = (
   total: string,
 ): ExplainerHighlight => ({
   tooltipLabel: () => {
-    if (path.length === 0)
-      return 'The start node, which costs nothing to reach';
-
     const edgeName = (id: string) => {
       const { source, target } = graph.getEdge(id);
       return `${graph.getNode(source).label}${graph.getNode(target).label}`;
     };
 
-    return `${path.map(edgeName).join(' + ')} = ${total}, the cheapest path found so far`;
+    return `${path.map(edgeName).join(' + ')} = ${total}, the cost from the start node to this node along the cheapest path found so far`;
   },
 });
+
+const listOf = (items: readonly string[]) => {
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+};
 
 export const singleSourceExplainer =
   (graph: Graph) =>
@@ -76,12 +79,12 @@ export const singleSourceExplainer =
 
       const waiting =
         frame.runnerUp === undefined
-          ? `There are no other paths to {${frame.node}}`
-          : `The cheapest upstream node is {${frame.runnerUp.node}} with a current cost of <${frame.runnerUp.distance}>. Edge costs cannot be negative, so nothing can reach {${frame.node}} for less than <${frame.distance}>`;
+          ? `There are no other paths to {${frame.node}} that can be cheaper`
+          : `The cheapest [Frontier] node is {${frame.runnerUp.node}} with a current cost of <${frame.runnerUp.distance}>. Edge costs cannot be negative, so nothing can reach {${frame.node}} for less than <${frame.distance}>`;
 
       return {
         content: `${mustPass} ${waiting}`,
-        highlights: [highlights.frontier],
+        highlights: [highlights.frontier, highlights.frontier],
       };
     }
 
@@ -103,7 +106,7 @@ export const singleSourceExplainer =
           `{${node}} with a current cost of <${distance}>`,
       );
 
-      const cheaper = `{${frame.via.node}} costs only <${frame.via.distance}> to reach, which is less than`;
+      const cheaper = `{${frame.via.node}} costs only <${frame.via.distance}> to reach, which not greater than`;
 
       if (named.length === 1) {
         return {
@@ -111,36 +114,36 @@ export const singleSourceExplainer =
         };
       }
 
-      const list =
-        named.length === 2
-          ? `${named[0]} and ${named[1]}`
-          : `${named.slice(0, -1).join(', ')}, and ${named[named.length - 1]}`;
+      const list = listOf(named);
 
       return {
-        content: `${list} cannot yet be finalized. ${cheaper} any of them, so an edge out of {${frame.via.node}}, or a chain of them, could still arrive for less`,
+        content: `${list} cannot yet be finalized. ${cheaper} them, so an edge out of {${frame.via.node}}, or a chain of them, could still arrive for less`,
       };
     }
 
     if (frame.type === 'explore-node') {
-      if (frame.edgeCount === 0) {
+      if (frame.edges.length === 0) {
         return {
           content: `{${frame.node}} has no outbound edges, so pathing through it cannot improve any cost`,
         };
       }
 
-      const edges =
-        frame.edgeCount === 1
-          ? `the single edge leaving {${frame.node}}`
-          : `each of the ${frame.edgeCount} edges leaving {${frame.node}}`;
+      const named = frame.edges.map((edge) => `{${edge}}`);
+
+      const follow =
+        named.length === 1
+          ? `Now follow the single edge leaving {${frame.node}}, ${named[0]}`
+          : `Now follow each of the ${named.length} edges leaving {${frame.node}}, ${listOf(named)}`;
 
       //  only for the start node we dont ask how going through "0 cost" will improve the cost of other nodes
       if (frame.node === frame.anchorNodeId) {
         return {
-          content: `Now follow ${edges} to see the cost of connecting adjacent nodes`,
+          content: `${follow}, to see the cost of connecting adjacent nodes`,
         };
       }
+
       return {
-        content: `Now follow ${edges}, and see whether going through it with a [base cost] of <${frame.distance}> reduces the current cost of downstream nodes`,
+        content: `${follow}, to see whether going through {${frame.node}} with a [Base Cost] of <${frame.distance}> reduces the current cost of ${listOf(named.map((edge) => `{${graph.getEdge(edge).target}}`))}`,
         highlights: [
           costBreakdown(graph, frame.basePath, String(frame.distance)),
         ],
@@ -156,14 +159,28 @@ export const singleSourceExplainer =
     if (frame.type === 'relax-edge') {
       const { weight } = graph.getEdge(frame.edge);
       return {
-        content: `Pathing through {${frame.edge}} costs <${weight}>, on top of the <${frame.base}> already spent reaching {${frame.from}}, for a total of <${frame.offered}>`,
+        content: `Pathing through {${frame.edge}} costs <${weight}>`,
       };
     }
 
     if (frame.type === 'improve-distance') {
+      const { weight, source } = graph.getEdge(frame.edge);
+      const isStartNode = source === frame.anchorNodeId;
+      const arrival = `: the <${frame.base}> already spent getting to {${frame.via}}, plus <${weight}> for {${frame.edge}}.`;
+
+      if (frame.oldDistance === undefined) {
+        return {
+          content: `Reaching {${frame.node}} through {${frame.via}} costs <${frame.newDistance}>${isStartNode ? '.' : arrival} Nothing has reached {${frame.node}} before, so its cost [Improves] from ∞`,
+          highlights: [highlights.improve],
+        };
+      }
+
       return {
-        content: `<${frame.newDistance}> Beats <${formatDistance(frame.oldDistance)}>, So [Improving] {${frame.node}}`,
-        highlights: [highlights.improve],
+        content: `${arrival} That beats its [Previous Cost] of <${frame.oldDistance}>, so {${frame.node}} [Improves] to <${frame.newDistance}>`,
+        highlights: [
+          costBreakdown(graph, frame.oldPath, String(frame.oldDistance)),
+          highlights.improve,
+        ],
       };
     }
 

@@ -32,7 +32,7 @@
 <template>
   <Well v-if="rows.length > 0">
     <VStack class="gap-2">
-      <span class="text-sm font-bold opacity-60">Distance</span>
+      <span class="text-lg font-bold">Distance</span>
       <VStack class="gap-2 max-h-[50vh] overflow-y-auto pr-1">
         <HStack
           v-for="row in rows"
@@ -41,7 +41,7 @@
         >
           <Node
             :id="row.id"
-            :scale="0.6"
+            :scale="0.8"
           />
           <span class="font-bold tabular-nums">
             {{ formatDistance(row.distance) }}

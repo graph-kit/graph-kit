@@ -54,6 +54,12 @@ export const edgeRoles = {
   discarded: 'rejected',
 } as const satisfies Record<SingleSourceEdgeConcept, EdgeRole>;
 
+/**
+ * the one violation the run waits out rather than dies on, since the graph it
+ * describes is one edit away from being valid again
+ */
+const RECOVERABLE_VIOLATION = 'negative-weight';
+
 export type SourceNodeId = Ref<GNode['id'] | undefined>;
 
 export type SingleSourceOptions = {
@@ -132,7 +138,19 @@ const singleSourceEffects = (
     explainer: singleSourceExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
-    onViolation: context.stopSimulation,
+    /*
+      a negative weight is a fixable mistake, not a dead end: the graph is still
+      whole, the frames already computed are still the ones that were true, and
+      putting the weight back resumes the run where it paused. so the simulation
+      stays up wearing the violation, and the guard's explainer says what to fix
+
+      the rest are not recoverable in the same way. a graph with the source node
+      deleted has nothing left to narrate, so those tear down as before
+    */
+    onViolation: (violation) => {
+      if (violation.id === RECOVERABLE_VIOLATION) return;
+      context.stopSimulation();
+    },
   };
 };
 
@@ -154,7 +172,7 @@ export const singleSourceSimulationDefinition = (
       if (!negative) return;
 
       return {
-        id: 'negative-weight',
+        id: RECOVERABLE_VIOLATION,
         explainer: {
           content: `{${negative.id}} costs less than <0>. Dijkstra's finalizes a cost as soon as it is the cheapest, which a negative edge can undercut later, so it cannot run here. Bellman-Ford can`,
         },

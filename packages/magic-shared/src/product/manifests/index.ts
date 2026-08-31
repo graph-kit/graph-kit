@@ -1,11 +1,6 @@
 import { productThumbnail } from './thumbnail.ts';
 import { ProductManifest } from './types.ts';
 
-/**
- * every product experience, in the order the navigation menu lists them. shared
- * features like navigation need each product's id, slug and card, so manifests
- * are declared together here rather than fragmented beside every product's view
- */
 export const manifests = {
   sets: {
     id: 'sets',
@@ -17,13 +12,13 @@ export const manifests = {
       card: {
         name: 'Set Theory',
         description:
-          'Draw sets on a canvas and watch queries light up the regions they select.',
+          'Create sets and write queries that light up the regions they select.',
       },
     },
     meta: {
       title: 'Set Theory | Magic Graphs',
       description:
-        'Draw sets on an infinite canvas, write queries like A union B, and watch the regions they select highlight as you type.',
+        'Draw sets on an infinite canvas and write queries like A union B that highlight the regions they select as you type.',
       ogImage: productThumbnail('sets', 'dark'),
     },
   },
@@ -37,20 +32,18 @@ export const manifests = {
       card: {
         name: 'Markov Chains',
         description:
-          'Wire up states, set transition probabilities and follow the walk.',
+          'Wire up states, set transition probabilities and read off the classes, periodicity and stationary distribution.',
       },
     },
     meta: {
       title: 'Markov Chains | Magic Graphs',
       description:
-        'Build a Markov chain state by state, set the transition probabilities between them and step through the walk to see where it settles.',
+        'Build a Markov chain state by state, set the transition probabilities between them and surface its communicating classes, recurrent and absorbing states, periodicity and stationary distribution.',
       ogImage: productThumbnail('markov-chains', 'dark'),
     },
   },
   'avl-trees': {
     id: 'avl-trees',
-    // false until we implement pausing inbound socket packets. basically we must pause listening and
-    // sending events on the client when the simulation is activated and resume with a force push of the post-sim state
     multiplayer: false,
     name: 'Magic AVL Trees',
     abbreviatedName: 'AVL',
@@ -59,7 +52,7 @@ export const manifests = {
       card: {
         name: 'AVL Trees',
         description:
-          'Insert and remove values, then watch the tree rotate back into balance.',
+          'Insert and remove values, then step through each rotation the tree makes to rebalance.',
       },
     },
     meta: {
@@ -79,13 +72,13 @@ export const manifests = {
       card: {
         name: 'Traversals',
         description:
-          'Step through BFS and DFS one visit at a time on a graph you build.',
+          'Step through BFS and DFS one visit at a time, tracking the queue and visited set.',
       },
     },
     meta: {
       title: 'Traversals | Magic Graphs',
       description:
-        'Run breadth first and depth first search on your own graph and watch the queue, the stack and the visited set change at every step.',
+        'Run breadth first and depth first search on your own graph and track the queue, the stack and the visited set at every step.',
       ogImage: productThumbnail('traversals', 'dark'),
     },
   },
@@ -99,13 +92,13 @@ export const manifests = {
       card: {
         name: 'Path Finding',
         description:
-          'Watch Dijkstra, Bellman Ford and Floyd Warshall hunt for shortest paths.',
+          'Run Dijkstra, Bellman Ford and Floyd Warshall to surface every shortest path.',
       },
     },
     meta: {
       title: 'Path Finding | Magic Graphs',
       description:
-        "Run Dijkstra's, Bellman Ford and Floyd Warshall on a weighted graph you build and watch the shortest paths take shape step by step.",
+        "Run Dijkstra's, Bellman Ford and Floyd Warshall on a weighted graph you build and trace the shortest paths as they take shape, step by step.",
       ogImage: productThumbnail('path-finding', 'dark'),
     },
   },
@@ -119,13 +112,13 @@ export const manifests = {
       card: {
         name: 'Minimum Spanning Trees',
         description:
-          "Watch Kruskal's and Prim's pick the cheapest edges that connect everything.",
+          "Run Kruskal's and Prim's to pick the cheapest edges that connect everything.",
       },
     },
     meta: {
       title: 'Minimum Spanning Trees | Magic Graphs',
       description:
-        "Run Kruskal's and Prim's on a weighted graph you build and see each one grow a minimum spanning tree edge by edge.",
+        "Run Kruskal's and Prim's on a weighted graph you build and trace each one as it grows a minimum spanning tree edge by edge.",
       ogImage: productThumbnail('min-spanning-trees', 'dark'),
     },
   },

@@ -267,7 +267,7 @@ describe('bellmanFord', () => {
 
     const doublingBack = keeps.find((frame) => frame.edge === 'e2');
     expect(doublingBack && explain(doublingBack)?.content).toBe(
-      '{e2} does not decrease the cost to {b} because the route from {a} already passes through {b} to get to {c}. The current cost [Remains]',
+      'Following {e2} would visit {b} twice, adding cost for no progress. The current cost [Remains]',
     );
 
     /*
@@ -761,6 +761,44 @@ describe('floydWarshall', () => {
     expect(routeBetween(graph, closing.routes, 'a', 'b')).toEqual(['e0']);
     // nothing leads back to a, so no trail does either
     expect(routeBetween(graph, closing.routes, 'd', 'a')).toEqual([]);
+  });
+
+  /*
+    a cell is written out of two other cells, and those two go on getting
+    cheaper without it. rebuilding the cell's route out of them afterwards lands
+    on a trip that costs less than the number the cell is showing, and often on
+    the very detour the cell is being weighed against, so both sides of the
+    comparison light up the same edges
+  */
+  it('holds each cell to the route it was written with, not a cheaper one since', () => {
+    // a to c is spliced to a -> b -> c of 5 on pivot b. pivot d then cuts a to b
+    // down to a -> d -> b of 3, which leaves a -> d -> b -> c costing 4
+    const graph = makeGraph(
+      ['a', 'b', 'c', 'd'],
+      [
+        ['a', 'b', 4],
+        ['a', 'd', 1],
+        ['b', 'c', 1],
+        ['d', 'b', 2],
+      ],
+    );
+    const frames = collect(floydWarshall(graph));
+
+    const weighed = frames.find(
+      (f) =>
+        f.type === 'consider-pair' &&
+        f.pivot === 'd' &&
+        f.from === 'a' &&
+        f.to === 'c',
+    );
+
+    expect(weighed).toBeDefined();
+    if (weighed?.type !== 'consider-pair') throw new Error('never');
+
+    expect(formatDistance(weighed.currentDistance)).toBe('5');
+    expect(weighed.currentRoute).toEqual(['e0', 'e2']);
+    expect(formatDistance(weighed.detourDistance)).toBe('4');
+    expect(weighed.detourRoute).toEqual(['e1', 'e3', 'e2']);
   });
 
   it('snapshots the trail per frame, rather than sharing the finished one', () => {

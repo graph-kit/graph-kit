@@ -1,5 +1,4 @@
 import {
-  GEdge,
   GNode,
   GraphPath,
   walkFromTo,
@@ -20,13 +19,11 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
   const nodeIds = graph.nodes.value.map((node) => node.id);
 
   const matrix: Record<GNode['id'], Record<GNode['id'], Distance>> = {};
-  const directEdge: Record<GNode['id'], Record<GNode['id'], GEdge['id']>> = {};
-  const viaPivot: Record<GNode['id'], Record<GNode['id'], GNode['id']>> = {};
+  const routes: Record<GNode['id'], Record<GNode['id'], GraphPath>> = {};
 
   for (const from of nodeIds) {
     matrix[from] = {};
-    directEdge[from] = {};
-    viaPivot[from] = {};
+    routes[from] = {};
     for (const to of nodeIds)
       matrix[from][to] = from === to ? new Fraction(0) : undefined;
   }
@@ -35,39 +32,34 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
     const cheapestKnown = matrix[edge.source]?.[edge.target];
     if (cheapestKnown !== undefined && cheapestKnown.lte(edge.weight)) continue;
     matrix[edge.source][edge.target] = edge.weight;
-    directEdge[edge.source][edge.target] = edge.id;
+    routes[edge.source][edge.target] = [edge.id];
   }
 
-  const liveTrail: RouteTrail = { directEdge, viaPivot };
-
-  // directEdge is fixed once seeded, so only the pivots need copying per frame
-  const trailSnapshot = (): RouteTrail => ({
-    directEdge,
-    viaPivot: Object.fromEntries(
-      nodeIds.map((from) => [from, { ...viaPivot[from] }]),
-    ),
-  });
+  // a route is replaced rather than edited, so the rows are all a frame has to copy
+  const trailSnapshot = (): RouteTrail =>
+    Object.fromEntries(nodeIds.map((from) => [from, { ...routes[from] }]));
 
   const routeFor = (from: GNode['id'], to: GNode['id']) =>
-    routeBetween(graph, liveTrail, from, to);
+    routeBetween(graph, routes, from, to);
 
-  /**
-   * the trip through the pivot, or nothing when the two legs overlap and it
-   * doubles back through a node it has already been to. such a walk is not a
-   * trip anyone can take, so it has nothing to offer the cell
-   */
+  /** the two legs of a trip through the pivot, laid end to end */
   const detourVia = (
     from: GNode['id'],
     pivot: GNode['id'],
     to: GNode['id'],
-  ): GraphPath => {
-    const intoPivot = routeFor(from, pivot);
-    const outOfPivot = routeFor(pivot, to);
-    if (intoPivot.length === 0 || outOfPivot.length === 0) return [];
+  ): GraphPath => [...routeFor(from, pivot), ...routeFor(pivot, to)];
 
-    const detour = [...intoPivot, ...outOfPivot];
+  /**
+   * whether a detour is a trip anyone can take: the legs chain into the pair
+   * asked about, and it does not double back through a node it has been to
+   */
+  const isTrip = (
+    detour: GraphPath,
+    from: GNode['id'],
+    to: GNode['id'],
+  ): boolean => {
     const walk = walkFromTo(graph, detour, from, to);
-    return walk && !walk.repeatsANode ? detour : [];
+    return walk !== undefined && !walk.repeatsANode;
   };
 
   const frame = <T extends AllPairsStep>(
@@ -134,7 +126,14 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
 
         // read before the cell is rewritten, or the route being beaten is gone
         const currentRoute = routeFor(from, to);
-        const detourRoute = detourVia(from, pivot, to);
+
+        /*
+          the whole walk through the pivot, which the cell takes on when the
+          detour wins so that its number and its route go on agreeing, and the
+          part of it worth showing, which is nothing when it doubles back
+        */
+        const detourPath = detourVia(from, pivot, to);
+        const detourRoute = isTrip(detourPath, from, to) ? detourPath : [];
 
         /** what the cell holds onto, absent when the detour is about to win */
         const keptDistance =
@@ -181,7 +180,7 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
         }
 
         matrix[from][to] = detourDistance;
-        viaPivot[from][to] = pivot;
+        routes[from][to] = detourPath;
 
         frameCollector.add(
           frame({

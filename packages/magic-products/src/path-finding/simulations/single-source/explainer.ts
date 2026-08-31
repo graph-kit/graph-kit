@@ -246,7 +246,7 @@ export const singleSourceExplainer =
           const from = graph.getEdge(frame.edge).source;
 
           return {
-            content: `{${frame.edge}} does not decrease the cost to {${frame.node}} because the route from {${frame.anchorNodeId}} already passes through {${frame.node}} to get to {${from}}. The current cost [Remains]`,
+            content: `Following {${frame.edge}} would visit {${frame.node}} twice, adding cost for no progress. The current cost [Remains]`,
             highlights: [highlights.keep],
           };
         }
@@ -328,7 +328,7 @@ export const singleSourceExplainer =
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${stillImproves}. The [negative cycle] check fails so the algorithm cannot give a cheapest path. The cycle costs ${lap.text}`,
+          content: `${stillImproves}. The [Negative Cycle] check fails so the algorithm cannot give a cheapest path. The cycle costs ${lap.text}`,
           highlights: [
             negativeCycle(graph, frame.loop.edges),
             ...lap.highlights,

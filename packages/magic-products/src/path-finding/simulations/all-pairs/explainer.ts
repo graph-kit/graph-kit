@@ -15,12 +15,10 @@ const matrixHighlight = (tooltipLabel: string): ExplainerHighlight => ({
 
 const highlights = {
   table: matrixHighlight(
-    'The cheapest trip we know between every pair of nodes',
+    'The cheapest trip between every pair of nodes so far',
   ),
-  improve: matrixHighlight('The detour is cheaper, so the cell gets rewritten'),
-  keep: matrixHighlight(
-    'The detour is no cheaper than the trip already in the cell, so the cell is left alone',
-  ),
+  improve: matrixHighlight('The detour is cheaper, so the cell gets updated'),
+  keep: matrixHighlight('The detour is not cheaper so the cell value remains'),
 } as const satisfies Record<string, ExplainerHighlight>;
 
 const cellCost = (graph: Graph, distance: Distance, route: GraphPath) =>
@@ -34,7 +32,7 @@ export const allPairsExplainer =
     switch (frame.type) {
       case 'start':
         return {
-          content: 'Seeding the [Table] with the Edges We Already Have',
+          content: 'Seeding the [Table] with the Edges in the graph',
           highlights: [highlights.table],
         };
 
@@ -42,7 +40,7 @@ export const allPairsExplainer =
         if (frame.cycleNodeIds?.length) {
           return {
             content:
-              'The [Table] Cannot Be Finalized. While a [Negative Cycle] Exists, Every Trip Through It Can Still Get Cheaper',
+              'The [Table] Cannot Be Finalized since a [Negative Cycle] Exists',
             highlights: [
               highlights.table,
               negativeCycle(graph, frame.cycleEdgeIds),
@@ -51,39 +49,40 @@ export const allPairsExplainer =
         }
 
         return {
-          content: "Done! Every Pair's Shortest Trip Is in the [Table]",
+          content:
+            'Done! The [Table] shows the cheapest bath between each pair of nodes',
           highlights: [highlights.table],
         };
 
       case 'choose-pivot':
         return {
-          content: `Pivot ${frame.pivotNumber} of ${frame.totalPivots}: Can Detouring Through {${frame.node}} Beat the [Table]?`,
+          content: `Phase ${frame.pivotNumber} of ${frame.totalPivots}: Can routing via {${frame.node}} reduce the current [Table] value?`,
           highlights: [highlights.table],
         };
 
       case 'consider-pair': {
-        const detour = cost(graph, frame.detourDistance, frame.detourRoute);
-        const today = cellCost(
+        const detourCost = cost(graph, frame.detourDistance, frame.detourRoute);
+        const currentCost = cellCost(
           graph,
           frame.currentDistance,
           frame.currentRoute,
         );
 
         return {
-          content: `{${frame.from}} to {${frame.to}} via {${frame.pivot}} Costs ${detour.text}, Against ${today.text} Today`,
-          highlights: [...detour.highlights, ...today.highlights],
+          content: `{${frame.from}} via {${frame.pivot}} to {${frame.to}} costs ${detourCost.text} compared with a current cost of ${currentCost.text}`,
+          highlights: [...detourCost.highlights, ...currentCost.highlights],
         };
       }
 
       case 'keep-pair': {
-        const kept = cost(graph, frame.currentDistance, frame.currentRoute);
-        const detour = cost(graph, frame.detourDistance, frame.detourRoute);
+        const keptCost = cost(graph, frame.currentDistance, frame.currentRoute);
+        const detourCost = cost(graph, frame.detourDistance, frame.detourRoute);
 
         return {
-          content: `{${frame.from}} to {${frame.to}} Is Already ${kept.text}, So the Detour Through {${frame.pivot}} Costing ${detour.text} Is No Help and the Cell [Remains]`,
+          content: `{${frame.from}} to {${frame.to}} currently costs ${keptCost.text} which is not less than the current route via {${frame.pivot}} costing ${detourCost.text} so the current cost [Remains]`,
           highlights: [
-            ...kept.highlights,
-            ...detour.highlights,
+            ...keptCost.highlights,
+            ...detourCost.highlights,
             highlights.keep,
           ],
         };
@@ -94,17 +93,21 @@ export const allPairsExplainer =
 
         if (frame.previousDistance === undefined) {
           return {
-            content: `Nothing Has Linked {${frame.from}} to {${frame.to}} Before, So the Cell [Improves] From ∞ to ${improved.text}`,
+            content: `Nothing has linked {${frame.from}} to {${frame.to}} yet, so the cost [Improves] from ∞ to ${improved.text}`,
             highlights: [highlights.improve, ...improved.highlights],
           };
         }
 
-        const beaten = cost(graph, frame.previousDistance, frame.previousRoute);
+        const improvedCost = cost(
+          graph,
+          frame.previousDistance,
+          frame.previousRoute,
+        );
 
         return {
-          content: `The Detour Wins Against ${beaten.text}, So the Cell for {${frame.from}} to {${frame.to}} [Improves] to ${improved.text}`,
+          content: `The detour improves against ${improvedCost.text}, so the cost for {${frame.from}} to {${frame.to}} [Improves] to ${improved.text}`,
           highlights: [
-            ...beaten.highlights,
+            ...improvedCost.highlights,
             highlights.improve,
             ...improved.highlights,
           ],

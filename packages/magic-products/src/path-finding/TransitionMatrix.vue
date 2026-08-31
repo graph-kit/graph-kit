@@ -10,6 +10,7 @@
   import { computed } from 'vue';
 
   import TransitionMatrixCell from './TransitionMatrixCell.vue';
+  import { useMatrixDensity } from './composables/useMatrixDensity.ts';
   import { useTransitionMatrixGrid } from './composables/useTransitionMatrixGrid.ts';
 
   const graph = useProvidedGraph();
@@ -79,46 +80,7 @@
     graph.focus.set([targetId, ...edgeIds]);
   };
 
-  type CellSize = 'xsmall' | 'small' | 'medium' | 'large';
-
-  const cellSizeConfig: Record<
-    CellSize,
-    { headerClass: string; dataClass: string; nodeScale: number }
-  > = {
-    xsmall: {
-      headerClass: 'size-6 text-xs',
-      dataClass: 'size-6 max-w-6 text-xs',
-      nodeScale: 0.325,
-    },
-    small: {
-      headerClass: 'size-8 text-sm',
-      dataClass: 'size-8 max-w-8 text-sm',
-      nodeScale: 0.5,
-    },
-    medium: {
-      headerClass: 'size-10',
-      dataClass: 'size-10 max-w-10',
-      nodeScale: 0.625,
-    },
-    large: {
-      headerClass: 'size-12',
-      dataClass: 'size-12 max-w-12',
-      nodeScale: 0.75,
-    },
-  };
-
-  const density = computed(() => {
-    const count = graph.nodes.value.length;
-    const cellSize: CellSize =
-      count > 12
-        ? 'xsmall'
-        : count > 7
-          ? 'small'
-          : count > 5
-            ? 'medium'
-            : 'large';
-    return cellSizeConfig[cellSize];
-  });
+  const density = useMatrixDensity(() => graph.nodes.value.length);
 
   const headerCellClass = computed(() => density.value.headerClass);
   const columnHeaderCellClass = computed(

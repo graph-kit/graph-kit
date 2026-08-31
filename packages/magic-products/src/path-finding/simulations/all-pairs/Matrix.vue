@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import Node from '@magic/shared/Node';
+  import TruncatedText from '@magic/shared/TruncatedText';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
   import { GNode, GraphPath } from '@magic/shared/graph';
@@ -9,6 +10,7 @@
 
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
+  import { useMatrixDensity } from '../../composables/useMatrixDensity.ts';
   import { formatDistance } from '../distance.ts';
   import { nodeRoles } from './effects.ts';
   import { AllPairsFrame } from './frame.ts';
@@ -75,7 +77,6 @@
   const PIVOT_TINT = nodeRoleColors[nodeRoles.pivot] + '33';
   const PAIR_TINT = nodeRoleColors[nodeRoles.pair] + '66';
 
-  // the cell wears the color its route is being painted in out on the canvas
   const hoveredTint = computed(() => {
     const firstEdge = hoveredRoute.value.at(0);
     if (firstEdge === undefined) return;
@@ -103,24 +104,48 @@
   const unhoverCell = (from: GNode['id'], to: GNode['id']) => {
     if (hoveredCell.value === cellKey(from, to)) hoveredCell.value = undefined;
   };
+
+  const distanceOf = (from: GNode['id'], to: GNode['id']) =>
+    matrix.value?.[from]?.[to];
+
+  const isReachable = (from: GNode['id'], to: GNode['id']) =>
+    distanceOf(from, to) !== undefined;
+
+  const cellTooltip = (from: GNode['id'], to: GNode['id']) =>
+    `${graph.getNode(from).label}→${graph.getNode(to).label}: ${formatDistance(distanceOf(from, to))}`;
+
+  const density = useMatrixDensity(() => nodeIds.value.length);
+
+  const columnHeaderCellClass = computed(
+    () =>
+      `${density.value.headerClass} sticky top-0 z-10 bg-gray-200 dark:bg-gray-800`,
+  );
+  const cellClass = (from: GNode['id'], to: GNode['id']) => [
+    density.value.dataClass,
+    'overflow-hidden rounded-sm p-0 text-center font-bold tabular-nums',
+    isReachable(from, to)
+      ? 'bg-gray-800 text-white dark:bg-gray-900'
+      : 'bg-gray-500/15',
+    hasRoute(from, to) ? 'cursor-pointer' : '',
+  ];
 </script>
 
 <template>
   <Well v-if="nodeIds.length > 0">
-    <VStack class="gap-2">
-      <span class="text-sm font-bold opacity-60">From \ To</span>
+    <VStack>
       <div class="max-h-[50vh] max-w-[40vw] overflow-auto">
-        <table class="border-separate border-spacing-1">
+        <table class="table-fixed border-separate border-spacing-1">
           <thead>
             <tr>
-              <th></th>
+              <th :class="columnHeaderCellClass"></th>
               <th
                 v-for="to in nodeIds"
                 :key="to"
+                :class="columnHeaderCellClass"
               >
                 <Node
                   :id="to"
-                  :scale="0.45"
+                  :scale="density.nodeScale"
                 />
               </th>
             </tr>
@@ -130,22 +155,29 @@
               v-for="from in nodeIds"
               :key="from"
             >
-              <th>
+              <th :class="density.headerClass">
                 <Node
                   :id="from"
-                  :scale="0.45"
+                  :scale="density.nodeScale"
                 />
               </th>
               <td
                 v-for="to in nodeIds"
                 :key="to"
-                class="rounded-sm px-2 text-center font-bold tabular-nums"
-                :class="hasRoute(from, to) ? 'cursor-pointer' : ''"
-                :style="{ backgroundColor: cellTint(from, to) }"
+                :class="cellClass(from, to)"
                 @mouseenter="hoverCell(from, to)"
                 @mouseleave="unhoverCell(from, to)"
+                :style="{ backgroundColor: cellTint(from, to) }"
               >
-                {{ formatDistance(matrix?.[from]?.[to]) }}
+                <div class="grid size-full place-items-center rounded-sm">
+                  <TruncatedText
+                    :class="`block w-full px-1 ${isReachable(from, to) ? '' : 'opacity-40'}`"
+                    :tooltip="cellTooltip(from, to)"
+                    :delay="400"
+                  >
+                    {{ formatDistance(distanceOf(from, to)) }}
+                  </TruncatedText>
+                </div>
               </td>
             </tr>
           </tbody>

@@ -5,7 +5,7 @@
 | Plugin                                      | What It Does                                                           |
 | ------------------------------------------- | ---------------------------------------------------------------------- |
 | [`surface`](./src/surface/index.ts)         | Hands the graph its drawing surface, plus paint priority and cursors.  |
-| [`interactive`](./src/interactive/index.ts) | Build the graph on the canvas: add nodes, link them, edit weights.     |
+| [`interactive`](./src/interactive/index.ts) | Build the graph on the surface: add nodes, link them, edit weights.    |
 | [`nodeDrag`](./src/node-drag/index.ts)      | Click-and-drag repositioning, including a whole multi-node selection.  |
 | [`anchors`](./src/anchors/index.ts)         | Draggable handles on a hovered node for pulling out a new edge.        |
 | [`marquee`](./src/marquee/index.ts)         | Drag a box on empty canvas to select everything it encloses.           |
@@ -21,9 +21,9 @@
 
 Pure computation, no rendering.
 
-| Plugin                                                          | What It Does                                                        |
-| --------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [`adjacencyLists`](./src/adjacency-lists/index.ts)              | Adjacency lists, plain and weighted, that other analysis builds on. |
-| [`characteristics`](./src/characteristics/index.ts)             | Completeness, connectedness, bipartiteness, cycles, SCCs.           |
-| [`minimumSpanningTrees`](./src/minimum-spanning-trees/index.ts) | Every MST of the graph, or every minimum spanning forest.           |
-| [`transitionMatrix`](./src/transition-matrix/index.ts)          | A node-by-node matrix of exact fractions, for Markov-chain work.    |
+| Plugin                                                          | What It Does                                              |
+| --------------------------------------------------------------- | --------------------------------------------------------- |
+| [`adjacencyLists`](./src/adjacency-lists/index.ts)              | Adjacency lists, plain and weighted.                      |
+| [`characteristics`](./src/characteristics/index.ts)             | Completeness, connectedness, bipartiteness, cycles, SCCs. |
+| [`minimumSpanningTrees`](./src/minimum-spanning-trees/index.ts) | Every MST of the graph, or every minimum spanning forest. |
+| [`transitionMatrix`](./src/transition-matrix/index.ts)          | A node-by-node matrix of exact fractions.                 |

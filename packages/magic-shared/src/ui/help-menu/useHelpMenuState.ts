@@ -1,3 +1,5 @@
+import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
+
 import { ComputedRef, computed, ref } from 'vue';
 
 import { ShortcutControls } from '../../shortcuts/useShortcuts.ts';
@@ -7,7 +9,7 @@ import { HelpMenuGesture, HelpMenuRow, HelpMenuSection } from './types.ts';
 
 /** the groups the shell fills, in the order they read best. the product's own read first */
 const CATEGORY_ORDER = [
-  'Canvas',
+  'Graph',
   'Camera',
   'Simulation',
   'Annotations',
@@ -37,7 +39,7 @@ const byCategoryOrder = (previous: string, next: string) => {
 /** the help dialog, reachable in every product with the "h" key */
 export const useHelpMenuState = (
   shortcuts: ShortcutControls,
-  gestures: HelpMenuGesture[] = [],
+  gestures: MaybeGetter<HelpMenuGesture[]> = [],
 ): HelpMenuControls => {
   const isOpen = ref(false);
 
@@ -61,7 +63,9 @@ export const useHelpMenuState = (
       });
     }
 
-    for (const gesture of gestures) {
+    // read through the getter inside the computed, so a gesture that comes and goes
+    // with the plugin answering it comes and goes from the menu with it
+    for (const gesture of getValue(gestures)) {
       const { label, icon } = GESTURE_DISPLAY[gesture.gesture];
       addRow(gesture.category, {
         name: gesture.name,

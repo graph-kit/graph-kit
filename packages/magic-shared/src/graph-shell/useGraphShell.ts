@@ -4,6 +4,7 @@ import { resolveShellFlags } from '../product/flags.ts';
 import { ContentPredicate, ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
+import { graphShellHelpMenu } from './help.ts';
 import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
 import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
@@ -59,7 +60,7 @@ export const useGraphShell = (
   const shell = useShell(host, {
     productId: options.productId,
     flags: options.flags,
-    helpMenu: options.helpMenu,
+    helpMenu: graphShellHelpMenu(graph, options.helpMenu),
     lensChips,
     simulationButtons,
   });

@@ -2,6 +2,7 @@ import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
 import { ReadonlyEventHub } from '@core/events/createEventHub';
+import { MaybeGetter } from '@core/utils/maybeGetter/index';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { Tier } from '@multiplayer/protocol/tiers';
 import { BasicColorMode } from '@vueuse/core';
@@ -162,8 +163,11 @@ export type ShellOptions = {
   productId: ProductId;
   /** what the product asks for, see {@link ShellFlags} */
   flags?: ShellFlagOptions;
-  /** what this product adds to the help menu beyond its shortcuts */
-  helpMenu?: HelpMenuGesture[];
+  /**
+   * what this product adds to the help menu beyond its shortcuts. a getter for anything
+   * whose availability changes, since the menu lists only what is answering right now
+   */
+  helpMenu?: MaybeGetter<HelpMenuGesture[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
 };

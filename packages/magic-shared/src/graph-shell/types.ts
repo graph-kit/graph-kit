@@ -1,3 +1,5 @@
+import { MaybeGetter } from '@core/utils/maybeGetter/index';
+
 import { Graph } from '../graph/types.ts';
 import { UseGraphOptions } from '../graph/useGraph.ts';
 import { ShellFlagOptions } from '../product/flags.ts';
@@ -20,7 +22,7 @@ export type GraphShellOptions = UseGraphOptions & {
   /** conditionally disable/enable shell features */
   flags?: ShellFlagOptions;
   /** what this product adds to the help menu beyond its shortcuts */
-  helpMenu?: HelpMenuGesture[];
+  helpMenu?: MaybeGetter<HelpMenuGesture[]>;
   /** builds the lens chips shown above the canvas, if the product offers any */
   lensChips?: GraphLensChipOption;
   /** builds the simulation buttons shown below the canvas, if the product offers any */

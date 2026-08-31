@@ -85,7 +85,7 @@
 
 <template>
   <Well v-if="rows.length > 0">
-    <VStack class="gap-2">
+    <VStack>
       <span class="text-lg font-bold text-center">{{ title }}</span>
       <!--
         a plain element rather than a VStack, because the scroll has to reach

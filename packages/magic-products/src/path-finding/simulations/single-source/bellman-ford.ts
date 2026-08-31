@@ -26,14 +26,6 @@ export const bellmanFord: SingleSourceFunction =
 
     const arrivalEdgeByNode = new Map<GNode['id'], GEdge>();
 
-    /*
-      the route each distance was actually paid on, written down as it is paid
-      rather than read back off the arrival edges afterwards. once a negative
-      cycle overwrites the arrival edge a node was first reached by, walking
-      that chain backwards only ever goes round the loop, so the edges leading
-      in from the source are gone. relaxing already knows them: the route to
-      the target is the route to the source with the crossed edge on the end
-    */
     const routeByNode = new Map<GNode['id'], GEdge['id'][]>([
       [sourceNodeId, []],
     ]);
@@ -42,12 +34,6 @@ export const bellmanFord: SingleSourceFunction =
 
     const edgeById = new Map(allEdges.map((edge) => [edge.id, edge]));
 
-    /*
-      the route an offer would be paid on. crossing an edge that lands back on
-      a node the route has already reached is only worth doing when the lap it
-      closes costs less than nothing, so an offer that merely doubles back is
-      answered with no route and reads as a bare cost
-    */
     const routeBehindOffer = (edge: GEdge, offered: Fraction) => {
       const basePath = routeTo(edge.source);
 
@@ -91,11 +77,6 @@ export const bellmanFord: SingleSourceFunction =
       sweep = undefined;
     };
 
-    /*
-      no frontier and no settled set: bellman ford has neither. it sweeps every
-      edge every pass, so the only state worth painting is the distance table
-      and the tree the table implies
-    */
     const frame = <T extends SingleSourceStep>(
       fields: T & SingleSourceHighlights,
     ): SingleSourceFrame => ({
@@ -106,11 +87,6 @@ export const bellmanFord: SingleSourceFunction =
       ...fields,
     });
 
-    /**
-     * what crossing this edge would offer the node it lands on, next to what
-     * that node already holds. absent when nothing has reached the far side to
-     * cross from, which every caller answers with {@link skipUnreachable}
-     */
     const offerAcross = (edge: GEdge) => {
       const reachedFrom = distances[edge.source];
       if (reachedFrom === undefined) return;
@@ -184,12 +160,7 @@ export const bellmanFord: SingleSourceFunction =
       frameCollector.add(frame({ type: 'end', ...painted }));
     };
 
-    /**
-     * one more sweep once the passes are spent. every distance that can be
-     * final is by then, so an edge that still improves one is riding a loop
-     * that gets cheaper every lap. reports the cycle and answers whether it
-     * found one, since nothing after it is worth showing if it did
-     */
+    // checking step
     const runNegativeCycleSweep = () => {
       beginSweep();
       frameCollector.add(
@@ -354,8 +325,6 @@ export const bellmanFord: SingleSourceFunction =
       frameCollector.add(frame({ type: 'unreachable', nodes: unreachable }));
     }
 
-    // nothing was final until the last pass, so everything reached becomes
-    // final all at once rather than one node at a time the way dijkstra does it
     frameCollector.add(
       frame({
         type: 'end',

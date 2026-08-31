@@ -5,14 +5,6 @@ import { CoreEdge } from '@graph/primitives/types';
 import { GraphPath } from '../../graph/path.ts';
 import { GEdge, Graph } from '../../graph/types.ts';
 
-/**
- * a themer that lights up one route at a time, in place of the last.
- *
- * paints the route's edges and leaves its nodes alone. the one place a run of
- * edges gets painted, so that everything pointing at one across the app reads
- * the same way: the explainer reaches it through `createEdgeSetHighlight`,
- * panels hold one directly and call `setPath` as the hover moves.
- */
 export type PathThemer = {
   themer: Themer;
   /** paints this route, in place of whatever was painted before */
@@ -22,11 +14,6 @@ export type PathThemer = {
 
 export type PathThemerOptions = {
   path?: GraphPath;
-  /**
-   * what to paint it in, defaulting to the color focus wears, which is what a
-   * route the reader is merely pointing at should look like. pass a role color
-   * for a route the algorithm is claiming rather than one being pointed at
-   */
   color?: Color;
 };
 

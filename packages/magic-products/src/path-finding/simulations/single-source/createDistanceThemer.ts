@@ -13,10 +13,6 @@ import { SingleSourceFrame } from './frame.ts';
 const TENTATIVE_ALPHA = 0.65;
 
 export type DistanceThemerOptions = {
-  /**
-   * fade the nodes whose distance can still improve, which only reads as
-   * something when the run has a settled set to contrast them against
-   */
   dimTentativeDistances: boolean;
 };
 

@@ -30,14 +30,12 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
     routes[edge.source][edge.target] = [edge.id];
   }
 
-  // a route is replaced rather than edited, so the rows are all a frame has to copy
   const trailSnapshot = (): RouteTrail =>
     Object.fromEntries(nodeIds.map((from) => [from, { ...routes[from] }]));
 
   const routeFor = (from: GNode['id'], to: GNode['id']) =>
     routeBetween(graph, routes, from, to);
 
-  /** the two legs of a trip through the pivot, laid end to end */
   const detourVia = (
     from: GNode['id'],
     pivot: GNode['id'],
@@ -45,8 +43,7 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
   ): GraphPath => [...routeFor(from, pivot), ...routeFor(pivot, to)];
 
   /**
-   * whether a detour is a trip anyone can take: the legs chain into the pair
-   * asked about, and it does not double back through a node it has been to
+   * whether a detour is a trip anyone can take. it can not double back through a node it has been to
    */
   const isTrip = (
     detour: GraphPath,
@@ -119,24 +116,16 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
         const detourDistance = intoPivot.add(outOfPivot);
         const currentDistance = matrix[from][to];
 
-        // read before the cell is rewritten, or the route being beaten is gone
         const currentRoute = routeFor(from, to);
 
-        /*
-          the whole walk through the pivot, which the cell takes on when the
-          detour wins so that its number and its route go on agreeing, and the
-          part of it worth showing, which is nothing when it doubles back
-        */
         const detourPath = detourVia(from, pivot, to);
         const detourRoute = isTrip(detourPath, from, to) ? detourPath : [];
 
-        /** what the cell holds onto, absent when the detour is about to win */
         const keptDistance =
           currentDistance !== undefined && currentDistance.lte(detourDistance)
             ? currentDistance
             : undefined;
 
-        // a losing detour that is not even a trip is passed over in silence
         if (keptDistance !== undefined && detourRoute.length === 0) continue;
 
         const pairUnderTest = {
@@ -190,9 +179,7 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
 
         /*
           the diagonal starts at zero, so the only way a cell can improve on
-          itself is by getting back for less than nothing. that is the whole
-          proof, and every pivot after it would be filling in a table no
-          answer survives
+          itself is by getting back for less than 0
         */
         if (from === to) {
           reportNegativeCycle(from);

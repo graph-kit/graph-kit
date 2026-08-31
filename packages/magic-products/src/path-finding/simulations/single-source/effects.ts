@@ -33,17 +33,12 @@ type SingleSourceNodeConcept =
   'exploring' | 'weighing' | 'finalized' | 'frontier' | 'source' | 'looping';
 
 export const nodeRoles = {
-  /** the node the algorithm is standing on this frame */
   exploring: 'active',
-  /** a node whose distance is being compared against a fresh offer */
   weighing: 'candidate',
-  /** its distance is final, no later step can beat it */
   finalized: 'settled',
-  /** discovered, with a tentative distance that may still improve */
   frontier: 'pending',
-  /** the node the user picked to measure every distance from */
   source: 'anchor',
-  /** it sits on a cycle that costs less than nothing to go around */
+  // sits on negative cycle
   looping: 'result',
 } as const satisfies Record<SingleSourceNodeConcept, NodeRole>;
 
@@ -51,13 +46,10 @@ type SingleSourceEdgeConcept =
   'relaxing' | 'shortestPath' | 'discarded' | 'looping';
 
 export const edgeRoles = {
-  /** the edge whose weight is being tested this frame */
   relaxing: 'crossing',
-  /** an edge on one of the best paths found so far */
   shortestPath: 'tree',
-  /** an edge tested this frame that offered nothing better */
   discarded: 'rejected',
-  /** it is part of the cycle that costs less than nothing to lap */
+  // is part of negative cycle
   looping: 'result',
 } as const satisfies Record<SingleSourceEdgeConcept, EdgeRole>;
 
@@ -132,11 +124,6 @@ const singleSourceEffects = (
         position: 'center-right',
         id: frontierSlotId,
       },
-      /*
-        the two algorithms fill different halves of a frame, so both panels are
-        registered and each renders only for the run that gives it something:
-        dijkstra has a frontier and no sweep, bellman ford the other way round
-      */
       {
         component: Sweep,
         position: 'center-right',

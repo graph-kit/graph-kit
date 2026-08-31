@@ -19,7 +19,7 @@ export const edgeIdsAlongPathTo = (
   const edgeIds: GEdge['id'][] = [];
   const visited = new Set<GNode['id']>();
 
-  // a negative cycle makes the arrival chain loop, so walk each node once
+  // a negative cycle makes the arrival chain loop
   for (let at = node; !visited.has(at);) {
     visited.add(at);
     const arrivedOn = arrivalEdgeByNode.get(at);

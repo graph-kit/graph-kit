@@ -22,19 +22,24 @@
 
   const rawInput = ref('');
 
-  const input = computed({
-    get: () => rawInput.value,
-    set: (value) => {
-      rawInput.value = value.replace(/[^0-9]/g, '');
-    },
+  const input = computed(() => {
+    const trimmed = rawInput.value.trim();
+    if (trimmed.length === 0) return undefined;
+    return Number(trimmed);
   });
 
+  const inputValid = computed(() => Number.isInteger(input.value));
+
+  const showError = computed(
+    () => input.value !== undefined && !inputValid.value,
+  );
+
   const insert = () => {
-    if (input.value.length === 0) return;
+    if (!inputValid.value) return;
     mode.value = 'insert';
     const node = nullThrows(
       graph.actions.addNode({
-        label: input.value,
+        label: String(input.value),
         position: { x: 800, y: 250 },
       }),
       'node transaction failed',
@@ -56,15 +61,16 @@
     </template>
     <Well class="w-48">
       <TextInput
-        v-model="input"
+        v-model="rawInput"
+        :invalid="showError"
         @keyup.enter="insert"
         @vue:mounted="({ el }) => el?.focus()"
         inputmode="numeric"
-        placeholder="Enter a number"
+        placeholder="Enter an integer"
       />
       <Button
         @click="insert"
-        :disabled="input.length === 0"
+        :disabled="inputValid ? false : 'Enter an integer'"
         class="w-full mt-2"
       >
         <template #start>

@@ -11,7 +11,7 @@
 <template>
   <Button
     @click="resetTree"
-    class="hover:bg-red-600 active:bg-red-700 dark:hover:bg-red-600 dark:active:bg-red-700"
+    class="hover:bg-red-600 active:bg-red-700 dark:hover:bg-red-600 dark:active:bg-red-700 hover:text-white"
   >
     <template #start>
       <Icon :path="mdiRestart" />

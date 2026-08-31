@@ -20,7 +20,7 @@ import { focus } from '@graph/plugins/focus';
 import { surface } from '@graph/plugins/surface';
 ```
 
-| Plugin              |                                                                                           |
+| Plugin              | What It Does                                                                              |
 | ------------------- | ----------------------------------------------------------------------------------------- |
 | **surface**         | render the graph to a canvas surface                                                      |
 | **interactive**     | gestures such as double-clicking to add a node                                            |

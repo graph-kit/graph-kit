@@ -41,7 +41,7 @@ export const negativeCycleChip = (graph: Graph): LensChipDefinition => {
   return {
     name: () => `Negative Cycle: ${cycle.value ? 'Yes' : 'No'}`,
     tooltipLabel:
-      'A cycle in which all edges sum to a negative value. Every lap around it costs less than the previous round in an infinite loop',
+      'A cycle in which all edges sum to a negative value. Every lap around it costs less than the previous round causing an infinite loop',
     lens: {
       id: 'negative-cycle',
       activate: () => {

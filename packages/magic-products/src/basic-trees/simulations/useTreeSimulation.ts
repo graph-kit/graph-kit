@@ -4,7 +4,6 @@ import { SimulationDefinition } from '@magic/shared/simulation';
 
 import { ref } from 'vue';
 
-import { graphToTree } from '../graph-conversion/graphToTree.ts';
 import { AVLTree } from '../tree/AVLTree.ts';
 import { createSync } from './createSync.ts';
 import { treeExplainer } from './explainer.ts';
@@ -59,10 +58,6 @@ export const useTreeSimulation = (
     },
     recomputeFramesOnStructureChange: false,
   };
-
-  graph.events.transit.subscribe('onDecoded', () => {
-    tree.root = graphToTree(graph);
-  });
 
   return {
     definition,

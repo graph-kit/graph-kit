@@ -20,7 +20,7 @@ import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
-import { HelpMenuGesture } from '../ui/help-menu/types.ts';
+import { HelpMenuItem } from '../ui/help-menu/types.ts';
 import { HelpMenuControls } from '../ui/help-menu/useHelpMenuState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
@@ -57,6 +57,20 @@ export type HistoryField = {
   redo: () => void;
   /** makes whatever the graph holds right now the state undo bottoms out at */
   clear: () => void;
+};
+
+/**
+ * what the shell hands consumers: the host's history plus a way to hold undo and redo
+ * off while the product's state isn't ready to handle it
+ */
+export type ShellHistory = HistoryField & {
+  /**
+   * blocks undo and redo until the returned release is called. `message` is what the
+   * buttons report as their reason for being disabled
+   */
+  suppress: (message: string) => () => void;
+  /** why undo and redo are blocked, `undefined` when they are not */
+  suppression: ComputedRef<string | undefined>;
 };
 
 export type DocBinding = {
@@ -164,7 +178,7 @@ export type ShellOptions = {
   /** what the product asks for, see {@link ShellFlags} */
   flags?: ShellFlagOptions;
   /** what this product adds to the help menu beyond its shortcuts */
-  helpMenu?: MaybeGetter<HelpMenuGesture[]>;
+  helpMenu?: MaybeGetter<HelpMenuItem[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
 };
@@ -184,7 +198,7 @@ export type Shell = {
   toast: ToastControls;
   surface: CanvasSurface;
   transit?: TransitField;
-  history?: HistoryField;
+  history?: ShellHistory;
   annotations?: AnnotationsUIControls;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];

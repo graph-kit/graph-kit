@@ -1,3 +1,5 @@
+import { Key } from 'ctrl-keys';
+
 /** what the help menu shows for one thing a user can do */
 export type HelpMenuEntry = {
   category: string;
@@ -18,6 +20,17 @@ export type HelpMenuGesture = HelpMenuEntry & {
   id: string;
   gesture: Gesture;
 };
+
+/**
+ * a key binding answered by something other than the shortcut registry
+ */
+export type HelpMenuBinding = HelpMenuEntry & {
+  id: string;
+  key: Key;
+};
+
+/** one row the menu can list on behalf of a plugin or a product */
+export type HelpMenuItem = HelpMenuGesture | HelpMenuBinding;
 
 /** one key or one gesture, as the menu prints it */
 export type HelpMenuChip = {

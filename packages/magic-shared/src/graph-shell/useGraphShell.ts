@@ -73,7 +73,6 @@ export const useGraphShell = (
     shell.localStorage.invalidate,
   );
 
-  // any settled move, not just a drag drop, so programmatic repositioning persists too
   graph.events.subscribe(
     'onNodePositionsCommitted',
     shell.localStorage.invalidate,

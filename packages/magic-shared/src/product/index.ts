@@ -14,6 +14,8 @@ export type {
   Gesture,
   HelpMenuEntry,
   HelpMenuGesture,
+  HelpMenuBinding,
+  HelpMenuItem,
 } from '../ui/help-menu/types.ts';
 
 export { provideShell, useProvidedShell } from './context.ts';

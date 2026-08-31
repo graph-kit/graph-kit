@@ -3,18 +3,24 @@ import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 import { Ref, ref } from 'vue';
 
 import { Graph } from '../graph/types.ts';
-import { HelpMenuGesture } from '../ui/help-menu/types.ts';
+import { HelpMenuItem } from '../ui/help-menu/types.ts';
 
 type PluginLifecycle = Graph['interactive']['lifecycle'];
 
 export const GRAPH_HELP_CATEGORY = 'Graph';
 
-const INTERACTIVE_GESTURES: HelpMenuGesture[] = [
+const INTERACTIVE_HELP: HelpMenuItem[] = [
   {
     id: 'graph/add-node',
     category: GRAPH_HELP_CATEGORY,
     name: 'Add Node',
     gesture: 'dblclick',
+  },
+  {
+    id: 'graph/remove-node',
+    category: GRAPH_HELP_CATEGORY,
+    name: 'Remove Node',
+    key: 'backspace',
   },
 ];
 
@@ -28,12 +34,12 @@ const lifecycleEnabled = (lifecycle: PluginLifecycle): Ref<boolean> => {
 /** the graph's gestures and the product's, listed only while a plugin answers them */
 export const graphShellHelpMenu = (
   graph: Graph,
-  productGestures: MaybeGetter<HelpMenuGesture[]> = [],
+  productHelp: MaybeGetter<HelpMenuItem[]> = [],
 ) => {
   const interactive = lifecycleEnabled(graph.interactive.lifecycle);
 
   return () => [
-    ...(interactive.value ? INTERACTIVE_GESTURES : []),
-    ...getValue(productGestures),
+    ...(interactive.value ? INTERACTIVE_HELP : []),
+    ...getValue(productHelp),
   ];
 };

@@ -25,9 +25,9 @@ const KEY_SYMBOLS: Record<string, string> = {
   esc: 'Esc',
   space: 'Space',
   plus: '+',
-  backspace: '⌫',
+  backspace: '⌫ Backspace',
   delete: 'Del',
-  enter: '↵',
+  enter: '↵ Enter',
   tab: 'Tab',
 };
 

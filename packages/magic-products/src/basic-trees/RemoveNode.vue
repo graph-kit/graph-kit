@@ -3,26 +3,18 @@
   import Button from '@magic/shared/Button';
   import Icon from '@magic/shared/Icon';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
-  import { useProvidedShell } from '@magic/shared/product';
   import { useFocusedNode } from '@magic/shared/utilities/useFocusedNode';
   import { mdiPlay } from '@mdi/js';
 
-  import { useProvidedTreeSimulation } from './useProvidedTree.ts';
+  import { useProvidedTreeActions } from './useProvidedTree.ts';
 
   const graph = useProvidedGraph();
-  const shell = useProvidedShell();
-
-  const {
-    controls: { mode, target },
-    definition,
-  } = useProvidedTreeSimulation();
+  const { removeNode } = useProvidedTreeActions();
   const node = useFocusedNode(graph);
 
   const remove = () => {
     assert(node.value, 'target not defined');
-    mode.value = 'remove';
-    target.value = node.value.id;
-    shell.simulation.start(definition);
+    removeNode(node.value.id);
   };
 </script>
 

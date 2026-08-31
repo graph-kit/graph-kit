@@ -14,7 +14,11 @@
   import { AVLTree } from './tree/AVLTree.ts';
   import { getBalanceFactor } from './tree/getBalanceFactor.ts';
   import { getTreeHeight } from './tree/getTreeHeight.ts';
-  import { provideTree, provideTreeSimulation } from './useProvidedTree.ts';
+  import {
+    provideTreeActions,
+    provideTreeSimulation,
+  } from './useProvidedTree.ts';
+  import { useTreeActions, useTreeShortcuts } from './useTreeActions.ts';
   import { useTreePersistence } from './useTreePersistence.ts';
 
   const tree = new AVLTree();
@@ -83,7 +87,10 @@
 
   const treeSim = useTreeSimulation(tree, graph);
   provideTreeSimulation(treeSim);
-  provideTree(tree);
+
+  const treeActions = useTreeActions(tree, graph, shell, treeSim);
+  provideTreeActions(treeActions);
+  useTreeShortcuts(graph, shell, treeActions);
 
   useTreePersistence(tree, graph, shell);
 

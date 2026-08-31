@@ -22,9 +22,10 @@
   "dependencies": {
     "@canvas/primitives": "workspace:*",
     "@canvas/surface": "workspace:*",
-    "@core/utils": "workspace:*",
     "@core/components": "workspace:*",
+    "@core/utils": "workspace:*",
     "@cortex-js/compute-engine": "^0.102.0",
+    "@graph/algorithms": "workspace:*",
     "@graph/plugins": "workspace:*",
     "@graph/primitives": "workspace:*",
     "@graph/theme-presets": "workspace:*",

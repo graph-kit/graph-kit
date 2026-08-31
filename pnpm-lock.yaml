@@ -470,6 +470,9 @@ importers:
       '@cortex-js/compute-engine':
         specifier: ^0.102.0
         version: 0.102.0
+      '@graph/algorithms':
+        specifier: workspace:*
+        version: link:../graph-algorithms
       '@graph/plugins':
         specifier: workspace:*
         version: link:../graph-plugins

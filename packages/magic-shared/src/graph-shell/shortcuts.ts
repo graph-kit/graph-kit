@@ -7,6 +7,7 @@ export const useGraphShellShortcuts = (shell: Shell, graph: Graph) => {
   const shortcuts: ShortcutItem[] = [
     {
       id: 'shell/focus-all',
+      helpMenu: { category: 'Canvas', name: 'Select All' },
       key: 'meta+a',
       callback: graph.focus.setAll,
     },

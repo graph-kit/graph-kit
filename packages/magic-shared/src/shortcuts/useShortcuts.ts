@@ -4,9 +4,10 @@ import { Callback, Key } from 'ctrl-keys';
 
 import { ComputedRef, computed, onUnmounted, ref } from 'vue';
 
+import { WithHelpMenuEntry } from '../ui/help-menu/types.ts';
 import { useCtrlKeys } from './useCtrlKeys.ts';
 
-export type ShortcutItem = {
+export type ShortcutItem = WithHelpMenuEntry & {
   id: string;
   key: Key;
   callback: Callback;

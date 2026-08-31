@@ -59,6 +59,7 @@ export const useGraphShell = (
   const shell = useShell(host, {
     productId: options.productId,
     flags: options.flags,
+    helpMenu: options.helpMenu,
     lensChips,
     simulationButtons,
   });

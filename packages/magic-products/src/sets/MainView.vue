@@ -96,6 +96,7 @@
 
   shell.shortcuts.add({
     id: 'delete-set',
+    helpMenu: { category: 'Sets', name: 'Delete Focused Sets' },
     callback: deleteFocusedSetDefinitions,
     key: 'backspace',
   });

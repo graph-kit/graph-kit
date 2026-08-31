@@ -74,7 +74,7 @@ export const useShell = (
     appearance,
     shortcuts,
     debug,
-    helpMenu: useHelpMenuState(),
+    helpMenu: useHelpMenuState(shortcuts, options.helpMenu),
     toast: useToastState(),
     annotations,
     lensChips: options.lensChips,

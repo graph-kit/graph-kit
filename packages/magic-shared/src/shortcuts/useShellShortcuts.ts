@@ -9,12 +9,14 @@ export const useShellShortcuts = (shell: Shell) => {
   const shortcuts: (ShortcutItem | undefined)[] = [
     {
       id: 'shell/fullscreen',
+      helpMenu: { category: 'View', name: 'Toggle Fullscreen' },
       key: 'f',
       callback: fullscreen.toggle,
     },
     shell.annotations
       ? {
           id: 'shell/toggle-annotations',
+          helpMenu: { category: 'Annotations', name: 'Toggle Annotating' },
           key: 'a',
           callback: () => {
             if (shell.multiplayer?.room.isReadonly.value) return;
@@ -24,11 +26,13 @@ export const useShellShortcuts = (shell: Shell) => {
       : undefined,
     {
       id: 'shell/toggle-help-menu',
+      helpMenu: { category: 'View', name: 'Toggle Help Menu' },
       key: 'h',
       callback: shell.helpMenu.toggle,
     },
     {
       id: 'shell/simulation/stop',
+      helpMenu: { category: 'Simulation', name: 'Stop Simulation' },
       key: 'escape',
       callback: () => {
         if (!shell.simulation.current.value) return;
@@ -37,6 +41,7 @@ export const useShellShortcuts = (shell: Shell) => {
     },
     {
       id: 'shell/simulation/previous-frame',
+      helpMenu: { category: 'Simulation', name: 'Previous Frame' },
       key: 'left',
       callback: () => {
         const playhead = shell.simulation.current.value?.playhead;
@@ -46,6 +51,7 @@ export const useShellShortcuts = (shell: Shell) => {
     },
     {
       id: 'shell/simulation/next-frame',
+      helpMenu: { category: 'Simulation', name: 'Next Frame' },
       key: 'right',
       callback: () => {
         const playhead = shell.simulation.current.value?.playhead;
@@ -55,23 +61,25 @@ export const useShellShortcuts = (shell: Shell) => {
     },
     {
       id: 'shell/toggle-debug',
+      helpMenu: { category: 'View', name: 'Toggle Debug Mode' },
       key: 'd',
       callback: shell.debug.toggle,
     },
     {
       id: 'shell/toggle-component-slot-ui',
+      helpMenu: { category: 'View', name: 'Hide Interface' },
       key: 'meta+.',
       callback: shell.componentSlots.visibility.toggle,
     },
     {
       id: 'shell/zoom-out',
+      helpMenu: { category: 'Camera', name: 'Zoom Out' },
       key: '-',
       callback: () => shell.surface.camera.actions.zoomOut(),
     },
-    // the key carries shift on the layouts that print + above =, so the shifted
-    // binding is the literal press and the bare one is the same key without it
     {
       id: 'shell/zoom-in',
+      helpMenu: { category: 'Camera', name: 'Zoom In' },
       key: 'shift++',
       callback: () => shell.surface.camera.actions.zoomIn(),
     },
@@ -83,6 +91,7 @@ export const useShellShortcuts = (shell: Shell) => {
     shell.history
       ? {
           id: 'shell/undo',
+          helpMenu: { category: 'History', name: 'Undo' },
           key: 'meta+z',
           callback: () => {
             if (!shell.history?.canUndo.value) return;
@@ -93,6 +102,7 @@ export const useShellShortcuts = (shell: Shell) => {
     shell.history
       ? {
           id: 'shell/redo',
+          helpMenu: { category: 'History', name: 'Redo' },
           key: 'meta+shift+z',
           callback: () => {
             if (!shell.history?.canRedo.value) return;

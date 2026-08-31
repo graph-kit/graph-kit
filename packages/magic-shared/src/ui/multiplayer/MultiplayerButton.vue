@@ -92,7 +92,7 @@
       const roomId = await multiplayer.value.room.start();
       toast.show({
         title: 'Session Started',
-        description: `Join with session code ${roomId.toUpperCase()}.`,
+        description: `Session live with code ${roomId.toUpperCase()}.`,
         severity: 'success',
         duration: SESSION_STARTED_TOAST_MS,
       });

@@ -5,6 +5,7 @@ import { createPhantomAwareEdgeRenderFunction } from '@graph/plugins/phantom/cre
 import { GraphUnderCursor } from '@graph/plugins/surface/types';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
+import { Lens } from '@magic/shared/lens';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 import tinycolor from 'tinycolor2';
 import { DeepReadonly } from 'ts-essentials';
@@ -100,7 +101,42 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
     }
   };
 
+  const MAX_MSTS_EDGE_DEPICTION = 8;
+
+  const lens = {
+    id: 'all-msts',
+    activate: () => {
+      if (msts.value.length > MAX_MSTS_EDGE_DEPICTION) return;
+      addPhantomEdges();
+      graph.setRenderFunction('edge', noGapRenderer);
+      removeEdges = true;
+      edgeThemer.activate();
+      graph.anchors.lifecycle.disable();
+      graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
+      graph.surface.events.elements.subscribe(
+        'onElementsUnderCursorChange',
+        setActiveMstIndex,
+      );
+    },
+    deactivate: () => {
+      graph.phantom.removeAllEdges();
+      graph.setRenderFunction('edge', defaultRenderer);
+      removeEdges = false;
+      edgeThemer.deactivate();
+      graph.anchors.lifecycle.enable();
+      graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
+      graph.surface.events.elements.unsubscribe(
+        'onElementsUnderCursorChange',
+        setActiveMstIndex,
+      );
+    },
+  } as const satisfies Lens;
+
   const handleStructureChange = () => {
+    if (msts.value.length > MAX_MSTS_EDGE_DEPICTION) {
+      lens.deactivate();
+      return;
+    }
     graph.phantom.removeAllEdges();
     addPhantomEdges();
   };
@@ -112,32 +148,6 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
     tooltipLabel: () => {
       return `This graph has ${msts.value.length} unique minimum spanning tree${msts.value.length === 1 ? '' : 's'}.`;
     },
-    lens: {
-      id: 'all-msts',
-      activate: () => {
-        addPhantomEdges();
-        graph.setRenderFunction('edge', noGapRenderer);
-        removeEdges = true;
-        edgeThemer.activate();
-        graph.anchors.lifecycle.disable();
-        graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
-        graph.surface.events.elements.subscribe(
-          'onElementsUnderCursorChange',
-          setActiveMstIndex,
-        );
-      },
-      deactivate: () => {
-        graph.phantom.removeAllEdges();
-        graph.setRenderFunction('edge', defaultRenderer);
-        removeEdges = false;
-        edgeThemer.deactivate();
-        graph.anchors.lifecycle.enable();
-        graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
-        graph.surface.events.elements.unsubscribe(
-          'onElementsUnderCursorChange',
-          setActiveMstIndex,
-        );
-      },
-    },
+    lens,
   };
 };

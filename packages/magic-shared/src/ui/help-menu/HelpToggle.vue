@@ -14,12 +14,15 @@
 <template>
   <Well class="p-0 rounded-full overflow-hidden">
     <Dialog
-      class="max-w-lg"
+      class="max-w-md"
       title="Help"
+      :show-header="false"
       :open="helpMenu.isOpen.value"
       @update:open="helpMenu.setOpen"
     >
-      <HelpMenuContent class="mt-4" />
+      <Well class="py-4 px-6">
+        <HelpMenuContent />
+      </Well>
 
       <template #trigger>
         <IconButton

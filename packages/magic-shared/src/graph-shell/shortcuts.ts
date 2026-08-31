@@ -7,7 +7,7 @@ export const useGraphShellShortcuts = (shell: Shell, graph: Graph) => {
   // TODO make it windows + mac agnostic
   const shortcuts: ShortcutItem[] = [
     {
-      id: 'shell/focus-all',
+      id: 'shell/graph/focus-all',
       helpMenu: { category: GRAPH_HELP_CATEGORY, name: 'Select All' },
       key: 'meta+a',
       callback: graph.focus.setAll,

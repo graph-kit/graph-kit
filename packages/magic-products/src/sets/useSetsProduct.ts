@@ -73,7 +73,7 @@ export const useSetsProduct = () => {
 
   const shell = useShell(host, {
     productId: 'sets',
-    // the gesture MainView subscribes onDblClick to, which no shortcut covers
+    // MainView subscribes this to onDblClick
     helpMenu: [
       {
         id: 'sets/create-set',

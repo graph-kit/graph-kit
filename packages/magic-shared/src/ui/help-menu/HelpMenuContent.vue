@@ -10,11 +10,7 @@
 
   const { helpMenu } = useProvidedShell();
 
-  /**
-   * this only exists while the menu is up, which is exactly when the shell's shortcut
-   * for the same key has stood down: a dialog owns the keystrokes landing inside it,
-   * so the way back out is the menu's own to answer
-   */
+  // the shell's shortcut stands down inside a dialog, so the menu closes itself
   const closeOnHelpKey = (event: KeyboardEvent) => {
     if (isTypingTarget(event)) return;
     if (event.key.toLowerCase() !== HELP_MENU_KEY) return;
@@ -24,7 +20,6 @@
   onMounted(() => window.addEventListener('keydown', closeOnHelpKey));
   onUnmounted(() => window.removeEventListener('keydown', closeOnHelpKey));
 
-  // the keys sit on the panel's own surface, so they carry their own edge to read as caps
   const capClasses =
     'inline-flex items-center gap-1 rounded border border-gray-400 dark:border-gray-600 bg-gray-200 dark:bg-gray-900 px-2 py-0.5 text-xs font-semibold';
 </script>
@@ -51,7 +46,6 @@
             :key="chip.text"
             :class="capClasses"
           >
-            <!-- a gesture is a picture and a name, a key is only ever its own name -->
             <Icon
               v-if="chip.icon"
               :path="chip.icon"

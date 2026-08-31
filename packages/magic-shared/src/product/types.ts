@@ -163,10 +163,7 @@ export type ShellOptions = {
   productId: ProductId;
   /** what the product asks for, see {@link ShellFlags} */
   flags?: ShellFlagOptions;
-  /**
-   * what this product adds to the help menu beyond its shortcuts. a getter for anything
-   * whose availability changes, since the menu lists only what is answering right now
-   */
+  /** what this product adds to the help menu beyond its shortcuts */
   helpMenu?: MaybeGetter<HelpMenuGesture[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];

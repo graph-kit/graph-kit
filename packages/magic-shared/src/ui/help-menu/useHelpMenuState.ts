@@ -9,7 +9,7 @@ import { HelpMenuGesture, HelpMenuRow, HelpMenuSection } from './types.ts';
 
 export const HELP_MENU_KEY = 'h';
 
-/** the groups the shell fills, in the order they read best. the product's own read first */
+/** the shell's groups in display order; a product's own categories read before these */
 const CATEGORY_ORDER = [
   'Graph',
   'Camera',
@@ -36,7 +36,6 @@ const byCategoryOrder = (previous: string, next: string) => {
   return previousRank - nextRank;
 };
 
-/** the help dialog */
 export const useHelpMenuState = (
   shortcuts: ShortcutControls,
   gestures: MaybeGetter<HelpMenuGesture[]> = [],
@@ -54,8 +53,7 @@ export const useHelpMenuState = (
       else byCategory.set(category, [row]);
     };
 
-    // read through the getter inside the computed, so a gesture that comes and goes
-    // with the plugin answering it comes and goes from the menu with it
+    // read inside the computed, so a gesture leaves the menu with its plugin
     for (const gesture of getValue(gestures)) {
       const { label, icon } = GESTURE_DISPLAY[gesture.gesture];
       addRow(gesture.category, {
@@ -64,7 +62,6 @@ export const useHelpMenuState = (
       });
     }
 
-    // a shortcut with nothing to say about itself is registered but not listed
     for (const shortcut of shortcuts.shortcuts.value) {
       if (!shortcut.helpMenu) continue;
       addRow(shortcut.helpMenu.category, {

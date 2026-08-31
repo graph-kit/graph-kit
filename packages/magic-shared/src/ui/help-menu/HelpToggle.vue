@@ -7,7 +7,6 @@
   import { useProvidedShell } from '../../product/context.ts';
   import HelpMenuContent from './HelpMenuContent.vue';
 
-  // the shell owns the dialog's state so the "h" shortcut can reach it from anywhere
   const { helpMenu } = useProvidedShell();
 </script>
 

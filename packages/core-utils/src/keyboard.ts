@@ -14,9 +14,7 @@ export const isTypingTarget = (event: KeyboardEvent) => {
 
 /**
  * true when the keystroke landed inside an open dialog, which owns it rather than
- * whatever it is covering. a shortcut layer that acts here reaches past the dialog to
- * the canvas underneath, and preventing the default on the way steals the escape a
- * dialog closes itself on.
+ * whatever it is covering
  */
 export const isDialogTarget = (event: KeyboardEvent) => {
   const target = event.target;

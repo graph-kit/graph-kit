@@ -1,14 +1,10 @@
 import { Key } from 'ctrl-keys';
 
-// called rather than read once, since prerender has no navigator to ask
+// a function rather than a constant, since prerender has no navigator to ask
 const isMac = () =>
   typeof navigator !== 'undefined' && /mac/i.test(navigator.userAgent);
 
-/**
- * the bindings fire on the meta key itself, so off mac this reads Meta rather than
- * Ctrl: naming the key windows users would actually have to press is what the TODO
- * on the shell's own bindings is about
- */
+// the bindings fire on the meta key itself, so off mac this reads Meta rather than Ctrl
 const modifierSymbols = () => ({
   meta: isMac() ? '⌘ Command' : 'Meta',
   shift: '⇧ Shift',
@@ -35,10 +31,7 @@ const KEY_SYMBOLS: Record<string, string> = {
   tab: 'Tab',
 };
 
-/**
- * splits the binding the way ctrl-keys parses it, so the `+` key carries its own
- * segment rather than leaving an empty one behind
- */
+/** splits the binding as ctrl-keys parses it, so the `+` key gets its own segment */
 const segments = (key: string) => {
   if (key === '+') return ['+'];
   if (key.endsWith('+')) return [...key.slice(0, -2).split('+'), '+'];

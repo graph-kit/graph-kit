@@ -20,8 +20,7 @@
     /** the heading the panel renders, and the accessible name screen readers announce */
     title: string;
     /**
-     * whether the heading is drawn. off, the title is still announced rather than
-     * dropped: a dialog a screen reader cannot name is one nobody can tell apart
+     * whether the heading is drawn; the title is announced either way
      * @default true
      */
     showHeader?: boolean;
@@ -41,13 +40,8 @@
 
   const classes = computed(() => cn(panel, attrClass.value));
 
-  /**
-   * whether the dialog is being driven by a pointer. closing hands focus back to the
-   * trigger, which for a pointer user lands a tooltip and a focus ring on a button they
-   * are already done with, since the browser reads a scripted focus move as keyboard
-   * focus. a key press is the one case where the handoff was wanted, there being nowhere
-   * else for a keyboard to land
-   */
+  // closing hands focus back to the trigger, which a pointer user reads as a stray
+  // tooltip and focus ring; only a keyboard has nowhere else to land
   const usingPointer = ref(false);
 
   const keepFocusPut = (event: Event) => {
@@ -61,7 +55,6 @@
 </script>
 
 <template>
-  <!-- modal, since a dialog worth interrupting for has nothing to gain from what it covers -->
   <DialogRoot v-model:open="open">
     <DialogTrigger as-child>
       <slot name="trigger" />
@@ -70,13 +63,7 @@
       <DialogOverlay class="fixed inset-0 z-50 bg-black/50" />
       <!--
         reka points the panel at a description element whether or not one exists and
-        warns when it finds nothing there, so the panel says it has none. anything
-        below the heading is the caller's, which owns its own description if it wants one
-      -->
-      <!--
-        the modality is read off the panel and off the click that dismisses it from
-        outside, which lands on the overlay rather than in here. opening resets it, so a
-        reopen is judged by how it is closed rather than by how the last one was
+        warns when it finds nothing there, so the panel says it has none
       -->
       <DialogContent
         v-bind="{ ...attrs, class: undefined, 'aria-describedby': undefined }"
@@ -93,7 +80,6 @@
         >
           {{ title }}
         </DialogTitle>
-        <!-- as-child, so the name and what hides it are the one element -->
         <VisuallyHidden
           v-else
           as-child

@@ -64,11 +64,14 @@
       :class="hasOverflow ? 'shrink-0' : parked"
     >
       <!-- the menu goes with the overflow that filled it, so a row that grows back
-           never leaves an empty one hanging open -->
+           never leaves an empty one hanging open. it holds the row's own items, which
+           come at their own widths, so it drops the floor a menu of list items is
+           given by default and hugs them instead -->
       <Dropdown
         v-if="hasOverflow"
         align="end"
         :side-offset="20"
+        class="min-w-0"
       >
         <template #trigger>
           <IconButton

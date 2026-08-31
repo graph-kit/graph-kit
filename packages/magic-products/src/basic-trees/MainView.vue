@@ -1,7 +1,6 @@
 <script setup lang="ts">
   import Shell from '@magic/shared/Shell';
   import { useGraphShell } from '@magic/shared/graph-shell';
-  import { createNodeThemer } from '@magic/shared/theme';
   import { useFocusedNode } from '@magic/shared/utilities';
 
   import InsertNode from './InsertNode.vue';
@@ -15,6 +14,7 @@
   import { getBalanceFactor } from './tree/getBalanceFactor.ts';
   import { getTreeHeight } from './tree/getTreeHeight.ts';
   import { provideTreeSimulation } from './useProvidedTree.ts';
+  import { useTreePersistence } from './useTreePersistence.ts';
 
   const tree = new AVLTree();
 
@@ -22,7 +22,6 @@
     productId: 'avl-trees',
     flags: {
       history: false,
-      localStorage: false,
       adjustAnimationSpeed: true,
     },
     core: {
@@ -72,6 +71,8 @@
 
   const treeSim = useTreeSimulation(tree, graph);
   provideTreeSimulation(treeSim);
+
+  useTreePersistence(tree, graph, shell);
 
   graph.anchors.lifecycle.disable();
   graph.nodeDrag.lifecycle.disable();

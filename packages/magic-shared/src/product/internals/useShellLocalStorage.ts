@@ -19,6 +19,11 @@ export type LocalStorageControls = {
    * Restores whatever was persisted.
    */
   sync: () => void;
+  /**
+   * Holds off persisting until the returned release is called, dropping any write
+   * already scheduled. Release persists what the product settled on.
+   */
+  suspend: () => () => void;
 };
 
 const useLocalStorageSync = (
@@ -27,9 +32,33 @@ const useLocalStorageSync = (
 ): LocalStorageControls => {
   const key = localStorageKey(productId);
 
-  const invalidate = debounce(() => {
+  let suspended = false;
+
+  const persist = () => {
     writeLocalStorage(key, JSON.stringify(transit.encode()));
-  }, DEBOUNCE_MS);
+  };
+
+  const scheduleWrite = debounce(persist, DEBOUNCE_MS);
+
+  const invalidate = () => {
+    if (suspended) return;
+    scheduleWrite();
+  };
+
+  const suspend = () => {
+    suspended = true;
+    // a scheduled write reads state at flush time, which lands mid-change
+    scheduleWrite.cancel();
+
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      suspended = false;
+      // written now rather than debounced: nothing flushes on unmount
+      persist();
+    };
+  };
 
   // no longer mounts itself: restoring now has to lose to a room, and only the
   // shell knows whether one answered. see the restore order in useShell
@@ -46,13 +75,14 @@ const useLocalStorageSync = (
     }
   };
 
-  return { invalidate, sync };
+  return { invalidate, sync, suspend };
 };
 
 /** stands in when nothing is persisted */
 const INERT: LocalStorageControls = {
   invalidate: () => {},
   sync: () => {},
+  suspend: () => () => {},
 };
 
 export const useShellLocalStorage = (

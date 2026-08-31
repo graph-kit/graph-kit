@@ -28,10 +28,6 @@ export class AVLTree {
     });
   }
 
-  reset() {
-    this.root = undefined;
-  }
-
   private removeMin(node: TreeNode): TreeNode | undefined {
     if (!node.left) return node.right;
     node.left = this.removeMin(node.left);

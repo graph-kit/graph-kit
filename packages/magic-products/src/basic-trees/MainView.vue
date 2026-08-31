@@ -5,6 +5,7 @@
 
   import InsertNode from './InsertNode.vue';
   import RemoveNode from './RemoveNode.vue';
+  import ResetTree from './ResetTree.vue';
   import { createBalanceFactorThemer } from './createBalanceFactorThemer.ts';
   import { createTreeHeightThemer } from './createTreeHeightThemer.ts';
   import { definitions } from './definitions.ts';
@@ -13,7 +14,7 @@
   import { AVLTree } from './tree/AVLTree.ts';
   import { getBalanceFactor } from './tree/getBalanceFactor.ts';
   import { getTreeHeight } from './tree/getTreeHeight.ts';
-  import { provideTreeSimulation } from './useProvidedTree.ts';
+  import { provideTree, provideTreeSimulation } from './useProvidedTree.ts';
   import { useTreePersistence } from './useTreePersistence.ts';
 
   const tree = new AVLTree();
@@ -30,12 +31,22 @@
     },
     simulationButtons: (graph) => {
       const node = useFocusedNode(graph);
-      const disabled = () => {
-        if (graph.nodes.value.length === 0) return 'No nodes in tree';
+
+      const emptyTree = () =>
+        graph.nodes.value.length === 0 ? 'No nodes in tree' : false;
+
+      const cannotRemove = () => {
+        const empty = emptyTree();
+        if (empty) return empty;
         if (!node.value) return 'Click a node to remove from tree';
         return false;
       };
-      return [{ disabled, render: RemoveNode }, { render: InsertNode }];
+
+      return [
+        { disabled: cannotRemove, render: RemoveNode },
+        { render: InsertNode },
+        { disabled: emptyTree, render: ResetTree },
+      ];
     },
     lensChips: (graph) => {
       const root = () => {
@@ -71,6 +82,7 @@
 
   const treeSim = useTreeSimulation(tree, graph);
   provideTreeSimulation(treeSim);
+  provideTree(tree);
 
   useTreePersistence(tree, graph, shell);
 

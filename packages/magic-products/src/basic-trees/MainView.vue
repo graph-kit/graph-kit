@@ -74,6 +74,7 @@
             id: 'tree-height',
             ...treeHeightTheme,
           },
+          tooltipLabel: definitions.treeHeight,
           name: () => 'Root Height: ' + getTreeHeight(root()),
         },
       ];

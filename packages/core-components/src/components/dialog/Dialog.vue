@@ -9,7 +9,7 @@
     VisuallyHidden,
   } from 'reka-ui';
 
-  import { computed, useAttrs } from 'vue';
+  import { computed, ref, useAttrs } from 'vue';
 
   import { cn } from '../../cn.ts';
   import { useAttrClass } from '../../composables/useAttrClass.ts';
@@ -41,6 +41,19 @@
 
   const classes = computed(() => cn(panel, attrClass.value));
 
+  /**
+   * whether the dialog is being driven by a pointer. closing hands focus back to the
+   * trigger, which for a pointer user lands a tooltip and a focus ring on a button they
+   * are already done with, since the browser reads a scripted focus move as keyboard
+   * focus. a key press is the one case where the handoff was wanted, there being nowhere
+   * else for a keyboard to land
+   */
+  const usingPointer = ref(false);
+
+  const keepFocusPut = (event: Event) => {
+    if (usingPointer.value) event.preventDefault();
+  };
+
   defineSlots<{
     default?: () => unknown;
     trigger: () => unknown;
@@ -60,9 +73,19 @@
         warns when it finds nothing there, so the panel says it has none. anything
         below the heading is the caller's, which owns its own description if it wants one
       -->
+      <!--
+        the modality is read off the panel and off the click that dismisses it from
+        outside, which lands on the overlay rather than in here. opening resets it, so a
+        reopen is judged by how it is closed rather than by how the last one was
+      -->
       <DialogContent
         v-bind="{ ...attrs, class: undefined, 'aria-describedby': undefined }"
         :class="classes"
+        @pointerdown="usingPointer = true"
+        @keydown="usingPointer = false"
+        @pointer-down-outside="usingPointer = true"
+        @open-auto-focus="usingPointer = false"
+        @close-auto-focus="keepFocusPut"
       >
         <DialogTitle
           v-if="showHeader"

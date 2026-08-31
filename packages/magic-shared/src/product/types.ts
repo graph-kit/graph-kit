@@ -19,6 +19,7 @@ import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
+import { HelpMenuControls } from '../ui/help-menu/useHelpMenuState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
 import { ShellFlagOptions, ShellFlags } from './flags.ts';
@@ -174,6 +175,7 @@ export type Shell = {
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
   debug: DebugControls;
+  helpMenu: HelpMenuControls;
   /** the app wide toast queue, which every product shares, see {@link ToastControls} */
   toast: ToastControls;
   surface: CanvasSurface;

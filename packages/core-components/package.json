@@ -51,6 +51,10 @@
       "types": "./dist/types/components/dropdown/DropdownSubmenu.vue.d.ts",
       "default": "./src/components/dropdown/DropdownSubmenu.vue"
     },
+    "./Dialog": {
+      "types": "./dist/types/components/dialog/Dialog.vue.d.ts",
+      "default": "./src/components/dialog/Dialog.vue"
+    },
     "./Switch": {
       "types": "./dist/types/components/switch/Switch.vue.d.ts",
       "default": "./src/components/switch/Switch.vue"

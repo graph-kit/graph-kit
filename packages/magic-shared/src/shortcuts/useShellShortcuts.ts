@@ -23,6 +23,11 @@ export const useShellShortcuts = (shell: Shell) => {
         }
       : undefined,
     {
+      id: 'shell/toggle-help-menu',
+      key: 'h',
+      callback: shell.helpMenu.toggle,
+    },
+    {
       id: 'shell/toggle-debug',
       key: 'd',
       callback: shell.debug.toggle,

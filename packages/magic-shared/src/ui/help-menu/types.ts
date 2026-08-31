@@ -8,7 +8,7 @@ export type HelpMenuEntry = {
 
 /** anything the menu can list carries one of these */
 export type WithHelpMenuEntry = {
-  /** absent for a binding not worth its own row, like an action's second binding */
+  /** how it appears in the help menu, leaving empty means it doesn't surface at all */
   helpMenu?: HelpMenuEntry;
 };
 

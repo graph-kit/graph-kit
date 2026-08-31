@@ -6,7 +6,6 @@ import { ShortcutItem } from './useShortcuts.ts';
 
 export const useShellShortcuts = (shell: Shell) => {
   const fullscreen = useFullscreen();
-  // TODO make it windows + mac agnostic
   const shortcuts: (ShortcutItem | undefined)[] = [
     {
       id: 'shell/fullscreen',
@@ -69,7 +68,7 @@ export const useShellShortcuts = (shell: Shell) => {
     {
       id: 'shell/toggle-component-slot-ui',
       helpMenu: { category: 'View', name: 'Hide Interface' },
-      key: 'meta+.',
+      key: 'mod+.',
       callback: shell.componentSlots.visibility.toggle,
     },
     {
@@ -93,7 +92,7 @@ export const useShellShortcuts = (shell: Shell) => {
       ? {
           id: 'shell/undo',
           helpMenu: { category: 'History', name: 'Undo' },
-          key: 'meta+z',
+          key: 'mod+z',
           callback: () => {
             if (!shell.history?.canUndo.value) return;
             shell.history.undo();
@@ -104,7 +103,7 @@ export const useShellShortcuts = (shell: Shell) => {
       ? {
           id: 'shell/redo',
           helpMenu: { category: 'History', name: 'Redo' },
-          key: 'meta+shift+z',
+          key: 'mod+shift+z',
           callback: () => {
             if (!shell.history?.canRedo.value) return;
             shell.history.redo();

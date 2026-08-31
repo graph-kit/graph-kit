@@ -21,3 +21,9 @@ export const isDialogTarget = (event: KeyboardEvent) => {
   if (!(target instanceof HTMLElement)) return false;
   return !!target.closest('[role="dialog"], [role="alertdialog"]');
 };
+
+/**
+ * a function rather than a constant, since prerender runs with no navigator to ask
+ */
+export const isMac = () =>
+  typeof navigator !== 'undefined' && /mac/i.test(navigator.userAgent);

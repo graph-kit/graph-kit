@@ -2,25 +2,28 @@
 
 ## Rendering & Interaction
 
-| Plugin                                      | What It Does                                                                                                                                                                                    |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`canvas`](./src/canvas/index.ts)           | Owns the drawing surface: aggregates every shape plugins want rendered, runs the animation loop, tracks what sits under the cursor, and re-emits DOM mouse/keyboard events as graph-aware ones. |
-| [`interactive`](./src/interactive/index.ts) | Lets users build the graph directly on the canvas: double-click to create a node, drag between nodes to link them, edit edge weights, delete selections.                                        |
-| [`nodeDrag`](./src/node-drag/index.ts)      | Handles click-and-drag repositioning of nodes, including dragging a whole multi-node selection at once.                                                                                         |
-| [`anchors`](./src/anchors/index.ts)         | Spawns draggable handles around a hovered node so you can pull a new edge out of it, with a live preview line while dragging.                                                                   |
-| [`marquee`](./src/marquee/index.ts)         | Drag-a-box selection on empty canvas, selecting every node and edge the box encloses.                                                                                                           |
-| [`focus`](./src/focus/index.ts)             | Tracks which nodes and edges are currently selected and themes them accordingly, supporting click, shift-click, and programmatic selection.                                                     |
-| [`phantom`](./src/phantom/index.ts)         | Renders "ghost" nodes and edges that look real but aren't part of the graph data, useful for previews, hints, and algorithm visualizations.                                                     |
-| [`nodeLabel`](./src/node-label/index.ts)    | Attaches human-readable labels to nodes, auto-generating A, B, C... for new ones, and draws them on the node.                                                                                   |
-| [`animation`](./src/animation/index.ts)     | Captures before/after frames around a change so the canvas tweens between them instead of snapping.                                                                                             |
-| [`history`](./src/history/index.ts)         | Undo/redo, implemented as full graph snapshots rather than inverse actions so plugin-owned state (labels, etc.) is restored too.                                                                |
+| Plugin                                      | What It Does                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| [`surface`](./src/surface/index.ts)         | Hands the graph its drawing surface, plus paint priority and cursors.  |
+| [`interactive`](./src/interactive/index.ts) | Build the graph on the canvas: add nodes, link them, edit weights.     |
+| [`nodeDrag`](./src/node-drag/index.ts)      | Click-and-drag repositioning, including a whole multi-node selection.  |
+| [`anchors`](./src/anchors/index.ts)         | Draggable handles on a hovered node for pulling out a new edge.        |
+| [`marquee`](./src/marquee/index.ts)         | Drag a box on empty canvas to select everything it encloses.           |
+| [`focus`](./src/focus/index.ts)             | Tracks the current selection and themes it accordingly.                |
+| [`phantom`](./src/phantom/index.ts)         | Ghost nodes and edges that render but aren't in the graph data.        |
+| [`nodeLabel`](./src/node-label/index.ts)    | Labels on nodes, auto-generated A, B, C... for new ones.               |
+| [`annotations`](./src/annotations/index.ts) | Freehand drawing, erasing, and a laser pointer over the canvas.        |
+| [`animation`](./src/animation/index.ts)     | Interpolates between before and after frames instead of snapping.      |
+| [`history`](./src/history/index.ts)         | Undo and redo, as full graph snapshots rather than inverse actions.    |
+| [`readonly`](./src/readonly/index.ts)       | Holds every plugin that can write to the graph disabled while entered. |
 
-## Graph analysis
+## Graph Analysis
 
 Pure computation, no rendering.
 
-| Plugin                                                 | What it does                                                                                                                                                     |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`adjacencyLists`](./src/adjacency-lists/index.ts)     | Derives adjacency lists from the graph, plain and weighted and direction-aware, as the shared substrate other analysis plugins build on.                         |
-| [`characteristics`](./src/characteristics/index.ts)    | Answers structural questions about the graph: is it complete, connected, bipartite; what are its cycles, strongly connected components, and bidirectional edges. |
-| [`transitionMatrix`](./src/transition-matrix/index.ts) | Turns the weighted adjacency list into a node-by-node matrix of exact fractions, for Markov-chain style work.                                                    |
+| Plugin                                                          | What It Does                                                        |
+| --------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [`adjacencyLists`](./src/adjacency-lists/index.ts)              | Adjacency lists, plain and weighted, that other analysis builds on. |
+| [`characteristics`](./src/characteristics/index.ts)             | Completeness, connectedness, bipartiteness, cycles, SCCs.           |
+| [`minimumSpanningTrees`](./src/minimum-spanning-trees/index.ts) | Every MST of the graph, or every minimum spanning forest.           |
+| [`transitionMatrix`](./src/transition-matrix/index.ts)          | A node-by-node matrix of exact fractions, for Markov-chain work.    |

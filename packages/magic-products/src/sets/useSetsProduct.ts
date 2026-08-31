@@ -78,7 +78,7 @@ export const useSetsProduct = () => {
       {
         id: 'sets/create-set',
         category: 'Sets',
-        name: 'Create a Set',
+        name: 'Create Set',
         gesture: 'dblclick',
       },
     ],

@@ -40,6 +40,31 @@ export const bellmanFord: SingleSourceFunction =
 
     const routeTo = (node: GNode['id']) => routeByNode.get(node) ?? [];
 
+    const edgeById = new Map(allEdges.map((edge) => [edge.id, edge]));
+
+    /*
+      the route an offer would be paid on. crossing an edge that lands back on
+      a node the route has already reached is only worth doing when the lap it
+      closes costs less than nothing, so an offer that merely doubles back is
+      answered with no route and reads as a bare cost
+    */
+    const routeBehindOffer = (edge: GEdge, offered: Fraction) => {
+      const basePath = routeTo(edge.source);
+
+      let reached = new Fraction(0);
+      let at = sourceNodeId;
+
+      for (const id of basePath) {
+        if (at === edge.target && offered.gte(reached)) return [];
+        const crossed = edgeById.get(id);
+        if (!crossed) return [];
+        reached = reached.add(crossed.weight);
+        at = crossed.target;
+      }
+
+      return [...basePath, edge.id];
+    };
+
     const changedThisPass = new Set<GNode['id']>();
 
     const totalPasses = Math.max(nodeIds.length - 1, 0);
@@ -195,7 +220,7 @@ export const bellmanFord: SingleSourceFunction =
               distance: current,
               offered,
               edge: edge.id,
-              basePath: routeTo(edge.source),
+              offeredPath: routeBehindOffer(edge, offered),
               currentPath: routeTo(edge.target),
               activeNodeId: edge.source,
               candidateNodeIds: [edge.target],
@@ -225,8 +250,8 @@ export const bellmanFord: SingleSourceFunction =
             newDistance: offered,
             via: edge.source,
             base: reachedFrom,
-            basePath,
             edge: edge.id,
+            newPath: [...basePath, edge.id],
             oldPath,
             activeNodeId: edge.source,
             candidateNodeIds: [edge.target],

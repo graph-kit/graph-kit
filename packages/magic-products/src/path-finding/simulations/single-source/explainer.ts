@@ -222,10 +222,7 @@ export const singleSourceExplainer =
         };
 
       case 'improve-distance': {
-        const improved = cost(graph, frame.newDistance, [
-          ...frame.basePath,
-          frame.edge,
-        ]);
+        const improved = cost(graph, frame.newDistance, frame.newPath);
 
         if (frame.oldDistance === undefined) {
           return {
@@ -247,10 +244,18 @@ export const singleSourceExplainer =
       }
 
       case 'keep-distance': {
-        const offered = cost(graph, frame.offered, [
-          ...frame.basePath,
-          frame.edge,
-        ]);
+        // no route behind the offer means it doubled back into the very node
+        // it was headed for, so there is no trip to put a cost against
+        if (frame.offeredPath.length === 0) {
+          const from = graph.getEdge(frame.edge).source;
+
+          return {
+            content: `{${frame.edge}} does not decrease the cost to {${frame.node}} because the route from {${frame.anchorNodeId}} already passes through {${frame.node}} to get to {${from}}. The current cost [Remains]`,
+            highlights: [highlights.keep],
+          };
+        }
+
+        const offered = cost(graph, frame.offered, frame.offeredPath);
         const current = cost(graph, frame.distance, frame.currentPath);
 
         return {

@@ -6,6 +6,7 @@ import { routeBetween } from './all-pairs/routeTrail.ts';
 import { type DistanceRow, formatDistance } from './distance.ts';
 import { bellmanFord } from './single-source/bellman-ford.ts';
 import { dijkstras } from './single-source/dijkstras.ts';
+import { singleSourceExplainer } from './single-source/explainer.ts';
 import { SingleSourceFrame } from './single-source/frame.ts';
 
 /** source, target, weight. the weight is anything `new Fraction()` takes */
@@ -238,6 +239,77 @@ describe('bellmanFord', () => {
   });
 
   /*
+    the explainer only needs the two lookups below on top of a bare graph, and
+    a themer it can build a highlight from without a canvas to paint on
+  */
+  const explainerFor = (graph: any) =>
+    singleSourceExplainer({
+      ...graph,
+      getEdge: (id: string) =>
+        graph.edges.value.find((edge: any) => edge.id === id),
+      theme: { createThemer: () => ({ activate() {}, deactivate() {} }) },
+      focus: { theme: { _resolveToken: () => '#000000' } },
+    } as any);
+
+  it('says why an offer that doubles back is not a cost worth comparing', () => {
+    const graph = makeGraph(
+      ['a', 'b', 'c'],
+      [
+        ['a', 'b', 1],
+        ['b', 'c', 1],
+        ['c', 'b', 5],
+      ],
+    );
+    const explain = explainerFor(graph);
+    const keeps = collect(bellmanFord(graph, 'a')).filter(
+      (frame) => frame.type === 'keep-distance',
+    );
+
+    const doublingBack = keeps.find((frame) => frame.edge === 'e2');
+    expect(doublingBack && explain(doublingBack)?.content).toBe(
+      '{e2} does not decrease the cost to {b} because the route from {a} already passes through {b} to get to {c}. The current cost [Remains]',
+    );
+
+    /*
+      the sentence for a real comparison is left alone, with both costs still
+      bracketed so both routes stay hoverable
+    */
+    const genuine = keeps.find((frame) => frame.edge === 'e0');
+    expect(genuine && explain(genuine)?.content).toBe(
+      '[1] does not decrease the cost of reaching {b} which currently costs [1]. Therefore the current cost [Remains]',
+    );
+  });
+
+  /*
+    an edge can land back on a node the route has already reached, and the walk
+    that makes is not a trip anyone would take unless the lap it closes costs
+    less than nothing. it needs no negative weights at all to come up
+  */
+  it('offers no route when an edge only doubles back into the route', () => {
+    // a -e0-> b -e1-> c, and c -e2-> b lands back on b, closing a lap of 6
+    const graph = makeGraph(
+      ['a', 'b', 'c'],
+      [
+        ['a', 'b', 1],
+        ['b', 'c', 1],
+        ['c', 'b', 5],
+      ],
+    );
+    const keeps = collect(bellmanFord(graph, 'a')).filter(
+      (frame) => frame.type === 'keep-distance',
+    );
+
+    const doublingBack = keeps.filter((frame) => frame.edge === 'e2');
+    expect(doublingBack.length).toBeGreaterThan(0);
+    for (const frame of doublingBack) expect(frame.offeredPath).toEqual([]);
+
+    // an offer that really is a trip still carries the route it is paid on
+    expect(keeps.find((frame) => frame.edge === 'e0')?.offeredPath).toEqual([
+      'e0',
+    ]);
+  });
+
+  /*
     a -e0-> x -e1-> b reaches the cycle b -e2-> c -e3-> b, which costs less
     every lap. once the cycle overwrites the edge b was first reached by, the
     arrival chain can only go round the loop, so the way in has to be kept as
@@ -256,6 +328,8 @@ describe('bellmanFord', () => {
   const routesShownIn = (frames: SingleSourceFrame[]) =>
     frames.flatMap((frame) => [
       ...('basePath' in frame ? [frame.basePath] : []),
+      ...('newPath' in frame ? [frame.newPath] : []),
+      ...('offeredPath' in frame ? [frame.offeredPath] : []),
       ...('currentPath' in frame ? [frame.currentPath] : []),
       ...('oldPath' in frame ? [frame.oldPath] : []),
     ]);
@@ -299,7 +373,7 @@ describe('bellmanFord', () => {
 
     for (const frame of collect(bellmanFord(REACHES_A_CYCLE, 'a'))) {
       if (frame.type !== 'improve-distance') continue;
-      expect(weightOf([...frame.basePath, frame.edge]).toFraction()).toBe(
+      expect(weightOf(frame.newPath).toFraction()).toBe(
         frame.newDistance.toFraction(),
       );
     }

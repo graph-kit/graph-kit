@@ -82,12 +82,11 @@ type ImproveDistanceFrame = {
   /** the node the cheaper route arrives from */
   via: GNode['id'];
   base: Fraction;
-  /**
-   * the edges of the route to `via`
-   */
-  basePath: readonly GEdge['id'][];
   /** the edge that closes the new route */
   edge: GEdge['id'];
+  /** the edges of the cheaper route, which the node now holds */
+  newPath: readonly GEdge['id'][];
+  /** the edges of the route it beat */
   oldPath: readonly GEdge['id'][];
 };
 
@@ -98,8 +97,7 @@ type KeepDistanceFrame = {
   offered: Fraction;
   /** the edge that would have closed the offered route */
   edge: GEdge['id'];
-  /** the edges of the route to the node the offer came from*/
-  basePath: readonly GEdge['id'][];
+  offeredPath: readonly GEdge['id'][];
   // edges the distance value came from
   currentPath: readonly GEdge['id'][];
 };

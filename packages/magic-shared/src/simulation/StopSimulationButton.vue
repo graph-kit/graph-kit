@@ -17,7 +17,8 @@
   const buttonClass = computed(() =>
     cn(
       'bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-600 dark:active:bg-red-600 active:bg-red-600 text-white',
-      isOnLastFrame.value && 'animate-pulse hover:animate-none',
+      isOnLastFrame.value &&
+        'animate-pulse [animation-duration:0.8s] hover:animate-none',
     ),
   );
 </script>

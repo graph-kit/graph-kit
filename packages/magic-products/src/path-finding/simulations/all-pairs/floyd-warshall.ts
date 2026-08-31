@@ -1,9 +1,4 @@
-import {
-  GNode,
-  GraphPath,
-  walkFromTo,
-  walkLoopAt,
-} from '@magic/shared/graph';
+import { GNode, GraphPath, walkFromTo, walkLoopAt } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
 import { Distance } from '../distance.ts';

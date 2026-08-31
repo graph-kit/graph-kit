@@ -1,12 +1,11 @@
-import { displayNumber } from '@core/utils/math';
 import {
   Explainer,
   ExplainerHighlight,
   createEdgeSetHighlight,
 } from '@magic/shared/explainer';
-import { GEdge, Graph } from '@magic/shared/graph';
-import Fraction from 'fraction.js';
+import { Graph } from '@magic/shared/graph';
 
+import { cost, count, listOf } from '../explainerProse.ts';
 import { negativeCycle } from '../negativeCycle.ts';
 import { SingleSourceFrame } from './frame.ts';
 
@@ -48,29 +47,6 @@ const highlights = {
     'Every edge in the graph, in the order this pass visits them',
   ),
 } as const satisfies Record<string, ExplainerHighlight>;
-
-const cost = (graph: Graph, value: Fraction, path: readonly GEdge['id'][]) => {
-  const { primary, secondary } = displayNumber(value);
-
-  if (path.length === 0) {
-    return { text: `<${primary}>`, highlights: [] as ExplainerHighlight[] };
-  }
-
-  return {
-    text: `[${primary}]`,
-    highlights: [createEdgeSetHighlight(graph, path, secondary)],
-  };
-};
-
-/** `1 edge`, `9 edges`, `2 passes` */
-const count = (amount: number, singular: string, plural = `${singular}s`) =>
-  `${amount} ${amount === 1 ? singular : plural}`;
-
-/** `a`, `a and b`, `a, b, and c` */
-const listOf = (items: readonly string[]) => {
-  if (items.length <= 2) return items.join(' and ');
-  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
-};
 
 export const singleSourceExplainer =
   (graph: Graph) =>
@@ -243,8 +219,6 @@ export const singleSourceExplainer =
         // no route behind the offer means it doubled back into the very node
         // it was headed for, so there is no trip to put a cost against
         if (frame.offeredPath.length === 0) {
-          const from = graph.getEdge(frame.edge).source;
-
           return {
             content: `Following {${frame.edge}} would visit {${frame.node}} twice, adding cost for no progress. The current cost [Remains]`,
             highlights: [highlights.keep],

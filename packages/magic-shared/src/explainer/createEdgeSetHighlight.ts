@@ -1,8 +1,15 @@
 import { Color } from '@core/utils/colors';
 
 import { GEdge, Graph } from '../graph/types.ts';
+import { createPathThemer } from '../theme/path/createPathThemer.ts';
 import { ExplainerHighlight } from './types.ts';
 
+/**
+ * lights a run of edges up while the words naming it are hovered.
+ *
+ * the explainer's way of reaching {@link createPathThemer}, so that a route
+ * pointed at from prose and a route pointed at from a panel paint identically
+ */
 export const createEdgeSetHighlight = (
   graph: Graph,
   edgeIds: readonly GEdge['id'][],
@@ -10,16 +17,7 @@ export const createEdgeSetHighlight = (
   /** defaults to the color focus wears, see {@link createPathThemer} */
   color?: Color,
 ): ExplainerHighlight => {
-  const ids = new Set(edgeIds);
-
-  const themer = graph.theme.createThemer({
-    surface: {
-      'edge.default.color': (edge) =>
-        ids.has(edge.id)
-          ? (color ?? graph.focus.theme._resolveToken('edge.focus.color', edge))
-          : undefined,
-    },
-  });
+  const { themer } = createPathThemer(graph, { path: edgeIds, color });
 
   return {
     tooltipLabel,

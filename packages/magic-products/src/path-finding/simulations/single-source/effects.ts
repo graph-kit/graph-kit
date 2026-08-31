@@ -29,39 +29,39 @@ import {
 } from './explainer.ts';
 import { SingleSourceFrame, SingleSourceFunction } from './frame.ts';
 
-// exploring = the node the algorithm is standing on this frame.
-// weighing = a node whose distance is being compared against a fresh offer.
-// finalized = its distance is final, no later step can beat it.
-// frontier = discovered, with a tentative distance that may still improve.
-// source = the node the user picked to measure every distance from.
-// looping = it sits on a cycle that costs less than nothing to go around.
-type SingleSourceConcept =
+type SingleSourceNodeConcept =
   'exploring' | 'weighing' | 'finalized' | 'frontier' | 'source' | 'looping';
 
 export const nodeRoles = {
+  /** the node the algorithm is standing on this frame */
   exploring: 'active',
+  /** a node whose distance is being compared against a fresh offer */
   weighing: 'candidate',
+  /** its distance is final, no later step can beat it */
   finalized: 'settled',
+  /** discovered, with a tentative distance that may still improve */
   frontier: 'pending',
+  /** the node the user picked to measure every distance from */
   source: 'anchor',
+  /** it sits on a cycle that costs less than nothing to go around */
   looping: 'result',
-} as const satisfies Record<SingleSourceConcept, NodeRole>;
+} as const satisfies Record<SingleSourceNodeConcept, NodeRole>;
 
-// relaxing = the edge whose weight is being tested this frame.
-// shortestPath = an edge on one of the best paths found so far.
-// discarded = an edge tested this frame that offered nothing better.
-// looping = it is part of the cycle that costs less than nothing to lap.
 type SingleSourceEdgeConcept =
   'relaxing' | 'shortestPath' | 'discarded' | 'looping';
 
 export const edgeRoles = {
+  /** the edge whose weight is being tested this frame */
   relaxing: 'crossing',
+  /** an edge on one of the best paths found so far */
   shortestPath: 'tree',
+  /** an edge tested this frame that offered nothing better */
   discarded: 'rejected',
+  /** it is part of the cycle that costs less than nothing to lap */
   looping: 'result',
 } as const satisfies Record<SingleSourceEdgeConcept, EdgeRole>;
 
-// does not exit out of sim but shows user error
+/** shows the user an error rather than exiting the simulation */
 const RECOVERABLE_VIOLATION = 'negative-weight';
 
 export type SourceNodeId = Ref<GNode['id'] | undefined>;
@@ -92,10 +92,10 @@ const singleSourceEffects = (
 
   const currentFrame = ref<SingleSourceFrame>();
 
-  // order matters: latter elements take priority over earlier ones. the source
-  // sits below the two roles that describe what is happening right now, so the
-  // node the user picked gives up its pink for the frame it is being worked on
   /*
+    order matters: latter elements take priority over earlier ones. the source
+    sits below the two roles that describe what is happening right now, so the
+    node the user picked gives up its pink for the frame it is being worked on.
     the cycle sits above the tree it is made of, or the shortest path green
     would paint over the very edges being called out, and below the two roles
     that follow the walker, so the edge being crossed and the node it lands on
@@ -113,11 +113,9 @@ const singleSourceEffects = (
     loopingEdges,
     relaxing,
     {
-      themer: createDistanceThemer(
-        graph,
-        currentFrame,
-        options.dimsTentativeDistances ?? false,
-      ),
+      themer: createDistanceThemer(graph, currentFrame, {
+        dimTentativeDistances: options.dimsTentativeDistances ?? false,
+      }),
     },
   ];
 

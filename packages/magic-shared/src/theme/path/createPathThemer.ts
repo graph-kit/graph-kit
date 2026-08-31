@@ -8,9 +8,10 @@ import { GEdge, Graph } from '../../graph/types.ts';
 /**
  * a themer that lights up one route at a time, in place of the last.
  *
- * paints the route's edges and leaves its nodes alone, the same as
- * {@link createEdgeSetHighlight}, so that everything pointing at a run of edges
- * across the app reads the same way.
+ * paints the route's edges and leaves its nodes alone. the one place a run of
+ * edges gets painted, so that everything pointing at one across the app reads
+ * the same way: the explainer reaches it through `createEdgeSetHighlight`,
+ * panels hold one directly and call `setPath` as the hover moves.
  */
 export type PathThemer = {
   themer: Themer;

@@ -10,6 +10,8 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 import { computed } from 'vue';
 
+import { NEGATIVE_CYCLE_DEFINITION } from '../simulations/negativeCycle.ts';
+
 const findNegativeCycle = (graph: Graph) => {
   for (const component of graph.characteristics.sccs.value.components) {
     const inComponent = new Set(component.map((node) => node.id));
@@ -40,8 +42,7 @@ export const negativeCycleChip = (graph: Graph): LensChipDefinition => {
 
   return {
     name: () => `Negative Cycle: ${cycle.value ? 'Yes' : 'No'}`,
-    tooltipLabel:
-      'A cycle in which all edges sum to a negative value. Every lap around it costs less than the previous round causing an infinite loop',
+    tooltipLabel: `${NEGATIVE_CYCLE_DEFINITION}. Every lap around it costs less than the previous round causing infinitely short paths`,
     lens: {
       id: 'negative-cycle',
       activate: () => {

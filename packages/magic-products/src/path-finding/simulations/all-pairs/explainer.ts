@@ -2,9 +2,9 @@ import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph, GraphPath } from '@magic/shared/graph';
 
 import { Distance, formatDistance } from '../distance.ts';
+import { cost, count } from '../explainerProse.ts';
 import { negativeCycle } from '../negativeCycle.ts';
 import { matrixSlotId } from './effects.ts';
-import { cost, count } from './explainerParts.ts';
 import { AllPairsFrame } from './frame.ts';
 
 const matrixHighlight = (tooltipLabel: string): ExplainerHighlight => ({
@@ -32,7 +32,7 @@ export const allPairsExplainer =
     switch (frame.type) {
       case 'start':
         return {
-          content: 'Seeding the [Table] with the Edges in the graph',
+          content: 'Seeding the [Table] with the edges in the graph',
           highlights: [highlights.table],
         };
 
@@ -40,7 +40,7 @@ export const allPairsExplainer =
         if (frame.cycleNodeIds?.length) {
           return {
             content:
-              'The [Table] Cannot Be Finalized since a [Negative Cycle] Exists',
+              'The [Table] cannot be finalized since a [Negative Cycle] exists',
             highlights: [
               highlights.table,
               negativeCycle(graph, frame.cycleEdgeIds),
@@ -50,7 +50,7 @@ export const allPairsExplainer =
 
         return {
           content:
-            'Done! The [Table] shows the cheapest bath between each pair of nodes',
+            'Done! The [Table] shows the cheapest path between each pair of nodes',
           highlights: [highlights.table],
         };
 
@@ -98,16 +98,16 @@ export const allPairsExplainer =
           };
         }
 
-        const improvedCost = cost(
+        const previousCost = cost(
           graph,
           frame.previousDistance,
           frame.previousRoute,
         );
 
         return {
-          content: `The detour improves against ${improvedCost.text}, so the cost for {${frame.from}} to {${frame.to}} [Improves] to ${improved.text}`,
+          content: `The detour improves against ${previousCost.text}, so the cost for {${frame.from}} to {${frame.to}} [Improves] to ${improved.text}`,
           highlights: [
-            ...improvedCost.highlights,
+            ...previousCost.highlights,
             highlights.improve,
             ...improved.highlights,
           ],
@@ -121,11 +121,11 @@ export const allPairsExplainer =
         };
 
       case 'negative-cycle': {
-        const found = `{${frame.node}} Can Return to Itself for Less Than Nothing`;
+        const found = `{${frame.node}} can return to itself for less than nothing`;
 
         if (!frame.loop) {
           return {
-            content: `${found}, So a [Negative Cycle] Runs Through It and No Shortest Path Exists`,
+            content: `${found}, so a [Negative Cycle] runs through it and no shortest path exists`,
             highlights: [negativeCycle(graph)],
           };
         }
@@ -133,7 +133,7 @@ export const allPairsExplainer =
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${found}: a [Negative Cycle] Costing ${lap.text} a Lap, So No Shortest Path Exists`,
+          content: `${found}: a [Negative Cycle] costing ${lap.text} a lap, so no shortest path exists`,
           highlights: [
             negativeCycle(graph, frame.loop.edges),
             ...lap.highlights,

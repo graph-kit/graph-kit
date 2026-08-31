@@ -65,30 +65,31 @@ export const bellmanFord: SingleSourceFunction =
       return [...basePath, edge.id];
     };
 
-    const changedThisPass = new Set<GNode['id']>();
-
     const totalPasses = Math.max(nodeIds.length - 1, 0);
 
     let sweep: SingleSourceSweep['sweep'];
 
-    const beginSweep = (pass?: number) =>
-      (sweep = {
+    const beginSweep = (pass?: number) => {
+      sweep = {
         edgeIds: sweepEdgeIds,
         position: 0,
         pass,
         totalPasses,
         outcomes: {},
-      });
+      };
+    };
 
-    const atEdge = (index: number) => {
+    const advanceSweepTo = (index: number) => {
       if (sweep) sweep.position = index + 1;
     };
 
-    const record = (edge: GEdge, outcome: SweepOutcome) => {
+    const recordSweepOutcome = (edge: GEdge, outcome: SweepOutcome) => {
       if (sweep) sweep.outcomes[edge.id] = outcome;
     };
 
-    const endSweep = () => (sweep = undefined);
+    const endSweep = () => {
+      sweep = undefined;
+    };
 
     /*
       no frontier and no settled set: bellman ford has neither. it sweeps every
@@ -105,8 +106,24 @@ export const bellmanFord: SingleSourceFunction =
       ...fields,
     });
 
+    /**
+     * what crossing this edge would offer the node it lands on, next to what
+     * that node already holds. absent when nothing has reached the far side to
+     * cross from, which every caller answers with {@link skipUnreachable}
+     */
+    const offerAcross = (edge: GEdge) => {
+      const reachedFrom = distances[edge.source];
+      if (reachedFrom === undefined) return;
+
+      return {
+        reachedFrom,
+        offered: reachedFrom.add(edge.weight),
+        current: distances[edge.target],
+      };
+    };
+
     const skipUnreachable = (edge: GEdge) => {
-      record(edge, 'skipped');
+      recordSweepOutcome(edge, 'skipped');
       frameCollector.add(
         frame({
           type: 'skip-unreachable',
@@ -167,6 +184,64 @@ export const bellmanFord: SingleSourceFunction =
       frameCollector.add(frame({ type: 'end', ...painted }));
     };
 
+    /**
+     * one more sweep once the passes are spent. every distance that can be
+     * final is by then, so an edge that still improves one is riding a loop
+     * that gets cheaper every lap. reports the cycle and answers whether it
+     * found one, since nothing after it is worth showing if it did
+     */
+    const runNegativeCycleSweep = () => {
+      beginSweep();
+      frameCollector.add(
+        frame({
+          type: 'begin-verification',
+          passesDone: totalPasses,
+          nodeCount: nodeIds.length,
+        }),
+      );
+
+      for (const [index, edge] of allEdges.entries()) {
+        advanceSweepTo(index);
+
+        const offer = offerAcross(edge);
+
+        if (!offer) {
+          skipUnreachable(edge);
+          continue;
+        }
+
+        const { offered, current } = offer;
+
+        if (current === undefined || offered.lt(current)) {
+          recordSweepOutcome(edge, 'improved');
+          arrivalEdgeByNode.set(edge.target, edge);
+          endSweep();
+          reportTheCycle(edge);
+          return true;
+        }
+
+        recordSweepOutcome(edge, 'kept');
+        frameCollector.add(
+          frame({
+            type: 'verify-edge',
+            edge: edge.id,
+            from: edge.source,
+            to: edge.target,
+            offered,
+            current,
+            currentPath: routeTo(edge.target),
+            activeNodeId: edge.source,
+            candidateNodeIds: [edge.target],
+            relaxingEdgeIds: [edge.id],
+          }),
+        );
+      }
+
+      endSweep();
+      frameCollector.add(frame({ type: 'no-negative-cycle' }));
+      return false;
+    };
+
     frameCollector.add(frame({ type: 'start', source: sourceNodeId }));
 
     let provedByFixpoint = false;
@@ -182,20 +257,19 @@ export const bellmanFord: SingleSourceFunction =
         }),
       );
 
-      changedThisPass.clear();
+      let anyDistanceImproved = false;
 
       for (const [index, edge] of allEdges.entries()) {
-        atEdge(index);
+        advanceSweepTo(index);
 
-        const reachedFrom = distances[edge.source];
+        const offer = offerAcross(edge);
 
-        if (reachedFrom === undefined) {
+        if (!offer) {
           skipUnreachable(edge);
           continue;
         }
 
-        const offered = reachedFrom.add(edge.weight);
-        const current = distances[edge.target];
+        const { reachedFrom, offered, current } = offer;
 
         frameCollector.add(
           frame({
@@ -212,7 +286,7 @@ export const bellmanFord: SingleSourceFunction =
         );
 
         if (current !== undefined && current.lte(offered)) {
-          record(edge, 'kept');
+          recordSweepOutcome(edge, 'kept');
           frameCollector.add(
             frame({
               type: 'keep-distance',
@@ -239,8 +313,8 @@ export const bellmanFord: SingleSourceFunction =
         arrivalEdgeByNode.set(edge.target, edge);
         routeByNode.set(edge.target, [...basePath, edge.id]);
 
-        record(edge, 'improved');
-        changedThisPass.add(edge.target);
+        recordSweepOutcome(edge, 'improved');
+        anyDistanceImproved = true;
 
         frameCollector.add(
           frame({
@@ -260,7 +334,7 @@ export const bellmanFord: SingleSourceFunction =
         );
       }
 
-      if (changedThisPass.size > 0) continue;
+      if (anyDistanceImproved) continue;
 
       endSweep();
       frameCollector.add(frame({ type: 'pass-settled', pass }));
@@ -268,58 +342,9 @@ export const bellmanFord: SingleSourceFunction =
       break;
     }
 
-    // check sweep
-    if (!provedByFixpoint && totalPasses > 0) {
-      beginSweep();
-      frameCollector.add(
-        frame({
-          type: 'begin-verification',
-          passesDone: totalPasses,
-          nodeCount: nodeIds.length,
-        }),
-      );
+    const passesRanOut = !provedByFixpoint && totalPasses > 0;
 
-      for (const [index, edge] of allEdges.entries()) {
-        atEdge(index);
-
-        const reachedFrom = distances[edge.source];
-
-        if (reachedFrom === undefined) {
-          skipUnreachable(edge);
-          continue;
-        }
-
-        const offered = reachedFrom.add(edge.weight);
-        const current = distances[edge.target];
-
-        if (current === undefined || offered.lt(current)) {
-          record(edge, 'improved');
-          arrivalEdgeByNode.set(edge.target, edge);
-          endSweep();
-          reportTheCycle(edge);
-          return;
-        }
-
-        record(edge, 'kept');
-        frameCollector.add(
-          frame({
-            type: 'verify-edge',
-            edge: edge.id,
-            from: edge.source,
-            to: edge.target,
-            offered,
-            current,
-            currentPath: routeTo(edge.target),
-            activeNodeId: edge.source,
-            candidateNodeIds: [edge.target],
-            relaxingEdgeIds: [edge.id],
-          }),
-        );
-      }
-
-      endSweep();
-      frameCollector.add(frame({ type: 'no-negative-cycle' }));
-    }
+    if (passesRanOut && runNegativeCycleSweep()) return;
 
     endSweep();
 

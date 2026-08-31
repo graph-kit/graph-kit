@@ -22,10 +22,19 @@ export const dijkstras: SingleSourceFunction =
     const settled = new Set<GNode['id']>();
     const arrivalEdgeByNode = new Map<GNode['id'], GEdge>();
 
+    const routeTo = (node: GNode['id']) =>
+      edgeIdsAlongPathTo(arrivalEdgeByNode, node);
+
     const frontier = () =>
       Object.keys(distances)
         .filter((id) => !settled.has(id) && distances[id] !== undefined)
         .sort((a, b) => distances[a]!.compare(distances[b]!));
+
+    const frontierEntry = (node: GNode['id']) => ({
+      node,
+      distance: distances[node]!,
+      path: routeTo(node),
+    });
 
     const frame = <T extends SingleSourceStep>(
       fields: T & SingleSourceHighlights,
@@ -40,44 +49,34 @@ export const dijkstras: SingleSourceFunction =
 
     frameCollector.add(frame({ type: 'start', source: sourceNodeId }));
 
-    let settleCount = 0;
-
     for (;;) {
       const queue = frontier();
       const nearest = queue.at(0);
       if (!nearest) break;
 
-      const holding = (ids: readonly GNode['id'][]) =>
-        ids.map((node) => ({
-          node,
-          distance: distances[node]!,
-          path: edgeIdsAlongPathTo(arrivalEdgeByNode, node),
-        }));
-
-      if (settleCount > 0) {
+      if (settled.size > 0) {
         const runnerUp = queue.at(1);
         frameCollector.add(
           frame({
             type: 'safe-to-settle',
             node: nearest,
             distance: distances[nearest]!,
-            path: edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
+            path: routeTo(nearest),
             runnerUp:
-              runnerUp === undefined ? undefined : holding([runnerUp])[0],
+              runnerUp === undefined ? undefined : frontierEntry(runnerUp),
             activeNodeId: nearest,
           }),
         );
       }
 
       settled.add(nearest);
-      settleCount++;
 
       frameCollector.add(
         frame({
           type: 'settle-node',
           node: nearest,
           distance: distances[nearest]!,
-          path: edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
+          path: routeTo(nearest),
           activeNodeId: nearest,
         }),
       );
@@ -92,8 +91,8 @@ export const dijkstras: SingleSourceFunction =
         frameCollector.add(
           frame({
             type: 'still-tentative',
-            waiting: holding(waiting),
-            via: holding([nearest])[0],
+            waiting: waiting.map((node) => frontierEntry(node)),
+            via: frontierEntry(nearest),
             candidateNodeIds: waiting,
           }),
         );
@@ -105,7 +104,7 @@ export const dijkstras: SingleSourceFunction =
           node: nearest,
           distance: distances[nearest]!,
           edges: leaving.map((edge) => edge.id),
-          basePath: edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
+          basePath: routeTo(nearest),
           activeNodeId: nearest,
         }),
       );
@@ -121,7 +120,7 @@ export const dijkstras: SingleSourceFunction =
               edge: edge.id,
               node: edge.target,
               distance: current!,
-              path: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target),
+              path: routeTo(edge.target),
               activeNodeId: nearest,
               rejectedEdgeIds: [edge.id],
             }),
@@ -151,11 +150,8 @@ export const dijkstras: SingleSourceFunction =
               distance: current,
               offered,
               edge: edge.id,
-              offeredPath: [
-                ...edgeIdsAlongPathTo(arrivalEdgeByNode, nearest),
-                edge.id,
-              ],
-              currentPath: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target),
+              offeredPath: [...routeTo(nearest), edge.id],
+              currentPath: routeTo(edge.target),
               activeNodeId: nearest,
               candidateNodeIds: [edge.target],
               rejectedEdgeIds: [edge.id],
@@ -166,8 +162,8 @@ export const dijkstras: SingleSourceFunction =
 
         // read before the arrival edge is replaced, or the route being beaten is
         // already gone, and the route the new cost is built on already rewritten
-        const oldPath = edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target);
-        const basePath = edgeIdsAlongPathTo(arrivalEdgeByNode, nearest);
+        const oldPath = routeTo(edge.target);
+        const basePath = routeTo(nearest);
 
         distances[edge.target] = offered;
         arrivalEdgeByNode.set(edge.target, edge);

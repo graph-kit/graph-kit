@@ -3,6 +3,8 @@
   import { useGraphShell } from '@magic/shared/graph-shell';
   import { useFocusedNode } from '@magic/shared/utilities';
 
+  import { shallowReactive } from 'vue';
+
   import InsertNode from './InsertNode.vue';
   import RemoveNode from './RemoveNode.vue';
   import ResetTree from './ResetTree.vue';
@@ -21,7 +23,7 @@
   import { useTreeActions, useTreeShortcuts } from './useTreeActions.ts';
   import { useTreePersistence } from './useTreePersistence.ts';
 
-  const tree = new AVLTree();
+  const tree = shallowReactive(new AVLTree());
 
   const { graph, shell } = useGraphShell({
     productId: 'avl-trees',

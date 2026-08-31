@@ -1,11 +1,9 @@
-import { Key } from 'ctrl-keys';
+import { isMac } from '@core/utils/keyboard';
 
-// a function rather than a constant, since prerender has no navigator to ask
-const isMac = () =>
-  typeof navigator !== 'undefined' && /mac/i.test(navigator.userAgent);
+import { ShortcutKey } from '../../shortcuts/useShortcuts.ts';
 
-// the bindings fire on the meta key itself, so off mac this reads Meta rather than Ctrl
 const modifierSymbols = () => ({
+  mod: isMac() ? '⌘ Command' : 'Ctrl',
   meta: isMac() ? '⌘ Command' : 'Meta',
   shift: '⇧ Shift',
   alt: isMac() ? '⌥' : 'Alt',
@@ -38,8 +36,8 @@ const segments = (key: string) => {
   return key.split('+');
 };
 
-/** one chip per segment, e.g. 'meta+shift+z' reads as ⌘ ⇧ Z */
-export const formatShortcutKey = (key: Key): string[] => {
+/** one chip per segment, e.g. 'mod+shift+z' reads as ⌘ ⇧ Z */
+export const formatShortcutKey = (key: ShortcutKey): string[] => {
   const modifiers: Record<string, string> = modifierSymbols();
 
   return segments(key).map((segment) => {

@@ -54,7 +54,7 @@ export const useTreeShortcuts = (
 
   shell.shortcuts.add({
     id: 'avl/delete-selection',
-    helpMenu: { category: GRAPH_HELP_CATEGORY, name: 'Delete Node' },
+    helpMenu: { category: GRAPH_HELP_CATEGORY, name: 'Remove Node' },
     key: 'backspace',
     callback: onBackspace,
   });

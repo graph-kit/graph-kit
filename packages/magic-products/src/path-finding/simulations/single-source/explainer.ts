@@ -93,14 +93,7 @@ export const singleSourceExplainer =
         if (frame.cycleEdgeIds?.length) {
           return {
             content: `Cannot finalize [Distances]. While a [Negative Cycle] exists, we cannot find the cheapest path from {${frame.anchorNodeId}}`,
-            highlights: [
-              highlights.distances,
-              createEdgeSetHighlight(
-                graph,
-                frame.cycleEdgeIds,
-                'A cycle in which all edges sum to a negative value',
-              ),
-            ],
+            highlights: [highlights.distances, highlights.negativeCycle],
           };
         }
 
@@ -326,15 +319,16 @@ export const singleSourceExplainer =
 
         if (!frame.loop) {
           return {
-            content: `${stillImproves}. The negative cycle check fails so the algorithm cannot give a cheapest path`,
+            content: `${stillImproves}. The [Negative Cycle] check fails so the algorithm cannot give a cheapest path`,
+            highlights: [highlights.negativeCycle],
           };
         }
 
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${stillImproves}. The negative cycle check fails so the algorithm cannot give a cheapest path. The cycle costs ${lap.text}`,
-          highlights: lap.highlights,
+          content: `${stillImproves}. The [negative cycle] check fails so the algorithm cannot give a cheapest path. The cycle costs ${lap.text}`,
+          highlights: [highlights.negativeCycle, ...lap.highlights],
         };
       }
     }

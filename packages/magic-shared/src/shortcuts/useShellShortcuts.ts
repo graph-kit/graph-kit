@@ -1,6 +1,7 @@
 import { useFullscreen } from '@vueuse/core';
 
 import { Shell } from '../product/types.ts';
+import { HELP_MENU_KEY } from '../ui/help-menu/useHelpMenuState.ts';
 import { ShortcutItem } from './useShortcuts.ts';
 
 export const useShellShortcuts = (shell: Shell) => {
@@ -27,7 +28,7 @@ export const useShellShortcuts = (shell: Shell) => {
     {
       id: 'shell/toggle-help-menu',
       helpMenu: { category: 'View', name: 'Toggle Help Menu' },
-      key: 'h',
+      key: HELP_MENU_KEY,
       callback: shell.helpMenu.toggle,
     },
     {

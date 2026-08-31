@@ -7,6 +7,13 @@ import { formatShortcutKey } from './formatShortcutKey.ts';
 import { GESTURE_DISPLAY } from './gestures.ts';
 import { HelpMenuGesture, HelpMenuRow, HelpMenuSection } from './types.ts';
 
+/**
+ * the key that opens the menu, and closes it again. the shortcut layer stands down
+ * inside a dialog so escape can reach it, which leaves the open menu to answer this
+ * one itself, see HelpMenuContent
+ */
+export const HELP_MENU_KEY = 'h';
+
 /** the groups the shell fills, in the order they read best. the product's own read first */
 const CATEGORY_ORDER = [
   'Graph',

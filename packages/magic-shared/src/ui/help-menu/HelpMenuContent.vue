@@ -1,9 +1,28 @@
 <script setup lang="ts">
+  import { isTypingTarget } from '@core/utils/keyboard';
+
+  import { onMounted, onUnmounted } from 'vue';
+
   import Icon from '../../components/icon/Icon.vue';
   import VStack from '../../components/layout/VStack.vue';
   import { useProvidedShell } from '../../product/context.ts';
+  import { HELP_MENU_KEY } from './useHelpMenuState.ts';
 
   const { helpMenu } = useProvidedShell();
+
+  /**
+   * this only exists while the menu is up, which is exactly when the shell's shortcut
+   * for the same key has stood down: a dialog owns the keystrokes landing inside it,
+   * so the way back out is the menu's own to answer
+   */
+  const closeOnHelpKey = (event: KeyboardEvent) => {
+    if (isTypingTarget(event)) return;
+    if (event.key.toLowerCase() !== HELP_MENU_KEY) return;
+    helpMenu.setOpen(false);
+  };
+
+  onMounted(() => window.addEventListener('keydown', closeOnHelpKey));
+  onUnmounted(() => window.removeEventListener('keydown', closeOnHelpKey));
 
   // the keys sit on the panel's own surface, so they carry their own edge to read as caps
   const capClasses =
@@ -17,7 +36,7 @@
       :key="section.category"
       gap="1"
     >
-      <h3 class="text-xs font-bold uppercase tracking-wide opacity-60">
+      <h3 class="opacity-80 font-bold tracking-wide">
         {{ section.category }}
       </h3>
       <div

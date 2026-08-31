@@ -57,7 +57,6 @@
         v-bind="{ ...attrs, class: undefined, 'aria-describedby': undefined }"
         :class="classes"
       >
-        <DialogTitle class="text-lg font-bold">{{ title }}</DialogTitle>
         <slot />
       </DialogContent>
     </DialogPortal>

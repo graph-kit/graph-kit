@@ -20,7 +20,7 @@ import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
-import { HelpMenuGesture } from '../ui/help-menu/types.ts';
+import { HelpMenuItem } from '../ui/help-menu/types.ts';
 import { HelpMenuControls } from '../ui/help-menu/useHelpMenuState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
@@ -178,7 +178,7 @@ export type ShellOptions = {
   /** what the product asks for, see {@link ShellFlags} */
   flags?: ShellFlagOptions;
   /** what this product adds to the help menu beyond its shortcuts */
-  helpMenu?: MaybeGetter<HelpMenuGesture[]>;
+  helpMenu?: MaybeGetter<HelpMenuItem[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
 };

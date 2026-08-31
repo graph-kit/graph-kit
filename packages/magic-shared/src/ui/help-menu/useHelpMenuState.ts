@@ -5,7 +5,7 @@ import { ComputedRef, computed, ref } from 'vue';
 import { ShortcutControls } from '../../shortcuts/useShortcuts.ts';
 import { formatShortcutKey } from './formatShortcutKey.ts';
 import { GESTURE_DISPLAY } from './gestures.ts';
-import { HelpMenuGesture, HelpMenuRow, HelpMenuSection } from './types.ts';
+import { HelpMenuItem, HelpMenuRow, HelpMenuSection } from './types.ts';
 
 export const HELP_MENU_KEY = 'h';
 
@@ -38,7 +38,7 @@ const byCategoryOrder = (previous: string, next: string) => {
 
 export const useHelpMenuState = (
   shortcuts: ShortcutControls,
-  gestures: MaybeGetter<HelpMenuGesture[]> = [],
+  items: MaybeGetter<HelpMenuItem[]> = [],
 ): HelpMenuControls => {
   const isOpen = ref(false);
 
@@ -53,12 +53,20 @@ export const useHelpMenuState = (
       else byCategory.set(category, [row]);
     };
 
-    // read inside the computed, so a gesture leaves the menu with its plugin
-    for (const gesture of getValue(gestures)) {
-      const { label, icon } = GESTURE_DISPLAY[gesture.gesture];
-      addRow(gesture.category, {
-        name: gesture.name,
-        trigger: [{ text: label, icon }],
+    // read inside the computed, so a row leaves the menu with the plugin answering it
+    for (const item of getValue(items)) {
+      if ('gesture' in item) {
+        const { label, icon } = GESTURE_DISPLAY[item.gesture];
+        addRow(item.category, {
+          name: item.name,
+          trigger: [{ text: label, icon }],
+        });
+        continue;
+      }
+
+      addRow(item.category, {
+        name: item.name,
+        trigger: formatShortcutKey(item.key).map((text) => ({ text })),
       });
     }
 

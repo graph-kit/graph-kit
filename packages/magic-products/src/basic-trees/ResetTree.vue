@@ -9,7 +9,10 @@
 </script>
 
 <template>
-  <Button @click="resetTree">
+  <Button
+    @click="resetTree"
+    class="hover:bg-red-600 active:bg-red-700 dark:hover:bg-red-600 dark:active:bg-red-700"
+  >
     <template #start>
       <Icon :path="mdiRestart" />
     </template>

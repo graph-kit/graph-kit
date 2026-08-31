@@ -8,7 +8,6 @@
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedShell } from '../../product/context.ts';
   import { useRunningSimulation } from '../useRunningSimulation.ts';
   import SimulationExplainerText from './SimulationExplainerText.vue';
 
@@ -38,24 +37,6 @@
     const lastPosition = simulation.value.frameCount - 1;
     if (lastPosition <= 0) return 100;
     return (simulation.value.playhead.position / lastPosition) * 100;
-  });
-
-  const shell = useProvidedShell();
-  const { useShortcut } = shell.shortcuts;
-
-  useShortcut({
-    key: 'left',
-    callback: () => {
-      if (!simulation.value.playhead.isFirst())
-        simulation.value.playhead.prev();
-    },
-  });
-
-  useShortcut({
-    key: 'right',
-    callback: () => {
-      if (!simulation.value.playhead.isLast()) simulation.value.playhead.next();
-    },
   });
 </script>
 

@@ -2,6 +2,7 @@ import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
 import { ReadonlyEventHub } from '@core/events/createEventHub';
+import { MaybeGetter } from '@core/utils/maybeGetter/index';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 import { Tier } from '@multiplayer/protocol/tiers';
 import { BasicColorMode } from '@vueuse/core';
@@ -19,6 +20,8 @@ import { SimulationControls } from '../simulation/useSimulationState.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
+import { HelpMenuGesture } from '../ui/help-menu/types.ts';
+import { HelpMenuControls } from '../ui/help-menu/useHelpMenuState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
 import { ShellFlagOptions, ShellFlags } from './flags.ts';
@@ -160,6 +163,8 @@ export type ShellOptions = {
   productId: ProductId;
   /** what the product asks for, see {@link ShellFlags} */
   flags?: ShellFlagOptions;
+  /** what this product adds to the help menu beyond its shortcuts */
+  helpMenu?: MaybeGetter<HelpMenuGesture[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
 };
@@ -174,6 +179,7 @@ export type Shell = {
   appearance: AppearanceControls;
   shortcuts: ShortcutControls;
   debug: DebugControls;
+  helpMenu: HelpMenuControls;
   /** the app wide toast queue, which every product shares, see {@link ToastControls} */
   toast: ToastControls;
   surface: CanvasSurface;

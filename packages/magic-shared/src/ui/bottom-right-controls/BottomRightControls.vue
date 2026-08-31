@@ -11,6 +11,7 @@
   import AnnotationToggle from '../annotations/AnnotationToggle.vue';
   import AppearanceToggle from '../appearance/AppearanceToggle.vue';
   import FullscreenButton from '../fullscreen/FullscreenButton.vue';
+  import HelpToggle from '../help-menu/HelpToggle.vue';
   import LinkSharingButton from '../link-sharing/LinkSharingButton.vue';
   import MultiplayerButton from '../multiplayer/MultiplayerButton.vue';
 
@@ -20,6 +21,8 @@
 <template>
   <HStack>
     <AnnotationToggle v-if="shell.annotations" />
+
+    <HelpToggle />
 
     <Well class="p-0 rounded-full overflow-hidden">
       <Dropdown

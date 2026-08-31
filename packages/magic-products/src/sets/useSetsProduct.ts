@@ -71,7 +71,18 @@ export const useSetsProduct = () => {
     },
   };
 
-  const shell = useShell(host, { productId: 'sets' });
+  const shell = useShell(host, {
+    productId: 'sets',
+    // MainView subscribes this to onDblClick
+    helpMenu: [
+      {
+        id: 'sets/create-set',
+        category: 'Sets',
+        name: 'Create a Set',
+        gesture: 'dblclick',
+      },
+    ],
+  });
 
   const setsProductState = useSetsProductState(shell);
   useCanvasTheme(shell, setsProductState);

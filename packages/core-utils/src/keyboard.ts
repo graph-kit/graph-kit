@@ -11,3 +11,13 @@ export const isTypingTarget = (event: KeyboardEvent) => {
   if (!(target instanceof HTMLElement)) return false;
   return TYPING_TAGS.has(target.tagName) || target.isContentEditable;
 };
+
+/**
+ * true when the keystroke landed inside an open dialog, which owns it rather than
+ * whatever it is covering
+ */
+export const isDialogTarget = (event: KeyboardEvent) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return false;
+  return !!target.closest('[role="dialog"], [role="alertdialog"]');
+};

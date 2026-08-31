@@ -59,6 +59,20 @@ export type HistoryField = {
   clear: () => void;
 };
 
+/**
+ * what the shell hands consumers: the host's history plus a way to hold undo and redo
+ * off while the product's state isn't ready to handle it
+ */
+export type ShellHistory = HistoryField & {
+  /**
+   * blocks undo and redo until the returned release is called. `message` is what the
+   * buttons report as their reason for being disabled
+   */
+  suppress: (message: string) => () => void;
+  /** why undo and redo are blocked, `undefined` when they are not */
+  suppression: ComputedRef<string | undefined>;
+};
+
 export type DocBinding = {
   history: HistoryField;
   /** stops mirroring, leaving the product's own state exactly as the document left it */
@@ -184,7 +198,7 @@ export type Shell = {
   toast: ToastControls;
   surface: CanvasSurface;
   transit?: TransitField;
-  history?: HistoryField;
+  history?: ShellHistory;
   annotations?: AnnotationsUIControls;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];

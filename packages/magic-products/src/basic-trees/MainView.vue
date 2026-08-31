@@ -26,7 +26,6 @@
   const { graph, shell } = useGraphShell({
     productId: 'avl-trees',
     flags: {
-      history: false,
       adjustAnimationSpeed: true,
     },
     core: {

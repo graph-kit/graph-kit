@@ -4,6 +4,8 @@ import { Shell } from '@magic/shared/product';
 import { graphToTree } from './graph-conversion/graphToTree.ts';
 import { AVLTree } from './tree/AVLTree.ts';
 
+const SUPPRESSION_MESSAGE = 'Undo/redo is disabled during simulation';
+
 export const useTreePersistence = (
   tree: AVLTree,
   graph: Graph,
@@ -13,11 +15,17 @@ export const useTreePersistence = (
     tree.root = graphToTree(graph);
   });
 
-  let release: (() => void) | undefined;
+  let releaseStorage: (() => void) | undefined;
+  let releaseHistory: (() => void) | undefined;
 
   shell.simulation.events.subscribe('onSimulationStarted', () => {
-    release = shell.localStorage.suspend();
+    releaseStorage = shell.localStorage.suspend();
+    releaseHistory = shell.history?.suppress(SUPPRESSION_MESSAGE);
   });
 
-  shell.simulation.events.subscribe('onSimulationEnded', () => release?.());
+  shell.simulation.events.subscribe('onSimulationEnded', () => {
+    releaseStorage?.();
+    releaseHistory?.();
+    graph.history.captureSnapshot();
+  });
 };

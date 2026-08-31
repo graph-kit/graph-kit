@@ -28,6 +28,7 @@ export const useTreeActions = (
   resetTree: () => {
     graph.actions.removeElements({ nodes: graph.nodes.value, edges: [] });
     tree.root = graphToTree(graph);
+    graph.history.captureSnapshot();
   },
 });
 

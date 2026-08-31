@@ -28,6 +28,32 @@ export const useShellShortcuts = (shell: Shell) => {
       callback: shell.helpMenu.toggle,
     },
     {
+      id: 'shell/simulation/stop',
+      key: 'escape',
+      callback: () => {
+        if (!shell.simulation.current.value) return;
+        shell.simulation.stop();
+      },
+    },
+    {
+      id: 'shell/simulation/previous-frame',
+      key: 'left',
+      callback: () => {
+        const playhead = shell.simulation.current.value?.playhead;
+        if (!playhead || playhead.isFirst()) return;
+        playhead.prev();
+      },
+    },
+    {
+      id: 'shell/simulation/next-frame',
+      key: 'right',
+      callback: () => {
+        const playhead = shell.simulation.current.value?.playhead;
+        if (!playhead || playhead.isLast()) return;
+        playhead.next();
+      },
+    },
+    {
       id: 'shell/toggle-debug',
       key: 'd',
       callback: shell.debug.toggle,

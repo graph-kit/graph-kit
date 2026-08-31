@@ -10,13 +10,6 @@
 
   const shell = useProvidedShell();
 
-  const { useShortcut } = shell.shortcuts;
-
-  useShortcut({
-    key: 'escape',
-    callback: shell.simulation.stop,
-  });
-
   const isOnLastFrame = computed(
     () => shell.simulation.current.value?.playhead.isLast() ?? false,
   );

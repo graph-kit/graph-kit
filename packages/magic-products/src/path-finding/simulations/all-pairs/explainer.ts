@@ -2,8 +2,9 @@ import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph, GraphPath } from '@magic/shared/graph';
 
 import { Distance, formatDistance } from '../distance.ts';
+import { negativeCycle } from '../negativeCycle.ts';
 import { matrixSlotId } from './effects.ts';
-import { cost, count, negativeCycle } from './explainerParts.ts';
+import { cost, count } from './explainerParts.ts';
 import { AllPairsFrame } from './frame.ts';
 
 const matrixHighlight = (tooltipLabel: string): ExplainerHighlight => ({

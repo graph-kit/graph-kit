@@ -1,3 +1,5 @@
+import { Color } from '@core/utils/colors';
+
 import { GEdge, Graph } from '../graph/types.ts';
 import { ExplainerHighlight } from './types.ts';
 
@@ -5,6 +7,8 @@ export const createEdgeSetHighlight = (
   graph: Graph,
   edgeIds: readonly GEdge['id'][],
   tooltipLabel?: ExplainerHighlight['tooltipLabel'],
+  /** defaults to the color focus wears, see {@link createPathThemer} */
+  color?: Color,
 ): ExplainerHighlight => {
   const ids = new Set(edgeIds);
 
@@ -12,7 +16,7 @@ export const createEdgeSetHighlight = (
     surface: {
       'edge.default.color': (edge) =>
         ids.has(edge.id)
-          ? graph.focus.theme._resolveToken('edge.focus.color', edge)
+          ? (color ?? graph.focus.theme._resolveToken('edge.focus.color', edge))
           : undefined,
     },
   });

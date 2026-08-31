@@ -7,18 +7,15 @@ import {
 import { GEdge, Graph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
+import { negativeCycle } from '../negativeCycle.ts';
 import { SingleSourceFrame } from './frame.ts';
 
 export const distancesSlotId = 'path-finding/distances';
 export const frontierSlotId = 'path-finding/frontier';
 export const sweepSlotId = 'path-finding/sweep';
-export const negativeCycleSlotId = 'path-finding/negativeCycle';
 
 type SlotId =
-  | typeof distancesSlotId
-  | typeof frontierSlotId
-  | typeof sweepSlotId
-  | typeof negativeCycleSlotId;
+  typeof distancesSlotId | typeof frontierSlotId | typeof sweepSlotId;
 
 const slotHighlight = (
   slot: SlotId,
@@ -49,10 +46,6 @@ const highlights = {
   sweep: slotHighlight(
     sweepSlotId,
     'Every edge in the graph, in the order this pass visits them',
-  ),
-  negativeCycle: slotHighlight(
-    negativeCycleSlotId,
-    'A cycle in which all edges sum to a negative value',
   ),
 } as const satisfies Record<string, ExplainerHighlight>;
 
@@ -93,7 +86,10 @@ export const singleSourceExplainer =
         if (frame.cycleEdgeIds?.length) {
           return {
             content: `Cannot finalize [Distances]. While a [Negative Cycle] exists, we cannot find the cheapest path from {${frame.anchorNodeId}}`,
-            highlights: [highlights.distances, highlights.negativeCycle],
+            highlights: [
+              highlights.distances,
+              negativeCycle(graph, frame.cycleEdgeIds),
+            ],
           };
         }
 
@@ -300,7 +296,7 @@ export const singleSourceExplainer =
       case 'begin-verification': {
         return {
           content: `After ${count(frame.passesDone, 'pass', 'passes')} all [Distances] are final. A verification sweep will confirm there are no [negative cycles]`,
-          highlights: [highlights.distances, highlights.negativeCycle],
+          highlights: [highlights.distances, negativeCycle(graph)],
         };
       }
 
@@ -325,7 +321,7 @@ export const singleSourceExplainer =
         if (!frame.loop) {
           return {
             content: `${stillImproves}. The [Negative Cycle] check fails so the algorithm cannot give a cheapest path`,
-            highlights: [highlights.negativeCycle],
+            highlights: [negativeCycle(graph)],
           };
         }
 
@@ -333,7 +329,10 @@ export const singleSourceExplainer =
 
         return {
           content: `${stillImproves}. The [negative cycle] check fails so the algorithm cannot give a cheapest path. The cycle costs ${lap.text}`,
-          highlights: [highlights.negativeCycle, ...lap.highlights],
+          highlights: [
+            negativeCycle(graph, frame.loop.edges),
+            ...lap.highlights,
+          ],
         };
       }
     }

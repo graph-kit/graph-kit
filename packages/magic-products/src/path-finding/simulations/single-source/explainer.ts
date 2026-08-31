@@ -11,8 +11,14 @@ import { SingleSourceFrame } from './frame.ts';
 
 export const distancesSlotId = 'path-finding/distances';
 export const frontierSlotId = 'path-finding/frontier';
+export const sweepSlotId = 'path-finding/sweep';
+export const negativeCycleSlotId = 'path-finding/negativeCycle';
 
-type SlotId = typeof distancesSlotId | typeof frontierSlotId;
+type SlotId =
+  | typeof distancesSlotId
+  | typeof frontierSlotId
+  | typeof sweepSlotId
+  | typeof negativeCycleSlotId;
 
 const slotHighlight = (
   slot: SlotId,
@@ -40,6 +46,14 @@ const highlights = {
     frontierSlotId,
     'All nodes that have been explored but not finalized yet. The distances may be improved with a different path.',
   ),
+  sweep: slotHighlight(
+    sweepSlotId,
+    'Every edge in the graph, in the order this pass visits them',
+  ),
+  negativeCycle: slotHighlight(
+    negativeCycleSlotId,
+    'A cycle in which all edges sum to a negative value',
+  ),
 } as const satisfies Record<string, ExplainerHighlight>;
 
 const cost = (graph: Graph, value: Fraction, path: readonly GEdge['id'][]) => {
@@ -54,6 +68,10 @@ const cost = (graph: Graph, value: Fraction, path: readonly GEdge['id'][]) => {
     highlights: [createEdgeSetHighlight(graph, path, secondary)],
   };
 };
+
+/** `1 edge`, `9 edges`, `2 passes` */
+const count = (amount: number, singular: string, plural = `${singular}s`) =>
+  `${amount} ${amount === 1 ? singular : plural}`;
 
 /** `a`, `a and b`, `a, b, and c` */
 const listOf = (items: readonly string[]) => {
@@ -72,6 +90,20 @@ export const singleSourceExplainer =
         };
 
       case 'end':
+        if (frame.cycleEdgeIds?.length) {
+          return {
+            content: `Cannot finalize [Distances]. While a [Negative Cycle] exists, we cannot find the cheapest path from {${frame.anchorNodeId}}`,
+            highlights: [
+              highlights.distances,
+              createEdgeSetHighlight(
+                graph,
+                frame.cycleEdgeIds,
+                'A cycle in which all edges sum to a negative value',
+              ),
+            ],
+          };
+        }
+
         return {
           content: `Done! The [Distances] from {${frame.anchorNodeId}} are as cheap as they can get`,
           highlights: [highlights.distances],
@@ -130,7 +162,11 @@ export const singleSourceExplainer =
           `with cost${held.length === 1 ? '' : 's'}`,
           listOf(held.map(({ shown }) => shown.text)),
           held.length === 1 ? '' : 'respectively',
-        ].join(' ');
+          // one node waiting drops the trailing 'respectively', and joining an
+          // empty piece in leaves a double space in front of the next sentence
+        ]
+          .filter(Boolean)
+          .join(' ');
 
         return {
           content: `${waiting} cannot yet be finalized. {${frame.via.node}} costs ${via.text} to reach, which is cheaper, so a path from {${frame.via.node}} could be cheaper`,
@@ -182,7 +218,7 @@ export const singleSourceExplainer =
         const finalized = cost(graph, frame.distance, frame.path);
 
         return {
-          content: `{${frame.edge}} is not followed, because {${frame.node}} is already finalized at ${finalized.text} and no path can beat a finalized cost`,
+          content: `{${frame.edge}} is not followed, because {${frame.node}} is already finalized at ${finalized.text}`,
           highlights: finalized.highlights,
         };
       }
@@ -193,25 +229,26 @@ export const singleSourceExplainer =
         };
 
       case 'improve-distance': {
-        if (frame.oldDistance === undefined) {
-          return {
-            content: `Nothing has reached {${frame.node}} before, so its cost [Improves] from ∞`,
-            highlights: [highlights.improve],
-          };
-        }
-
-        const previousPath = cost(graph, frame.oldDistance, frame.oldPath);
-        const improvedPath = cost(graph, frame.newDistance, [
+        const improved = cost(graph, frame.newDistance, [
           ...frame.basePath,
           frame.edge,
         ]);
 
+        if (frame.oldDistance === undefined) {
+          return {
+            content: `Nothing has reached {${frame.node}} before, so its distance [Improves] from ∞ to ${improved.text}`,
+            highlights: [highlights.improve, ...improved.highlights],
+          };
+        }
+
+        const had = cost(graph, frame.oldDistance, frame.oldPath);
+
         return {
-          content: `That beats its previous cost of ${previousPath.text}, so {${frame.node}} [Improves] to ${improvedPath.text}`,
+          content: `{${frame.node}} already had a route costing ${had.text}. Going through {${frame.via}} is cheaper costing ${improved.text}, so its distance [Improves]`,
           highlights: [
-            ...previousPath.highlights,
+            ...had.highlights,
+            ...improved.highlights,
             highlights.improve,
-            ...improvedPath.highlights,
           ],
         };
       }
@@ -242,22 +279,63 @@ export const singleSourceExplainer =
         };
       }
 
-      // not dijkstras below here, so we can ignore these frames for now
+      // bellman ford only
 
-      case 'begin-pass':
+      case 'begin-pass': {
         return {
-          content: `Pass ${frame.pass} of ${frame.totalPasses}: Sweeping Every Edge Once More`,
+          content: `Pass ${frame.pass} of ${frame.totalPasses}. The cheapest path uses at most ${count(frame.pass, 'edge')}. Sweeping edges in [Order]`,
+          highlights: [highlights.sweep],
+        };
+      }
+
+      case 'skip-unreachable':
+        return {
+          content: `{${frame.edge}} is swept, but {${frame.from}} still costs ∞, so {${frame.to}} cannot be updated`,
         };
 
       case 'pass-settled':
         return {
-          content: `Pass ${frame.pass} Changed Nothing, So No Later Pass Will Either. [Distances] Are Final`,
+          content: `Pass ${frame.pass} did not improve any costs meaning the [Distances] are final`,
           highlights: [highlights.distances],
         };
 
-      case 'negative-cycle':
+      case 'begin-verification': {
         return {
-          content: `{${frame.node}} Can Still Get Cheaper! A Negative Cycle Means No Shortest Path Exists`,
+          content: `After ${count(frame.passesDone, 'pass', 'passes')} all [Distances] are final. A verification sweep will confirm there are no [negative cycles]`,
+          highlights: [highlights.distances, highlights.negativeCycle],
         };
+      }
+
+      case 'verify-edge': {
+        const held = cost(graph, frame.current, frame.currentPath);
+
+        return {
+          content: `{${frame.edge}} improves nothing: {${frame.to}} costs ${held.text} and pathing through {${frame.from}} costs <${frame.offered.toFraction()}>`,
+          highlights: held.highlights,
+        };
+      }
+
+      case 'no-negative-cycle':
+        return {
+          content: `The sweep improved nothing, so [Distances] are final`,
+          highlights: [highlights.distances],
+        };
+
+      case 'negative-cycle': {
+        const stillImproves = `{${frame.edge}} can still make {${frame.node}} cheaper`;
+
+        if (!frame.loop) {
+          return {
+            content: `${stillImproves}. The negative cycle check fails so the algorithm cannot give a cheapest path`,
+          };
+        }
+
+        const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
+
+        return {
+          content: `${stillImproves}. The negative cycle check fails so the algorithm cannot give a cheapest path. The cycle costs ${lap.text}`,
+          highlights: lap.highlights,
+        };
+      }
     }
   };

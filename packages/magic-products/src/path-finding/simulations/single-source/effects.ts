@@ -19,11 +19,13 @@ import { Ref, ref } from 'vue';
 import { findNegativeWeightEdge } from '../edges.ts';
 import Distances from './Distances.vue';
 import Frontier from './Frontier.vue';
+import Sweep from './Sweep.vue';
 import { createDistanceThemer } from './createDistanceThemer.ts';
 import {
   distancesSlotId,
   frontierSlotId,
   singleSourceExplainer,
+  sweepSlotId,
 } from './explainer.ts';
 import { SingleSourceFrame, SingleSourceFunction } from './frame.ts';
 
@@ -32,8 +34,9 @@ import { SingleSourceFrame, SingleSourceFunction } from './frame.ts';
 // finalized = its distance is final, no later step can beat it.
 // frontier = discovered, with a tentative distance that may still improve.
 // source = the node the user picked to measure every distance from.
+// looping = it sits on a cycle that costs less than nothing to go around.
 type SingleSourceConcept =
-  'exploring' | 'weighing' | 'finalized' | 'frontier' | 'source';
+  'exploring' | 'weighing' | 'finalized' | 'frontier' | 'source' | 'looping';
 
 export const nodeRoles = {
   exploring: 'active',
@@ -41,17 +44,21 @@ export const nodeRoles = {
   finalized: 'settled',
   frontier: 'pending',
   source: 'anchor',
+  looping: 'result',
 } as const satisfies Record<SingleSourceConcept, NodeRole>;
 
 // relaxing = the edge whose weight is being tested this frame.
 // shortestPath = an edge on one of the best paths found so far.
 // discarded = an edge tested this frame that offered nothing better.
-type SingleSourceEdgeConcept = 'relaxing' | 'shortestPath' | 'discarded';
+// looping = it is part of the cycle that costs less than nothing to lap.
+type SingleSourceEdgeConcept =
+  'relaxing' | 'shortestPath' | 'discarded' | 'looping';
 
 export const edgeRoles = {
   relaxing: 'crossing',
   shortestPath: 'tree',
   discarded: 'rejected',
+  looping: 'result',
 } as const satisfies Record<SingleSourceEdgeConcept, EdgeRole>;
 
 // does not exit out of sim but shows user error
@@ -63,20 +70,24 @@ export type SingleSourceOptions = {
   graph: Graph;
   sourceNodeId: SourceNodeId;
   requiresNonNegativeWeights?: boolean;
+  dimsTentativeDistances?: boolean;
 };
 
 const singleSourceEffects = (
-  graph: Graph,
+  options: SingleSourceOptions,
   context: SetupContext<SingleSourceFrame>,
 ): SimulationEffects<SingleSourceFrame> => {
+  const { graph } = options;
   const frontier = createNodeIdThemer(graph, nodeRoles.frontier);
   const finalized = createNodeIdThemer(graph, nodeRoles.finalized);
   const source = createNodeIdThemer(graph, nodeRoles.source);
   const weighing = createNodeIdThemer(graph, nodeRoles.weighing);
   const exploring = createNodeIdThemer(graph, nodeRoles.exploring);
+  const loopingNodes = createNodeIdThemer(graph, nodeRoles.looping);
 
   const shortestPath = createEdgeIdThemer(graph, edgeRoles.shortestPath);
   const discarded = createEdgeIdThemer(graph, edgeRoles.discarded);
+  const loopingEdges = createEdgeIdThemer(graph, edgeRoles.looping);
   const relaxing = createEdgeIdThemer(graph, edgeRoles.relaxing);
 
   const currentFrame = ref<SingleSourceFrame>();
@@ -84,16 +95,30 @@ const singleSourceEffects = (
   // order matters: latter elements take priority over earlier ones. the source
   // sits below the two roles that describe what is happening right now, so the
   // node the user picked gives up its pink for the frame it is being worked on
+  /*
+    the cycle sits above the tree it is made of, or the shortest path green
+    would paint over the very edges being called out, and below the two roles
+    that follow the walker, so the edge being crossed and the node it lands on
+    still read as this frame's move rather than blending into the loop
+  */
   const themers = [
     frontier,
     finalized,
     source,
+    loopingNodes,
     weighing,
     exploring,
     shortestPath,
     discarded,
+    loopingEdges,
     relaxing,
-    { themer: createDistanceThemer(graph, currentFrame) },
+    {
+      themer: createDistanceThemer(
+        graph,
+        currentFrame,
+        options.dimsTentativeDistances ?? false,
+      ),
+    },
   ];
 
   const lens: Lens = {
@@ -108,6 +133,16 @@ const singleSourceEffects = (
         component: Frontier,
         position: 'center-right',
         id: frontierSlotId,
+      },
+      /*
+        the two algorithms fill different halves of a frame, so both panels are
+        registered and each renders only for the run that gives it something:
+        dijkstra has a frontier and no sweep, bellman ford the other way round
+      */
+      {
+        component: Sweep,
+        position: 'center-right',
+        id: sweepSlotId,
       },
     ],
     activate: () => {
@@ -126,6 +161,8 @@ const singleSourceEffects = (
     frontier.setIds(frame.pendingNodeIds ?? []);
     source.setId(frame.anchorNodeId);
     relaxing.setIds(frame.relaxingEdgeIds ?? []);
+    loopingNodes.setIds(frame.cycleNodeIds ?? []);
+    loopingEdges.setIds(frame.cycleEdgeIds ?? []);
     shortestPath.setIds(frame.treeEdgeIds);
     discarded.setIds(frame.rejectedEdgeIds ?? []);
   };
@@ -174,5 +211,5 @@ export const singleSourceSimulationDefinition = (
       nullThrows(options.sourceNodeId.value, 'source node id not defined'),
     )(collector);
   },
-  setup: (context) => singleSourceEffects(options.graph, context),
+  setup: (context) => singleSourceEffects(options, context),
 });

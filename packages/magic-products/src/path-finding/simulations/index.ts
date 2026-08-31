@@ -23,6 +23,7 @@ export const usePathFindingSimulations = (graph: Graph) => {
     dijkstras: singleSourceSimulationDefinition(dijkstras, {
       ...singleSource,
       requiresNonNegativeWeights: true,
+      dimsTentativeDistances: true,
     }),
     bellmanFord: singleSourceSimulationDefinition(bellmanFord, singleSource),
     floydWarshall: allPairsSimulationDefinition(floydWarshall, { graph }),

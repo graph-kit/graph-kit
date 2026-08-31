@@ -5,6 +5,7 @@ import { floydWarshall } from './all-pairs/floyd-warshall.ts';
 import { type DistanceRow, formatDistance } from './distance.ts';
 import { bellmanFord } from './single-source/bellman-ford.ts';
 import { dijkstras } from './single-source/dijkstras.ts';
+import { SingleSourceFrame } from './single-source/frame.ts';
 
 /** source, target, weight. the weight is anything `new Fraction()` takes */
 type EdgeSpec = [string, string, number | string];
@@ -228,7 +229,212 @@ describe('bellmanFord', () => {
       ],
     );
     const frames = collect(bellmanFord(graph, 'a'));
-    expect(frames.some((f) => f.type === 'negative-cycle')).toBe(true);
+    const cycle = frames.find((f) => f.type === 'negative-cycle');
+    expect(cycle).toBeDefined();
+    // the edge that still improves is the proof, so the frame carries it
+    expect(cycle && 'edge' in cycle && cycle.edge).toBeDefined();
+    expect(frames.some((f) => f.type === 'no-negative-cycle')).toBe(false);
+  });
+
+  /*
+    the edges are listed in the reverse of the order the distances travel, which
+    is the worst case: every pass carries the wave exactly one edge further, so
+    the last pass still improves and the run cannot stop early
+  */
+  const REVERSE_CHAIN: EdgeSpec[] = [
+    ['c', 'd', 1],
+    ['b', 'c', 1],
+    ['a', 'b', 1],
+  ];
+
+  const CHAIN_NODES = ['a', 'b', 'c', 'd'];
+
+  /*
+    the frames of each pass, from the frame announcing one to the last frame of
+    its sweep. a pass ends where its sweep does, so the verification sweep and
+    the frames closing the run stay out of the pass they follow
+  */
+  const passes = (frames: SingleSourceFrame[]) => {
+    const grouped: SingleSourceFrame[][] = [];
+    let current: SingleSourceFrame[] | undefined;
+
+    for (const frame of frames) {
+      if (frame.type === 'begin-pass') {
+        current = [];
+        grouped.push(current);
+      } else if (
+        frame.type === 'begin-verification' ||
+        frame.sweep === undefined
+      ) {
+        current = undefined;
+      }
+      current?.push(frame);
+    }
+
+    return grouped;
+  };
+
+  it('sweeps every edge every pass, unreachable sources included', () => {
+    // nothing reaches x, so x->y is swept and passed over on every pass
+    const graph = makeGraph(
+      ['a', 'b', 'x', 'y'],
+      [
+        ['a', 'b', 1],
+        ['x', 'y', 1],
+      ],
+    );
+    const frames = collect(bellmanFord(graph, 'a'));
+
+    const skipped = frames.filter((f) => f.type === 'skip-unreachable');
+    expect(skipped.length).toBeGreaterThan(0);
+    expect(skipped.every((f) => 'edge' in f && f.edge === 'e1')).toBe(true);
+
+    // every pass accounts for every edge, whether it could be followed or not
+    for (const pass of passes(frames)) {
+      const touched = pass
+        .filter((f) => f.type === 'relax-edge' || f.type === 'skip-unreachable')
+        .map((f) => ('edge' in f ? f.edge : undefined));
+      expect(touched).toEqual(['e0', 'e1']);
+    }
+  });
+
+  it('carries the sweep order and a cursor that walks it', () => {
+    const graph = makeGraph(CHAIN_NODES, REVERSE_CHAIN);
+    const frames = collect(bellmanFord(graph, 'a'));
+    const sweepOrder = ['e0', 'e1', 'e2'];
+
+    for (const pass of passes(frames)) {
+      // the pass opens on the whole list with nothing visited yet
+      expect(pass[0].sweep?.edgeIds).toEqual(sweepOrder);
+      expect(pass[0].sweep?.position).toBe(0);
+
+      // and the cursor only ever moves forward, one edge at a time
+      const cursor = pass.map((f) => f.sweep?.position);
+      expect(cursor).toEqual([...cursor].sort((a, b) => a! - b!));
+      expect(Math.max(...cursor.map((at) => at ?? 0))).toBe(sweepOrder.length);
+    }
+  });
+
+  it('titles each sweep by its pass, and the extra one by neither', () => {
+    const graph = makeGraph(CHAIN_NODES, REVERSE_CHAIN);
+    const frames = collect(bellmanFord(graph, 'a'));
+
+    // the passes are numbered against the same total the bound is argued from
+    expect(passes(frames).map((pass) => pass[0].sweep?.pass)).toEqual([
+      1, 2, 3,
+    ]);
+    for (const pass of passes(frames)) {
+      expect(pass[0].sweep?.totalPasses).toBe(3);
+    }
+
+    // the extra sweep is not one of them, so it carries no pass to be called by
+    const check = frames.find((f) => f.type === 'begin-verification');
+    expect(check?.sweep).toBeDefined();
+    expect(check?.sweep?.pass).toBeUndefined();
+  });
+
+  it('books what every edge did as the sweep rules on it', () => {
+    // a->b improves on the first pass, a->c never beats the 1 it already has,
+    // and x->y is never crossable because nothing reaches x
+    const graph = makeGraph(
+      ['a', 'b', 'x', 'y'],
+      [
+        ['a', 'b', 1],
+        ['a', 'b', 4],
+        ['x', 'y', 1],
+      ],
+    );
+    const frames = collect(bellmanFord(graph, 'a'));
+    const firstPass = passes(frames)[0];
+
+    // nothing is booked before the sweep has ruled, so the opening frame is bare
+    expect(firstPass[0].sweep?.outcomes).toEqual({});
+
+    expect(last(firstPass).sweep?.outcomes).toEqual({
+      e0: 'improved',
+      e1: 'kept',
+      e2: 'skipped',
+    });
+  });
+
+  it('starts each pass with a clean slate of outcomes', () => {
+    const graph = makeGraph(CHAIN_NODES, REVERSE_CHAIN);
+    const frames = collect(bellmanFord(graph, 'a'));
+
+    /*
+      the panel shows what this pass found, not what every pass ever found, so a
+      verdict cannot survive into the sweep after it. the reverse chain improves
+      exactly one edge per pass, which is what makes that visible at all
+      */
+    const improvedPerPass = passes(frames).map(
+      (pass) =>
+        Object.values(last(pass).sweep?.outcomes ?? {}).filter(
+          (outcome) => outcome === 'improved',
+        ).length,
+    );
+    expect(improvedPerPass).toEqual([1, 1, 1]);
+  });
+
+  it('leaves the sweep off dijkstra, which has no edge list to walk', () => {
+    const graph = makeGraph(['a', 'b', 'c', 'd'], DIAMOND);
+    const frames = collect(dijkstras(graph, 'a'));
+    expect(frames.every((f) => f.sweep === undefined)).toBe(true);
+  });
+
+  it('sweeps once more to prove no cycle when the last pass still improved', () => {
+    const graph = makeGraph(CHAIN_NODES, REVERSE_CHAIN);
+    const frames = collect(bellmanFord(graph, 'a'));
+
+    expect(frames.some((f) => f.type === 'pass-settled')).toBe(false);
+
+    const verification = frames.find((f) => f.type === 'begin-verification');
+    expect(
+      verification && 'passesDone' in verification && verification.passesDone,
+    ).toBe(3);
+
+    // every edge is checked, and every check clears
+    expect(frames.filter((f) => f.type === 'verify-edge')).toHaveLength(3);
+    expect(frames.some((f) => f.type === 'no-negative-cycle')).toBe(true);
+  });
+
+  /*
+    a pass that changes nothing is already a proof: no edge can improve, so no
+    cycle can be getting cheaper, and the extra sweep would be asking a question
+    that has been answered
+  */
+  it('skips the extra sweep when a pass already changed nothing', () => {
+    const graph = makeGraph(['a', 'b', 'c', 'd'], DIAMOND);
+    const frames = collect(bellmanFord(graph, 'a'));
+
+    expect(frames.some((f) => f.type === 'pass-settled')).toBe(true);
+    expect(frames.some((f) => f.type === 'begin-verification')).toBe(false);
+    expect(frames.some((f) => f.type === 'verify-edge')).toBe(false);
+  });
+
+  it('finalizes everything reached, all at once, on the last frame', () => {
+    const graph = makeGraph(CHAIN_NODES, REVERSE_CHAIN);
+    const frames = collect(bellmanFord(graph, 'a'));
+
+    // nothing is final before the end: bellman ford has no settled set to grow
+    for (const frame of frames.slice(0, -1)) {
+      expect(frame.settledNodeIds).toBeUndefined();
+    }
+    expect(last(frames).settledNodeIds).toEqual(CHAIN_NODES);
+  });
+
+  it('finalizes nothing on a run that ends in a cycle', () => {
+    const graph = makeGraph(
+      ['a', 'b', 'c'],
+      [
+        ['a', 'b', 1],
+        ['b', 'c', -2],
+        ['c', 'b', -2],
+      ],
+    );
+    const frames = collect(bellmanFord(graph, 'a'));
+
+    // nothing is finalized, since no shortest path exists to finalize
+    expect(last(frames).settledNodeIds).toBeUndefined();
   });
 });
 

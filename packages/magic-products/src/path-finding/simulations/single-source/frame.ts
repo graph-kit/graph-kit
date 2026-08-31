@@ -104,6 +104,35 @@ type KeepDistanceFrame = {
   currentPath: readonly GEdge['id'][];
 };
 
+type SkipUnreachableFrame = {
+  type: 'skip-unreachable';
+  edge: GEdge['id'];
+  from: GNode['id'];
+  to: GNode['id'];
+};
+
+type BeginVerificationFrame = {
+  type: 'begin-verification';
+  passesDone: number;
+  nodeCount: number;
+};
+
+type VerifyEdgeFrame = {
+  type: 'verify-edge';
+  edge: GEdge['id'];
+  from: GNode['id'];
+  to: GNode['id'];
+  /** what the route through `from` offers, which has to lose to `current` */
+  offered: Fraction;
+  current: Fraction;
+  /** the edges of the route `current` arrived on */
+  currentPath: readonly GEdge['id'][];
+};
+
+type NoNegativeCycleFrame = {
+  type: 'no-negative-cycle';
+};
+
 type UnreachableFrame = {
   type: 'unreachable';
   nodes: readonly GNode['id'][];
@@ -113,6 +142,8 @@ type BeginPassFrame = {
   type: 'begin-pass';
   pass: number;
   totalPasses: number;
+  /** carried so the pass count can be argued for without reading the graph */
+  nodeCount: number;
 };
 
 type PassSettledFrame = {
@@ -123,6 +154,12 @@ type PassSettledFrame = {
 type NegativeCycleFrame = {
   type: 'negative-cycle';
   node: GNode['id'];
+  /** the edge that still improves node, which is the proof there is a cycle */
+  edge: GEdge['id'];
+  loop?: {
+    edges: readonly GEdge['id'][];
+    lapCost: Fraction;
+  };
 };
 
 export type SingleSourceStep =
@@ -137,6 +174,10 @@ export type SingleSourceStep =
   | ImproveDistanceFrame
   | KeepDistanceFrame
   | UnreachableFrame
+  | SkipUnreachableFrame
+  | BeginVerificationFrame
+  | VerifyEdgeFrame
+  | NoNegativeCycleFrame
   | BeginPassFrame
   | PassSettledFrame
   | NegativeCycleFrame;
@@ -173,8 +214,41 @@ export type SingleSourceHighlights = {
   relaxingEdgeIds?: readonly GEdge['id'][];
   /** edges tested this frame that offered nothing better than what we had */
   rejectedEdgeIds?: readonly GEdge['id'][];
+  /** nodes on a cycle that gets cheaper every lap */
+  cycleNodeIds?: readonly GNode['id'][];
+  /** the edges of that cycle */
+  cycleEdgeIds?: readonly GEdge['id'][];
+};
+
+/** what an edge turned out to do when the sweep reached it */
+export type SweepOutcome = 'improved' | 'kept' | 'skipped';
+
+/**
+ * the pass underway and how far through the edge list it has got. only bellman
+ * ford has one: dijkstra follows the edges leaving one node at a time rather
+ * than sweeping the whole list, so it leaves this off entirely and the panel
+ * stays away.
+ *
+ * nested rather than spread across the frame because the parts are worth
+ * nothing apart: a position with no list to index, or an outcome with no sweep
+ * it belongs to, is not a state any panel could draw
+ */
+export type SingleSourceSweep = {
+  sweep?: {
+    /** every edge of the sweep, in the order it visits them */
+    edgeIds: readonly GEdge['id'][];
+    /** how many are done, the one on screen included */
+    position: number;
+    /** which pass this is, absent for the extra sweep that checks for a cycle */
+    pass?: number;
+    /** how many passes the run will make at most */
+    totalPasses: number;
+    /** what each edge did, for the ones the sweep has reached so far */
+    outcomes: Partial<Record<GEdge['id'], SweepOutcome>>;
+  };
 };
 
 export type SingleSourceFrame = SingleSourceStep &
   SingleSourceState &
-  SingleSourceHighlights;
+  SingleSourceHighlights &
+  SingleSourceSweep;

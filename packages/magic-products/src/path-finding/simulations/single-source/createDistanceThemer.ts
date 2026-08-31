@@ -15,6 +15,7 @@ const TENTATIVE_ALPHA = 0.65;
 export const createDistanceThemer = (
   graph: Graph,
   frame: Ref<SingleSourceFrame | undefined>,
+  dimTentative: boolean,
 ): Themer => {
   const showingNodeLabel = (id: CoreNode['id']) =>
     graph.anchors.parentNodeId() === id ||
@@ -35,6 +36,12 @@ export const createDistanceThemer = (
       .setAlpha(TENTATIVE_ALPHA)
       .toHex8String();
   };
+
+  if (!dimTentative) {
+    return graph.theme.createThemer({
+      surface: { 'node.default.text.content': distanceText },
+    });
+  }
 
   return graph.theme.createThemer({
     surface: {

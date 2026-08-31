@@ -30,3 +30,40 @@ export const edgeIdsAlongPathTo = (
 
   return edgeIds.reverse();
 };
+
+export const nodeOnCycleFrom = (
+  arrivalEdgeByNode: ReadonlyMap<GNode['id'], GEdge>,
+  from: GNode['id'],
+  nodeCount: number,
+): GNode['id'] | undefined => {
+  let at = from;
+
+  for (let step = 0; step < nodeCount; step++) {
+    const arrivedOn = arrivalEdgeByNode.get(at);
+    if (!arrivedOn) return undefined;
+    at = arrivedOn.source;
+  }
+
+  return at;
+};
+
+export const traceCycleFrom = (
+  arrivalEdgeByNode: ReadonlyMap<GNode['id'], GEdge>,
+  from: GNode['id'],
+  nodeCount: number,
+): GEdge[] | undefined => {
+  const edges: GEdge[] = [];
+  let at = from;
+
+  for (let step = 0; step <= nodeCount; step++) {
+    const arrivedOn = arrivalEdgeByNode.get(at);
+    if (!arrivedOn) return undefined;
+
+    edges.push(arrivedOn);
+    at = arrivedOn.source;
+
+    if (at === from) return edges.reverse();
+  }
+
+  return undefined;
+};

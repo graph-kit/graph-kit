@@ -2,11 +2,7 @@ import { GEdge, GNode } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 
 import { Distance } from '../distance.ts';
-import {
-  edgeIdsAlongPathTo,
-  nodeOnCycleFrom,
-  traceCycleFrom,
-} from '../edges.ts';
+import { nodeOnCycleFrom, traceCycleFrom } from '../edges.ts';
 import {
   SingleSourceFrame,
   SingleSourceFunction,
@@ -29,6 +25,20 @@ export const bellmanFord: SingleSourceFunction =
     distances[sourceNodeId] = new Fraction(0);
 
     const arrivalEdgeByNode = new Map<GNode['id'], GEdge>();
+
+    /*
+      the route each distance was actually paid on, written down as it is paid
+      rather than read back off the arrival edges afterwards. once a negative
+      cycle overwrites the arrival edge a node was first reached by, walking
+      that chain backwards only ever goes round the loop, so the edges leading
+      in from the source are gone. relaxing already knows them: the route to
+      the target is the route to the source with the crossed edge on the end
+    */
+    const routeByNode = new Map<GNode['id'], GEdge['id'][]>([
+      [sourceNodeId, []],
+    ]);
+
+    const routeTo = (node: GNode['id']) => routeByNode.get(node) ?? [];
 
     const changedThisPass = new Set<GNode['id']>();
 
@@ -185,8 +195,8 @@ export const bellmanFord: SingleSourceFunction =
               distance: current,
               offered,
               edge: edge.id,
-              basePath: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.source),
-              currentPath: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target),
+              basePath: routeTo(edge.source),
+              currentPath: routeTo(edge.target),
               activeNodeId: edge.source,
               candidateNodeIds: [edge.target],
               rejectedEdgeIds: [edge.id],
@@ -195,13 +205,14 @@ export const bellmanFord: SingleSourceFunction =
           continue;
         }
 
-        // read before the arrival edge is replaced, or the route being beaten is
-        // already gone, and the route the new cost is built on already rewritten
-        const oldPath = edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target);
-        const basePath = edgeIdsAlongPathTo(arrivalEdgeByNode, edge.source);
+        // read before they are replaced, or the route being beaten is already
+        // gone, and the route the new cost is built on already rewritten
+        const oldPath = routeTo(edge.target);
+        const basePath = routeTo(edge.source);
 
         distances[edge.target] = offered;
         arrivalEdgeByNode.set(edge.target, edge);
+        routeByNode.set(edge.target, [...basePath, edge.id]);
 
         record(edge, 'improved');
         changedThisPass.add(edge.target);
@@ -273,7 +284,7 @@ export const bellmanFord: SingleSourceFunction =
             to: edge.target,
             offered,
             current,
-            currentPath: edgeIdsAlongPathTo(arrivalEdgeByNode, edge.target),
+            currentPath: routeTo(edge.target),
             activeNodeId: edge.source,
             candidateNodeIds: [edge.target],
             relaxingEdgeIds: [edge.id],

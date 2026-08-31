@@ -2,6 +2,7 @@ import Fraction from 'fraction.js';
 import { describe, expect, it } from 'vitest';
 
 import { floydWarshall } from './all-pairs/floyd-warshall.ts';
+import { routeBetween } from './all-pairs/routeTrail.ts';
 import { type DistanceRow, formatDistance } from './distance.ts';
 import { bellmanFord } from './single-source/bellman-ford.ts';
 import { dijkstras } from './single-source/dijkstras.ts';
@@ -234,6 +235,74 @@ describe('bellmanFord', () => {
     // the edge that still improves is the proof, so the frame carries it
     expect(cycle && 'edge' in cycle && cycle.edge).toBeDefined();
     expect(frames.some((f) => f.type === 'no-negative-cycle')).toBe(false);
+  });
+
+  /*
+    a -e0-> x -e1-> b reaches the cycle b -e2-> c -e3-> b, which costs less
+    every lap. once the cycle overwrites the edge b was first reached by, the
+    arrival chain can only go round the loop, so the way in has to be kept as
+    the route is paid rather than read back off it afterwards
+  */
+  const REACHES_A_CYCLE = makeGraph(
+    ['a', 'x', 'b', 'c'],
+    [
+      ['a', 'x', 1],
+      ['x', 'b', 1],
+      ['b', 'c', -2],
+      ['c', 'b', -2],
+    ],
+  );
+
+  const routesShownIn = (frames: SingleSourceFrame[]) =>
+    frames.flatMap((frame) => [
+      ...('basePath' in frame ? [frame.basePath] : []),
+      ...('currentPath' in frame ? [frame.currentPath] : []),
+      ...('oldPath' in frame ? [frame.oldPath] : []),
+    ]);
+
+  it('keeps the edges leading in from the start on a route that laps a cycle', () => {
+    const frames = collect(bellmanFord(REACHES_A_CYCLE, 'a'));
+
+    const startsElsewhere = routesShownIn(frames).filter(
+      (route) =>
+        route.length > 0 &&
+        REACHES_A_CYCLE.edges.value.find((edge: any) => edge.id === route[0])
+          .source !== 'a',
+    );
+    expect(startsElsewhere).toEqual([]);
+
+    // the route to b, once the cycle has been lapped, still shows the way in
+    const lapped = frames.find(
+      (frame) =>
+        frame.type === 'keep-distance' &&
+        frame.node === 'b' &&
+        frame.currentPath.length > 2,
+    );
+    expect(lapped && 'currentPath' in lapped && lapped.currentPath).toEqual([
+      'e0',
+      'e1',
+      'e2',
+      'e3',
+    ]);
+  });
+
+  it('shows a route whose weight is the distance it is shown against', () => {
+    const weightOf = (edgeIds: readonly string[]) =>
+      edgeIds.reduce(
+        (total, id) =>
+          total.add(
+            REACHES_A_CYCLE.edges.value.find((edge: any) => edge.id === id)
+              .weight,
+          ),
+        new Fraction(0),
+      );
+
+    for (const frame of collect(bellmanFord(REACHES_A_CYCLE, 'a'))) {
+      if (frame.type !== 'improve-distance') continue;
+      expect(weightOf([...frame.basePath, frame.edge]).toFraction()).toBe(
+        frame.newDistance.toFraction(),
+      );
+    }
   });
 
   /*
@@ -500,5 +569,182 @@ describe('floydWarshall', () => {
     );
     const frames = collect(floydWarshall(graph));
     expect(frames.some((f) => f.type === 'negative-cycle')).toBe(true);
+  });
+
+  /*
+    a cell holds one number, but the reader is looking at a graph. the route it
+    was spliced from is what puts that number back on the canvas
+  */
+  it('rebuilds the route a cell was spliced from', () => {
+    const graph = makeGraph(['a', 'b', 'c', 'd'], DIAMOND);
+    const frames = collect(floydWarshall(graph));
+
+    const improved = frames.filter(
+      (f) => f.type === 'improve-pair' && f.from === 'a' && f.to === 'd',
+    );
+
+    // a -e0-> b -e1-> d, the 3 the table settles on, rather than the 5 via c
+    expect(improved.at(-1)).toMatchObject({ detourRoute: ['e0', 'e1'] });
+  });
+
+  it('holds on to the route being beaten, so both sides of the swap can be shown', () => {
+    // the direct a->c of 9 loses to a->b->c of 3, and both routes are named
+    const graph = makeGraph(
+      ['a', 'b', 'c'],
+      [
+        ['a', 'c', 9],
+        ['a', 'b', 1],
+        ['b', 'c', 2],
+      ],
+    );
+    const frames = collect(floydWarshall(graph));
+
+    const swap = frames.find(
+      (f) => f.type === 'improve-pair' && f.from === 'a' && f.to === 'c',
+    );
+
+    expect(swap).toMatchObject({
+      previousRoute: ['e0'],
+      detourRoute: ['e1', 'e2'],
+    });
+  });
+
+  it('traces the loop behind a negative cycle, and what a lap of it costs', () => {
+    const graph = makeGraph(
+      ['a', 'b', 'c'],
+      [
+        ['a', 'b', 1],
+        ['b', 'c', -2],
+        ['c', 'b', -2],
+      ],
+    );
+    const frames = collect(floydWarshall(graph));
+
+    const cycle = frames.find((f) => f.type === 'negative-cycle');
+
+    // c -e2-> b -e1-> c, which is -4 a lap. the a->b edge is not on it
+    expect(cycle).toMatchObject({ node: 'c', cycleEdgeIds: ['e2', 'e1'] });
+    expect(cycle && 'loop' in cycle && cycle.loop?.lapCost.toFraction()).toBe(
+      '-4',
+    );
+  });
+
+  /*
+    the diagonal going negative is the whole proof, so every pivot after it
+    would be filling in a table no answer survives
+  */
+  it('stops at the proof rather than working through the pivots left', () => {
+    const graph = makeGraph(
+      ['a', 'b', 'c'],
+      [
+        ['a', 'b', 1],
+        ['b', 'c', -2],
+        ['c', 'b', -2],
+      ],
+    );
+    const frames = collect(floydWarshall(graph));
+
+    expect(frames.at(-2)?.type).toBe('negative-cycle');
+    expect(last(frames).type).toBe('end');
+
+    const pivots = frames.filter((f) => f.type === 'choose-pivot');
+    // the third pivot is never reached, though the run was going to make three
+    expect(pivots).toHaveLength(2);
+    expect(pivots.at(0)).toMatchObject({ totalPivots: 3 });
+  });
+
+  /*
+    the table is not an answer once a lap can undercut it, so the run has to
+    stop saying it is one
+  */
+  it('does not close on a finished table when a negative cycle turns up', () => {
+    const graph = makeGraph(
+      ['a', 'b'],
+      [
+        ['a', 'b', 1],
+        ['b', 'a', -3],
+      ],
+    );
+    const frames = collect(floydWarshall(graph));
+
+    const closing = last(frames);
+    expect(closing.type).toBe('end');
+    expect(closing.cycleEdgeIds).toEqual(['e1', 'e0']);
+    // counting unreached pairs off a meaningless table would only mislead
+    expect(frames.some((f) => f.type === 'unreachable')).toBe(false);
+  });
+
+  /*
+    the panel lets the reader ask about any cell, not just the one being worked
+    on, so every frame has to carry enough trail to answer for the whole table
+    as it stood at that moment
+  */
+  it('carries a trail that rebuilds any cell of the table it was taken with', () => {
+    const graph = makeGraph(['a', 'b', 'c', 'd'], DIAMOND);
+    const closing = last(collect(floydWarshall(graph)));
+
+    expect(routeBetween(graph, closing.routes, 'a', 'd')).toEqual(['e0', 'e1']);
+    expect(routeBetween(graph, closing.routes, 'a', 'b')).toEqual(['e0']);
+    // nothing leads back to a, so no trail does either
+    expect(routeBetween(graph, closing.routes, 'd', 'a')).toEqual([]);
+  });
+
+  it('snapshots the trail per frame, rather than sharing the finished one', () => {
+    const graph = makeGraph(['a', 'b', 'c', 'd'], DIAMOND);
+    const frames = collect(floydWarshall(graph));
+
+    const seeded = frames[0];
+    // a to d is only spliced once a pivot gets to it, so the seeding frame has
+    // the direct edges and nothing more
+    expect(routeBetween(graph, seeded.routes, 'a', 'd')).toEqual([]);
+    expect(routeBetween(graph, seeded.routes, 'a', 'b')).toEqual(['e0']);
+
+    expect(routeBetween(graph, last(frames).routes, 'a', 'd')).toEqual([
+      'e0',
+      'e1',
+    ]);
+  });
+
+  /*
+    the two legs of a detour can overlap, leaving a walk that arrives, wanders
+    off and comes back. no one can take that trip, so the pair is passed over
+    rather than shown losing to it
+  */
+  it('passes over a detour that doubles back through a node it has visited', () => {
+    // a to e runs a -> c -> d -> e, and e back to d runs e -> b -> d, so the
+    // detour from a to d through e would be a -> c -> d -> e -> b -> d
+    const graph = makeGraph(
+      ['a', 'b', 'c', 'd', 'e'],
+      [
+        ['a', 'c', 1],
+        ['c', 'd', 1],
+        ['d', 'e', 1],
+        ['e', 'b', 1],
+        ['b', 'd', 1],
+      ],
+    );
+    const frames = collect(floydWarshall(graph));
+
+    const weighed = frames.filter(
+      (f) => 'pivot' in f && f.pivot === 'e' && f.from === 'a' && f.to === 'd',
+    );
+    expect(weighed).toEqual([]);
+
+    // and the cell keeps the real route, a -> c -> d
+    expect(formatDistance(last(frames).matrix.a.d)).toBe('2');
+    expect(routeBetween(graph, last(frames).routes, 'a', 'd')).toEqual([
+      'e0',
+      'e1',
+    ]);
+  });
+
+  it('counts the pairs nothing links, against every pair there is', () => {
+    const graph = makeGraph(['a', 'b', 'c', 'd'], DIAMOND);
+    const unreachable = collect(floydWarshall(graph)).find(
+      (f) => f.type === 'unreachable',
+    );
+
+    // only a reaches everything: b and c reach d alone, and d reaches nothing
+    expect(unreachable).toMatchObject({ pairs: 7, totalPairs: 12 });
   });
 });

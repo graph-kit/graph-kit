@@ -303,7 +303,7 @@ export const singleSourceExplainer =
         const held = cost(graph, frame.current, frame.currentPath);
 
         return {
-          content: `{${frame.edge}} improves nothing: {${frame.to}} costs ${held.text} and pathing through {${frame.from}} costs <${frame.offered.toFraction()}>`,
+          content: `{${frame.edge}} does not lower the cost to {${frame.to}} which costs ${held.text}`,
           highlights: held.highlights,
         };
       }
@@ -315,7 +315,7 @@ export const singleSourceExplainer =
         };
 
       case 'negative-cycle': {
-        const stillImproves = `{${frame.edge}} can still make {${frame.node}} cheaper`;
+        const stillImproves = `{${frame.edge}} lowers the cost to {${frame.node}}`;
 
         if (!frame.loop) {
           return {

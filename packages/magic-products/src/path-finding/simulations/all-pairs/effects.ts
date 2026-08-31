@@ -6,26 +6,34 @@ import {
   SimulationDefinition,
   SimulationEffects,
 } from '@magic/shared/simulation/types';
-import { NodeRole, createNodeIdThemer } from '@magic/shared/theme';
+import {
+  EdgeRole,
+  NodeRole,
+  createEdgeIdThemer,
+  createNodeIdThemer,
+} from '@magic/shared/theme';
 
 import Matrix from './Matrix.vue';
 import { allPairsExplainer } from './explainer.ts';
 import { AllPairsFrame, AllPairsFunction } from './frame.ts';
 
-// pivot = the node every pair is currently being asked to detour through.
-// pair = the two ends of the trip being weighed against that detour.
-type AllPairsConcept = 'pivot' | 'pair';
+type AllPairsNodeConcept = 'pivot' | 'pair' | 'onNegativeCycle';
 
 export const nodeRoles = {
   pivot: 'active',
   pair: 'candidate',
-} as const satisfies Record<AllPairsConcept, NodeRole>;
+  onNegativeCycle: 'result',
+} as const satisfies Record<AllPairsNodeConcept, NodeRole>;
 
-/*
-  no edge roles. floyd warshall never relaxes a named edge: it compares two
-  table cells, so there is nothing on the canvas to paint but the three nodes
-  involved
-*/
+type AllPairsEdgeConcept =
+  'currentRoute' | 'detourRoute' | 'rejectedRoute' | 'onNegativeCycle';
+
+export const edgeRoles = {
+  currentRoute: 'tree',
+  detourRoute: 'weighing',
+  rejectedRoute: 'rejected',
+  onNegativeCycle: 'result',
+} as const satisfies Record<AllPairsEdgeConcept, EdgeRole>;
 
 export type AllPairsOptions = {
   graph: Graph;
@@ -39,9 +47,24 @@ const allPairsEffects = (
 ): SimulationEffects<AllPairsFrame> => {
   const pivot = createNodeIdThemer(graph, nodeRoles.pivot);
   const pair = createNodeIdThemer(graph, nodeRoles.pair);
+  const cycleNodes = createNodeIdThemer(graph, nodeRoles.onNegativeCycle);
 
-  // order matters: latter elements take priority over earlier ones
-  const themers = [pair, pivot];
+  const currentRoute = createEdgeIdThemer(graph, edgeRoles.currentRoute);
+  const detourRoute = createEdgeIdThemer(graph, edgeRoles.detourRoute);
+  const rejectedRoute = createEdgeIdThemer(graph, edgeRoles.rejectedRoute);
+  const cycleEdges = createEdgeIdThemer(graph, edgeRoles.onNegativeCycle);
+
+  // latter themers win where two routes share an edge, so the route that
+  // survives the frame is painted after the one it beat
+  const themers = [
+    cycleNodes,
+    pair,
+    pivot,
+    rejectedRoute,
+    currentRoute,
+    detourRoute,
+    cycleEdges,
+  ];
 
   const lens: Lens = {
     id: 'path-finding/all-pairs',
@@ -59,11 +82,16 @@ const allPairsEffects = (
   const syncToFrame = (frame: AllPairsFrame) => {
     pivot.setId(frame.activeNodeId);
     pair.setIds(frame.candidateNodeIds ?? []);
+    cycleNodes.setIds(frame.cycleNodeIds ?? []);
+    currentRoute.setIds(frame.routeEdgeIds ?? []);
+    detourRoute.setIds(frame.detourEdgeIds ?? []);
+    rejectedRoute.setIds(frame.rejectedEdgeIds ?? []);
+    cycleEdges.setIds(frame.cycleEdgeIds ?? []);
   };
 
   return {
     lens,
-    explainer: allPairsExplainer(),
+    explainer: allPairsExplainer(graph),
     onSetupCompleted: syncToFrame,
     onFrameTransition: syncToFrame,
     onViolation: context.stopSimulation,

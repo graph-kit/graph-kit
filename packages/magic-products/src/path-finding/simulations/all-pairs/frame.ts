@@ -1,8 +1,9 @@
-import { GNode, Graph } from '@magic/shared/graph';
+import { GNode, Graph, GraphPath } from '@magic/shared/graph';
 import { FrameCollectorFn } from '@magic/shared/simulation/types';
 import Fraction from 'fraction.js';
 
 import { Distance, DistanceMatrix } from '../distance.ts';
+import { RouteTrail } from './routeTrail.ts';
 
 export type AllPairsFunction = (
   graph: Graph,
@@ -28,17 +29,10 @@ type ConsiderPairFrame = {
   from: GNode['id'];
   to: GNode['id'];
   pivot: GNode['id'];
-  direct: Distance;
-  viaPivot: Fraction;
-};
-
-type ImprovePairFrame = {
-  type: 'improve-pair';
-  from: GNode['id'];
-  to: GNode['id'];
-  pivot: GNode['id'];
-  oldDistance: Distance;
-  newDistance: Fraction;
+  currentDistance: Distance;
+  currentRoute: GraphPath;
+  detourDistance: Fraction;
+  detourRoute: GraphPath;
 };
 
 type KeepPairFrame = {
@@ -46,12 +40,36 @@ type KeepPairFrame = {
   from: GNode['id'];
   to: GNode['id'];
   pivot: GNode['id'];
-  distance: Fraction;
+  currentDistance: Fraction;
+  currentRoute: GraphPath;
+  detourDistance: Fraction;
+  detourRoute: GraphPath;
+};
+
+type ImprovePairFrame = {
+  type: 'improve-pair';
+  from: GNode['id'];
+  to: GNode['id'];
+  pivot: GNode['id'];
+  previousDistance: Distance;
+  previousRoute: GraphPath;
+  detourDistance: Fraction;
+  detourRoute: GraphPath;
+};
+
+type UnreachablePairsFrame = {
+  type: 'unreachable';
+  pairs: number;
+  totalPairs: number;
 };
 
 type NegativeCycleFrame = {
   type: 'negative-cycle';
   node: GNode['id'];
+  loop?: {
+    edges: GraphPath;
+    lapCost: Fraction;
+  };
 };
 
 export type AllPairsStep =
@@ -59,25 +77,24 @@ export type AllPairsStep =
   | EndFrame
   | ChoosePivotFrame
   | ConsiderPairFrame
-  | ImprovePairFrame
   | KeepPairFrame
+  | ImprovePairFrame
+  | UnreachablePairsFrame
   | NegativeCycleFrame;
 
-/**
- * the table is rebuilt into every frame, so it is required. which cell is being
- * looked at is not here on purpose: the pair lives on the frames that have one,
- * where the reader can see it belongs to that step and nowhere else
- */
 type AllPairsState = {
-  /** the distance between every ordered pair of nodes */
   matrix: DistanceMatrix;
+  routes: RouteTrail;
 };
 
 export type AllPairsHighlights = {
-  /** the pivot the algorithm is detouring through this frame */
   activeNodeId?: GNode['id'];
-  /** the two ends of the pair being weighed this frame */
   candidateNodeIds?: readonly GNode['id'][];
+  routeEdgeIds?: GraphPath;
+  detourEdgeIds?: GraphPath;
+  rejectedEdgeIds?: GraphPath;
+  cycleNodeIds?: readonly GNode['id'][];
+  cycleEdgeIds?: GraphPath;
 };
 
 export type AllPairsFrame = AllPairsStep & AllPairsState & AllPairsHighlights;

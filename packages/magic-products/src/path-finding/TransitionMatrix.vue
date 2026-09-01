@@ -89,11 +89,10 @@
   );
   const emptyCellClass = computed(
     () =>
-      `${density.value.headerClass} rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
+      `${density.value.dataClass} overflow-hidden rounded-sm bg-gray-500/20 text-center font-bold opacity-40`,
   );
   const dataCellClass = computed(
-    () =>
-      `${density.value.dataClass} overflow-hidden rounded-sm text-center font-bold text-white tabular-nums`,
+    () => `${density.value.dataClass} relative overflow-hidden p-0`,
   );
 </script>
 
@@ -143,15 +142,15 @@
                   :edge-id="cell.edge.id"
                   v-slot="{ color, cursor }"
                 >
-                  <td class="p-0">
+                  <td :class="dataCellClass">
                     <button
                       type="button"
-                      :class="dataCellClass"
+                      class="absolute inset-0 grid place-items-center rounded-sm text-center font-bold text-white tabular-nums"
                       :style="{ backgroundColor: color, cursor }"
                       @click="graph.focus.set([cell.edge.id])"
                     >
                       <TruncatedText
-                        class="block"
+                        class="block w-full px-1"
                         :tooltip="cellTooltip(row.id, cell.id)"
                         :delay="400"
                       >

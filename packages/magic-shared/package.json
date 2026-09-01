@@ -76,6 +76,10 @@
       "types": "./dist/types/components/dropdown/DropdownItem.vue.d.ts",
       "default": "./src/components/dropdown/DropdownItem.vue"
     },
+    "./Popover": {
+      "types": "./dist/types/components/popover/Popover.vue.d.ts",
+      "default": "./src/components/popover/Popover.vue"
+    },
     "./Dialog": {
       "types": "./dist/types/components/dialog/Dialog.vue.d.ts",
       "default": "./src/components/dialog/Dialog.vue"

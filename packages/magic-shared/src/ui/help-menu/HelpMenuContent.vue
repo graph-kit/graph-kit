@@ -6,6 +6,7 @@
   import Icon from '../../components/icon/Icon.vue';
   import VStack from '../../components/layout/VStack.vue';
   import { useProvidedShell } from '../../product/context.ts';
+  import FeedbackBanner from './FeedbackBanner.vue';
   import { HELP_MENU_KEY } from './useHelpMenuState.ts';
 
   const { helpMenu } = useProvidedShell();
@@ -25,7 +26,8 @@
 </script>
 
 <template>
-  <VStack gap="6">
+  <VStack>
+    <FeedbackBanner />
     <VStack
       v-for="section of helpMenu.sections.value"
       :key="section.category"

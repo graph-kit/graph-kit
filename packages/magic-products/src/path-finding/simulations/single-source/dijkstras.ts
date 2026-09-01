@@ -71,15 +71,19 @@ export const dijkstras: SingleSourceFunction =
 
       settled.add(nearest);
 
-      frameCollector.add(
-        frame({
-          type: 'settle-node',
-          node: nearest,
-          distance: distances[nearest]!,
-          path: routeTo(nearest),
-          activeNodeId: nearest,
-        }),
-      );
+      // the start node is handed its distance of 0 by the frame that opens the
+      // run, so settling it tells the reader nothing they were not just told
+      if (nearest !== sourceNodeId) {
+        frameCollector.add(
+          frame({
+            type: 'settle-node',
+            node: nearest,
+            distance: distances[nearest]!,
+            path: routeTo(nearest),
+            activeNodeId: nearest,
+          }),
+        );
+      }
 
       const leaving = edgesLeaving.get(nearest) ?? [];
       // edges landing on a finalized node cannot improve anything, so they are

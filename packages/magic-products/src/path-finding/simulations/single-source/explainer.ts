@@ -116,10 +116,7 @@ export const singleSourceExplainer =
         const settled = cost(graph, frame.distance, frame.path);
 
         return {
-          content:
-            frame.node === frame.anchorNodeId
-              ? `{${frame.node}} is the start node so it gets assigned a distance of ${settled.text}`
-              : `{${frame.node}} becomes [Finalized] with a cost of ${settled.text}`,
+          content: `{${frame.node}} becomes [Finalized] with a cost of ${settled.text}`,
           highlights: [highlights.finalized, ...settled.highlights],
         };
       }

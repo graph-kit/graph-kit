@@ -8,24 +8,26 @@
 
   import { computed } from 'vue';
 
-  import { formatDistance } from '../distance.ts';
+  import { Distance, formatDistance } from '../distance.ts';
   import { SingleSourceFrame } from './frame.ts';
 
   const graph = useProvidedGraph();
 
   const currentFrame = useCurrentFrame<SingleSourceFrame>();
 
-  /*
-    rows follow the graph's own node order rather than the distances, so a row
-    stays put for the whole run. sorting by distance would reshuffle the table
-    on every improvement, which is the one moment the reader is looking at it
-  */
+  const byDistance = (left: Distance, right: Distance) => {
+    if (left === undefined) return right === undefined ? 0 : 1;
+    if (right === undefined) return -1;
+    return left.compare(right);
+  };
+
   const rows = computed(() => {
     const distances = currentFrame.value?.distances;
     if (!distances) return [];
     return graph.nodes.value
       .filter((node) => node.id in distances)
-      .map((node) => ({ id: node.id, distance: distances[node.id] }));
+      .map((node) => ({ id: node.id, distance: distances[node.id] }))
+      .sort((a, b) => byDistance(a.distance, b.distance));
   });
 </script>
 

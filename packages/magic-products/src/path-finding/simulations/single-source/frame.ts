@@ -54,14 +54,6 @@ type ExploreNodeFrame = {
   basePath: readonly GEdge['id'][];
 };
 
-type SkipSettledFrame = {
-  type: 'skip-settled';
-  edge: GEdge['id'];
-  node: GNode['id'];
-  distance: Fraction;
-  path: readonly GEdge['id'][];
-};
-
 type RelaxEdgeFrame = {
   type: 'relax-edge';
   edge: GEdge['id'];
@@ -157,7 +149,6 @@ export type SingleSourceStep =
   | SettleNodeFrame
   | StillTentativeFrame
   | ExploreNodeFrame
-  | SkipSettledFrame
   | RelaxEdgeFrame
   | ImproveDistanceFrame
   | KeepDistanceFrame

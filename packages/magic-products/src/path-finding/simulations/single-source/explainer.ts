@@ -13,8 +13,13 @@ export const distancesSlotId = 'path-finding/distances';
 export const frontierSlotId = 'path-finding/frontier';
 export const sweepSlotId = 'path-finding/sweep';
 
+export const finalizedSlotId = 'path-finding/finalized';
+
 type SlotId =
-  typeof distancesSlotId | typeof frontierSlotId | typeof sweepSlotId;
+  | typeof distancesSlotId
+  | typeof frontierSlotId
+  | typeof sweepSlotId
+  | typeof finalizedSlotId;
 
 const slotHighlight = (
   slot: SlotId,
@@ -29,6 +34,10 @@ const highlights = {
   distances: slotHighlight(
     distancesSlotId,
     'The cheapest path from the start node',
+  ),
+  finalized: slotHighlight(
+    finalizedSlotId,
+    'This node is as cheap as it can get. No other path can reduce its cost',
   ),
   improve: slotHighlight(
     distancesSlotId,
@@ -110,8 +119,8 @@ export const singleSourceExplainer =
           content:
             frame.node === frame.anchorNodeId
               ? `{${frame.node}} is the start node so it gets assigned a distance of ${settled.text}`
-              : `{${frame.node}} becomes finalized with a cost of ${settled.text}`,
-          highlights: settled.highlights,
+              : `{${frame.node}} becomes [Finalized] with a cost of ${settled.text}`,
+          highlights: [highlights.finalized, ...settled.highlights],
         };
       }
 
@@ -134,9 +143,10 @@ export const singleSourceExplainer =
           .join(' ');
 
         return {
-          content: `${waiting} cannot yet be finalized. {${frame.via.node}} costs ${via.text} to reach, which is cheaper, so a path from {${frame.via.node}} could be cheaper`,
+          content: `${waiting} cannot yet be [Finalized]. {${frame.via.node}} costs ${via.text} to reach, which is cheaper, so a path from {${frame.via.node}} could be cheaper`,
           highlights: [
             ...held.flatMap(({ shown }) => shown.highlights),
+            highlights.finalized,
             ...via.highlights,
           ],
         };
@@ -153,7 +163,7 @@ export const singleSourceExplainer =
 
         const follow = onlyOneEdge
           ? `Now path through {${frame.edges[0]}}`
-          : `Now path through the [${frame.edges.length} edges] leaving {${frame.node}}`;
+          : `Now path through the [${frame.edges.length} edges] leaving {${frame.node}} to un-finalized nodes`;
 
         const followHighlights = onlyOneEdge
           ? []
@@ -176,15 +186,6 @@ export const singleSourceExplainer =
         return {
           content: `${follow}, to see if pathing through {${frame.node}} with an initial cost of ${initial.text} reduces the current cost to ${edgesReached}`,
           highlights: [...followHighlights, ...initial.highlights],
-        };
-      }
-
-      case 'skip-settled': {
-        const finalized = cost(graph, frame.distance, frame.path);
-
-        return {
-          content: `{${frame.edge}} is not followed, because {${frame.node}} is already finalized at ${finalized.text}`,
-          highlights: finalized.highlights,
         };
       }
 

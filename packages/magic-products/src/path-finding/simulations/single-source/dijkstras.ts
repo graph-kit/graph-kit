@@ -82,12 +82,15 @@ export const dijkstras: SingleSourceFunction =
       );
 
       const leaving = edgesLeaving.get(nearest) ?? [];
+      // edges landing on a finalized node cannot improve anything, so they are
+      // passed over without a frame rather than shown being turned down
+      const followable = leaving.filter((edge) => !settled.has(edge.target));
 
       const waiting = queue
         .slice(1)
         .filter((id) => distances[id]!.gt(distances[nearest]!));
 
-      if (waiting.length > 0 && leaving.length > 0) {
+      if (waiting.length > 0 && followable.length > 0) {
         frameCollector.add(
           frame({
             type: 'still-tentative',
@@ -98,35 +101,26 @@ export const dijkstras: SingleSourceFunction =
         );
       }
 
-      frameCollector.add(
-        frame({
-          type: 'explore-node',
-          node: nearest,
-          distance: distances[nearest]!,
-          edges: leaving.map((edge) => edge.id),
-          basePath: routeTo(nearest),
-          activeNodeId: nearest,
-        }),
-      );
+      // a node with edges that all land on finalized ones has nothing to follow,
+      // and announcing an exploration that never happens reads as a dead end
+      const nothingToFollow = leaving.length > 0 && followable.length === 0;
 
-      for (const edge of leaving) {
+      if (!nothingToFollow) {
+        frameCollector.add(
+          frame({
+            type: 'explore-node',
+            node: nearest,
+            distance: distances[nearest]!,
+            edges: followable.map((edge) => edge.id),
+            basePath: routeTo(nearest),
+            activeNodeId: nearest,
+          }),
+        );
+      }
+
+      for (const edge of followable) {
         const offered = distances[nearest]!.add(edge.weight);
         const current = distances[edge.target];
-
-        if (settled.has(edge.target)) {
-          frameCollector.add(
-            frame({
-              type: 'skip-settled',
-              edge: edge.id,
-              node: edge.target,
-              distance: current!,
-              path: routeTo(edge.target),
-              activeNodeId: nearest,
-              rejectedEdgeIds: [edge.id],
-            }),
-          );
-          continue;
-        }
 
         frameCollector.add(
           frame({

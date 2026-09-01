@@ -1,12 +1,16 @@
-//which graph element the explainer is highlighting right now,
-let highlighted: string | undefined;
+/*
+  which graph elements the explainer is pointing at right now: a node ref lights
+  itself, an edge ref lights itself and the nodes it runs between
+*/
+let highlighted: readonly string[] = [];
 
-export const getHighlightedExplainerElement = () => highlighted;
+export const isHighlightedExplainerElement = (id: string) =>
+  highlighted.includes(id);
 
-export const setHighlightedExplainerElement = (id: string) => {
-  highlighted = id;
+export const setHighlightedExplainerElements = (ids: readonly string[]) => {
+  highlighted = ids;
 };
 
-export const clearHighlightedExplainerElement = (id: string) => {
-  if (highlighted === id) highlighted = undefined;
+export const clearHighlightedExplainerElements = (ids: readonly string[]) => {
+  if (highlighted === ids) highlighted = [];
 };

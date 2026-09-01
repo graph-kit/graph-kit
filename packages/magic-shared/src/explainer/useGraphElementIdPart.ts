@@ -2,8 +2,8 @@ import { Graph } from '../graph/types.ts';
 import { useEdgeStyles, useNodeStyles } from '../theme/index.ts';
 import { ExplainerSegment } from './explainerSegments.ts';
 import {
-  clearHighlightedExplainerElement,
-  setHighlightedExplainerElement,
+  clearHighlightedExplainerElements,
+  setHighlightedExplainerElements,
 } from './highlightedElement.ts';
 import { ExplainerHighlight } from './types.ts';
 import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
@@ -12,12 +12,18 @@ const useGraphElementExplainerHighlight = (
   graph: Graph,
   id: string,
 ): ExplainerHighlight => {
+  const litIds = graph.isEdge(id)
+    ? [id, graph.getEdge(id).source, graph.getEdge(id).target]
+    : [id];
+
   // proxy default color to focus color
   const themer = graph.theme.createThemer({
     surface: {
       'node.default.border.color': (node) =>
-        node.id === id
-          ? graph.focus.theme._resolveToken('node.focus.border.color', { id })
+        litIds.includes(node.id)
+          ? graph.focus.theme._resolveToken('node.focus.border.color', {
+              id: node.id,
+            })
           : undefined,
       'edge.default.color': (edge) =>
         edge.id === id
@@ -33,11 +39,11 @@ const useGraphElementExplainerHighlight = (
       edge?.dispose();
     },
     activate: () => {
-      setHighlightedExplainerElement(id);
+      setHighlightedExplainerElements(litIds);
       themer.activate();
     },
     deactivate: () => {
-      clearHighlightedExplainerElement(id);
+      clearHighlightedExplainerElements(litIds);
       themer.deactivate();
     },
     classes: 'text-white',

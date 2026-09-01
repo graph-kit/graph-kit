@@ -1,6 +1,6 @@
 import { Color } from '@core/utils/colors';
 import { CoreNode } from '@graph/primitives/types';
-import { getHighlightedExplainerElement } from '@magic/shared/explainer';
+import { isHighlightedExplainerElement } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
 import { Themer } from '@magic/shared/theme';
 import tinycolor from 'tinycolor2';
@@ -24,7 +24,7 @@ export const createDistanceThemer = (
   const showingNodeLabel = (id: CoreNode['id']) =>
     graph.anchors.parentNodeId() === id ||
     graph.focus.isFocused(id) ||
-    getHighlightedExplainerElement() === id;
+    isHighlightedExplainerElement(id);
 
   const distanceText = ({ id }: CoreNode) => {
     const distances = frame.value?.distances;

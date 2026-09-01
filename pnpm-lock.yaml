@@ -6,15 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@types/tinycolor2':
-      specifier: ^1.4.6
-      version: 1.4.6
-    '@vueuse/core':
-      specifier: ^13.9.0
-      version: 13.9.0
-    tinycolor2:
-      specifier: ^1.6.0
-      version: 1.6.0
     vue:
       specifier: ^3.5.18
       version: 3.5.40
@@ -96,9 +87,6 @@ importers:
       '@core/utils':
         specifier: workspace:*
         version: link:../core-utils
-      '@vueuse/core':
-        specifier: 'catalog:'
-        version: 13.9.0(vue@3.5.40(typescript@6.0.3))
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.6.0

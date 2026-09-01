@@ -21,6 +21,13 @@ HTMLCanvasElement.prototype.getContext = vi.fn(function (
   };
 }) as any;
 
+// jsdom has no ResizeObserver, and the surface observes the canvas on mount
+globalThis.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof ResizeObserver;
+
 const mounted: (() => void)[] = [];
 
 // the surface keeps a requestAnimationFrame repaint loop alive until it unmounts

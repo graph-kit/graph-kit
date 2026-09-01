@@ -133,8 +133,6 @@ export const singleSourceExplainer =
           `with cost${held.length === 1 ? '' : 's'}`,
           listOf(held.map(({ shown }) => shown.text)),
           held.length === 1 ? '' : 'respectively',
-          // one node waiting drops the trailing 'respectively', and joining an
-          // empty piece in leaves a double space in front of the next sentence
         ]
           .filter(Boolean)
           .join(' ');
@@ -156,15 +154,9 @@ export const singleSourceExplainer =
           };
         }
 
-        const onlyOneEdge = frame.edges.length === 1;
+        const follow = `{${frame.node}} has [${frame.edges.length} edges] to un-finalized nodes`;
 
-        const follow = onlyOneEdge
-          ? `Now path through {${frame.edges[0]}}`
-          : `Now path through the [${frame.edges.length} edges] leaving {${frame.node}} to un-finalized nodes`;
-
-        const followHighlights = onlyOneEdge
-          ? []
-          : [createEdgeSetHighlight(graph, frame.edges)];
+        const followHighlights = [createEdgeSetHighlight(graph, frame.edges)];
 
         //  only for the start node we dont ask how going through "0 cost" will improve the cost of other nodes
         if (frame.node === frame.anchorNodeId) {
@@ -181,7 +173,7 @@ export const singleSourceExplainer =
         const initial = cost(graph, frame.distance, frame.basePath);
 
         return {
-          content: `${follow}, to see if pathing through {${frame.node}} with an initial cost of ${initial.text} reduces the current cost to ${edgesReached}`,
+          content: `${follow}. Pathing through {${frame.node}} with an initial cost of ${initial.text} may reduce the current cost to ${edgesReached}`,
           highlights: [...followHighlights, ...initial.highlights],
         };
       }

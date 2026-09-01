@@ -105,11 +105,9 @@ export const dijkstras: SingleSourceFunction =
         );
       }
 
-      // a node with edges that all land on finalized ones has nothing to follow,
-      // and announcing an exploration that never happens reads as a dead end
-      const nothingToFollow = leaving.length > 0 && followable.length === 0;
+      const worthAnnouncing = followable.length > 1 || leaving.length === 0;
 
-      if (!nothingToFollow) {
+      if (worthAnnouncing) {
         frameCollector.add(
           frame({
             type: 'explore-node',

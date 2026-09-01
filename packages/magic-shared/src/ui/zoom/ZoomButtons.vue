@@ -38,7 +38,7 @@
             : undefined
         "
         class="p-3 pl-4 bg-transparent dark:bg-transparent rounded-r-none"
-        label="Zoom out (-)"
+        label="Zoom out"
         :size="20"
         :path="mdiMinus"
       />
@@ -53,7 +53,7 @@
             : undefined
         "
         class="p-3 pr-4 bg-transparent dark:bg-transparent rounded-l-none"
-        label="Zoom in (+)"
+        label="Zoom in"
         :size="20"
         :path="mdiPlus"
       />

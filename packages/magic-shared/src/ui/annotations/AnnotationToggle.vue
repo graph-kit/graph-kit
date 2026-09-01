@@ -20,12 +20,12 @@
   const content = computed(() => {
     if (controls.isActive.value) {
       return {
-        label: `Stop Annotating (a)`,
+        label: `Stop annotating`,
         icon: mdiPencilOff,
       };
     } else {
       return {
-        label: 'Start Annotating (a)',
+        label: 'Start annotating',
         icon: mdiPencil,
       };
     }

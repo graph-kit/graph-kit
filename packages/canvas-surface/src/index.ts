@@ -3,9 +3,8 @@ import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
-import { useElementSize } from '@vueuse/core';
 
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { type DrawPattern, useBackgroundPattern } from './backgroundPattern.ts';
 import { useCamera } from './camera/index.ts';
@@ -33,26 +32,30 @@ const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
 
 /**
  * sizes the canvas's backing store to its layout box at the current device
- * pixel ratio, handing back that box in css pixels
+ * pixel ratio, handing back that box in css pixels and whether the backing
+ * store actually moved
  */
 const sizeCanvas = (canvasRef: HTMLCanvasElement | undefined) => {
   const canvas = nullThrows(canvasRef, CANVAS_MISSING);
 
   const dpr = getDevicePixelRatio();
   const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  return rect;
+  const width = Math.round(rect.width * dpr);
+  const height = Math.round(rect.height * dpr);
+
+  const resized = canvas.width !== width || canvas.height !== height;
+  if (resized) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  return { rect, resized };
 };
 
 export const useCanvasSurface = (): CanvasSurface => {
   const canvas = ref<HTMLCanvasElement>();
-  const canvasBoxSize = useElementSize(canvas);
 
-  /*
-    the layout box as of the last resize, not useElementSize's copy of it, which
-    reads 0 until its ResizeObserver fires a frame after mount
-  */
+  /** the layout box as of the last resize, in css pixels */
   const canvasCssSize = { width: ref(0), height: ref(0) };
 
   const { shapes, ...renderer } = createAnimatedShapes();
@@ -65,6 +68,7 @@ export const useCanvasSurface = (): CanvasSurface => {
   const lifecycleEvents = createEventHub(createCanvasLifecycleEventRegistry());
 
   let repaintFrame: number | undefined;
+  let resizeObserver: ResizeObserver | undefined;
   /*
     resolved once per canvas element rather than per frame. getContext hands
     back the same context every time, but the lookup itself was showing up 60
@@ -88,31 +92,37 @@ export const useCanvasSurface = (): CanvasSurface => {
     repaintFrame = requestAnimationFrame((now) => {
       scheduleRepaint();
       if (now - lastRepaintAt < MS_PER_REPAINT) return;
-      lastRepaintAt = now;
       repaintCanvas(now);
     });
   };
 
   const resizeCanvas = () => {
-    const { width, height } = sizeCanvas(canvas.value);
-    canvasCssSize.width.value = width;
-    canvasCssSize.height.value = height;
-    ctx = getCtx(canvas);
+    const { rect, resized } = sizeCanvas(canvas.value);
+    canvasCssSize.width.value = rect.width;
+    canvasCssSize.height.value = rect.height;
+    return resized;
   };
 
   onMounted(() => {
+    ctx = getCtx(canvas);
     resizeCanvas();
     scheduleRepaint();
     lifecycleEvents.emit('onMounted');
+
+    resizeObserver = new ResizeObserver(() => {
+      if (!resizeCanvas()) return;
+      repaintCanvas(performance.now());
+    });
+    resizeObserver.observe(nullThrows(canvas.value, CANVAS_MISSING));
   });
 
   onBeforeUnmount(() => {
     lifecycleEvents.emit('onBeforeUnmount');
     if (repaintFrame !== undefined) cancelAnimationFrame(repaintFrame);
+    resizeObserver?.disconnect();
+    resizeObserver = undefined;
     ctx = undefined;
   });
-
-  watch([canvasBoxSize.width, canvasBoxSize.height], resizeCanvas);
 
   const canvasEvents = createCanvasBoundEvents(canvas, lifecycleEvents);
   const domEvents = createDocumentBoundEvents(lifecycleEvents);
@@ -139,6 +149,7 @@ export const useCanvasSurface = (): CanvasSurface => {
 
   const repaintCanvas = (now: number) => {
     if (!ctx) return;
+    lastRepaintAt = now;
     renderer.tick(now);
     lifecycleEvents.emit('onBeforeRepaint');
     camera.transformAndClear(ctx);

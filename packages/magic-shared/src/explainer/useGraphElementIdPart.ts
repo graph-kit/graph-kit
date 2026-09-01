@@ -67,7 +67,9 @@ export const useGraphElementRefExplainerSegment = (
     text: () => {
       if (graph.isNode(id)) return graph.getNode(id).label;
       const { source, target } = graph.getEdge(id);
-      return `${graph.getNode(source).label}${graph.getNode(target).label}`;
+      const pair = [graph.getNode(source).label, graph.getNode(target).label];
+      const labelReadyPair = graph.metadata.directed ? pair : pair.toSorted();
+      return labelReadyPair.join('');
     },
     highlight: useGraphElementExplainerHighlight(graph, id),
   };

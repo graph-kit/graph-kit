@@ -39,26 +39,6 @@
     return (simulation.value.playhead.position / lastPosition) * 100;
   });
 
-  const shell = useProvidedShell();
-  const { useShortcut } = shell.shortcuts;
-
-  useShortcut({
-    key: 'left',
-    callback: () => {
-      if (violation.value) return;
-      if (!simulation.value.playhead.isFirst())
-        simulation.value.playhead.prev();
-    },
-  });
-
-  useShortcut({
-    key: 'right',
-    callback: () => {
-      if (violation.value) return;
-      if (!simulation.value.playhead.isLast()) simulation.value.playhead.next();
-    },
-  });
-
   const forwardButtonDisabled = computed(() => {
     return simulation.value.playhead.isLast() || violation.value !== undefined;
   });

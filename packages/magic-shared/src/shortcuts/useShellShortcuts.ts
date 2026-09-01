@@ -44,9 +44,10 @@ export const useShellShortcuts = (shell: Shell) => {
       helpMenu: { category: 'Simulation', name: 'Previous Frame' },
       key: 'left',
       callback: () => {
-        const playhead = shell.simulation.current.value?.playhead;
-        if (!playhead || playhead.isFirst()) return;
-        playhead.prev();
+        const simulation = shell.simulation.current.value;
+        if (!simulation || simulation.violation) return;
+        if (simulation.playhead.isFirst()) return;
+        simulation.playhead.prev();
       },
     },
     {
@@ -54,9 +55,10 @@ export const useShellShortcuts = (shell: Shell) => {
       helpMenu: { category: 'Simulation', name: 'Next Frame' },
       key: 'right',
       callback: () => {
-        const playhead = shell.simulation.current.value?.playhead;
-        if (!playhead || playhead.isLast()) return;
-        playhead.next();
+        const simulation = shell.simulation.current.value;
+        if (!simulation || simulation.violation) return;
+        if (simulation.playhead.isLast()) return;
+        simulation.playhead.next();
       },
     },
     {

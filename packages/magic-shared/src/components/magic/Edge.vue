@@ -3,6 +3,7 @@
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import type { GEdge } from '@magic/shared/graph/types';
   import { useEdgeStyles } from '@magic/shared/theme';
+  import tinycolor from 'tinycolor2';
 
   import { StyleValue, computed, onUnmounted } from 'vue';
 
@@ -27,7 +28,7 @@
   }));
 
   const edgeStyle = computed<StyleValue>(() => ({
-    backgroundColor: styles.value.color,
+    backgroundColor: tinycolor(styles.value.color).setAlpha(1).toHexString(),
     height: styles.value.width * props.scale + 'px',
     placeItems: 'center',
   }));

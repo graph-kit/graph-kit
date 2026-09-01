@@ -10,6 +10,14 @@ export type {
 
 export type { ShellFlagOptions, ShellFlags } from './flags.ts';
 
+export type {
+  Gesture,
+  HelpMenuEntry,
+  HelpMenuGesture,
+  HelpMenuBinding,
+  HelpMenuItem,
+} from '../ui/help-menu/types.ts';
+
 export { provideShell, useProvidedShell } from './context.ts';
 
 export { manifests, products } from './manifests/index.ts';

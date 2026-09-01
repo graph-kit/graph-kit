@@ -72,7 +72,7 @@ export const light = {
 
     'node.focus.border.color': colors.BLUE_600,
     'node.focus.border.width': shared.node.borderWidth,
-    'node.focus.color': colors.BLUE_100,
+    'node.focus.color': colors.GRAY_50,
     'node.focus.cursor': shared.node.cursor,
     'node.focus.size': shared.node.size,
     'node.focus.text.color': shared.node.text.color,

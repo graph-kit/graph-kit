@@ -1,4 +1,4 @@
-import { isTypingTarget } from '@core/utils/keyboard';
+import { isDialogTarget, isTypingTarget } from '@core/utils/keyboard';
 import { type Binding, type Sequence, keys } from 'ctrl-keys';
 
 import { onMounted, onUnmounted } from 'vue';
@@ -14,7 +14,7 @@ export const useCtrlKeys = (): CtrlKeys => {
   const handler = keys();
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (isTypingTarget(event)) return;
+    if (isTypingTarget(event) || isDialogTarget(event)) return;
     if (handler.handle(event)) event.preventDefault();
   };
 

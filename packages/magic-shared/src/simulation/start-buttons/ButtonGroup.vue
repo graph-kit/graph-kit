@@ -1,52 +1,56 @@
 <script setup lang="ts">
+  import { useMounted } from '@vueuse/core';
+
   import { computed } from 'vue';
 
-  import HStack from '../../components/layout/HStack.vue';
+  import OverflowRow from '../../components/layout/OverflowRow.vue';
   import Well from '../../components/layout/Well.vue';
   import { useProvidedShell } from '../../product/context.ts';
   import StartButton from './StartButton.vue';
 
   const shell = useProvidedShell();
 
-  const buttons = computed(() => shell.simulationButtons ?? []);
+  const isMounted = useMounted();
+
+  const buttons = computed(() =>
+    (shell.simulationButtons ?? []).map((button, index) => ({
+      ...button,
+      index,
+    })),
+  );
+
+  const buttonKey = (button: { index: number }) => button.index;
 
   const show = computed(() => {
     const simRunning = shell.simulation.current.value;
-    return buttons.value.length > 0 && !simRunning;
+    return isMounted.value && buttons.value.length > 0 && !simRunning;
   });
 </script>
 
 <template>
   <Well v-if="show">
-    <HStack class="flex-wrap">
-      <template
-        v-for="(
-          {
-            disabled = () => false as const,
-            beforeStarting,
-            definition,
-            name,
-            render,
-          },
-          index
-        ) in buttons"
-        :key="index"
-      >
+    <OverflowRow
+      :items="buttons"
+      :key-of="buttonKey"
+      label="More"
+      class="max-w-[35vw]"
+    >
+      <template #default="{ item: button }">
         <component
-          v-if="render"
-          :is="render"
-          :definition="definition"
-          :disabled="disabled()"
-          :before-starting="beforeStarting"
+          v-if="button.render"
+          :is="button.render"
+          :definition="button.definition"
+          :disabled="button.disabled?.() ?? false"
+          :before-starting="button.beforeStarting"
         />
         <StartButton
           v-else
-          :definition="definition"
-          :name="name"
-          :disabled="disabled()"
-          :before-starting="beforeStarting"
+          :definition="button.definition"
+          :name="button.name"
+          :disabled="button.disabled?.() ?? false"
+          :before-starting="button.beforeStarting"
         />
       </template>
-    </HStack>
+    </OverflowRow>
   </Well>
 </template>

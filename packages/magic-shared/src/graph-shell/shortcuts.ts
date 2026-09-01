@@ -1,13 +1,14 @@
 import { Graph } from '../graph/types.ts';
 import { Shell } from '../product/types.ts';
 import { ShortcutItem } from '../shortcuts/useShortcuts.ts';
+import { GRAPH_HELP_CATEGORY } from './help.ts';
 
 export const useGraphShellShortcuts = (shell: Shell, graph: Graph) => {
-  // TODO make it windows + mac agnostic
   const shortcuts: ShortcutItem[] = [
     {
-      id: 'shell/focus-all',
-      key: 'meta+a',
+      id: 'shell/graph/focus-all',
+      helpMenu: { category: GRAPH_HELP_CATEGORY, name: 'Select All' },
+      key: 'mod+a',
       callback: graph.focus.setAll,
     },
   ];

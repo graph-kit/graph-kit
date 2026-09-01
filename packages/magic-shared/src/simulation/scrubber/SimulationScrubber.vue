@@ -8,7 +8,6 @@
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
-  import { useProvidedShell } from '../../product/context.ts';
   import { useRunningSimulation } from '../useRunningSimulation.ts';
   import SimulationExplainerText from './SimulationExplainerText.vue';
 

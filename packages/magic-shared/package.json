@@ -76,6 +76,10 @@
       "types": "./dist/types/components/dropdown/DropdownItem.vue.d.ts",
       "default": "./src/components/dropdown/DropdownItem.vue"
     },
+    "./Dialog": {
+      "types": "./dist/types/components/dialog/Dialog.vue.d.ts",
+      "default": "./src/components/dialog/Dialog.vue"
+    },
     "./Switch": {
       "types": "./dist/types/components/switch/Switch.vue.d.ts",
       "default": "./src/components/switch/Switch.vue"
@@ -205,9 +209,11 @@
     "lz-string": "^1.5.0",
     "mathlive": "^0.110.0",
     "socket.io-client": "^4.8.1",
-    "yjs": "^13.6.32"
+    "yjs": "^13.6.32",
+    "tinycolor2": "catalog:"
   },
   "devDependencies": {
+    "@types/tinycolor2": "catalog:",
     "nuxt": "^4.1.2",
     "ts-essentials": "^10.2.0",
     "vue": "catalog:"

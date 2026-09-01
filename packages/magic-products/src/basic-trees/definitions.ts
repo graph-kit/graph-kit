@@ -1,7 +1,8 @@
 import { TreeNode } from './tree/TreeNode.ts';
 
 export const definitions = {
-  treeHeight: '',
+  treeHeight:
+    'The number of nodes on the longest path from the root down to a leaf. Conventions differ on where the count starts: here a lone node has a height of 1 and an empty tree 0, while sources that count edges instead would call that same node 0.',
   treeBalance:
     'A node is unbalanced when its balance factor falls outside -1 to 1.',
   balanceFactor:

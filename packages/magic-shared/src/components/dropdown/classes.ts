@@ -5,4 +5,4 @@ export const menuPanelClasses =
 // menu buttons sit on the panel's own surface, so they drop the button skin's background.
 // the highlight background marks menu position, so a focus ring on top of it is redundant
 export const menuItemClasses =
-  'px-2 bg-transparent dark:bg-transparent w-full justify-start focus-visible:ring-0 focus-visible:ring-offset-0';
+  'px-2 bg-transparent dark:bg-transparent dark:hover:bg-gray-900 w-full justify-start focus-visible:ring-0 focus-visible:ring-offset-0';

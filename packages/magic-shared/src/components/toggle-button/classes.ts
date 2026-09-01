@@ -3,4 +3,4 @@
 // Toggle's data-state (on/off) via the as-child attrs merge, but aria-pressed
 // is untouched by Tooltip either way.
 export const toggleButton =
-  'bg-gray-300 text-black aria-pressed:bg-gray-100 dark:bg-gray-900 dark:text-white dark:aria-pressed:bg-gray-700';
+  'bg-gray-300 hover:bg-gray-100 text-black aria-pressed:bg-gray-100 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-700 dark:aria-pressed:bg-gray-700';

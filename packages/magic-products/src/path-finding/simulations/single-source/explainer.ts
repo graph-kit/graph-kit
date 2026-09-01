@@ -28,7 +28,7 @@ const slotHighlight = (
 const highlights = {
   distances: slotHighlight(
     distancesSlotId,
-    'The cheapest distance to the node so far',
+    'The cheapest path from the start node',
   ),
   improve: slotHighlight(
     distancesSlotId,

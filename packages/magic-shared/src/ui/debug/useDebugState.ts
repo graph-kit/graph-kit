@@ -6,20 +6,23 @@ import { toast } from '../toast/useToastState.ts';
 import ShellDashboard from './ShellDashboard.vue';
 import ShellFlags from './ShellFlags.vue';
 import SurfaceDashboard from './SurfaceDashboard.vue';
+import UserAgent from './UserAgent.vue';
 
 const DEBUG_SLOT_PRIORITY = -Infinity;
 
 const DEBUG_SLOTS: ComponentSlot[] = [
+  {
+    id: 'shell/debug/user-agent',
+    component: UserAgent,
+    position: 'bottom-right',
+    priority: DEBUG_SLOT_PRIORITY,
+  },
   {
     id: 'shell/debug/surface',
     component: SurfaceDashboard,
     position: 'bottom-right',
     priority: DEBUG_SLOT_PRIORITY,
   },
-  /*
-    the flags and the shell readouts sit opposite the surface one, since bottom right
-    already carries the shell's own controls and three stacked panels outgrow it
-  */
   {
     id: 'shell/debug/product-flags',
     component: ShellFlags,

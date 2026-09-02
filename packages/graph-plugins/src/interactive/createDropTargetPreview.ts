@@ -126,6 +126,9 @@ export const createDropTargetPreview = (
     surface.set('edge.hover.color', previewEdgeColor);
     surface.set('edge.hover.text.color', previewEdgeColor);
 
+    anchors?.set('anchors.default.color', dropTargetBorderColor);
+    anchors?.set('anchors.parentFocused.color', dropTargetBorderColor);
+
     anchors?.set('anchors.edge.preview.default.color', anchorEdgePreviewColor);
     anchors?.set(
       'anchors.edge.preview.parentFocused.color',

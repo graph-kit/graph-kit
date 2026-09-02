@@ -22,7 +22,8 @@ type AllPairsNodeConcept = 'pivot' | 'pair' | 'onNegativeCycle';
 export const nodeRoles = {
   pivot: 'active',
   pair: 'candidate',
-  onNegativeCycle: 'result',
+  // sits on negative cycle
+  onNegativeCycle: 'violation',
 } as const satisfies Record<AllPairsNodeConcept, NodeRole>;
 
 type AllPairsEdgeConcept =
@@ -32,7 +33,8 @@ export const edgeRoles = {
   currentRoute: 'tree',
   detourRoute: 'weighing',
   rejectedRoute: 'rejected',
-  onNegativeCycle: 'result',
+  // is part of negative cycle
+  onNegativeCycle: 'violation',
 } as const satisfies Record<AllPairsEdgeConcept, EdgeRole>;
 
 export type AllPairsOptions = {

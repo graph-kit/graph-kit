@@ -64,6 +64,7 @@ export const useCanvasSurface = (): CanvasSurface => {
   const drawContent = ref<DrawContent>(aggregator.draw);
   const drawBackgroundPattern = ref<DrawPattern>(() => () => {});
   const contentSuspended = ref(false);
+  const backgroundPatternSuspended = ref(false);
 
   const lifecycleEvents = createEventHub(createCanvasLifecycleEventRegistry());
 
@@ -153,7 +154,7 @@ export const useCanvasSurface = (): CanvasSurface => {
     renderer.tick(now);
     lifecycleEvents.emit('onBeforeRepaint');
     camera.transformAndClear(ctx);
-    pattern.draw(ctx);
+    if (!backgroundPatternSuspended.value) pattern.draw(ctx);
     if (!contentSuspended.value) drawContent.value(ctx);
     lifecycleEvents.emit('onAfterRepaint');
   };
@@ -171,6 +172,7 @@ export const useCanvasSurface = (): CanvasSurface => {
       content: drawContent,
       backgroundPattern: drawBackgroundPattern,
       contentSuspended,
+      backgroundPatternSuspended,
     },
     aggregator,
     shapes,

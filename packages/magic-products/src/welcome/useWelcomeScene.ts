@@ -2,31 +2,28 @@ import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { CoreNode } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
-import { ProductManifest, manifests } from '@magic/shared/product';
-import { useFocusedNode } from '@magic/shared/utilities';
+import { manifests } from '@magic/shared/product';
 import tinycolor from 'tinycolor2';
 
-import { computed, inject, onMounted, onUnmounted, provide, ref } from 'vue';
+import { onMounted } from 'vue';
 
 import {
   NODE_RADIUS,
   edgeIdOf,
-  edges,
   nodeIdOf,
+  pickArrangement,
+  resolveColors,
   resolvePositions,
-  welcomeNodes,
 } from './scene.ts';
 
 const SEED_DURATION_MS = 300;
 
-const KEY = 'WELCOME_SCENE';
+export const useWelcomeScene = (graph: Graph) => {
+  const arrangement = pickArrangement();
 
-const createWelcomeScene = (graph: Graph) => {
-  const productByNodeId = new Map<string, ProductManifest>();
   const paintByNodeId = new Map<string, Color>();
 
-  for (const { productId, color } of welcomeNodes) {
-    productByNodeId.set(nodeIdOf(productId), manifests[productId]);
+  for (const { productId, color } of resolveColors(arrangement)) {
     paintByNodeId.set(nodeIdOf(productId), color);
   }
 
@@ -50,42 +47,19 @@ const createWelcomeScene = (graph: Graph) => {
     })
     .activate();
 
-  const hoveredProduct = ref<ProductManifest>();
-
-  const focusedNode = useFocusedNode(graph);
-
-  const focusedProduct = computed(() => {
-    if (!focusedNode.value) return;
-    return nullThrows(
-      productByNodeId.get(focusedNode.value.id),
-      'node is not a welcome node',
-    );
-  });
-
-  /** pointing at a product previews it, clicking one pins it */
-  const activeProduct = computed(
-    () => hoveredProduct.value ?? focusedProduct.value,
-  );
-
-  // edges are hoverable too, and those are the only elements without a product
-  const trackHover = (element: { id: string } | undefined) => {
-    hoveredProduct.value = element
-      ? productByNodeId.get(element.id)
-      : undefined;
-  };
-
   const seed = () =>
     graph.animation.capture(
       () =>
         graph.actions.addElements({
-          nodes: resolvePositions(graph.surface.visibleWorldRect.value).map(
-            ({ productId, position }) => ({
-              id: nodeIdOf(productId),
-              label: manifests[productId].abbreviatedName,
-              position,
-            }),
-          ),
-          edges: edges.map(([source, target], index) => ({
+          nodes: resolvePositions(
+            arrangement,
+            graph.surface.visibleWorldRect.value,
+          ).map(({ productId, position }) => ({
+            id: nodeIdOf(productId),
+            label: manifests[productId].abbreviatedName,
+            position,
+          })),
+          edges: arrangement.edges.map(([source, target], index) => ({
             id: edgeIdOf(index),
             source: nodeIdOf(source),
             target: nodeIdOf(target),
@@ -94,31 +68,5 @@ const createWelcomeScene = (graph: Graph) => {
       { durationMs: SEED_DURATION_MS },
     );
 
-  onMounted(() => {
-    seed();
-    graph.surface.events.elements.subscribe(
-      'onHoveredElementChange',
-      trackHover,
-    );
-  });
-
-  onUnmounted(() => {
-    graph.surface.events.elements.unsubscribe(
-      'onHoveredElementChange',
-      trackHover,
-    );
-  });
-
-  return { activeProduct };
+  onMounted(seed);
 };
-
-export type WelcomeScene = ReturnType<typeof createWelcomeScene>;
-
-export const provideWelcomeScene = (graph: Graph) => {
-  const scene = createWelcomeScene(graph);
-  provide(KEY, scene);
-  return scene;
-};
-
-export const useWelcomeScene = () =>
-  nullThrows(inject<WelcomeScene>(KEY), 'welcome scene not provided!');

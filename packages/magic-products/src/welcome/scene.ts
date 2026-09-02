@@ -1,59 +1,59 @@
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import colors, { Color } from '@core/utils/colors';
-import { ProductId } from '@magic/shared/product';
+import { getRandomElement } from '@core/utils/random';
+import { ProductId, products } from '@magic/shared/product';
 
-export type WelcomeNode = {
-  productId: ProductId;
-  /**
-   * placement relative to the other nodes, in world units. the origin these are
-   * written against is arbitrary, only the distances between them matter
-   */
-  offset: Coordinate;
-  color: Color;
-};
+import {
+  WelcomeArrangement,
+  WelcomeProductId,
+  welcomeArrangements,
+} from './arrangements.ts';
 
-export const welcomeNodes = [
-  {
-    productId: 'avl-trees',
-    offset: { x: 240, y: -130 },
-    color: colors.PURPLE_500,
-  },
-  {
-    productId: 'traversals',
-    offset: { x: 240, y: 130 },
-    color: colors.PINK_500,
-  },
-  {
-    productId: 'path-finding',
-    offset: { x: -240, y: 130 },
-    color: colors.ORANGE_500,
-  },
-  {
-    productId: 'min-spanning-trees',
-    offset: { x: -240, y: -130 },
-    color: colors.CYAN_500,
-  },
-  {
-    productId: 'markov-chains',
-    offset: { x: 560, y: -30 },
-    color: colors.SKY_500,
-  },
-  {
-    productId: 'sets',
-    offset: { x: -670, y: -30 },
-    color: colors.SKY_500,
-  },
-] as const satisfies WelcomeNode[];
+export const pickArrangement = () => getRandomElement(welcomeArrangements);
+
+const entriesOf = ({ nodes }: WelcomeArrangement) =>
+  Object.entries(nodes) as [WelcomeProductId, Coordinate][];
+
+/** handed out left to right, looping once the arrangement outruns it */
+const WIPE: Color[] = [
+  colors.PURPLE_500,
+  colors.FUCHSIA_500,
+  colors.PINK_500,
+  colors.ROSE_500,
+  colors.ORANGE_600,
+  colors.ORANGE_400,
+];
+
+/**
+ * spends the wipe across the arrangement, so a node's color falls out of where it
+ * sits horizontally rather than being written down per layout
+ */
+export const resolveColors = (arrangement: WelcomeArrangement) =>
+  entriesOf(arrangement)
+    .sort(
+      ([, previous], [, next]) => previous.x - next.x || previous.y - next.y,
+    )
+    .map(([productId], index) => ({
+      productId,
+      color: WIPE[index % WIPE.length],
+    }));
 
 const midpointOf = (values: number[]) =>
   (Math.min(...values) + Math.max(...values)) / 2;
 
+/** world units the scene sits below the viewport center, clearing the banner above it */
+const VERTICAL_BIAS = 30;
+
 /**
- * lands the scene's bounding box on the center of whatever the canvas is showing,
- * so the graph arrives centered at any window size
+ * lands the arrangement's bounding box on the center of whatever the canvas is
+ * showing, so the graph arrives centered at any window size
  */
-export const resolvePositions = (viewport: BoundingBox) => {
-  const offsets = welcomeNodes.map(({ offset }) => offset);
+export const resolvePositions = (
+  arrangement: WelcomeArrangement,
+  viewport: BoundingBox,
+) => {
+  const entries = entriesOf(arrangement);
+  const offsets = entries.map(([, offset]) => offset);
 
   const origin: Coordinate = {
     x:
@@ -62,34 +62,25 @@ export const resolvePositions = (viewport: BoundingBox) => {
       midpointOf(offsets.map(({ x }) => x)),
     y:
       viewport.at.y +
-      viewport.height / 2 -
+      viewport.height / 2 +
+      VERTICAL_BIAS -
       midpointOf(offsets.map(({ y }) => y)),
   };
 
-  return welcomeNodes.map(({ productId, offset }) => ({
+  return entries.map(([productId, offset]) => ({
     productId,
     position: { x: origin.x + offset.x, y: origin.y + offset.y },
   }));
 };
 
-/** only the products the scene places, so no edge can name a node that is absent */
-type WelcomeProductId = (typeof welcomeNodes)[number]['productId'];
-
-/** [source, target] pairs, drawn once every node has animated in */
-export const edges: [WelcomeProductId, WelcomeProductId][] = [
-  ['avl-trees', 'markov-chains'],
-  ['markov-chains', 'avl-trees'],
-  ['avl-trees', 'min-spanning-trees'],
-  ['markov-chains', 'traversals'],
-  ['min-spanning-trees', 'path-finding'],
-  ['path-finding', 'traversals'],
-  ['traversals', 'path-finding'],
-  ['traversals', 'avl-trees'],
-  ['min-spanning-trees', 'sets'],
-];
-
 export const NODE_RADIUS = 45;
 
-export const nodeIdOf = (productId: ProductId) => `welcome/node/${productId}`;
+const NODE_ID_PREFIX = 'welcome/node/';
+
+export const nodeIdOf = (productId: ProductId) =>
+  `${NODE_ID_PREFIX}${productId}`;
+
+export const productOf = (nodeId: string) =>
+  products.find(({ id }) => `${NODE_ID_PREFIX}${id}` === nodeId);
 
 export const edgeIdOf = (index: number) => `welcome/edge/${index}`;

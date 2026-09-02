@@ -47,7 +47,7 @@
   >
     <ExplainerText
       :explainer="{
-        content: 'Click Any Node To Open Experience',
+        content: 'Click A Node To Open Experience',
       }"
     />
   </div>

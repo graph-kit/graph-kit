@@ -11,10 +11,10 @@ import { computed, inject, onMounted, onUnmounted, provide, ref } from 'vue';
 import {
   NODE_RADIUS,
   edgeIdOf,
-  edges,
   nodeIdOf,
+  pickArrangement,
+  resolveColors,
   resolvePositions,
-  welcomeNodes,
 } from './scene.ts';
 
 const SEED_DURATION_MS = 300;
@@ -22,10 +22,12 @@ const SEED_DURATION_MS = 300;
 const KEY = 'WELCOME_SCENE';
 
 const createWelcomeScene = (graph: Graph) => {
+  const arrangement = pickArrangement();
+
   const productByNodeId = new Map<string, ProductManifest>();
   const paintByNodeId = new Map<string, Color>();
 
-  for (const { productId, color } of welcomeNodes) {
+  for (const { productId, color } of resolveColors(arrangement)) {
     productByNodeId.set(nodeIdOf(productId), manifests[productId]);
     paintByNodeId.set(nodeIdOf(productId), color);
   }
@@ -78,14 +80,15 @@ const createWelcomeScene = (graph: Graph) => {
     graph.animation.capture(
       () =>
         graph.actions.addElements({
-          nodes: resolvePositions(graph.surface.visibleWorldRect.value).map(
-            ({ productId, position }) => ({
-              id: nodeIdOf(productId),
-              label: manifests[productId].abbreviatedName,
-              position,
-            }),
-          ),
-          edges: edges.map(([source, target], index) => ({
+          nodes: resolvePositions(
+            arrangement,
+            graph.surface.visibleWorldRect.value,
+          ).map(({ productId, position }) => ({
+            id: nodeIdOf(productId),
+            label: manifests[productId].abbreviatedName,
+            position,
+          })),
+          edges: arrangement.edges.map(([source, target], index) => ({
             id: edgeIdOf(index),
             source: nodeIdOf(source),
             target: nodeIdOf(target),

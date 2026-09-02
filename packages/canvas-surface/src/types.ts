@@ -26,6 +26,8 @@ export type DrawFns = {
   backgroundPattern: Ref<DrawPattern>;
   /** holds the canvas on its background pattern alone, leaving content undrawn */
   contentSuspended: Ref<boolean>;
+  /** the mirror of {@link DrawFns.contentSuspended}, leaving the pattern undrawn */
+  backgroundPatternSuspended: Ref<boolean>;
 };
 
 export type CanvasRef = {

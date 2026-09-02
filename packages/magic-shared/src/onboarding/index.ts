@@ -2,5 +2,5 @@
 export { useOnboarding } from './useOnboarding.ts';
 export type { OnboardingControls } from './useOnboarding.ts';
 export { mdiImageUrl } from './icon.ts';
-export { ICON_COLOR } from './palette.ts';
+export { onboardingPalette } from './palette.ts';
 export type { OnboardingItem } from './types.ts';

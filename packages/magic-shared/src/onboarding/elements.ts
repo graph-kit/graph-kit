@@ -11,6 +11,7 @@ import {
   ONBOARDING_PRIORITY,
   THUMBNAIL_BORDER_RADIUS,
 } from './constants.ts';
+import { mdiImageUrl } from './icon.ts';
 import { OnboardingLayout } from './layout.ts';
 import { OnboardingFont, OnboardingItem, OnboardingPalette } from './types.ts';
 
@@ -92,7 +93,7 @@ export const onboardingElements = (
         at: row.image.at,
         width: row.image.width,
         height: row.image.height,
-        src: item.imageUrl,
+        src: mdiImageUrl(item.icon, palette.iconColor),
       }),
     });
 

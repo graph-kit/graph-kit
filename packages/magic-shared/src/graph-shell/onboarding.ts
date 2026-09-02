@@ -1,23 +1,19 @@
 import { mdiGestureDoubleTap, mdiHelp, mdiPencil } from '@mdi/js';
 
-import {
-  ICON_COLOR,
-  OnboardingItem,
-  mdiImageUrl,
-} from '../onboarding/index.ts';
+import { OnboardingItem } from '../onboarding/index.ts';
 
 /** what the graph shell contributes when the product names nothing of its own */
 export const GRAPH_ONBOARDING: OnboardingItem[] = [
   {
-    imageUrl: mdiImageUrl(mdiGestureDoubleTap, ICON_COLOR),
+    icon: mdiGestureDoubleTap,
     display: 'Double click to add a node',
   },
   {
-    imageUrl: mdiImageUrl(mdiPencil, ICON_COLOR),
+    icon: mdiPencil,
     display: 'A for freehand annotations',
   },
   {
-    imageUrl: mdiImageUrl(mdiHelp, ICON_COLOR),
+    icon: mdiHelp,
     display: 'H for help',
   },
 ];

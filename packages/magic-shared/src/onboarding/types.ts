@@ -2,7 +2,8 @@ import { FontFamily, FontWeight } from '@canvas/primitives/text/types';
 
 /** one thing worth doing on an empty canvas */
 export type OnboardingItem = {
-  imageUrl: string;
+  /** an mdi icon path, as exported by `@mdi/js` */
+  icon: string;
   display: string;
 };
 
@@ -19,6 +20,8 @@ export type OnboardingPalette = {
   cardColor: string;
   borderColor: string;
   labelColor: string;
-  /** behind a thumbnail, so a transparent image still reads as a tile */
+  /** behind an icon, so a transparent image still reads as a tile */
   thumbnailColor: string;
+  /** what an icon has to be painted in to read on {@link OnboardingPalette.thumbnailColor} */
+  iconColor: string;
 };

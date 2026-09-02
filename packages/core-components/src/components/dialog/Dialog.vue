@@ -48,6 +48,15 @@
     if (usingPointer.value) event.preventDefault();
   };
 
+  // reka would ring the first control in the panel, and preventing focus outright
+  // leaves it on the trigger, outside the trap
+  const focusPanel = (event: Event) => {
+    usingPointer.value = false;
+    event.preventDefault();
+    if (event.target instanceof HTMLElement)
+      event.target.focus({ preventScroll: true });
+  };
+
   defineSlots<{
     default?: () => unknown;
     trigger: () => unknown;
@@ -68,10 +77,11 @@
       <DialogContent
         v-bind="{ ...attrs, class: undefined, 'aria-describedby': undefined }"
         :class="classes"
+        tabindex="-1"
         @pointerdown="usingPointer = true"
         @keydown="usingPointer = false"
         @pointer-down-outside="usingPointer = true"
-        @open-auto-focus="usingPointer = false"
+        @open-auto-focus="focusPanel"
         @close-auto-focus="keepFocusPut"
       >
         <DialogTitle

@@ -32,6 +32,11 @@ export type ShellFlags = {
    * @default true
    */
   jumpToContent: boolean;
+  /**
+   * suggests what to try first when the product opens on nothing
+   * @default true
+   */
+  onboarding: boolean;
 };
 
 const DEFAULTS: ShellFlags = {
@@ -41,6 +46,7 @@ const DEFAULTS: ShellFlags = {
   linkSharing: true,
   adjustAnimationSpeed: false,
   jumpToContent: true,
+  onboarding: true,
 };
 
 /** what a product author writes: only what differs from {@link ShellFlags} defaults */

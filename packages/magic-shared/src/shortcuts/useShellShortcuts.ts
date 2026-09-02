@@ -81,12 +81,12 @@ export const useShellShortcuts = (shell: Shell) => {
     },
     {
       id: 'shell/zoom-in',
-      helpMenu: { category: 'Camera', name: 'Zoom In' },
       key: 'shift++',
       callback: () => shell.surface.camera.actions.zoomIn(),
     },
     {
       id: 'shell/zoom-in-unshifted',
+      helpMenu: { category: 'Camera', name: 'Zoom In' },
       key: '=',
       callback: () => shell.surface.camera.actions.zoomIn(),
     },

@@ -26,7 +26,7 @@
       <template #trigger>
         <IconButton
           class="bg-transparent dark:bg-transparent p-4"
-          label="Help (h)"
+          label="Help"
           :path="mdiHelp"
           :size="20"
         />

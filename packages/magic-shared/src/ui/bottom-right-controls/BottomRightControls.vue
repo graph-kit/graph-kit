@@ -33,7 +33,7 @@
           <IconButton
             :size="20"
             :path="mdiDotsVertical"
-            label="More Options"
+            label="More options"
             class="p-4 bg-transparent dark:bg-transparent aria-expanded:bg-gray-100 dark:aria-expanded:bg-gray-700"
           />
         </template>

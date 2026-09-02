@@ -32,7 +32,7 @@
         @click="shell.history.undo"
         :disabled="undoDisabled"
         class="p-3 pl-5 bg-transparent dark:bg-transparent rounded-r-none"
-        label="Undo (cmd + z)"
+        label="Undo"
         :size="20"
         :path="mdiUndo"
       />
@@ -41,7 +41,7 @@
         @click="shell.history.redo"
         :disabled="redoDisabled"
         class="p-3 pr-5 bg-transparent dark:bg-transparent rounded-l-none"
-        label="Redo (cmd + shift + z)"
+        label="Redo"
         :size="20"
         :path="mdiRedo"
       />

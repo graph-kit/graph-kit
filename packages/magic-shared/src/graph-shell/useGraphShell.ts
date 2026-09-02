@@ -18,7 +18,6 @@ export const useGraphShell = (
 ): { shell: Shell; graph: Graph } => {
   const graph = useGraph(options);
 
-  const lensChips = options.lensChips?.(graph);
   const simulationButtons = options.simulationButtons?.(graph);
 
   const draggedNodes = trackDraggedNodes(graph);
@@ -62,7 +61,7 @@ export const useGraphShell = (
     productId: options.productId,
     flags: options.flags,
     helpMenu: graphShellHelpMenu(graph, options.helpMenu),
-    lensChips,
+    lensChips: (shell) => options.lensChips?.(graph, shell),
     simulationButtons,
     onboarding: flags.onboarding ? GRAPH_ONBOARDING : [],
     onSetupCompleted: () => {

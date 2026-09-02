@@ -1,4 +1,6 @@
 import { Graph } from '@magic/shared/graph';
+import { Lens } from '@magic/shared/lens/types';
+import { Shell } from '@magic/shared/product';
 import {
   LensChipDefinition,
   disabledState,
@@ -15,18 +17,29 @@ import { recurrentStatesThemer } from './themers/recurrentStates.ts';
 import { stationaryDistributionThemer } from './themers/stationaryDistribution.ts';
 import { transientStatesThemer } from './themers/transientStates.ts';
 import { useMarkovChain } from './useMarkovChain.ts';
-import { validityLens } from './validityLens.ts';
+import { VALIDITY_EXPLAINER_SLOT_ID, validityLens } from './validityLens.ts';
 
-/** a property only asked of some chains, so it answers with nothing rather than a misleading no */
 const yesNo = (answer: boolean | undefined) => {
   if (answer === undefined) return 'N/A';
   return answer ? 'Yes' : 'No';
 };
 
-export const lensChips = (graph: Graph): LensChipDefinition[] => {
+export const lensChips = (graph: Graph, shell: Shell): LensChipDefinition[] => {
   const chain = useMarkovChain(graph);
 
   const validity = validityLens(graph, chain);
+
+  const explainValidity: Lens = {
+    ...validity,
+    activate: () => {
+      validity.activate?.();
+      shell.componentSlots.setHighlighted(VALIDITY_EXPLAINER_SLOT_ID);
+    },
+    deactivate: () => {
+      shell.componentSlots.clearHighlighted();
+      validity.deactivate?.();
+    },
+  };
 
   const requiresValidChain = (
     chip: LensChipDefinition,
@@ -34,8 +47,8 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
     ...chip,
     disabled: () =>
       (!chain.isValid.value && {
-        reason: `Needs a valid chain. ${definitions.validity}`,
-        lens: validity,
+        reason: 'Needs a valid chain',
+        lens: explainValidity,
       }) ||
       disabledState(chip),
   });

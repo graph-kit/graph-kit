@@ -180,7 +180,8 @@ export type ShellOptions = {
   flags?: ShellFlagOptions;
   /** what this product adds to the help menu beyond its shortcuts */
   helpMenu?: MaybeGetter<HelpMenuItem[]>;
-  lensChips?: LensChipDefinition[];
+  /** built from the shell so a chip can reach the chrome around it, see {@link Shell.lensChips} */
+  lensChips?: (shell: Shell) => LensChipDefinition[] | undefined;
   simulationButtons?: SimulationButtonDefinition[];
   /** what the product suggests trying first, shown only if it opens on nothing */
   onboarding?: OnboardingItem[];

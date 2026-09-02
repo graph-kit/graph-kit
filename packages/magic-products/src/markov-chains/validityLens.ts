@@ -6,6 +6,8 @@ import { layered } from './themers/layered.ts';
 import { outboundTotalsThemer } from './themers/outboundTotals.ts';
 import { MarkovChain } from './useMarkovChain.ts';
 
+export const VALIDITY_EXPLAINER_SLOT_ID = 'markov-chains/validity-explainer';
+
 /** paints which states break the chain and labels each with what its transitions add up to */
 export const validityLens = (graph: Graph, chain: MarkovChain): Lens => ({
   id: 'valid',

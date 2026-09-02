@@ -5,6 +5,7 @@
   import TransitionSimulationButton from './TransitionSimulationButton.vue';
   import ValidityExplainer from './ValidityExplainer.vue';
   import { lensChips } from './lensChips.ts';
+  import { VALIDITY_EXPLAINER_SLOT_ID } from './validityLens.ts';
 
   const { shell } = useGraphShell({
     productId: 'markov-chains',
@@ -15,7 +16,7 @@
   });
 
   shell.componentSlots.add({
-    id: 'markov-chains/validity-explainer',
+    id: VALIDITY_EXPLAINER_SLOT_ID,
     component: ValidityExplainer,
     position: 'bottom-middle',
   });

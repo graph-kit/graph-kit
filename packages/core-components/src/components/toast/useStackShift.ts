@@ -12,10 +12,21 @@ const SHIFT_MS = 200;
  * or gone, play back the difference.
  */
 export const useStackShift = (viewport: Ref<HTMLElement | undefined>) => {
-  /** where each card sat when it was last measured, keyed by the card itself */
+  /** where each card came to rest when it was last measured, keyed by the card itself */
   const tops = new WeakMap<Element, number>();
 
+  /** the shift a card is playing, so the next one can take over rather than fight it */
+  const shifts = new WeakMap<Element, Animation>();
+
   const cards = () => [...(viewport.value?.children ?? [])];
+
+  /**
+   * a card on its way out is playing its own exit on the same transform, and a script
+   * animation outranks a CSS one, so shifting it would snap it back into view for the
+   * rest of its stay. it is leaving anyway, and its row goes with it
+   */
+  const isLeaving = (card: Element) =>
+    card.getAttribute('data-state') === 'closed';
 
   const record = () => {
     for (const card of cards()) {
@@ -25,19 +36,38 @@ export const useStackShift = (viewport: Ref<HTMLElement | undefined>) => {
 
   const shift = () => {
     for (const card of cards()) {
-      const previous = tops.get(card);
-      const next = card.getBoundingClientRect().top;
+      if (isLeaving(card)) continue;
+
+      const playing = shifts.get(card);
+
+      /*
+       * a card still shifting is between rows, and that is where the eye last saw it.
+       * one at rest was last seen at the row it was recorded at, since the mutation
+       * that brought us here has not been painted yet
+       */
+      const from =
+        playing?.playState === 'running'
+          ? card.getBoundingClientRect().top
+          : tops.get(card);
+
+      // a rect reports the new row only once the old shift is off the element
+      playing?.cancel();
+      const to = card.getBoundingClientRect().top;
+
+      // recorded before animating, so the next shift reads a row and not a transform
+      tops.set(card, to);
+
       // an unmeasured card has just arrived, and its entrance is its own to play
-      if (previous === undefined || previous === next) continue;
-      card.animate(
-        [
-          { transform: `translateY(${previous - next}px)` },
-          { transform: 'none' },
-        ],
-        { duration: SHIFT_MS, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+      if (from === undefined || from === to) continue;
+
+      shifts.set(
+        card,
+        card.animate(
+          [{ transform: `translateY(${from - to}px)` }, { transform: 'none' }],
+          { duration: SHIFT_MS, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+        ),
       );
     }
-    record();
   };
 
   let observer: MutationObserver | undefined;

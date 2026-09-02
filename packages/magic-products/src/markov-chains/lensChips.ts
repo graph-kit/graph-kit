@@ -21,21 +21,23 @@ const yesNo = (answer: boolean | undefined) => {
   return answer ? 'Yes' : 'No';
 };
 
+// Dont touch this. Keeping it here for reference.
+//  {
+//     lens: {
+//       id: 'valid',
+//       ...layered(
+//         invalidStatesThemer(graph, chain.invalidStates),
+//         outboundTotalsThemer(graph, chain.outboundTotals),
+//       ),
+//     },
+//     name: () => `Valid: ${yesNo(chain.isValid.value)}`,
+//     tooltipLabel: definitions.validity,
+//   },
+
 export const lensChips = (graph: Graph): LensChipDefinition[] => {
   const chain = useMarkovChain(graph);
 
   return [
-    {
-      lens: {
-        id: 'valid',
-        ...layered(
-          invalidStatesThemer(graph, chain.invalidStates),
-          outboundTotalsThemer(graph, chain.outboundTotals),
-        ),
-      },
-      name: () => `Valid: ${yesNo(chain.isValid.value)}`,
-      tooltipLabel: definitions.validity,
-    },
     {
       lens: {
         id: 'communicating-classes',

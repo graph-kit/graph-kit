@@ -29,7 +29,7 @@
 
   const classes = computed(() =>
     cn(
-      'z-50 max-w-xs font-semibold rounded-md bg-neutral-900 px-3 py-1.5 text-sm text-white shadow-md',
+      'z-60 max-w-xs font-semibold rounded-md bg-neutral-900 px-3 py-1.5 text-sm text-white shadow-md',
       'transition-[opacity,scale] duration-200 ease-[cubic-bezier(0.34,1.8,0.64,1)]',
       'starting:opacity-0 starting:scale-75',
       normalizeClass(props.class),

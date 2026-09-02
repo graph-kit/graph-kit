@@ -147,6 +147,8 @@ export const useShell = (
 
     // whatever was restored is the starting point, not the state setup began with
     shell.history?.clear();
+
+    options.onSetupCompleted?.(shell.appearance);
   });
 
   useShellShortcuts(shell);

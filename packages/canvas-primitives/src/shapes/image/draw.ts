@@ -1,5 +1,5 @@
 import { rect } from '../rect/index.ts';
-import { loadImage } from './cache.ts';
+import { resolveImage } from './cache.ts';
 import type { ImageSchemaWithDefaults } from './defaults.ts';
 
 /**
@@ -33,13 +33,17 @@ export const drawImageWithCtx = (schema: ImageSchemaWithDefaults) => {
 
   const { width, height, at, rotation } = rectProps;
 
-  return async (ctx: CanvasRenderingContext2D) => {
-    const { image, error } = await loadImage(src, {
+  return (ctx: CanvasRenderingContext2D) => {
+    const { image, error } = resolveImage(src, {
       onLoad,
       onLoadError,
     });
 
     rect(rectProps).drawShape(ctx);
+
+    // the canvas repaints on its own loop, so a load still in flight simply lands on a
+    // later frame rather than holding this one open
+    if (!image && !error) return;
 
     ctx.save();
 

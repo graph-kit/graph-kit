@@ -181,6 +181,8 @@ export type ShellOptions = {
   helpMenu?: MaybeGetter<HelpMenuItem[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
+  /** triggered once the shell has finished standing the product up */
+  onSetupCompleted?: (appearance: AppearanceControls) => void;
 };
 
 /** the shell itself: the chrome and controls wrapped around a product */

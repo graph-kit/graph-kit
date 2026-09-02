@@ -106,6 +106,8 @@ export const bellmanFord: SingleSourceFunction =
           edge: edge.id,
           from: edge.source,
           to: edge.target,
+          activeNodeId: edge.source,
+          relaxingEdgeIds: [edge.id],
         }),
       );
     };

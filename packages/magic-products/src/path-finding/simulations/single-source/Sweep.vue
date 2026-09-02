@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import Tooltip from '@core/components/Tooltip';
   import Edge from '@magic/shared/Edge';
   import HStack from '@magic/shared/HStack';
   import Icon from '@magic/shared/Icon';
@@ -9,7 +10,7 @@
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useCurrentFrame } from '@magic/shared/simulation';
   import { edgeRoleColors } from '@magic/shared/theme';
-  import { mdiArrowDown, mdiClose, mdiMinus } from '@mdi/js';
+  import { mdiArrowDown, mdiEqual, mdiInfinity } from '@mdi/js';
 
   import { computed, nextTick, ref, watch } from 'vue';
 
@@ -31,17 +32,17 @@
     improved: {
       path: mdiArrowDown,
       color: edgeRoleColors[edgeRoles.shortestPath],
-      title: 'Improved a distance',
+      title: 'Improved distance',
     },
     kept: {
-      path: mdiMinus,
+      path: mdiEqual,
       color: edgeRoleColors[edgeRoles.discarded],
-      title: 'Offered nothing cheaper',
+      title: 'Did not improve distance',
     },
     skipped: {
-      path: mdiClose,
+      path: mdiInfinity,
       color: edgeRoleColors[edgeRoles.discarded],
-      title: 'Nothing had reached it to cross from',
+      title: 'From node costs ∞',
     },
   } as const;
 
@@ -116,15 +117,22 @@
             :scale="0.75"
             class="z-1"
           />
-          <div class="w-5 shrink-0 flex justify-center">
-            <Icon
+          <div
+            class="w-10 h-10 shrink-0 pt-2.25 flex justify-center rounded-sm bg-gray-300 dark:bg-gray-900"
+          >
+            <Tooltip
               v-if="row.outcome"
-              :path="row.outcome.path"
-              :size="18"
-              :style="{ color: row.outcome.color }"
+              :label="row.outcome.title"
             >
-              <title>{{ row.outcome.title }}</title>
-            </Icon>
+              <template #trigger>
+                <Icon
+                  :path="row.outcome.path"
+                  :size="22"
+                  :style="{ color: row.outcome.color }"
+                >
+                </Icon>
+              </template>
+            </Tooltip>
           </div>
         </HStack>
       </div>

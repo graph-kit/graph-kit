@@ -79,7 +79,6 @@ export const useShell = (
     helpMenu: useHelpMenuState(shortcuts, options.helpMenu),
     toast: useToastState(),
     annotations,
-    lensChips: options.lensChips,
     simulationButtons: options.simulationButtons,
     surface: host.surface,
     transit: host.transit,
@@ -89,6 +88,9 @@ export const useShell = (
     jumpToContent,
     onboarding,
   };
+
+  // built here rather than in the literal, so a chip can close over the shell it sits in
+  shell.lensChips = options.lensChips?.(shell);
 
   shell.surface.camera.events.subscribe(
     'onCameraChange',

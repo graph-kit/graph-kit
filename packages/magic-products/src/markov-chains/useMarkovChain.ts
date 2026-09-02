@@ -75,3 +75,5 @@ export const useMarkovChain = (graph: Graph) => {
     isReversible,
   };
 };
+
+export type MarkovChain = ReturnType<typeof useMarkovChain>;

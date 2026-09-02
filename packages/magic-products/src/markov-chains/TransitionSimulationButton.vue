@@ -16,10 +16,20 @@
 
   import { computed, ref, shallowRef } from 'vue';
 
+  import { definitions } from './definitions.ts';
   import { distributionSimulationDefinition } from './simulations/useDistributionSimulation.ts';
+  import { useMarkovChain } from './useMarkovChain.ts';
 
   const graph = useProvidedGraph();
   const shell = useProvidedShell();
+  const chain = useMarkovChain(graph);
+
+  const stepDisabled = computed(() => {
+    if (graph.nodes.value.length === 0) return 'Needs at least one state.';
+    if (!chain.isValid.value)
+      return `Needs a valid chain. ${definitions.validity}`;
+    return false;
+  });
 
   const startingDistribution = shallowRef<Fraction[]>([]);
   const simplify = ref(true);
@@ -96,7 +106,7 @@
 <template>
   <Dropdown align="center">
     <template #trigger>
-      <Button>
+      <Button :disabled="stepDisabled">
         <template #start>
           <Icon :path="mdiPlay" />
         </template>

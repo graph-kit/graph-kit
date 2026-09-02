@@ -4,12 +4,14 @@ import { Graph } from '../graph/types.ts';
 import { UseGraphOptions } from '../graph/useGraph.ts';
 import { ShellFlagOptions } from '../product/flags.ts';
 import { ProductId } from '../product/manifests/index.ts';
+import { Shell } from '../product/types.ts';
 import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { HelpMenuItem } from '../ui/help-menu/types.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 
 export type GraphLensChipOption = (
   graph: Graph,
+  shell: Shell,
 ) => LensChipDefinition[] | undefined;
 
 export type GraphSimulationButtonOption = (

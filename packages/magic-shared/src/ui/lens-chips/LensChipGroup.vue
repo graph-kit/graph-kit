@@ -8,7 +8,7 @@
   import Well from '../../components/layout/Well.vue';
   import { useProvidedShell } from '../../product/context.ts';
   import LensChip from './LensChip.vue';
-  import { LensChipDefinition } from './types.ts';
+  import { LensChipDefinition, disabledState, lensFor } from './types.ts';
 
   const chipId = (chip: LensChipDefinition) => chip.lens.id;
 
@@ -31,7 +31,14 @@
     ),
   );
 
-  const togglePinnedLens = (lensId: string) => {
+  const sortedChips = computed(() => [
+    ...chips.value.filter((chip) => !disabledState(chip)),
+    ...chips.value.filter((chip) => disabledState(chip)),
+  ]);
+
+  const togglePinnedLens = (chip: LensChipDefinition) => {
+    if (disabledState(chip)) return;
+    const lensId = chipId(chip);
     const wasPinned = lensId === pinnedLensId.value;
     pinnedLensId.value = wasPinned ? undefined : lensId;
     // unpinning has to read as off right away, so the hover the click came with
@@ -39,8 +46,10 @@
     hoverSuppressedLensId.value = wasPinned ? lensId : undefined;
   };
 
-  const setHovered = (lensId: string, hovered: boolean) => {
+  const setHovered = (chip: LensChipDefinition, hovered: boolean) => {
+    const lensId = chipId(chip);
     if (hovered) {
+      if (!lensFor(chip)) return;
       hoveredLensId.value = lensId;
       return;
     }
@@ -60,6 +69,19 @@
     shell.simulation.events.unsubscribe('onSimulationStarted', clearActiveChip),
   );
 
+  const disabledLensIds = computed(
+    () => new Set(chips.value.filter(disabledState).map(chipId)),
+  );
+
+  // if chip goes disabled while pinned, drop it
+  // so it doesn't spring back up when it becomes re-enabled. hover ends on its
+  // own, and until it does the lens resolves to whatever the disabled one offers
+  watch(disabledLensIds, (disabledIds) => {
+    if (pinnedLensId.value && disabledIds.has(pinnedLensId.value)) {
+      pinnedLensId.value = undefined;
+    }
+  });
+
   const displayedChipId = computed(() => {
     const hovered =
       hoveredLensId.value === hoverSuppressedLensId.value
@@ -76,12 +98,19 @@
     );
   });
 
-  watch(displayedChip, (newChip, oldChip) => {
-    if (oldChip) {
-      shell.lens.remove(oldChip.lens.id);
+  const displayedLens = computed(() => {
+    const chip = displayedChip.value;
+    return chip && lensFor(chip);
+  });
+
+  // watching the resolved lens rather than the chip, so the lens taken off is
+  // always the one that went on, even when the chip swapped which it offers
+  watch(displayedLens, (newLens, oldLens) => {
+    if (oldLens) {
+      shell.lens.remove(oldLens.id);
     }
-    if (newChip) {
-      shell.lens.add(newChip.lens);
+    if (newLens) {
+      shell.lens.add(newLens);
     }
   });
 </script>
@@ -89,7 +118,7 @@
 <template>
   <Well v-if="isMounted && chips.length > 0">
     <OverflowRow
-      :items="chips"
+      :items="sortedChips"
       :key-of="chipId"
       label="More"
       class="max-w-[calc(50vw-2rem)]"
@@ -97,10 +126,10 @@
       <template #default="{ item: chip, inMenu }">
         <LensChip
           v-bind="chip"
-          @click="togglePinnedLens(chipId(chip))"
-          @focus="setHovered(chipId(chip), true)"
-          @blur="setHovered(chipId(chip), false)"
-          @update:active="setHovered(chipId(chip), $event ?? false)"
+          @click="togglePinnedLens(chip)"
+          @focus="setHovered(chip, true)"
+          @blur="setHovered(chip, false)"
+          @update:active="setHovered(chip, $event ?? false)"
           :model-value="chipId(chip) === pinnedLensId"
           :class="inMenu ? menuChipClasses : undefined"
         />

@@ -3,16 +3,22 @@
   import { useGraphShell } from '@magic/shared/graph-shell';
 
   import TransitionSimulationButton from './TransitionSimulationButton.vue';
+  import ValidityExplainer from './ValidityExplainer.vue';
   import { lensChips } from './lensChips.ts';
+  import { VALIDITY_EXPLAINER_SLOT_ID } from './validityLens.ts';
 
-  // sims: step 0 through n of matrix multiplications
-
-  const { graph, shell } = useGraphShell({
+  const { shell } = useGraphShell({
     productId: 'markov-chains',
     lensChips,
     simulationButtons: () => {
       return [{ render: TransitionSimulationButton }];
     },
+  });
+
+  shell.componentSlots.add({
+    id: VALIDITY_EXPLAINER_SLOT_ID,
+    component: ValidityExplainer,
+    position: 'bottom-middle',
   });
 </script>
 

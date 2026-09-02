@@ -32,7 +32,7 @@ export const allPairsExplainer =
     switch (frame.type) {
       case 'start':
         return {
-          content: 'Seeding the [Table] with the edges in the graph',
+          content: 'Seeding The [Table] With The Edges In The Graph',
           highlights: [highlights.table],
         };
 
@@ -40,7 +40,7 @@ export const allPairsExplainer =
         if (frame.cycleNodeIds?.length) {
           return {
             content:
-              'The [Table] cannot be finalized since a [Negative Cycle] exists',
+              'The [Table] Cannot Be Finalized Since A [Negative Cycle] Exists',
             highlights: [
               highlights.table,
               negativeCycle(graph, frame.cycleEdgeIds),
@@ -50,13 +50,13 @@ export const allPairsExplainer =
 
         return {
           content:
-            'Done! The [Table] shows the cheapest path between each pair of nodes',
+            'Done! The [Table] Shows The Cheapest Path Between Each Pair Of Nodes',
           highlights: [highlights.table],
         };
 
       case 'choose-pivot':
         return {
-          content: `Phase ${frame.pivotNumber} of ${frame.totalPivots}: Can routing via {${frame.node}} reduce the current [Table] value?`,
+          content: `Phase ${frame.pivotNumber} Of ${frame.totalPivots}: Can Routing Via {${frame.node}} Reduce The Current [Table] Value?`,
           highlights: [highlights.table],
         };
 
@@ -69,7 +69,7 @@ export const allPairsExplainer =
         );
 
         return {
-          content: `{${frame.from}} via {${frame.pivot}} to {${frame.to}} costs ${detourCost.text} compared with a current cost of ${currentCost.text}`,
+          content: `{${frame.from}} Via {${frame.pivot}} To {${frame.to}} Costs ${detourCost.text} Compared With A Current Cost Of ${currentCost.text}`,
           highlights: [...detourCost.highlights, ...currentCost.highlights],
         };
       }
@@ -79,7 +79,7 @@ export const allPairsExplainer =
         const detourCost = cost(graph, frame.detourDistance, frame.detourRoute);
 
         return {
-          content: `{${frame.from}} to {${frame.to}} currently costs ${keptCost.text} which is not less than the current route via {${frame.pivot}} costing ${detourCost.text} so the current cost [Remains]`,
+          content: `{${frame.from}} To {${frame.to}} Currently Costs ${keptCost.text} Which Is Not Less Than The Current Route Via {${frame.pivot}} Costing ${detourCost.text} So The Current Cost [Remains]`,
           highlights: [
             ...keptCost.highlights,
             ...detourCost.highlights,
@@ -93,7 +93,7 @@ export const allPairsExplainer =
 
         if (frame.previousDistance === undefined) {
           return {
-            content: `Nothing has linked {${frame.from}} to {${frame.to}} yet, so the cost [Improves] from ∞ to ${improved.text}`,
+            content: `Nothing Has Linked {${frame.from}} To {${frame.to}} Yet, So The Cost [Improves] From ∞ To ${improved.text}`,
             highlights: [highlights.improve, ...improved.highlights],
           };
         }
@@ -105,7 +105,7 @@ export const allPairsExplainer =
         );
 
         return {
-          content: `The detour improves against ${previousCost.text}, so the cost for {${frame.from}} to {${frame.to}} [Improves] to ${improved.text}`,
+          content: `The Detour Improves Against ${previousCost.text}, So The Cost For {${frame.from}} To {${frame.to}} [Improves] To ${improved.text}`,
           highlights: [
             ...previousCost.highlights,
             highlights.improve,
@@ -116,16 +116,16 @@ export const allPairsExplainer =
 
       case 'unreachable':
         return {
-          content: `${count(frame.pairs, 'pair')} out of ${frame.totalPairs} stayed at ∞, since no route joins ${frame.pairs === 1 ? 'it' : 'them'} at all`,
+          content: `${count(frame.pairs, 'Pair')} Out Of ${frame.totalPairs} Stayed At ∞, Since No Route Joins ${frame.pairs === 1 ? 'It' : 'Them'} At All`,
           highlights: [],
         };
 
       case 'negative-cycle': {
-        const found = `{${frame.node}} can return to itself for less than nothing`;
+        const found = `{${frame.node}} Can Return To Itself For Less Than Nothing`;
 
         if (!frame.loop) {
           return {
-            content: `${found}, so a [Negative Cycle] runs through it and no shortest path exists`,
+            content: `${found}, So A [Negative Cycle] Runs Through It And No Shortest Path Exists`,
             highlights: [negativeCycle(graph)],
           };
         }
@@ -133,7 +133,7 @@ export const allPairsExplainer =
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${found}: a [Negative Cycle] costing ${lap.text} a lap, so no shortest path exists`,
+          content: `${found}: A [Negative Cycle] Costing ${lap.text} A Lap, So No Shortest Path Exists`,
           highlights: [
             negativeCycle(graph, frame.loop.edges),
             ...lap.highlights,

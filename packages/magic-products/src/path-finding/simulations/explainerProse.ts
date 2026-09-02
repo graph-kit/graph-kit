@@ -26,8 +26,8 @@ export const count = (
   plural = `${singular}s`,
 ) => `${amount} ${amount === 1 ? singular : plural}`;
 
-/** `a`, `a and b`, `a, b, and c` */
+/** `a`, `a And b`, `a, b, And c` */
 export const listOf = (items: readonly string[]) => {
-  if (items.length <= 2) return items.join(' and ');
-  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
+  if (items.length <= 2) return items.join(' And ');
+  return `${items.slice(0, -1).join(', ')}, And ${items.at(-1)}`;
 };

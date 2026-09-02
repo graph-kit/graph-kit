@@ -267,7 +267,7 @@ describe('bellmanFord', () => {
 
     const doublingBack = keeps.find((frame) => frame.edge === 'e2');
     expect(doublingBack && explain(doublingBack)?.content).toBe(
-      'Following {e2} would visit {b} twice, adding cost for no progress. The current cost [Remains]',
+      'Following {e2} Would Visit {b} Twice, Adding Cost For No Progress. The Current Cost [Remains]',
     );
 
     /*
@@ -276,7 +276,7 @@ describe('bellmanFord', () => {
     */
     const genuine = keeps.find((frame) => frame.edge === 'e0');
     expect(genuine && explain(genuine)?.content).toBe(
-      '[1] does not decrease the cost of reaching {b} which currently costs [1]. Therefore the current cost [Remains]',
+      '[1] Does Not Decrease The Cost Of Reaching {b} Which Currently Costs [1]. Therefore The Current Cost [Remains]',
     );
   });
 

@@ -8,6 +8,8 @@
   defineProps<{
     /** the gap the menu keeps from its trigger */
     sideOffset?: number;
+    /** the gap the menu keeps from the edge of the viewport it would otherwise run off */
+    collisionPadding?: number;
   }>();
 
   /** optional, so a call site can open the menu itself */
@@ -19,6 +21,7 @@
     v-model:open="open"
     :class="menuPanelClasses"
     :side-offset="sideOffset"
+    :collision-padding="collisionPadding"
   >
     <template #trigger><slot name="trigger" /></template>
     <slot />

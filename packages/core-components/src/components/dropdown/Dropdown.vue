@@ -21,6 +21,8 @@
     align?: DropdownMenuContentProps['align'];
     /** the gap the menu keeps from its trigger, which is also the hover path between them */
     sideOffset?: DropdownMenuContentProps['sideOffset'];
+    /** the gap the menu keeps from the edge of the viewport it would otherwise run off */
+    collisionPadding?: DropdownMenuContentProps['collisionPadding'];
     /** hover adds pointer intent on top of the click and keyboard paths rather than replacing them */
     openOn?: 'click' | 'hover';
   }
@@ -120,6 +122,7 @@
         :side="side"
         :align="align"
         :side-offset="sideOffset"
+        :collision-padding="collisionPadding"
         v-bind="{ ...attrs, class: undefined }"
         :class="classes"
         @pointerenter="cancelPendingClose"

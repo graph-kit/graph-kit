@@ -28,9 +28,4 @@ export type GraphShellOptions = UseGraphOptions & {
   lensChips?: GraphLensChipOption;
   /** builds the simulation buttons shown below the canvas, if the product offers any */
   simulationButtons?: GraphSimulationButtonOption;
-  /**
-   * what the product suggests trying first, shown only if it opens on an empty canvas.
-   * defaults to the gestures every graph shares, see `GRAPH_ONBOARDING`
-   */
-  onboarding?: OnboardingItem[];
 };

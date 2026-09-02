@@ -64,10 +64,7 @@ export const useGraphShell = (
     helpMenu: graphShellHelpMenu(graph, options.helpMenu),
     lensChips,
     simulationButtons,
-    onboarding: flags.onboarding
-      ? (options.onboarding ?? GRAPH_ONBOARDING)
-      : [],
-    // a graph restored from storage or a link is one nobody needs talking through
+    onboarding: flags.onboarding ? GRAPH_ONBOARDING : [],
     onSetupCompleted: () => {
       if (graph.nodes.value.length > 0) shell.onboarding?.close();
     },

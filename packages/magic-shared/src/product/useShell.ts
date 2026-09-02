@@ -157,8 +157,7 @@ export const useShell = (
 
     shell.onboarding?.open();
 
-    // last, so a product that just restored content can close the card right back
-    options.onSetupCompleted?.(shell.appearance);
+    options.onSetupCompleted?.(shell);
   });
 
   useShellShortcuts(shell);

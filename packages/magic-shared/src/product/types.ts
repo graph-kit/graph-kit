@@ -185,7 +185,7 @@ export type ShellOptions = {
   /** what the product suggests trying first, shown only if it opens on nothing */
   onboarding?: OnboardingItem[];
   /** triggered once the shell has finished standing the product up */
-  onSetupCompleted?: (appearance: AppearanceControls) => void;
+  onSetupCompleted?: (shell: Shell) => void;
 };
 
 /** the shell itself: the chrome and controls wrapped around a product */

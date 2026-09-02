@@ -11,7 +11,6 @@
   <Well :class="PANEL">
     <VStack gap="3">
       <DebugHeading :title="title">
-        <!-- the one reading worth seeing without reading the panel, like a frame rate -->
         <template #badge><slot name="badge" /></template>
       </DebugHeading>
       <slot />

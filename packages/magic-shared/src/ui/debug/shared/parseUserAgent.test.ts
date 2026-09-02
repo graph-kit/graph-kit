@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import { parseUserAgent } from './parseUserAgent.ts';
 
-/** real strings, since the point of the parser is surviving what browsers actually send */
+/** real strings, since the parser exists to survive what browsers actually send */
 const USER_AGENTS = {
   chromeMac:
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',

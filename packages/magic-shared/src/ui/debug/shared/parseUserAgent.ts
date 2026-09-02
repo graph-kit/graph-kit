@@ -1,24 +1,23 @@
 /*
-  every user agent string quotes the ones that came before it: Chrome calls itself
-  Safari, Edge calls itself Chrome, and all of them open with Mozilla. so each list
-  below runs most specific first and the first rule that matches wins, which is the
-  only thing that keeps Edge from reading as Chrome and Chrome from reading as Safari
+  every user agent string quotes the ones before it: Chrome calls itself Safari, Edge
+  calls itself Chrome. so each list below runs most specific first and the first match
+  wins
 */
 
 export type ParsedUserAgent = {
-  /** the browser's marketing name, which is what a bug gets filed against */
+  /** the browser's marketing name */
   browser: string;
-  /** major and minor only; the raw string on the panel still carries the patch level */
+  /** major and minor only */
   version: string;
-  /** what actually draws the page, which is what a rendering bug tracks */
+  /** what actually draws the page */
   engine: string;
   /** the operating system, with its version when the string carries one */
   os: string;
-  /** phones and tablets, where the pointer and touch paths differ from the desktop */
+  /** phones and tablets */
   isMobile: boolean;
 };
 
-/** what a field falls back to when the string did not say, so a readout never goes blank */
+/** what a field falls back to when the string did not say */
 export const UNKNOWN = 'unknown';
 
 type NamedPattern = { name: string; pattern: RegExp };
@@ -30,10 +29,7 @@ const BROWSER_PATTERNS: NamedPattern[] = [
   { name: 'Samsung Internet', pattern: /SamsungBrowser\/([\d.]+)/ },
   { name: 'Firefox', pattern: /(?:Firefox|FxiOS)\/([\d.]+)/ },
   { name: 'Chrome', pattern: /(?:Chrome|Chromium|CriOS)\/([\d.]+)/ },
-  /*
-    Safari's own Safari/ token carries a build number rather than a version, so the
-    version comes off the Version/ token that only Safari puts in front of it
-  */
+  // Safari/ carries a build number, so the version comes off the Version/ token
   { name: 'Safari', pattern: /Version\/([\d.]+).*\bSafari\// },
 ];
 
@@ -45,7 +41,7 @@ const ENGINE_PATTERNS: NamedPattern[] = [
   { name: 'WebKit', pattern: /AppleWebKit\/\d/ },
 ];
 
-/** the NT numbering says nothing to anyone, so the rules translate it back */
+/** the NT numbering, translated back to what the release is called */
 const WINDOWS_RELEASES: Record<string, string> = {
   '10.0': '10/11',
   '6.3': '8.1',
@@ -55,11 +51,10 @@ const WINDOWS_RELEASES: Record<string, string> = {
 
 type OsPattern = {
   pattern: RegExp;
-  /** what to print, given whatever version the pattern captured */
   format: (version: string) => string;
 };
 
-/** Apple writes its versions with underscores, and nobody reads them that way */
+/** Apple writes its versions with underscores */
 const dotted = (version: string) => version.replaceAll('_', '.');
 
 const OS_PATTERNS: OsPattern[] = [
@@ -91,7 +86,7 @@ const OS_PATTERNS: OsPattern[] = [
 
 const MOBILE_PATTERN = /\b(?:Mobi|Android|iPhone|iPad|iPod)/;
 
-/** 119.0.6045.109 reads as 119.0, which is all a panel this narrow has room for */
+/** 119.0.6045.109 reads as 119.0 */
 const toMajorMinor = (version: string) =>
   version.split('.').slice(0, 2).join('.');
 
@@ -113,10 +108,7 @@ const parseOs = (userAgent: string) => {
 
 /**
  * pulls the handful of fields a bug report is triaged on out of a user agent string.
- *
- * the string is a pile of compatibility lies rather than a format, so this is a best
- * effort by design: anything it cannot name comes back as `unknown`, and the panel
- * prints the raw string alongside the parse so nothing here is the only record of it
+ * best effort by design: anything it cannot name comes back as `unknown`
  */
 export const parseUserAgent = (userAgent: string): ParsedUserAgent => {
   const browser = firstMatch(userAgent, BROWSER_PATTERNS);

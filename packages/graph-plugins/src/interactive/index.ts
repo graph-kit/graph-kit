@@ -7,6 +7,7 @@ import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import Fraction from 'fraction.js';
 
 import { INTERACTIVE_PLUGIN_ID } from './constants.ts';
+import { createDropTargetPreview } from './createDropTargetPreview.ts';
 import { DEFAULT_INTERACTIVE_OPTIONS, InteractiveOptions } from './options.ts';
 import { InteractivePlugin } from './types.ts';
 
@@ -27,6 +28,9 @@ export const interactive =
       controls.history?.captureSnapshot();
     };
 
+    const newEdgeWeight = () =>
+      new Fraction(getValue(optionsWithDefaults.newEdgeWeight));
+
     let lastClickTime = 0;
 
     const handleNodeCreation = ({ coords, topElement }: ElementMouseEvent) => {
@@ -38,8 +42,6 @@ export const interactive =
 
       if (topElement && controls.isNode(topElement.id)) return;
 
-      // finalActions, not actions: this fires later, on a real click, so it
-      // needs the fully-composed action, not the fold-time snapshot
       const node = finalActions.addNode({
         position: { x: coords.x, y: coords.y },
       });
@@ -79,11 +81,11 @@ export const interactive =
 
     /** this plugin's policy on top of the graph's own rules, which are asked last */
     const doesEdgeConformToRules = (
-      sourceNode: { id: string },
-      targetNode: { id: string },
+      sourceNodeId: string,
+      targetNodeId: string,
     ) => {
       if (!optionsWithDefaults.allowSelfLoops) {
-        const violatesRule = sourceNode.id === targetNode.id;
+        const violatesRule = sourceNodeId === targetNodeId;
         if (violatesRule) return false;
       }
 
@@ -92,14 +94,14 @@ export const interactive =
           .edges()
           .find(
             (edge) =>
-              edge.source === sourceNode.id && edge.target === targetNode.id,
+              edge.source === sourceNodeId && edge.target === targetNodeId,
           );
 
         const edgeBetweenFromAndTo = controls
           .edges()
           .find(
             (edge) =>
-              edge.source === targetNode.id && edge.target === sourceNode.id,
+              edge.source === targetNodeId && edge.target === sourceNodeId,
           );
 
         const violatesRule = edgeBetweenToAndFrom || edgeBetweenFromAndTo;
@@ -107,8 +109,8 @@ export const interactive =
       }
 
       return controls.inspect.canAddEdge({
-        source: sourceNode.id,
-        target: targetNode.id,
+        source: sourceNodeId,
+        target: targetNodeId,
       });
     };
 
@@ -123,15 +125,16 @@ export const interactive =
       const targetNode = getters.getNode(nodeUnderneathAnchor.id);
       if (!targetNode) return;
 
-      const canCreateEdge = doesEdgeConformToRules(sourceNode, targetNode);
+      const canCreateEdge = doesEdgeConformToRules(
+        sourceNode.id,
+        targetNode.id,
+      );
       if (!canCreateEdge) return;
 
-      // finalActions, not actions: this fires later, on anchor drop, so it
-      // needs the fully-composed action, not the fold-time snapshot
       const edge = finalActions.addEdge({
         source: sourceNode.id,
         target: targetNode.id,
-        weight: new Fraction(getValue(optionsWithDefaults.newEdgeWeight)),
+        weight: newEdgeWeight(),
       });
       if (!edge) return;
 
@@ -140,8 +143,6 @@ export const interactive =
     };
 
     const removeFocusedElements = (e: KeyboardEvent) => {
-      // the surface hands on every keystroke in the page, so a backspace aimed at an
-      // edge weight field or a product panel must not delete the graph out from under it
       if (isTypingTarget(e)) return;
       if (e.key !== 'Backspace') return;
       finalActions.removeElements({
@@ -150,6 +151,12 @@ export const interactive =
       });
       captureHistorySnapshot();
     };
+
+    const dropTargetPreview = createDropTargetPreview(
+      controls,
+      doesEdgeConformToRules,
+      newEdgeWeight,
+    );
 
     const onEnable = () => {
       controls.surface.events.elements.handle(
@@ -167,6 +174,7 @@ export const interactive =
         handleEdgeCreation,
       );
       controls.surface.events.dom.subscribe('onKeyDown', removeFocusedElements);
+      dropTargetPreview.enable();
     };
 
     const onDisable = () => {
@@ -183,6 +191,7 @@ export const interactive =
         'onKeyDown',
         removeFocusedElements,
       );
+      dropTargetPreview.disable();
     };
 
     const lifecycle = createLifecycle({

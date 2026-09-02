@@ -558,7 +558,7 @@ describe('bellmanFord', () => {
     const graph = makeGraph(CHAIN_NODES, REVERSE_CHAIN);
     const frames = collect(bellmanFord(graph, 'a'));
 
-    // nothing is final before the end: bellman ford has no settled set to grow
+    // nothing is final before the end: bellman-ford has no settled set to grow
     for (const frame of frames.slice(0, -1)) {
       expect(frame.settledNodeIds).toBeUndefined();
     }
@@ -605,7 +605,7 @@ describe('floydWarshall', () => {
     });
   });
 
-  it('agrees with bellman ford from every source', () => {
+  it('agrees with bellman-ford from every source', () => {
     const graph = makeGraph(
       ['a', 'b', 'c'],
       [

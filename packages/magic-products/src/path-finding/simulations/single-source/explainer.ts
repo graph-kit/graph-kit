@@ -234,7 +234,7 @@ export const singleSourceExplainer =
         };
       }
 
-      // bellman ford only
+      // bellman-ford only
 
       case 'begin-pass': {
         return {

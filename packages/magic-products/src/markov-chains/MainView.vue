@@ -5,8 +5,6 @@
   import TransitionSimulationButton from './TransitionSimulationButton.vue';
   import { lensChips } from './lensChips.ts';
 
-  // sims: step 0 through n of matrix multiplications
-
   const { graph, shell } = useGraphShell({
     productId: 'markov-chains',
     lensChips,

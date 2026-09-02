@@ -31,6 +31,11 @@
     ),
   );
 
+  const sortedChips = computed(() => [
+    ...chips.value.filter((chip) => !disabledReason(chip)),
+    ...chips.value.filter((chip) => disabledReason(chip)),
+  ]);
+
   const togglePinnedLens = (chip: LensChipDefinition) => {
     if (disabledReason(chip)) return;
     const lensId = chipId(chip);
@@ -109,7 +114,7 @@
 <template>
   <Well v-if="isMounted && chips.length > 0">
     <OverflowRow
-      :items="chips"
+      :items="sortedChips"
       :key-of="chipId"
       label="More"
       class="max-w-[calc(50vw-2rem)]"

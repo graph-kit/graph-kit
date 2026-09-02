@@ -28,9 +28,13 @@
 
   const nodeHighlight: ExplainerHighlight = {
     tooltipLabel:
-      'A fundamental element or basic object of a graph that can be connected to other nodes by edges.',
+      'The basic object of a graph that can be connected to other nodes by edges.',
     activate: () => nodeThemer.activate(),
     deactivate: () => nodeThemer.deactivate(),
+  };
+
+  const experienceHighlight: ExplainerHighlight = {
+    tooltipLabel: 'A place to build, break, and experiment.',
   };
 </script>
 
@@ -67,8 +71,8 @@
   >
     <ExplainerText
       :explainer="{
-        content: 'Click A [Node] To Open Experience',
-        highlights: [nodeHighlight],
+        content: 'Click A [Node] To Open [Experience]',
+        highlights: [nodeHighlight, experienceHighlight],
       }"
     />
   </div>

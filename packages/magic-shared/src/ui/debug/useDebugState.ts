@@ -6,6 +6,7 @@ import { toast } from '../toast/useToastState.ts';
 import ShellDashboard from './ShellDashboard.vue';
 import ShellFlags from './ShellFlags.vue';
 import SurfaceDashboard from './SurfaceDashboard.vue';
+import UserAgent from './UserAgent.vue';
 
 const DEBUG_SLOT_PRIORITY = -Infinity;
 
@@ -30,6 +31,17 @@ const DEBUG_SLOTS: ComponentSlot[] = [
     id: 'shell/debug/shell',
     component: ShellDashboard,
     position: 'bottom-left',
+    priority: DEBUG_SLOT_PRIORITY,
+  },
+  /*
+    the top right is all but empty until a simulation puts its stop button there, and
+    a panel whose whole job is being read back off a bug report screenshot is worth
+    the room: neither bottom corner has any left
+  */
+  {
+    id: 'shell/debug/user-agent',
+    component: UserAgent,
+    position: 'top-right',
     priority: DEBUG_SLOT_PRIORITY,
   },
 ];

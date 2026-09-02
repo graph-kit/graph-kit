@@ -8,25 +8,20 @@
 
   import { computed } from 'vue';
 
-  import DebugPanel from './shared/DebugPanel.vue';
+  import DebugPanelMenu from './shared/DebugPanelMenu.vue';
   import DebugRow from './shared/DebugRow.vue';
   import DebugSection from './shared/DebugSection.vue';
   import DebugStatus from './shared/DebugStatus.vue';
   import { LABEL, VALUE } from './shared/classes.ts';
   import { UNKNOWN, parseUserAgent } from './shared/parseUserAgent.ts';
 
-  /*
-    debug mode only ever mounts this in a browser, but every route here is prerendered
-    and a bare navigator read at setup is the kind of thing that only breaks in the
-    build. so the readings come off these rather than off the globals
-  */
   const client = typeof navigator === 'undefined' ? undefined : navigator;
   const display = typeof screen === 'undefined' ? undefined : screen;
 
   const userAgent = client?.userAgent ?? '';
   const parsed = parseUserAgent(userAgent);
 
-  /** chromium only, and absent from the dom typings, so it is asked for rather than read */
+  /** chromium only */
   const deviceMemoryGb = (client as { deviceMemory?: number } | undefined)
     ?.deviceMemory;
 
@@ -34,7 +29,6 @@
   const language = client?.language || UNKNOWN;
   const touchPoints = client?.maxTouchPoints ?? 0;
 
-  // resolvedOptions is the only thing that will say which zone the browser settled on
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || UNKNOWN;
 
   const { width, height } = useWindowSize();
@@ -42,7 +36,6 @@
   const isOnline = useOnline();
   const reducedMotion = usePreferredReducedMotion();
 
-  /** the one reading worth having before the panel is read: what to reproduce on */
   const badge = computed(() =>
     parsed.version === UNKNOWN
       ? parsed.browser
@@ -55,7 +48,7 @@
 </script>
 
 <template>
-  <DebugPanel title="User Agent">
+  <DebugPanelMenu title="User Agent">
     <template #badge>
       <span :class="[VALUE, 'font-bold']">{{ badge }}</span>
     </template>
@@ -115,12 +108,12 @@
 
     <DebugSection title="Locale">
       <DebugRow label="language">{{ language }}</DebugRow>
-      <DebugRow
+      <!-- <DebugRow
         label="timezone"
         :title="timezone"
       >
         {{ timezone }}
-      </DebugRow>
+      </DebugRow> -->
     </DebugSection>
 
     <DebugSection title="State">
@@ -134,16 +127,10 @@
       />
     </DebugSection>
 
-    <!--
-      the parse above is a best effort over a string full of compatibility lies, so the
-      string itself is printed under it in full. it is the one readout here that has to
-      survive being read back off a screenshot, which is why it wraps rather than
-      truncating, and why a click takes all of it for pasting into the bug report
-    -->
     <DebugSection title="Raw">
       <span :class="[VALUE, 'cursor-text select-all break-all']">
         {{ userAgent || UNKNOWN }}
       </span>
     </DebugSection>
-  </DebugPanel>
+  </DebugPanelMenu>
 </template>

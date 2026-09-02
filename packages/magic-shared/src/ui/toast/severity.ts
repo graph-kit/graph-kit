@@ -4,6 +4,7 @@ import {
   mdiAlertOutline,
   mdiCheckCircle,
   mdiInformation,
+  mdiMagicStaff,
 } from '@mdi/js';
 
 /**
@@ -15,4 +16,5 @@ export const severityIcon: Record<ToastSeverity, string> = {
   success: mdiCheckCircle,
   warn: mdiAlertOutline,
   error: mdiAlertCircle,
+  magic: mdiMagicStaff,
 };

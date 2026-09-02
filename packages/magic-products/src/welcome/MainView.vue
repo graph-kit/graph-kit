@@ -23,7 +23,7 @@
   graph.anchors.lifecycle.disable();
   graph.interactive.lifecycle.disable();
 
-  useWelcomeScene(graph);
+  useWelcomeScene(graph, shell);
 
   shell.componentSlots.addMany([
     {

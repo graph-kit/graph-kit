@@ -5,7 +5,7 @@
   import TransitionSimulationButton from './TransitionSimulationButton.vue';
   import { lensChips } from './lensChips.ts';
 
-  const { graph, shell } = useGraphShell({
+  useGraphShell({
     productId: 'markov-chains',
     lensChips,
     simulationButtons: () => {

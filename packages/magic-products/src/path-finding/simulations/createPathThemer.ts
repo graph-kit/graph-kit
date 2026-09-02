@@ -1,9 +1,7 @@
 import { Color } from '@core/utils/colors';
-import { Themer } from '@graph/create-graph/createThemer';
 import { CoreEdge } from '@graph/primitives/types';
-
-import { GraphPath } from '../../graph/path.ts';
-import { GEdge, Graph } from '../../graph/types.ts';
+import { GEdge, Graph, GraphPath } from '@magic/shared/graph';
+import { Themer } from '@magic/shared/theme';
 
 export type PathThemer = {
   themer: Themer;

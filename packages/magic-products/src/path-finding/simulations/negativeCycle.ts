@@ -1,9 +1,8 @@
-import {
-  ExplainerHighlight,
-  createEdgeSetHighlight,
-} from '@magic/shared/explainer';
+import { ExplainerHighlight } from '@magic/shared/explainer';
 import { GEdge, Graph } from '@magic/shared/graph';
 import { edgeRoleColors } from '@magic/shared/theme';
+
+import { createEdgeSetHighlight } from './createEdgeSetHighlight.ts';
 
 export const NEGATIVE_CYCLE_DEFINITION =
   'A cycle in which all edges sum to a negative value';

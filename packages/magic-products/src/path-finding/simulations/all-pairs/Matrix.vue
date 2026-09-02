@@ -6,11 +6,12 @@
   import { GNode, GraphPath } from '@magic/shared/graph';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useCurrentFrame } from '@magic/shared/simulation';
-  import { createPathThemer, nodeRoleColors } from '@magic/shared/theme';
+  import { nodeRoleColors } from '@magic/shared/theme';
 
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
   import { useMatrixDensity } from '../../composables/useMatrixDensity.ts';
+  import { createPathThemer } from '../createPathThemer.ts';
   import { formatDistance } from '../distance.ts';
   import { nodeRoles } from './effects.ts';
   import { AllPairsFrame } from './frame.ts';

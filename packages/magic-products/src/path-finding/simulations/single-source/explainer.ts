@@ -1,10 +1,7 @@
-import {
-  Explainer,
-  ExplainerHighlight,
-  createEdgeSetHighlight,
-} from '@magic/shared/explainer';
+import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
 
+import { createEdgeSetHighlight } from '../createEdgeSetHighlight.ts';
 import { cost, count, listOf } from '../explainerProse.ts';
 import { negativeCycle } from '../negativeCycle.ts';
 import { SingleSourceFrame } from './frame.ts';

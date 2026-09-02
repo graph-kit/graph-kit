@@ -1,8 +1,8 @@
 import { Color } from '@core/utils/colors';
+import { ExplainerHighlight } from '@magic/shared/explainer';
+import { GEdge, Graph } from '@magic/shared/graph';
 
-import { GEdge, Graph } from '../graph/types.ts';
-import { createPathThemer } from '../theme/path/createPathThemer.ts';
-import { ExplainerHighlight } from './types.ts';
+import { createPathThemer } from './createPathThemer.ts';
 
 /**
  * lights a run of edges up while the words naming it are hovered.

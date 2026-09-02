@@ -1,10 +1,9 @@
 import { displayNumber } from '@core/utils/math';
-import {
-  ExplainerHighlight,
-  createEdgeSetHighlight,
-} from '@magic/shared/explainer';
+import { ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph, GraphPath } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
+
+import { createEdgeSetHighlight } from './createEdgeSetHighlight.ts';
 
 /** a cost that lights its route up on hover, or a plain number when it has none */
 export const cost = (graph: Graph, value: Fraction, route: GraphPath) => {

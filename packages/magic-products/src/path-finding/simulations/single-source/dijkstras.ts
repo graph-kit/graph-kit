@@ -47,6 +47,13 @@ export const dijkstras: SingleSourceFunction =
       ...fields,
     });
 
+    /*
+      one rule decides every highlight below: the active role is whatever this
+      frame is asking the reader to weigh, and it is set on the node and the
+      edge alike. so the node being stood on is left to read as what it already
+      is, settled, and the picture says the algorithm reaches out of settled
+      ground, along the edge under test, at the frontier node on its far end
+    */
     frameCollector.add(frame({ type: 'start', source: sourceNodeId }));
 
     for (;;) {
@@ -71,6 +78,9 @@ export const dijkstras: SingleSourceFunction =
 
       settled.add(nearest);
 
+      // no active node: this frame exists to show the colour change itself, and
+      // painting the node would cover the settling it was added here to announce.
+      //
       // the start node is handed its distance of 0 by the frame that opens the
       // run, so settling it tells the reader nothing they were not just told
       if (nearest !== sourceNodeId) {
@@ -80,7 +90,6 @@ export const dijkstras: SingleSourceFunction =
             node: nearest,
             distance: distances[nearest]!,
             path: routeTo(nearest),
-            activeNodeId: nearest,
           }),
         );
       }
@@ -94,19 +103,22 @@ export const dijkstras: SingleSourceFunction =
         .slice(1)
         .filter((id) => distances[id]!.gt(distances[nearest]!));
 
+      // the waiting nodes need no colour of their own, being the frontier the
+      // reader is already looking at. the explainer is what names them
       if (waiting.length > 0 && followable.length > 0) {
         frameCollector.add(
           frame({
             type: 'still-tentative',
             waiting: waiting.map((node) => frontierEntry(node)),
             via: frontierEntry(nearest),
-            candidateNodeIds: waiting,
           }),
         );
       }
 
       const worthAnnouncing = followable.length > 1 || leaving.length === 0;
 
+      // the fan of edges about to be walked is the thing being announced, so it
+      // is the fan that lights up rather than the node they all leave
       if (worthAnnouncing) {
         frameCollector.add(
           frame({
@@ -115,7 +127,7 @@ export const dijkstras: SingleSourceFunction =
             distance: distances[nearest]!,
             edges: followable.map((edge) => edge.id),
             basePath: routeTo(nearest),
-            activeNodeId: nearest,
+            relaxingEdgeIds: followable.map((edge) => edge.id),
           }),
         );
       }
@@ -132,8 +144,7 @@ export const dijkstras: SingleSourceFunction =
             to: edge.target,
             base: distances[nearest]!,
             offered,
-            activeNodeId: nearest,
-            candidateNodeIds: [edge.target],
+            activeNodeId: edge.target,
             relaxingEdgeIds: [edge.id],
           }),
         );
@@ -148,8 +159,7 @@ export const dijkstras: SingleSourceFunction =
               edge: edge.id,
               offeredPath: [...routeTo(nearest), edge.id],
               currentPath: routeTo(edge.target),
-              activeNodeId: nearest,
-              candidateNodeIds: [edge.target],
+              activeNodeId: edge.target,
               rejectedEdgeIds: [edge.id],
             }),
           );
@@ -175,8 +185,7 @@ export const dijkstras: SingleSourceFunction =
             edge: edge.id,
             newPath: [...basePath, edge.id],
             oldPath,
-            activeNodeId: nearest,
-            candidateNodeIds: [edge.target],
+            activeNodeId: edge.target,
             relaxingEdgeIds: [edge.id],
           }),
         );

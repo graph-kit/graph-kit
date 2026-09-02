@@ -193,7 +193,7 @@ export const singleSourceExplainer =
         const had = cost(graph, frame.oldDistance, frame.oldPath);
 
         return {
-          content: `{${frame.node}} already had a route costing ${had.text}. Going through {${frame.via}} is cheaper costing ${improved.text}, so its distance [Improves]`,
+          content: `{${frame.node}} currently costs ${had.text}. Going through {${frame.via}} is cheaper costing ${improved.text}, so its distance [Improves]`,
           highlights: [
             ...had.highlights,
             ...improved.highlights,

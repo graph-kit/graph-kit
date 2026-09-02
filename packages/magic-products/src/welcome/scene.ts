@@ -9,7 +9,12 @@ import {
   welcomeArrangements,
 } from './arrangements.ts';
 
-export const pickArrangement = () => getRandomElement(welcomeArrangements);
+export const pickArrangement = (except?: WelcomeArrangement) => {
+  const options = welcomeArrangements.filter(
+    (candidate) => candidate !== except,
+  );
+  return getRandomElement(options.length > 0 ? options : welcomeArrangements);
+};
 
 const entriesOf = ({ nodes }: WelcomeArrangement) =>
   Object.entries(nodes) as [WelcomeProductId, Coordinate][];
@@ -83,4 +88,5 @@ export const nodeIdOf = (productId: ProductId) =>
 export const productOf = (nodeId: string) =>
   products.find(({ id }) => `${NODE_ID_PREFIX}${id}` === nodeId);
 
-export const edgeIdOf = (index: number) => `welcome/edge/${index}`;
+export const edgeIdOf = (arrangement: WelcomeArrangement, index: number) =>
+  `welcome/edge/${arrangement.name}/${index}`;

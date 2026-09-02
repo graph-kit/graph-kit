@@ -2,11 +2,13 @@ import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { CoreNode } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
-import { manifests } from '@magic/shared/product';
+import { Shell, manifests } from '@magic/shared/product';
+import { toast } from '@magic/shared/toast';
 import tinycolor from 'tinycolor2';
 
-import { onMounted } from 'vue';
+import { capitalize, onMounted } from 'vue';
 
+import { WelcomeArrangement } from './arrangements.ts';
 import {
   NODE_RADIUS,
   edgeIdOf,
@@ -18,14 +20,22 @@ import {
 
 const SEED_DURATION_MS = 300;
 
-export const useWelcomeScene = (graph: Graph) => {
-  const arrangement = pickArrangement();
+const REARRANGE_DURATION_MS = 600;
+
+const EASTER_EGG_TOAST_MS = 5_000;
+
+export const useWelcomeScene = (graph: Graph, shell: Shell) => {
+  let arrangement = pickArrangement();
 
   const paintByNodeId = new Map<string, Color>();
 
-  for (const { productId, color } of resolveColors(arrangement)) {
-    paintByNodeId.set(nodeIdOf(productId), color);
-  }
+  const repaint = () => {
+    for (const { productId, color } of resolveColors(arrangement)) {
+      paintByNodeId.set(nodeIdOf(productId), color);
+    }
+  };
+
+  repaint();
 
   const paint = ({ id }: CoreNode) =>
     nullThrows(paintByNodeId.get(id), 'node is not a welcome node');
@@ -47,26 +57,68 @@ export const useWelcomeScene = (graph: Graph) => {
     })
     .activate();
 
+  const edgesOf = (layout: WelcomeArrangement) =>
+    layout.edges.map(([source, target], index) => ({
+      id: edgeIdOf(layout, index),
+      source: nodeIdOf(source),
+      target: nodeIdOf(target),
+    }));
+
+  const positionsOf = (layout: WelcomeArrangement) =>
+    resolvePositions(layout, graph.surface.visibleWorldRect.value);
+
   const seed = () =>
     graph.animation.capture(
       () =>
         graph.actions.addElements({
-          nodes: resolvePositions(
-            arrangement,
-            graph.surface.visibleWorldRect.value,
-          ).map(({ productId, position }) => ({
+          nodes: positionsOf(arrangement).map(({ productId, position }) => ({
             id: nodeIdOf(productId),
             label: manifests[productId].abbreviatedName,
             position,
           })),
-          edges: arrangement.edges.map(([source, target], index) => ({
-            id: edgeIdOf(index),
-            source: nodeIdOf(source),
-            target: nodeIdOf(target),
-          })),
+          edges: edgesOf(arrangement),
         }),
       { durationMs: SEED_DURATION_MS },
     );
+
+  const rearrange = () => {
+    const previous = arrangement;
+    arrangement = pickArrangement(previous);
+    repaint();
+
+    graph.animation.capture(
+      () => {
+        graph.actions.removeElements({
+          nodes: [],
+          edges: edgesOf(previous),
+        });
+        graph.actions.addElements({
+          nodes: [],
+          edges: edgesOf(arrangement),
+        });
+        graph.positions.setMany(
+          positionsOf(arrangement).map(({ productId, position }) => ({
+            nodeId: nodeIdOf(productId),
+            update: position,
+          })),
+        );
+      },
+      { durationMs: REARRANGE_DURATION_MS },
+    );
+
+    toast.show({
+      title: `Is That A ${capitalize(arrangement.name)}?`,
+      description: 'You hit the super secret space bar!',
+      severity: 'magic',
+      duration: EASTER_EGG_TOAST_MS,
+    });
+  };
+
+  shell.shortcuts.add({
+    id: 'welcome/rearrange',
+    key: 'space',
+    callback: rearrange,
+  });
 
   onMounted(seed);
 };

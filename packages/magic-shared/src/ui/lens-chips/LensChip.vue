@@ -7,7 +7,7 @@
   import Icon from '../../components/icon/Icon.vue';
   import ToggleButton from '../../components/toggle-button/ToggleButton.vue';
   import Tooltip from '../../components/tooltip/Tooltip.vue';
-  import { LensChipDefinition, disabledReason } from './types.ts';
+  import { LensChipDefinition, chipName, disabledReason } from './types.ts';
 
   // otherwise attrs land on the ToggleButton and the tooltip content both, so
   // listeners meant for the chip also trigger from the tooltip.
@@ -21,6 +21,8 @@
   const active = defineModel<boolean>('active');
 
   const reason = computed(() => disabledReason(props));
+
+  const label = computed(() => chipName(props));
 
   // a natively disabled button dispatches no pointer events, so the tooltip
   // carrying the reason would never open on the one chip that needs it
@@ -41,7 +43,7 @@
         :class="['gap-2', reason && disabledClasses]"
       >
         <span>
-          {{ getValue(name) }}
+          {{ label }}
         </span>
         <Icon :path="mdiInformationOutline" />
       </ToggleButton>

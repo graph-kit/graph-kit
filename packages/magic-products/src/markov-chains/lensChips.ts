@@ -1,5 +1,8 @@
 import { Graph } from '@magic/shared/graph';
-import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
+import {
+  LensChipDefinition,
+  disabledReason,
+} from '@magic/shared/ui/lens-chips/types';
 
 import { definitions } from './definitions.ts';
 import { absorbingStatesThemer } from './themers/absorbingStates.ts';
@@ -37,6 +40,16 @@ const yesNo = (answer: boolean | undefined) => {
 export const lensChips = (graph: Graph): LensChipDefinition[] => {
   const chain = useMarkovChain(graph);
 
+  const requiresValidChain = (
+    chip: LensChipDefinition,
+  ): LensChipDefinition => ({
+    ...chip,
+    disabled: () =>
+      (!chain.isValid.value &&
+        `Needs a valid chain. ${definitions.validity}`) ||
+      disabledReason(chip),
+  });
+
   return [
     {
       lens: {
@@ -45,8 +58,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
           communicatingClassesThemer(graph, chain.communicatingClasses),
         ),
       },
-      name: () =>
-        `Communicating Classes: ${chain.communicatingClasses.value.length}`,
+      name: {
+        headline: 'Communicating Classes',
+        stat: () => chain.communicatingClasses.value.length,
+      },
       tooltipLabel: definitions.communicatingClasses,
     },
     {
@@ -56,7 +71,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
           communicatingClassesThemer(graph, chain.communicatingClasses),
         ),
       },
-      name: () => `Reducible: ${yesNo(chain.isReducible.value)}`,
+      name: {
+        headline: 'Reducible',
+        stat: () => yesNo(chain.isReducible.value),
+      },
       tooltipLabel: definitions.reducible,
     },
     {
@@ -64,7 +82,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
         id: 'recurrent-classes',
         ...layered(recurrentClassesThemer(graph, chain.recurrentClasses)),
       },
-      name: () => `Recurrent Classes: ${chain.recurrentClasses.value.length}`,
+      name: {
+        headline: 'Recurrent Classes',
+        stat: () => chain.recurrentClasses.value.length,
+      },
       tooltipLabel: definitions.recurrentClasses,
     },
     {
@@ -72,7 +93,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
         id: 'recurrent-states',
         ...layered(recurrentStatesThemer(graph, chain.recurrentStates)),
       },
-      name: () => `Recurrent States: ${chain.recurrentStates.value.size}`,
+      name: {
+        headline: 'Recurrent States',
+        stat: () => chain.recurrentStates.value.size,
+      },
       tooltipLabel: definitions.recurrentStates,
     },
     {
@@ -80,7 +104,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
         id: 'transient-states',
         ...layered(transientStatesThemer(graph, chain.transientStates)),
       },
-      name: () => `Transient States: ${chain.transientStates.value.size}`,
+      name: {
+        headline: 'Transient States',
+        stat: () => chain.transientStates.value.size,
+      },
       tooltipLabel: definitions.transientStates,
     },
     {
@@ -88,7 +115,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
         id: 'absorbing-states',
         ...layered(absorbingStatesThemer(graph, chain.absorbingStates)),
       },
-      name: () => `Absorbing States: ${chain.absorbingStates.value.size}`,
+      name: {
+        headline: 'Absorbing States',
+        stat: () => chain.absorbingStates.value.size,
+      },
       tooltipLabel: definitions.absorbingStates,
     },
     {
@@ -96,7 +126,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
         id: 'absorbing-chain',
         ...layered(absorbingStatesThemer(graph, chain.absorbingStates)),
       },
-      name: () => `Absorbing Chain: ${yesNo(chain.isChainAbsorbing.value)}`,
+      name: {
+        headline: 'Absorbing Chain',
+        stat: () => yesNo(chain.isChainAbsorbing.value),
+      },
       tooltipLabel: definitions.absorbingChain,
     },
     {
@@ -111,7 +144,7 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
           ),
         ),
       },
-      name: () => `Periodic: ${yesNo(chain.isPeriodic.value)}`,
+      name: { headline: 'Periodic', stat: () => yesNo(chain.isPeriodic.value) },
       tooltipLabel: definitions.periodic,
     },
     {
@@ -121,17 +154,26 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
           communicatingClassesThemer(graph, chain.communicatingClasses),
         ),
       },
-      name: () => `Ergodic: ${yesNo(chain.isErgodic.value)}`,
+      name: { headline: 'Ergodic', stat: () => yesNo(chain.isErgodic.value) },
       tooltipLabel: definitions.ergodic,
     },
     {
       lens: { id: 'doubly-stochastic' },
-      name: () => `Doubly Stochastic: ${yesNo(chain.isDoublyStochastic.value)}`,
+      name: {
+        headline: 'Doubly Stochastic',
+        stat: () => yesNo(chain.isDoublyStochastic.value),
+      },
       tooltipLabel: definitions.doublyStochastic,
     },
     {
       lens: { id: 'reversible' },
-      name: () => `Reversible: ${yesNo(chain.isReversible.value)}`,
+      name: {
+        headline: 'Reversible',
+        stat: () => yesNo(chain.isReversible.value),
+      },
+      disabled: () =>
+        chain.isReducible.value &&
+        'Needs an irreducible chain. A transient state holds none of the distribution, so detailed balance would pass over its one way transitions.',
       tooltipLabel: definitions.reversible,
     },
     {
@@ -142,8 +184,11 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
           stationaryDistributionThemer(graph, chain.stationaryDistribution),
         ),
       },
-      name: () =>
-        `Stationary Distribution: ${chain.hasUniqueStationaryDistribution.value ? 'Unique' : 'None'}`,
+      name: {
+        headline: 'Stationary Distribution',
+        stat: () =>
+          chain.hasUniqueStationaryDistribution.value ? 'Unique' : 'None',
+      },
       tooltipLabel: definitions.stationaryDistribution,
     },
     {
@@ -154,8 +199,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
           stationaryDistributionThemer(graph, chain.stationaryDistribution),
         ),
       },
-      name: () =>
-        `Limiting Distribution: ${yesNo(chain.convergesToStationaryDistribution.value)}`,
+      name: {
+        headline: 'Limiting Distribution',
+        stat: () => yesNo(chain.convergesToStationaryDistribution.value),
+      },
       tooltipLabel: definitions.limitingDistribution,
     },
     {
@@ -169,5 +216,5 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
       name: () => 'Mean Recurrence Time',
       tooltipLabel: definitions.meanRecurrenceTime,
     },
-  ];
+  ].map(requiresValidChain);
 };

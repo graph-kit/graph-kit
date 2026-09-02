@@ -4,6 +4,8 @@ import { ProductControls, Shell, useShell } from '@magic/shared/product';
 
 import { ComputedRef, inject, provide } from 'vue';
 
+import TemporaryOnboarding from './TemporaryOnboarding.vue';
+import { SETS_ONBOARDING } from './onboarding.ts';
 import { type Queries, createQueries } from './queries.ts';
 import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
 import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
@@ -22,9 +24,11 @@ export type SetsProductState = {
   sections: ComputedRef<Section[]>;
 };
 
-const useSetsProductState = (shell: Shell): SetsProductState => {
+const useSetsProductState = (
+  shell: Shell,
+  sets: SetDefinitions,
+): SetsProductState => {
   const queries = createQueries();
-  const sets = createSetDefinitions();
   const theme = useSetsTheme(shell);
   const sections = useSections(sets.definitions);
 
@@ -52,6 +56,9 @@ export const useProvidedSetsProductState = () => {
 
 export const useSetsProduct = () => {
   const surface = useCanvasSurface();
+
+  // stood up ahead of the shell so the product can be built around it either side
+  const sets = createSetDefinitions();
 
   // sets has no serializable state yet, so there is nothing to mirror either way. it
   // is not flagged multiplayer, and giving it real transit is what would unblock both,
@@ -82,9 +89,10 @@ export const useSetsProduct = () => {
         gesture: 'dblclick',
       },
     ],
+    onboarding: SETS_ONBOARDING,
   });
 
-  const setsProductState = useSetsProductState(shell);
+  const setsProductState = useSetsProductState(shell, sets);
   useCanvasTheme(shell, setsProductState);
 
   provideSetsProductState(setsProductState);
@@ -93,6 +101,12 @@ export const useSetsProduct = () => {
     id: 'sets/query-panel',
     component: QueryPanel,
     position: 'bottom-middle',
+  });
+
+  shell.componentSlots.add({
+    id: 'sets/onboarding',
+    component: TemporaryOnboarding,
+    position: 'top-middle',
   });
 
   return { shell, setsProductState };

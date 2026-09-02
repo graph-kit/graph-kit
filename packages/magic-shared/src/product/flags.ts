@@ -58,15 +58,6 @@ const TRANSIT_BACKED = [
   'linkSharing',
 ] as const satisfies readonly (keyof ShellFlags)[];
 
-/**
- * neither "the content is offscreen" nor "there is no content yet" is answerable without
- * {@link ProductControls.isContent}
- */
-const CONTENT_BACKED = [
-  'jumpToContent',
-  'onboarding',
-] as const satisfies readonly (keyof ShellFlags)[];
-
 /** what the product asked for, narrowed to what its controls can actually support */
 export const resolveShellFlags = (
   flags: ShellFlagOptions = {},
@@ -85,8 +76,7 @@ export const resolveShellFlags = (
   if (!host.transit)
     for (const flag of TRANSIT_BACKED) withoutHostSupport(flag, 'transit');
 
-  if (!host.isContent)
-    for (const flag of CONTENT_BACKED) withoutHostSupport(flag, 'isContent');
+  if (!host.isContent) withoutHostSupport('jumpToContent', 'isContent');
 
   return resolved;
 };

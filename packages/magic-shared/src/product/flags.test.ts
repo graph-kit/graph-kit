@@ -100,14 +100,13 @@ describe('resolveShellFlags', () => {
   });
 
   describe('without host isContent', () => {
-    it('forces off every flag content backs', () => {
+    it('forces off jump to content', () => {
       const flags = resolveShellFlags({}, { transit });
 
       expect(flags.jumpToContent).toBe(false);
-      expect(flags.onboarding).toBe(false);
     });
 
-    it('overrules a product that asked for jump to content anyway', () => {
+    it('overrules a product that asked for it anyway', () => {
       const warn = warnings();
 
       const flags = resolveShellFlags({ jumpToContent: true }, { transit });
@@ -116,13 +115,10 @@ describe('resolveShellFlags', () => {
       expect(warn.mock.calls[0]?.[0]).toContain('jumpToContent');
     });
 
-    it('overrules a product that asked for onboarding anyway', () => {
-      const warn = warnings();
+    it('leaves onboarding alone, which asks the product nothing', () => {
+      const flags = resolveShellFlags({}, { transit });
 
-      const flags = resolveShellFlags({ onboarding: true }, { transit });
-
-      expect(flags.onboarding).toBe(false);
-      expect(warn.mock.calls[0]?.[0]).toContain('onboarding');
+      expect(flags.onboarding).toBe(true);
     });
   });
 

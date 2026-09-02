@@ -3,6 +3,8 @@ import {
   CanvasElement,
 } from '@canvas/primitives/aggregator/types';
 
+import { ComputedRef, computed, ref } from 'vue';
+
 import { ShellFlags } from '../product/flags.ts';
 import { ProductControls } from '../product/types.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
@@ -12,34 +14,35 @@ import { onboardingPalette } from './palette.ts';
 import { OnboardingItem } from './types.ts';
 
 export type OnboardingControls = {
-  /**
-   * puts the card up if the product turns out to have opened on nothing, judged on the
-   * first frame that can answer, see {@link ProductControls.isContent}
-   */
-  showWhenEmpty: () => void;
   /** puts the card on whatever the canvas is showing right now */
-  show: () => void;
-  /** takes it back down, whether or not it was up */
-  hide: () => void;
+  open: () => void;
+  /**
+   * takes it back down, whether or not it was up. what a product calls the moment its
+   * prompt stops being true, which only the product is in a position to know
+   */
+  close: () => void;
+  /** whether the card is up */
+  isActive: ComputedRef<boolean>;
 };
 
 /**
- * The card a product opens on when it has nothing to open on, listing what to try first
- * as an image beside the name of the gesture that gets there.
+ * The card a product opens on, listing what to try first as an image beside the name of
+ * the gesture that gets there. The shell puts it up once setup is done and never takes
+ * it down, since when a prompt has stopped being worth reading is the product's call,
+ * see {@link OnboardingControls.close}.
  *
- * Absent when the product flagged it off or contributed no items, and when it named no
- * content, since "opened on nothing" is not a question the shell can answer on its own
+ * Absent when the product flagged it off or contributed no items
  */
 export const useOnboarding = (
-  host: Pick<ProductControls, 'surface' | 'isContent'>,
+  host: Pick<ProductControls, 'surface'>,
   flags: ShellFlags,
   appearance: AppearanceControls,
   items: OnboardingItem[] = [],
 ): OnboardingControls | undefined => {
-  const { surface, isContent } = host;
-  if (!flags.onboarding || items.length === 0 || !isContent) return;
+  const { surface } = host;
+  if (!flags.onboarding || items.length === 0) return;
 
-  // nothing to paint until `show` builds the card, see below
+  // nothing to paint until `open` builds the card, see below
   let elements: () => CanvasElement[] = () => [];
 
   const transformer: AggregatorTransformer = (agg) => {
@@ -47,10 +50,16 @@ export const useOnboarding = (
     return agg;
   };
 
-  const hide = () => surface.aggregator.removeTransformer(transformer);
+  const active = ref(false);
 
-  const show = () => {
-    hide();
+  const close = () => {
+    active.value = false;
+    surface.aggregator.removeTransformer(transformer);
+  };
+
+  const open = () => {
+    close();
+    active.value = true;
 
     const layout = onboardingLayout(items, surface.visibleWorldRect.value);
     // rebuilt per frame off the appearance, so toggling light and dark repaints the card
@@ -64,25 +73,9 @@ export const useOnboarding = (
     surface.aggregator.addTransformer(transformer);
   };
 
-  /*
-    the aggregator holds what the last draw resolved, and setup finishes before the
-    canvas has drawn once, so asking then would find every product empty. the first draw
-    is both the earliest honest answer and the moment the camera the card is centered on
-    is the one the product actually restored
-  */
-  const showWhenEmpty = () => {
-    const decide = () => {
-      surface.aggregator.events.unsubscribe('onDraw', decide);
-      if (surface.aggregator.aggregator().some(isContent)) return;
-      show();
-    };
-
-    surface.aggregator.events.subscribe('onDraw', decide);
-  };
-
   return {
-    showWhenEmpty,
-    show,
-    hide,
+    open,
+    close,
+    isActive: computed(() => active.value),
   };
 };

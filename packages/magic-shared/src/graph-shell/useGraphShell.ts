@@ -67,7 +67,14 @@ export const useGraphShell = (
     onboarding: flags.onboarding
       ? (options.onboarding ?? GRAPH_ONBOARDING)
       : [],
+    // a graph restored from storage or a link is one nobody needs talking through
+    onSetupCompleted: () => {
+      if (graph.nodes.value.length > 0) shell.onboarding?.close();
+    },
   });
+
+  // the first node is the prompt answered, whichever of the gestures got there
+  graph.events.subscribe('onStructureChange', () => shell.onboarding?.close());
 
   graph.events.subscribe('onStructureChange', shell.simulation.invalidate);
 

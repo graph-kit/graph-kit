@@ -95,6 +95,10 @@ export const useShell = (
     localStorage.invalidate,
   );
 
+  host.annotations?.events.subscribe('onStrokeBegan', () =>
+    onboarding?.close(),
+  );
+
   const savedAnimationSpeed = readAnimationSpeed();
   if (savedAnimationSpeed) {
     host.surface.renderer.autoAnimate.setAnimationDuration(
@@ -151,9 +155,9 @@ export const useShell = (
     // whatever was restored is the starting point, not the state setup began with
     shell.history?.clear();
 
-    // last, so what it is deciding against is everything setup restored
-    shell.onboarding?.showWhenEmpty();
+    shell.onboarding?.open();
 
+    // last, so a product holding content it just restored can close the card right back
     options.onSetupCompleted?.(shell.appearance);
   });
 

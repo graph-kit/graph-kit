@@ -41,8 +41,7 @@ export const drawImageWithCtx = (schema: ImageSchemaWithDefaults) => {
 
     rect(rectProps).drawShape(ctx);
 
-    // the canvas repaints on its own loop, so a load still in flight simply lands on a
-    // later frame rather than holding this one open
+    // a load still in flight lands on a later repaint
     if (!image && !error) return;
 
     ctx.save();

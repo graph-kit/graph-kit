@@ -1,6 +1,6 @@
 import { FontFamily, FontWeight } from '@canvas/primitives/text/types';
 
-/** one thing worth doing on an empty canvas, as the onboarding card lists it */
+/** one thing worth doing on an empty canvas */
 export type OnboardingItem = {
   imageUrl: string;
   display: string;
@@ -15,7 +15,7 @@ export type OnboardingFont = {
 
 /** the colors the card is painted in, resolved from the shell's appearance */
 export type OnboardingPalette = {
-  /** sits just off the canvas behind it rather than on top of it */
+  /** a shade off the canvas behind it rather than a contrast against it */
   cardColor: string;
   borderColor: string;
   labelColor: string;

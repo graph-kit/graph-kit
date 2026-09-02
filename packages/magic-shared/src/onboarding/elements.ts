@@ -14,11 +14,7 @@ import {
 import { OnboardingLayout } from './layout.ts';
 import { OnboardingFont, OnboardingItem, OnboardingPalette } from './types.ts';
 
-/*
-  the card, the tiles, then the images and text over them. three tiers rather than one
-  because the aggregator paints in priority order, and each of these has to land on top
-  of the one before it
-*/
+// the aggregator paints in priority order, each tier landing over the one before it
 const CARD_PRIORITY = ONBOARDING_PRIORITY;
 const TILE_PRIORITY = ONBOARDING_PRIORITY + 1;
 const CONTENT_PRIORITY = ONBOARDING_PRIORITY + 2;
@@ -35,8 +31,7 @@ const textElement = (
   id: elementId,
   paintOnly: true,
   priority: CONTENT_PRIORITY,
-  // the text centers on the box, and the box was measured from the text, so it lands
-  // exactly where the layout put its top left corner
+  // the box is sized to the text, so centering lands it on the layout's origin
   shape: rect({
     at: box.at,
     width: box.width,

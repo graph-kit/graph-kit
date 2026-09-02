@@ -12,12 +12,10 @@ export type LoadImageOptions = {
 };
 
 /**
- * What is known about `src` right now, starting the load on the first ask and filling the
- * same entry in once it settles.
+ * What is known about `src` right now, starting the load on the first ask.
  *
- * Synchronous because a draw that awaits its own image runs after every shape painted in
- * the same frame, whatever priority it was handed, which puts every image on top of the
- * scene rather than in it. Callers ask again next frame instead of waiting
+ * Sync because a draw that awaits its own image lands after every shape in the frame,
+ * whatever priority it was handed, painting images over the scene rather than in it
  */
 export const resolveImage = (
   src: string,

@@ -73,7 +73,7 @@ export const useGraphShell = (
     },
   });
 
-  // the first node is the prompt answered, whichever of the gestures got there
+  // the first node is the prompt answered
   graph.events.subscribe('onStructureChange', () => shell.onboarding?.close());
 
   graph.events.subscribe('onStructureChange', shell.simulation.invalidate);

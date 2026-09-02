@@ -15,12 +15,11 @@ import { onboardingPalette } from './palette.ts';
 import { OnboardingItem } from './types.ts';
 
 export type OnboardingControls = {
-  /** puts the card on whatever the canvas is showing right now, unless this browser has already onboarded */
+  /** puts the card on what the canvas is showing, unless this browser already onboarded */
   open: () => void;
   /**
-   * takes it back down, whether or not it was up, and marks this browser onboarded for
-   * good. what a product calls the moment its prompt stops being true, which only the
-   * product is in a position to know
+   * takes it down and marks this browser onboarded for good. called the moment the
+   * prompt stops being true, which only the product knows
    */
   close: () => void;
   /** whether the card is up */
@@ -28,10 +27,9 @@ export type OnboardingControls = {
 };
 
 /**
- * The card a product opens on, listing what to try first as an image beside the name of
- * the gesture that gets there. The shell puts it up once setup is done and never takes
- * it down, since when a prompt has stopped being worth reading is the product's call,
- * see {@link OnboardingControls.close}.
+ * The card a product opens on, listing what to try first. The shell puts it up and never
+ * takes it down: only the product knows when its prompt stops being worth reading, see
+ * {@link OnboardingControls.close}.
  *
  * Absent when the product flagged it off or contributed no items
  */
@@ -44,7 +42,7 @@ export const useOnboarding = (
   const { surface } = host;
   if (!flags.onboarding || items.length === 0) return;
 
-  // nothing to paint until `open` builds the card, see below
+  // nothing to paint until `open` builds the card
   let elements: () => CanvasElement[] = () => [];
 
   const transformer: AggregatorTransformer = (agg) => {
@@ -71,7 +69,7 @@ export const useOnboarding = (
     active.value = true;
 
     const layout = onboardingLayout(items, surface.visibleWorldRect.value);
-    // rebuilt per frame off the appearance, so toggling light and dark repaints the card
+    // re-read per frame, so toggling light and dark repaints the card
     elements = () =>
       onboardingElements(
         items,

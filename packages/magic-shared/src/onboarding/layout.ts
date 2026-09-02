@@ -15,15 +15,14 @@ import { OnboardingItem } from './types.ts';
 export type OnboardingRowLayout = {
   /** the tile an item's image is framed by */
   thumbnail: BoundingBox;
-  /** the image itself, sitting inside the tile rather than filling it */
+  /** the image, inset in the tile rather than filling it */
   image: BoundingBox;
-  /** the box the name is centered in, sized to the name itself so it reads as left aligned */
+  /** the box the name is centered in, sized to the name so it reads left aligned */
   label: BoundingBox;
 };
 
 export type OnboardingLayout = {
   card: BoundingBox;
-  /** in the order the items were handed over */
   rows: OnboardingRowLayout[];
 };
 

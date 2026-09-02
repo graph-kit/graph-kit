@@ -3,10 +3,7 @@ import { BasicColorMode } from '@vueuse/core';
 
 import { OnboardingPalette } from './types.ts';
 
-/**
- * the tile is the same near black in both appearances, since an item's image is a fixed
- * url and cannot recolor itself the way the card around it does
- */
+/** the same in both appearances, since an item's image is a url that cannot recolor */
 export const TILE_COLOR = colors.GRAY_800;
 
 /** what an icon drawn onto {@link TILE_COLOR} has to be painted in to read */

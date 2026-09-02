@@ -57,7 +57,6 @@ export const useProvidedSetsProductState = () => {
 export const useSetsProduct = () => {
   const surface = useCanvasSurface();
 
-  // stood up ahead of the shell so the product can be built around it either side
   const sets = createSetDefinitions();
 
   // sets has no serializable state yet, so there is nothing to mirror either way. it

@@ -157,7 +157,7 @@ export const useShell = (
 
     shell.onboarding?.open();
 
-    // last, so a product holding content it just restored can close the card right back
+    // last, so a product that just restored content can close the card right back
     options.onSetupCompleted?.(shell.appearance);
   });
 

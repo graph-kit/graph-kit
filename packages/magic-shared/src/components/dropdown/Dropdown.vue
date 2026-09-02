@@ -10,7 +10,7 @@
     sideOffset?: number;
   }>();
 
-  /** passed through so a call site can open the menu itself, see the core component */
+  /** optional, so a call site can open the menu itself */
   const open = defineModel<boolean>('open', { default: false });
 </script>
 

@@ -182,10 +182,7 @@ export type ShellOptions = {
   helpMenu?: MaybeGetter<HelpMenuItem[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
-  /**
-   * what the product suggests trying first, shown only if it opens on nothing. left out
-   * by a product with nothing to suggest, see {@link OnboardingControls}
-   */
+  /** what the product suggests trying first, shown only if it opens on nothing */
   onboarding?: OnboardingItem[];
   /** triggered once the shell has finished standing the product up */
   onSetupCompleted?: (appearance: AppearanceControls) => void;
@@ -213,7 +210,7 @@ export type Shell = {
   localStorage: LocalStorageControls;
   /** absent when the host named no content, see {@link ProductControls.isContent} */
   jumpToContent?: JumpToContentControls;
-  /** absent when the product contributed no items, or named no content */
+  /** absent when the product flagged onboarding off or contributed no items */
   onboarding?: OnboardingControls;
   /**
    * The room connection, or undefined if

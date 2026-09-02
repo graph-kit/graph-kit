@@ -9,7 +9,6 @@
 </script>
 
 <template>
-  <!-- lifted out of the slot's flow and up to the middle of the viewport, where the real card draws -->
   <Well
     v-if="shell.onboarding?.isActive.value"
     class="dark:bg-gray-700 pointer-events-none"

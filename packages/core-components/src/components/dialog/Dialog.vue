@@ -48,12 +48,13 @@
     if (usingPointer.value) event.preventDefault();
   };
 
-  // reka opens by focusing the first control in the panel, which rings it as though
-  // the user had tabbed there; the panel takes focus instead so the trap still holds
+  // reka would ring the first control in the panel, and preventing focus outright
+  // leaves it on the trigger, outside the trap
   const focusPanel = (event: Event) => {
     usingPointer.value = false;
     event.preventDefault();
-    if (event.target instanceof HTMLElement) event.target.focus({ preventScroll: true });
+    if (event.target instanceof HTMLElement)
+      event.target.focus({ preventScroll: true });
   };
 
   defineSlots<{

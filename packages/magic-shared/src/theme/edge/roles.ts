@@ -17,7 +17,13 @@ import colors, { Color } from '@core/utils/colors';
  *   missing something, not a license to reach past this record for a color.
  */
 export type EdgeRole =
-  'crossing' | 'weighing' | 'crossed' | 'tree' | 'result' | 'rejected';
+  | 'crossing'
+  | 'weighing'
+  | 'crossed'
+  | 'tree'
+  | 'result'
+  | 'rejected'
+  | 'violation';
 
 /**
  * deliberately aligned with {@link nodeRoleColors}, so that an edge and a node
@@ -38,4 +44,6 @@ export const edgeRoleColors = {
   result: colors.VIOLET_500,
   /** has it been ruled out, like an edge that would close a cycle? */
   rejected: colors.GRAY_500,
+  /** does it prove the input is broken, like closing a negative cycle? */
+  violation: colors.RED_500,
 } as const satisfies Record<EdgeRole, Color>;

@@ -33,11 +33,11 @@ export const negativeCycleChip = (graph: Graph): LensChipDefinition => {
   const cycleEdgeIds = computed(() => new Set(cycle.value?.edges ?? []));
 
   const nodeThemer = createNodeThemer(graph, (node) =>
-    cycleNodeIds.value.has(node.id) ? nodeRoleColors.result : undefined,
+    cycleNodeIds.value.has(node.id) ? nodeRoleColors.violation : undefined,
   );
 
   const edgeThemer = createEdgeThemer(graph, (edge) =>
-    cycleEdgeIds.value.has(edge.id) ? edgeRoleColors.result : undefined,
+    cycleEdgeIds.value.has(edge.id) ? edgeRoleColors.violation : undefined,
   );
 
   return {

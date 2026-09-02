@@ -16,6 +16,6 @@ export const negativeCycle = (
         graph,
         loop,
         NEGATIVE_CYCLE_DEFINITION,
-        edgeRoleColors.result,
+        edgeRoleColors.violation,
       )
     : { tooltipLabel: NEGATIVE_CYCLE_DEFINITION };

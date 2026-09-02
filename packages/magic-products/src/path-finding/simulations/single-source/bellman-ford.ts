@@ -106,7 +106,6 @@ export const bellmanFord: SingleSourceFunction =
           edge: edge.id,
           from: edge.source,
           to: edge.target,
-          rejectedEdgeIds: [edge.id],
         }),
       );
     };
@@ -116,8 +115,7 @@ export const bellmanFord: SingleSourceFunction =
         type: 'negative-cycle' as const,
         node: provingEdge.target,
         edge: provingEdge.id,
-        activeNodeId: provingEdge.source,
-        candidateNodeIds: [provingEdge.target],
+        activeNodeId: provingEdge.target,
         relaxingEdgeIds: [provingEdge.id],
       };
 
@@ -201,8 +199,7 @@ export const bellmanFord: SingleSourceFunction =
             offered,
             current,
             currentPath: routeTo(edge.target),
-            activeNodeId: edge.source,
-            candidateNodeIds: [edge.target],
+            activeNodeId: edge.target,
             relaxingEdgeIds: [edge.id],
           }),
         );
@@ -213,6 +210,13 @@ export const bellmanFord: SingleSourceFunction =
       return false;
     };
 
+    /*
+      the active role marks whatever the frame asks the reader to weigh, on the
+      node and the edge alike, so an offer reads as one event: this edge, this
+      node on its far end. the near end is left plain on purpose, because the
+      sweep never stands anywhere. it walks a fixed edge list, and the tail of
+      the edge in hand has no standing beyond being where the arrow starts
+    */
     frameCollector.add(frame({ type: 'start', source: sourceNodeId }));
 
     let provedByFixpoint = false;
@@ -250,8 +254,7 @@ export const bellmanFord: SingleSourceFunction =
             to: edge.target,
             base: reachedFrom,
             offered,
-            activeNodeId: edge.source,
-            candidateNodeIds: [edge.target],
+            activeNodeId: edge.target,
             relaxingEdgeIds: [edge.id],
           }),
         );
@@ -267,8 +270,7 @@ export const bellmanFord: SingleSourceFunction =
               edge: edge.id,
               offeredPath: routeBehindOffer(edge, offered),
               currentPath: routeTo(edge.target),
-              activeNodeId: edge.source,
-              candidateNodeIds: [edge.target],
+              activeNodeId: edge.target,
               rejectedEdgeIds: [edge.id],
             }),
           );
@@ -298,8 +300,7 @@ export const bellmanFord: SingleSourceFunction =
             edge: edge.id,
             newPath: [...basePath, edge.id],
             oldPath,
-            activeNodeId: edge.source,
-            candidateNodeIds: [edge.target],
+            activeNodeId: edge.target,
             relaxingEdgeIds: [edge.id],
           }),
         );

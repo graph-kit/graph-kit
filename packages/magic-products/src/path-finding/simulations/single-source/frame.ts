@@ -170,7 +170,6 @@ type SingleSourceState = {
 
 export type SingleSourceHighlights = {
   activeNodeId?: GNode['id'];
-  candidateNodeIds?: readonly GNode['id'][];
   settledNodeIds?: readonly GNode['id'][];
   pendingNodeIds?: readonly GNode['id'][];
   relaxingEdgeIds?: readonly GEdge['id'][];

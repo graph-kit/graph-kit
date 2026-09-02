@@ -30,16 +30,15 @@ import {
 import { SingleSourceFrame, SingleSourceFunction } from './frame.ts';
 
 type SingleSourceNodeConcept =
-  'exploring' | 'weighing' | 'finalized' | 'frontier' | 'source' | 'looping';
+  'exploring' | 'finalized' | 'frontier' | 'source' | 'looping';
 
 export const nodeRoles = {
   exploring: 'active',
-  weighing: 'candidate',
   finalized: 'settled',
   frontier: 'pending',
   source: 'anchor',
   // sits on negative cycle
-  looping: 'result',
+  looping: 'violation',
 } as const satisfies Record<SingleSourceNodeConcept, NodeRole>;
 
 type SingleSourceEdgeConcept =
@@ -50,7 +49,7 @@ export const edgeRoles = {
   shortestPath: 'tree',
   discarded: 'rejected',
   // is part of negative cycle
-  looping: 'result',
+  looping: 'violation',
 } as const satisfies Record<SingleSourceEdgeConcept, EdgeRole>;
 
 /** shows the user an error rather than exiting the simulation */
@@ -73,7 +72,6 @@ const singleSourceEffects = (
   const frontier = createNodeIdThemer(graph, nodeRoles.frontier);
   const finalized = createNodeIdThemer(graph, nodeRoles.finalized);
   const source = createNodeIdThemer(graph, nodeRoles.source);
-  const weighing = createNodeIdThemer(graph, nodeRoles.weighing);
   const exploring = createNodeIdThemer(graph, nodeRoles.exploring);
   const loopingNodes = createNodeIdThemer(graph, nodeRoles.looping);
 
@@ -86,19 +84,18 @@ const singleSourceEffects = (
 
   /*
     order matters: latter elements take priority over earlier ones. the source
-    sits below the two roles that describe what is happening right now, so the
-    node the user picked gives up its pink for the frame it is being worked on.
-    the cycle sits above the tree it is made of, or the shortest path green
-    would paint over the very edges being called out, and below the two roles
-    that follow the walker, so the edge being crossed and the node it lands on
-    still read as this frame's move rather than blending into the loop
+    sits below the role that describes what is happening right now, so the node
+    the user picked gives up its pink for the frame it is being worked on. the
+    cycle sits above the tree it is made of, or the shortest path green would
+    paint over the very edges being called out, and below the two roles that
+    follow the walker, so the edge being crossed and the node it lands on still
+    read as this frame's move rather than blending into the loop
   */
   const themers = [
     frontier,
     finalized,
     source,
     loopingNodes,
-    weighing,
     exploring,
     shortestPath,
     discarded,
@@ -141,7 +138,6 @@ const singleSourceEffects = (
   const syncToFrame = (frame: SingleSourceFrame) => {
     currentFrame.value = frame;
     exploring.setId(frame.activeNodeId);
-    weighing.setIds(frame.candidateNodeIds ?? []);
     finalized.setIds(frame.settledNodeIds ?? []);
     frontier.setIds(frame.pendingNodeIds ?? []);
     source.setId(frame.anchorNodeId);

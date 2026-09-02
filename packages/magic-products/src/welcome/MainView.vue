@@ -4,7 +4,7 @@
 
   import ActionBar from './ActionBar.vue';
   import WelcomeBanner from './WelcomeBanner.vue';
-  import { provideWelcomeScene } from './useWelcomeScene.ts';
+  import { useWelcomeScene } from './useWelcomeScene.ts';
 
   const { graph, shell } = useGraphShell({
     productId: 'welcome',
@@ -23,7 +23,7 @@
   graph.anchors.lifecycle.disable();
   graph.interactive.lifecycle.disable();
 
-  provideWelcomeScene(graph);
+  useWelcomeScene(graph);
 
   shell.componentSlots.addMany([
     {

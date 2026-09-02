@@ -1,7 +1,7 @@
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import colors, { Color } from '@core/utils/colors';
 import { getRandomElement } from '@core/utils/random';
-import { ProductId } from '@magic/shared/product';
+import { ProductId, products } from '@magic/shared/product';
 
 import {
   WelcomeArrangement,
@@ -75,6 +75,12 @@ export const resolvePositions = (
 
 export const NODE_RADIUS = 45;
 
-export const nodeIdOf = (productId: ProductId) => `welcome/node/${productId}`;
+const NODE_ID_PREFIX = 'welcome/node/';
+
+export const nodeIdOf = (productId: ProductId) =>
+  `${NODE_ID_PREFIX}${productId}`;
+
+export const productOf = (nodeId: string) =>
+  products.find(({ id }) => `${NODE_ID_PREFIX}${id}` === nodeId);
 
 export const edgeIdOf = (index: number) => `welcome/edge/${index}`;

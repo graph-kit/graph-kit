@@ -6,18 +6,27 @@
   import ProductCard from '@magic/shared/ProductCard';
   import Well from '@magic/shared/Well';
   import { ExplainerText } from '@magic/shared/explainer';
+  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { productHref } from '@magic/shared/ui/index';
+  import { useFocusedNode } from '@magic/shared/utilities';
   import { mdiArrowRight } from '@mdi/js';
 
-  import { useWelcomeScene } from './useWelcomeScene.ts';
+  import { computed } from 'vue';
 
-  const { activeProduct } = useWelcomeScene();
+  import { productOf } from './scene.ts';
+
+  const graph = useProvidedGraph();
+  const focusedNode = useFocusedNode(graph);
+
+  const activeProduct = computed(() =>
+    focusedNode.value ? productOf(focusedNode.value.id) : undefined,
+  );
 </script>
 
 <template>
   <Well
     v-if="activeProduct"
-    class="w-124 p-0 select-none"
+    class="w-140 p-0 select-none"
   >
     <Button
       :href="productHref(activeProduct.id)"

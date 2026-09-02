@@ -8,7 +8,7 @@
   import Well from '../../components/layout/Well.vue';
   import { useProvidedShell } from '../../product/context.ts';
   import LensChip from './LensChip.vue';
-  import { LensChipDefinition } from './types.ts';
+  import { LensChipDefinition, disabledReason } from './types.ts';
 
   const chipId = (chip: LensChipDefinition) => chip.lens.id;
 
@@ -31,7 +31,9 @@
     ),
   );
 
-  const togglePinnedLens = (lensId: string) => {
+  const togglePinnedLens = (chip: LensChipDefinition) => {
+    if (disabledReason(chip)) return;
+    const lensId = chipId(chip);
     const wasPinned = lensId === pinnedLensId.value;
     pinnedLensId.value = wasPinned ? undefined : lensId;
     // unpinning has to read as off right away, so the hover the click came with
@@ -39,8 +41,10 @@
     hoverSuppressedLensId.value = wasPinned ? lensId : undefined;
   };
 
-  const setHovered = (lensId: string, hovered: boolean) => {
+  const setHovered = (chip: LensChipDefinition, hovered: boolean) => {
+    const lensId = chipId(chip);
     if (hovered) {
+      if (disabledReason(chip)) return;
       hoveredLensId.value = lensId;
       return;
     }
@@ -59,6 +63,22 @@
   onUnmounted(() =>
     shell.simulation.events.unsubscribe('onSimulationStarted', clearActiveChip),
   );
+
+  const disabledLensIds = computed(
+    () => new Set(chips.value.filter(disabledReason).map(chipId)),
+  );
+
+  // if chip goes disabled while active, drop its lens
+  // so it doesn't spring back up when it becomes re-enabled
+  watch(disabledLensIds, (disabledIds) => {
+    if (pinnedLensId.value && disabledIds.has(pinnedLensId.value)) {
+      pinnedLensId.value = undefined;
+    }
+    if (hoveredLensId.value && disabledIds.has(hoveredLensId.value)) {
+      hoveredLensId.value = undefined;
+      hoverSuppressedLensId.value = undefined;
+    }
+  });
 
   const displayedChipId = computed(() => {
     const hovered =
@@ -97,10 +117,10 @@
       <template #default="{ item: chip, inMenu }">
         <LensChip
           v-bind="chip"
-          @click="togglePinnedLens(chipId(chip))"
-          @focus="setHovered(chipId(chip), true)"
-          @blur="setHovered(chipId(chip), false)"
-          @update:active="setHovered(chipId(chip), $event ?? false)"
+          @click="togglePinnedLens(chip)"
+          @focus="setHovered(chip, true)"
+          @blur="setHovered(chip, false)"
+          @update:active="setHovered(chip, $event ?? false)"
           :model-value="chipId(chip) === pinnedLensId"
           :class="inMenu ? menuChipClasses : undefined"
         />

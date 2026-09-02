@@ -52,10 +52,10 @@
 
   const openOnDblClick = () => (open.value = true);
 
-  shell.surface.events.dom.subscribe('onDblClick', openOnDblClick);
+  shell.surface.events.canvas.subscribe('onDblClick', openOnDblClick);
 
   onUnmounted(() =>
-    shell.surface.events.dom.unsubscribe('onDblClick', openOnDblClick),
+    shell.surface.events.canvas.unsubscribe('onDblClick', openOnDblClick),
   );
 </script>
 

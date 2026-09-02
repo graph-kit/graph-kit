@@ -1,11 +1,5 @@
 <script setup lang="ts">
-  import {
-    mdiEmailOutline,
-    mdiForumOutline,
-    mdiGithub,
-    mdiMessageTextOutline,
-    mdiTwitter,
-  } from '@mdi/js';
+  import { mdiEmailOutline, mdiGithub, mdiMessageTextOutline } from '@mdi/js';
 
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';

@@ -2,7 +2,6 @@ import { MaybeGetter } from '@core/utils/maybeGetter/index';
 
 import { Graph } from '../graph/types.ts';
 import { UseGraphOptions } from '../graph/useGraph.ts';
-import { OnboardingItem } from '../onboarding/index.ts';
 import { ShellFlagOptions } from '../product/flags.ts';
 import { ProductId } from '../product/manifests/index.ts';
 import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';

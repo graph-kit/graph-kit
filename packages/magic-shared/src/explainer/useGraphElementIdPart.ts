@@ -1,6 +1,10 @@
 import { Graph } from '../graph/types.ts';
 import { useEdgeStyles, useNodeStyles } from '../theme/index.ts';
 import { ExplainerSegment } from './explainerSegments.ts';
+import {
+  clearHighlightedExplainerElements,
+  setHighlightedExplainerElements,
+} from './highlightedElement.ts';
 import { ExplainerHighlight } from './types.ts';
 import { unparsedExplainerSegment } from './unparsedExplainerSegment.ts';
 
@@ -8,12 +12,18 @@ const useGraphElementExplainerHighlight = (
   graph: Graph,
   id: string,
 ): ExplainerHighlight => {
+  const litIds = graph.isEdge(id)
+    ? [id, graph.getEdge(id).source, graph.getEdge(id).target]
+    : [id];
+
   // proxy default color to focus color
   const themer = graph.theme.createThemer({
     surface: {
       'node.default.border.color': (node) =>
-        node.id === id
-          ? graph.focus.theme._resolveToken('node.focus.border.color', { id })
+        litIds.includes(node.id)
+          ? graph.focus.theme._resolveToken('node.focus.border.color', {
+              id: node.id,
+            })
           : undefined,
       'edge.default.color': (edge) =>
         edge.id === id
@@ -28,8 +38,14 @@ const useGraphElementExplainerHighlight = (
       node?.dispose();
       edge?.dispose();
     },
-    activate: themer.activate,
-    deactivate: themer.deactivate,
+    activate: () => {
+      setHighlightedExplainerElements(litIds);
+      themer.activate();
+    },
+    deactivate: () => {
+      clearHighlightedExplainerElements(litIds);
+      themer.deactivate();
+    },
     classes: 'text-white',
     styles: () => {
       return {
@@ -55,23 +71,10 @@ export const useGraphElementRefExplainerSegment = (
   return {
     id: crypto.randomUUID(),
     text: () => {
-      if (graph.isNode(id)) {
-        return graph.theme.tokenResolver('node.text.content', { id });
-      }
-
-      const edge = graph.getEdge(id);
-
-      const source = graph.theme.tokenResolver('node.text.content', {
-        id: edge.source,
-      });
-
-      const target = graph.theme.tokenResolver('node.text.content', {
-        id: edge.target,
-      });
-
-      const pair = [source, target];
+      if (graph.isNode(id)) return graph.getNode(id).label;
+      const { source, target } = graph.getEdge(id);
+      const pair = [graph.getNode(source).label, graph.getNode(target).label];
       const labelReadyPair = graph.metadata.directed ? pair : pair.toSorted();
-
       return labelReadyPair.join('');
     },
     highlight: useGraphElementExplainerHighlight(graph, id),

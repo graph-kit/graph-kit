@@ -4,6 +4,7 @@ import {
   WithLifecycle,
   WithTheme,
 } from '@graph/plugins-shared/plugins';
+import { CoreNode } from '@graph/primitives/types';
 
 import { FocusPlugin } from '../focus/types.ts';
 import { SurfacePlugin } from '../surface/types.ts';
@@ -34,7 +35,13 @@ export type NodeAnchor = {
 };
 
 export type AnchorsControls = WithEvents<
-  WithTheme<{}, AnchorsThemes>,
+  WithTheme<
+    {
+      // the node the anchors are currently orbiting, if any held through an anchor hover and an anchor drag
+      parentNodeId: () => CoreNode['id'] | undefined;
+    },
+    AnchorsThemes
+  >,
   AnchorsEventMap
 >;
 

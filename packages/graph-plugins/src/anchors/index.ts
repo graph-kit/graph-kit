@@ -447,6 +447,7 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
       events: anchorsEventHub,
       lifecycle,
       theme,
+      parentNodeId: () => parentNode?.id,
     },
   };
 };

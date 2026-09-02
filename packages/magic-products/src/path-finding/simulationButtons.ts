@@ -2,6 +2,7 @@ import { nullThrows } from '@core/utils/assert';
 import { GraphSimulationButtonOption } from '@magic/shared/graph-shell';
 import { useFocusedNode } from '@magic/shared/utilities';
 
+import { findNegativeWeightEdge } from './simulations/edges.ts';
 import { usePathFindingSimulations } from './simulations/index.ts';
 
 export const simulationButtons: GraphSimulationButtonOption = (graph) => {
@@ -22,8 +23,20 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
     sourceNodeId.value = nullThrows(node.value?.id, 'no source node');
   };
 
+  const dijkstrasDisabled = () => {
+    const shared = disabled();
+    if (shared) return shared;
+    if (!findNegativeWeightEdge(graph)) return false;
+    return 'Cannot run with negative weights';
+  };
+
   return [
-    { name: "Dijkstra's", definition: dijkstras, beforeStarting, disabled },
+    {
+      name: "Dijkstra's",
+      definition: dijkstras,
+      beforeStarting,
+      disabled: dijkstrasDisabled,
+    },
     { name: 'Bellman-Ford', definition: bellmanFord, beforeStarting, disabled },
     {
       name: 'Floyd-Warshall',

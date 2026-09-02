@@ -18,10 +18,40 @@ type EndFrame = {
   type: 'end';
 };
 
+type FrontierEntry = {
+  node: GNode['id'];
+  distance: Fraction;
+  path: readonly GEdge['id'][];
+};
+
+type SafeToSettleFrame = {
+  type: 'safe-to-settle';
+  node: GNode['id'];
+  distance: Fraction;
+  path: readonly GEdge['id'][];
+  runnerUp?: FrontierEntry;
+};
+
 type SettleNodeFrame = {
   type: 'settle-node';
   node: GNode['id'];
   distance: Fraction;
+  path: readonly GEdge['id'][];
+};
+
+type StillTentativeFrame = {
+  type: 'still-tentative';
+  waiting: readonly FrontierEntry[];
+  via: FrontierEntry;
+};
+
+type ExploreNodeFrame = {
+  type: 'explore-node';
+  node: GNode['id'];
+  distance: Fraction;
+  // the edges about to be followed, in the order they will be
+  edges: readonly GEdge['id'][];
+  basePath: readonly GEdge['id'][];
 };
 
 type RelaxEdgeFrame = {
@@ -29,6 +59,8 @@ type RelaxEdgeFrame = {
   edge: GEdge['id'];
   from: GNode['id'];
   to: GNode['id'];
+  base: Fraction;
+  offered: Fraction;
 };
 
 type ImproveDistanceFrame = {
@@ -36,6 +68,12 @@ type ImproveDistanceFrame = {
   node: GNode['id'];
   oldDistance: Distance;
   newDistance: Fraction;
+  via: GNode['id'];
+  base: Fraction;
+  // edge that creates new route
+  edge: GEdge['id'];
+  newPath: readonly GEdge['id'][];
+  oldPath: readonly GEdge['id'][];
 };
 
 type KeepDistanceFrame = {
@@ -43,6 +81,37 @@ type KeepDistanceFrame = {
   node: GNode['id'];
   distance: Fraction;
   offered: Fraction;
+  // edge that would have created new route
+  edge: GEdge['id'];
+  offeredPath: readonly GEdge['id'][];
+  currentPath: readonly GEdge['id'][];
+};
+
+type SkipUnreachableFrame = {
+  type: 'skip-unreachable';
+  edge: GEdge['id'];
+  from: GNode['id'];
+  to: GNode['id'];
+};
+
+type BeginVerificationFrame = {
+  type: 'begin-verification';
+  passesDone: number;
+  nodeCount: number;
+};
+
+type VerifyEdgeFrame = {
+  type: 'verify-edge';
+  edge: GEdge['id'];
+  from: GNode['id'];
+  to: GNode['id'];
+  offered: Fraction;
+  current: Fraction;
+  currentPath: readonly GEdge['id'][];
+};
+
+type NoNegativeCycleFrame = {
+  type: 'no-negative-cycle';
 };
 
 type UnreachableFrame = {
@@ -54,6 +123,7 @@ type BeginPassFrame = {
   type: 'begin-pass';
   pass: number;
   totalPasses: number;
+  nodeCount: number;
 };
 
 type PassSettledFrame = {
@@ -64,54 +134,66 @@ type PassSettledFrame = {
 type NegativeCycleFrame = {
   type: 'negative-cycle';
   node: GNode['id'];
+  // edge that proves there is negative cycle
+  edge: GEdge['id'];
+  loop?: {
+    edges: readonly GEdge['id'][];
+    lapCost: Fraction;
+  };
 };
 
 export type SingleSourceStep =
   | StartFrame
   | EndFrame
+  | SafeToSettleFrame
   | SettleNodeFrame
+  | StillTentativeFrame
+  | ExploreNodeFrame
   | RelaxEdgeFrame
   | ImproveDistanceFrame
   | KeepDistanceFrame
   | UnreachableFrame
+  | SkipUnreachableFrame
+  | BeginVerificationFrame
+  | VerifyEdgeFrame
+  | NoNegativeCycleFrame
   | BeginPassFrame
   | PassSettledFrame
   | NegativeCycleFrame;
 
-/**
- * the state every single source frame carries, because both algorithms rebuild
- * all of it before every step. required rather than optional so a panel reading
- * a frame does not have to ask whether the run it is watching has a table yet
- */
 type SingleSourceState = {
-  /** the distance from the source to every node */
   distances: DistanceRow;
-  /** the node the user picked to measure every distance from */
   anchorNodeId: GNode['id'];
-  /** the edges that make up the best paths known so far */
+  // edges making up best path so far
   treeEdgeIds: readonly GEdge['id'][];
 };
 
-/**
- * what is being looked at this frame rather than what is known. optional
- * because it varies step to step, and because bellman ford has no frontier to
- * put in `pendingNodeIds` at all
- */
 export type SingleSourceHighlights = {
-  /** the node the algorithm is standing on this frame */
   activeNodeId?: GNode['id'];
-  /** nodes whose distance is being weighed this frame, but not yet changed */
-  candidateNodeIds?: readonly GNode['id'][];
-  /** nodes whose distance can no longer improve */
   settledNodeIds?: readonly GNode['id'][];
-  /** nodes with a tentative distance, waiting in the frontier */
   pendingNodeIds?: readonly GNode['id'][];
-  /** edges whose weight is being tested this frame */
   relaxingEdgeIds?: readonly GEdge['id'][];
-  /** edges tested this frame that offered nothing better than what we had */
   rejectedEdgeIds?: readonly GEdge['id'][];
+  // cycle means negative cycle
+  cycleNodeIds?: readonly GNode['id'][];
+  cycleEdgeIds?: readonly GEdge['id'][];
+};
+
+export type SweepOutcome = 'improved' | 'kept' | 'skipped';
+
+export type SingleSourceSweep = {
+  sweep?: {
+    edgeIds: readonly GEdge['id'][];
+    // what edge is being swept
+    position: number;
+    // what pass is it on
+    pass?: number;
+    totalPasses: number;
+    outcomes: Partial<Record<GEdge['id'], SweepOutcome>>;
+  };
 };
 
 export type SingleSourceFrame = SingleSourceStep &
   SingleSourceState &
-  SingleSourceHighlights;
+  SingleSourceHighlights &
+  SingleSourceSweep;

@@ -32,6 +32,8 @@
     placeItems: 'center',
   }));
 
+  const label = computed(() => graph.nodeLabel.get(props.id) ?? '?');
+
   onUnmounted(dispose);
 </script>
 
@@ -41,7 +43,7 @@
     class="rounded-full cursor-pointer"
     :style="nodeStyle"
   >
-    <span class="label">{{ styles.text.content }}</span>
+    <span class="label">{{ label }}</span>
   </button>
 </template>
 

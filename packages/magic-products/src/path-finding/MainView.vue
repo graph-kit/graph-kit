@@ -7,6 +7,9 @@
 
   useGraphShell({
     productId: 'path-finding',
+    core: {
+      directed: true,
+    },
     interactive: {
       allowSelfLoops: false,
       allowRepeatConnections: true,

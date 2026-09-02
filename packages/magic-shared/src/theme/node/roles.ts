@@ -24,13 +24,14 @@ export type NodeRole =
   | 'settled'
   | 'result'
   | 'anchor'
-  | 'excluded';
+  | 'excluded'
+  | 'violation';
 
 /**
  * hues are spread deliberately so that roles a product is likely to show at the
  * same time stay distinguishable in both the light and dark presets. 'excluded'
  * is the one neutral, because a ruled out node should recede rather than
- * compete for attention.
+ * compete for attention
  */
 export const nodeRoleColors = {
   /** is the algorithm processing this node right now? */
@@ -47,4 +48,6 @@ export const nodeRoleColors = {
   anchor: colors.PINK_500,
   /** is it ruled out, invalid or unreachable? */
   excluded: colors.GRAY_500,
+  /** does it prove the input is broken, like sitting on a negative cycle? */
+  violation: colors.RED_500,
 } as const satisfies Record<NodeRole, Color>;

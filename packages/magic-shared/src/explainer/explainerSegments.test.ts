@@ -2,7 +2,7 @@ import { getValue } from '@core/utils/maybeGetter/index';
 import Fraction from 'fraction.js';
 import { describe, expect, test, vi } from 'vitest';
 
-import { GEdge, Graph } from '../graph/types.ts';
+import { GEdge, GNode, Graph } from '../graph/types.ts';
 import { Explainer, ExplainerHighlight } from './types.ts';
 
 vi.mock('../theme/node/index.ts', () => ({
@@ -26,6 +26,7 @@ const graph = {
   isEdge: (id: string): boolean => id.startsWith('edge-'),
   getEdge: (id: string) =>
     ({ id, source: 'node-a', target: 'node-b' }) as GEdge,
+  getNode: (id: string) => ({ id, label: `Label ${id}` }) as GNode,
   // undirected, so an edge label sorts its endpoints before joining them
   metadata: { directed: false },
   theme: {
@@ -33,8 +34,6 @@ const graph = {
       activate: vi.fn(),
       deactivate: vi.fn(),
     }),
-    tokenResolver: (token: string, { id }: { id: string }) =>
-      token === 'node.text.content' ? `Label ${id}` : `Weight ${id}`,
   },
   focus: {
     theme: {

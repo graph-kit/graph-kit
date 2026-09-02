@@ -38,6 +38,14 @@
     if (lastPosition <= 0) return 100;
     return (simulation.value.playhead.position / lastPosition) * 100;
   });
+
+  const forwardButtonDisabled = computed(() => {
+    return simulation.value.playhead.isLast() || violation.value !== undefined;
+  });
+
+  const backwardButtonDisabled = computed(() => {
+    return simulation.value.playhead.isFirst() || violation.value !== undefined;
+  });
 </script>
 
 <template>
@@ -73,7 +81,7 @@
           :path="mdiChevronLeft"
           :size="size"
           :class="iconButtonClasses"
-          :disabled="simulation.playhead.isFirst()"
+          :disabled="backwardButtonDisabled"
           @click="simulation.playhead.prev()"
           label=""
           aria-label="Previous"
@@ -83,7 +91,7 @@
         <IconButton
           :size="size"
           :class="iconButtonClasses"
-          :disabled="simulation.playhead.isLast()"
+          :disabled="forwardButtonDisabled"
           @click="simulation.playhead.next()"
           :path="mdiChevronRight"
           label=""

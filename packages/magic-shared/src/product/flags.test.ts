@@ -23,6 +23,7 @@ describe('resolveShellFlags', () => {
       linkSharing: true,
       adjustAnimationSpeed: false,
       jumpToContent: true,
+      onboarding: true,
     });
   });
 
@@ -112,6 +113,12 @@ describe('resolveShellFlags', () => {
 
       expect(flags.jumpToContent).toBe(false);
       expect(warn.mock.calls[0]?.[0]).toContain('jumpToContent');
+    });
+
+    it('leaves onboarding alone, which asks the product nothing', () => {
+      const flags = resolveShellFlags({}, { transit });
+
+      expect(flags.onboarding).toBe(true);
     });
   });
 

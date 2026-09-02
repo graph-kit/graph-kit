@@ -7,6 +7,7 @@ import { provideGraph } from './context.ts';
 import { graphShellHelpMenu } from './help.ts';
 import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
 import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';
+import { GRAPH_ONBOARDING } from './onboarding.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
 import { graphTransitCompression } from './transit-compression.ts';
 import { GraphShellOptions } from './types.ts';
@@ -63,7 +64,14 @@ export const useGraphShell = (
     helpMenu: graphShellHelpMenu(graph, options.helpMenu),
     lensChips,
     simulationButtons,
+    onboarding: flags.onboarding ? GRAPH_ONBOARDING : [],
+    onSetupCompleted: () => {
+      if (graph.nodes.value.length > 0) shell.onboarding?.close();
+    },
   });
+
+  // the first node is the prompt answered
+  graph.events.subscribe('onStructureChange', () => shell.onboarding?.close());
 
   graph.events.subscribe('onStructureChange', shell.simulation.invalidate);
 

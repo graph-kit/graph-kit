@@ -26,7 +26,7 @@
 </script>
 
 <template>
-  <VStack>
+  <VStack gap="6">
     <FeedbackBanner />
     <VStack
       v-for="section of helpMenu.sections.value"

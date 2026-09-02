@@ -22,8 +22,8 @@ export const image: ShapeFactory<ImageSchema> = (options) => {
   const hitbox = (point: Coordinate) =>
     text?.textHitbox(point) || shapeHitbox(point);
 
-  const draw = async (ctx: CanvasRenderingContext2D) => {
-    await drawShape(ctx);
+  const draw = (ctx: CanvasRenderingContext2D) => {
+    drawShape(ctx);
     text?.drawTextArea(ctx);
   };
 

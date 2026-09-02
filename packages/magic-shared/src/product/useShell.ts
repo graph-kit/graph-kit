@@ -3,6 +3,7 @@ import { onMounted, watch } from 'vue';
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
 import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
+import { useOnboarding } from '../onboarding/index.ts';
 import { useShellShortcuts } from '../shortcuts/useShellShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import SimulationButtonGroup from '../simulation/start-buttons/ButtonGroup.vue';
@@ -52,6 +53,7 @@ export const useShell = (
 
   const localStorage = useShellLocalStorage(manifest.id, host, flags);
   const jumpToContent = useJumpToContent(host, flags);
+  const onboarding = useOnboarding(host, flags, appearance, options.onboarding);
 
   const { product: multiplayer, roomHistory } = useMultiplayer({
     host,
@@ -85,11 +87,16 @@ export const useShell = (
     localStorage,
     multiplayer,
     jumpToContent,
+    onboarding,
   };
 
   shell.surface.camera.events.subscribe(
     'onCameraChange',
     localStorage.invalidate,
+  );
+
+  host.annotations?.events.subscribe('onStrokeBegan', () =>
+    onboarding?.close(),
   );
 
   const savedAnimationSpeed = readAnimationSpeed();
@@ -147,6 +154,10 @@ export const useShell = (
 
     // whatever was restored is the starting point, not the state setup began with
     shell.history?.clear();
+
+    shell.onboarding?.open();
+
+    options.onSetupCompleted?.(shell);
   });
 
   useShellShortcuts(shell);

@@ -69,6 +69,8 @@
       shell.surface.cursorCoordinates.value,
     );
     focus.set(definition.id);
+    // the prompt was to make one of these
+    shell.onboarding?.close();
   };
 
   const deleteFocusedSetDefinitions = () => {

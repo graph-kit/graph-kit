@@ -72,7 +72,10 @@
             ...balanceFactorTheme,
           },
           tooltipLabel: definitions.balanceFactor,
-          name: () => 'Root Balance Factor: ' + getBalanceFactor(root()),
+          name: () => {
+            const bf = root() === undefined ? 'N/A' : getBalanceFactor(root());
+            return 'Root Balance Factor: ' + bf;
+          },
         },
         {
           lens: {
@@ -80,7 +83,10 @@
             ...treeHeightTheme,
           },
           tooltipLabel: definitions.treeHeight,
-          name: () => 'Root Height: ' + getTreeHeight(root()),
+          name: () => {
+            const height = root() === undefined ? 'N/A' : getTreeHeight(root());
+            return 'Root Height: ' + height;
+          },
         },
       ];
     },

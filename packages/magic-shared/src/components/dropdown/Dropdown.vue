@@ -9,10 +9,14 @@
     /** the gap the menu keeps from its trigger */
     sideOffset?: number;
   }>();
+
+  /** optional, so a call site can open the menu itself */
+  const open = defineModel<boolean>('open', { default: false });
 </script>
 
 <template>
   <Dropdown
+    v-model:open="open"
     :class="menuPanelClasses"
     :side-offset="sideOffset"
   >

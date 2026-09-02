@@ -35,7 +35,8 @@
   /** long enough to cross the gap between the trigger and the menu, short enough to read as a dismissal */
   const HOVER_CLOSE_DELAY_MS = 150;
 
-  const open = ref(false);
+  /** optional, for a call site that opens the menu on something other than its trigger */
+  const open = defineModel<boolean>('open', { default: false });
 
   /** a hover carries no focus intent, so reka's focus handoffs sit out until a click or a key opens the menu */
   const openedByHover = ref(false);

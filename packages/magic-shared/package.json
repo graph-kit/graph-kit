@@ -124,6 +124,10 @@
       "types": "./dist/types/graph-shell/index.d.ts",
       "default": "./src/graph-shell/index.ts"
     },
+    "./onboarding": {
+      "types": "./dist/types/onboarding/index.d.ts",
+      "default": "./src/onboarding/index.ts"
+    },
     "./lens": {
       "types": "./dist/types/lens/index.d.ts",
       "default": "./src/lens/index.ts"

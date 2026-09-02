@@ -7,7 +7,7 @@ import { provideGraph } from './context.ts';
 import { graphShellHelpMenu } from './help.ts';
 import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
 import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';
-import { GRAPH_ONBOARDING, useGraphOnboarding } from './onboarding/index.ts';
+import { GRAPH_ONBOARDING } from './onboarding.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
 import { graphTransitCompression } from './transit-compression.ts';
 import { GraphShellOptions } from './types.ts';
@@ -58,21 +58,15 @@ export const useGraphShell = (
     },
   };
 
-  const onboarding = useGraphOnboarding(
-    graph,
-    options.onboarding ?? GRAPH_ONBOARDING,
-  );
-
   const shell = useShell(host, {
     productId: options.productId,
     flags: options.flags,
     helpMenu: graphShellHelpMenu(graph, options.helpMenu),
     lensChips,
     simulationButtons,
-    // the graph the shell finished setting up is the one the prompt has to answer to
-    onSetupCompleted: (appearance) => {
-      if (graph.nodes.value.length === 0) onboarding.show(appearance);
-    },
+    onboarding: flags.onboarding
+      ? (options.onboarding ?? GRAPH_ONBOARDING)
+      : [],
   });
 
   graph.events.subscribe('onStructureChange', shell.simulation.invalidate);

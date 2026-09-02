@@ -23,6 +23,7 @@ describe('resolveShellFlags', () => {
       linkSharing: true,
       adjustAnimationSpeed: false,
       jumpToContent: true,
+      onboarding: true,
     });
   });
 
@@ -99,19 +100,29 @@ describe('resolveShellFlags', () => {
   });
 
   describe('without host isContent', () => {
-    it('forces off jump to content', () => {
+    it('forces off every flag content backs', () => {
       const flags = resolveShellFlags({}, { transit });
 
       expect(flags.jumpToContent).toBe(false);
+      expect(flags.onboarding).toBe(false);
     });
 
-    it('overrules a product that asked for it anyway', () => {
+    it('overrules a product that asked for jump to content anyway', () => {
       const warn = warnings();
 
       const flags = resolveShellFlags({ jumpToContent: true }, { transit });
 
       expect(flags.jumpToContent).toBe(false);
       expect(warn.mock.calls[0]?.[0]).toContain('jumpToContent');
+    });
+
+    it('overrules a product that asked for onboarding anyway', () => {
+      const warn = warnings();
+
+      const flags = resolveShellFlags({ onboarding: true }, { transit });
+
+      expect(flags.onboarding).toBe(false);
+      expect(warn.mock.calls[0]?.[0]).toContain('onboarding');
     });
   });
 

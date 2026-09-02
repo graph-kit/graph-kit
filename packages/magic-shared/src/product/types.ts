@@ -14,6 +14,7 @@ import { ComputedRef } from 'vue';
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { LensControls } from '../lens/useLensState.ts';
 import { ProductMultiplayer } from '../multiplayer/types.ts';
+import { OnboardingControls, OnboardingItem } from '../onboarding/index.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
@@ -181,6 +182,11 @@ export type ShellOptions = {
   helpMenu?: MaybeGetter<HelpMenuItem[]>;
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
+  /**
+   * what the product suggests trying first, shown only if it opens on nothing. left out
+   * by a product with nothing to suggest, see {@link OnboardingControls}
+   */
+  onboarding?: OnboardingItem[];
   /** triggered once the shell has finished standing the product up */
   onSetupCompleted?: (appearance: AppearanceControls) => void;
 };
@@ -207,6 +213,8 @@ export type Shell = {
   localStorage: LocalStorageControls;
   /** absent when the host named no content, see {@link ProductControls.isContent} */
   jumpToContent?: JumpToContentControls;
+  /** absent when the product contributed no items, or named no content */
+  onboarding?: OnboardingControls;
   /**
    * The room connection, or undefined if
    * 1. product has opted-out of multiplayer in its manifest or

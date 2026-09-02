@@ -13,6 +13,7 @@
       localStorage: false,
       annotations: false,
       linkSharing: false,
+      onboarding: false,
     },
     core: {
       weighted: false,

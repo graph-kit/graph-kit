@@ -9,7 +9,7 @@
   import { useProvidedShell } from '@magic/shared/product';
   import { mdiPlay, mdiPlus } from '@mdi/js';
 
-  import { computed, ref } from 'vue';
+  import { computed, onUnmounted, ref } from 'vue';
 
   import { useProvidedTreeSimulation } from './useProvidedTree.ts';
 
@@ -47,10 +47,20 @@
     target.value = node.id;
     shell.simulation.start(definition);
   };
+
+  const open = ref(false);
+
+  const openOnDblClick = () => (open.value = true);
+
+  shell.surface.events.dom.subscribe('onDblClick', openOnDblClick);
+
+  onUnmounted(() =>
+    shell.surface.events.dom.unsubscribe('onDblClick', openOnDblClick),
+  );
 </script>
 
 <template>
-  <Dropdown>
+  <Dropdown v-model:open="open">
     <template #trigger>
       <Button>
         <template #start>

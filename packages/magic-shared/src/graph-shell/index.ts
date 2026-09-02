@@ -7,5 +7,3 @@ export type {
 } from './types.ts';
 
 export { provideGraph, useProvidedGraph } from './context.ts';
-
-export type { OnboardingItem } from './onboarding/index.ts';

@@ -32,6 +32,11 @@ export type ShellFlags = {
    * @default true
    */
   jumpToContent: boolean;
+  /**
+   * suggests what to try first when the product opens on nothing
+   * @default true
+   */
+  onboarding: boolean;
 };
 
 const DEFAULTS: ShellFlags = {
@@ -41,6 +46,7 @@ const DEFAULTS: ShellFlags = {
   linkSharing: true,
   adjustAnimationSpeed: false,
   jumpToContent: true,
+  onboarding: true,
 };
 
 /** what a product author writes: only what differs from {@link ShellFlags} defaults */
@@ -50,6 +56,15 @@ export type ShellFlagOptions = Partial<ShellFlags>;
 const TRANSIT_BACKED = [
   'localStorage',
   'linkSharing',
+] as const satisfies readonly (keyof ShellFlags)[];
+
+/**
+ * neither "the content is offscreen" nor "there is no content yet" is answerable without
+ * {@link ProductControls.isContent}
+ */
+const CONTENT_BACKED = [
+  'jumpToContent',
+  'onboarding',
 ] as const satisfies readonly (keyof ShellFlags)[];
 
 /** what the product asked for, narrowed to what its controls can actually support */
@@ -70,7 +85,8 @@ export const resolveShellFlags = (
   if (!host.transit)
     for (const flag of TRANSIT_BACKED) withoutHostSupport(flag, 'transit');
 
-  if (!host.isContent) withoutHostSupport('jumpToContent', 'isContent');
+  if (!host.isContent)
+    for (const flag of CONTENT_BACKED) withoutHostSupport(flag, 'isContent');
 
   return resolved;
 };

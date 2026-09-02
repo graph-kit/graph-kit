@@ -7,7 +7,7 @@
   import Icon from '../../components/icon/Icon.vue';
   import ToggleButton from '../../components/toggle-button/ToggleButton.vue';
   import Tooltip from '../../components/tooltip/Tooltip.vue';
-  import { LensChipDefinition, chipName, disabledReason } from './types.ts';
+  import { LensChipDefinition, chipName, disabledState } from './types.ts';
 
   // otherwise attrs land on the ToggleButton and the tooltip content both, so
   // listeners meant for the chip also trigger from the tooltip.
@@ -20,7 +20,7 @@
   /** true while the user is pointing at or focused on the chip, its tooltip, or the gap between them */
   const active = defineModel<boolean>('active');
 
-  const reason = computed(() => disabledReason(props));
+  const disabled = computed(() => disabledState(props));
 
   const label = computed(() => chipName(props));
 
@@ -33,14 +33,14 @@
 <template>
   <Tooltip
     v-model:open="active"
-    :label="reason ?? getValue(tooltipLabel)"
+    :label="disabled?.reason ?? getValue(tooltipLabel)"
   >
     <template #trigger>
       <ToggleButton
         v-bind="$attrs"
         v-model="model"
-        :aria-disabled="!!reason"
-        :class="['gap-2', reason && disabledClasses]"
+        :aria-disabled="!!disabled"
+        :class="['gap-2', disabled && disabledClasses]"
       >
         <span>
           {{ label }}

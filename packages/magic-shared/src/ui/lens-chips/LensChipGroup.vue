@@ -8,7 +8,7 @@
   import Well from '../../components/layout/Well.vue';
   import { useProvidedShell } from '../../product/context.ts';
   import LensChip from './LensChip.vue';
-  import { LensChipDefinition, disabledReason } from './types.ts';
+  import { LensChipDefinition, disabledState, lensFor } from './types.ts';
 
   const chipId = (chip: LensChipDefinition) => chip.lens.id;
 
@@ -32,12 +32,12 @@
   );
 
   const sortedChips = computed(() => [
-    ...chips.value.filter((chip) => !disabledReason(chip)),
-    ...chips.value.filter((chip) => disabledReason(chip)),
+    ...chips.value.filter((chip) => !disabledState(chip)),
+    ...chips.value.filter((chip) => disabledState(chip)),
   ]);
 
   const togglePinnedLens = (chip: LensChipDefinition) => {
-    if (disabledReason(chip)) return;
+    if (disabledState(chip)) return;
     const lensId = chipId(chip);
     const wasPinned = lensId === pinnedLensId.value;
     pinnedLensId.value = wasPinned ? undefined : lensId;
@@ -49,7 +49,7 @@
   const setHovered = (chip: LensChipDefinition, hovered: boolean) => {
     const lensId = chipId(chip);
     if (hovered) {
-      if (disabledReason(chip)) return;
+      if (!lensFor(chip)) return;
       hoveredLensId.value = lensId;
       return;
     }
@@ -70,18 +70,15 @@
   );
 
   const disabledLensIds = computed(
-    () => new Set(chips.value.filter(disabledReason).map(chipId)),
+    () => new Set(chips.value.filter(disabledState).map(chipId)),
   );
 
-  // if chip goes disabled while active, drop its lens
-  // so it doesn't spring back up when it becomes re-enabled
+  // if chip goes disabled while pinned, drop it
+  // so it doesn't spring back up when it becomes re-enabled. hover ends on its
+  // own, and until it does the lens resolves to whatever the disabled one offers
   watch(disabledLensIds, (disabledIds) => {
     if (pinnedLensId.value && disabledIds.has(pinnedLensId.value)) {
       pinnedLensId.value = undefined;
-    }
-    if (hoveredLensId.value && disabledIds.has(hoveredLensId.value)) {
-      hoveredLensId.value = undefined;
-      hoverSuppressedLensId.value = undefined;
     }
   });
 
@@ -101,12 +98,19 @@
     );
   });
 
-  watch(displayedChip, (newChip, oldChip) => {
-    if (oldChip) {
-      shell.lens.remove(oldChip.lens.id);
+  const displayedLens = computed(() => {
+    const chip = displayedChip.value;
+    return chip && lensFor(chip);
+  });
+
+  // watching the resolved lens rather than the chip, so the lens taken off is
+  // always the one that went on, even when the chip swapped which it offers
+  watch(displayedLens, (newLens, oldLens) => {
+    if (oldLens) {
+      shell.lens.remove(oldLens.id);
     }
-    if (newChip) {
-      shell.lens.add(newChip.lens);
+    if (newLens) {
+      shell.lens.add(newLens);
     }
   });
 </script>

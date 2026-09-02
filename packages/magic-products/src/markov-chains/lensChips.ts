@@ -1,22 +1,21 @@
 import { Graph } from '@magic/shared/graph';
 import {
   LensChipDefinition,
-  disabledReason,
+  disabledState,
 } from '@magic/shared/ui/lens-chips/types';
 
 import { definitions } from './definitions.ts';
 import { absorbingStatesThemer } from './themers/absorbingStates.ts';
 import { communicatingClassesThemer } from './themers/communicatingClasses.ts';
-import { invalidStatesThemer } from './themers/invalidStates.ts';
 import { layered } from './themers/layered.ts';
 import { meanRecurrenceTimesThemer } from './themers/meanRecurrenceTimes.ts';
-import { outboundTotalsThemer } from './themers/outboundTotals.ts';
 import { periodicityThemer } from './themers/periodicity.ts';
 import { recurrentClassesThemer } from './themers/recurrentClasses.ts';
 import { recurrentStatesThemer } from './themers/recurrentStates.ts';
 import { stationaryDistributionThemer } from './themers/stationaryDistribution.ts';
 import { transientStatesThemer } from './themers/transientStates.ts';
 import { useMarkovChain } from './useMarkovChain.ts';
+import { validityLens } from './validityLens.ts';
 
 /** a property only asked of some chains, so it answers with nothing rather than a misleading no */
 const yesNo = (answer: boolean | undefined) => {
@@ -24,30 +23,21 @@ const yesNo = (answer: boolean | undefined) => {
   return answer ? 'Yes' : 'No';
 };
 
-// Dont touch this. Keeping it here for reference.
-//  {
-//     lens: {
-//       id: 'valid',
-//       ...layered(
-//         invalidStatesThemer(graph, chain.invalidStates),
-//         outboundTotalsThemer(graph, chain.outboundTotals),
-//       ),
-//     },
-//     name: () => `Valid: ${yesNo(chain.isValid.value)}`,
-//     tooltipLabel: definitions.validity,
-//   },
-
 export const lensChips = (graph: Graph): LensChipDefinition[] => {
   const chain = useMarkovChain(graph);
+
+  const validity = validityLens(graph, chain);
 
   const requiresValidChain = (
     chip: LensChipDefinition,
   ): LensChipDefinition => ({
     ...chip,
     disabled: () =>
-      (!chain.isValid.value &&
-        `Needs a valid chain. ${definitions.validity}`) ||
-      disabledReason(chip),
+      (!chain.isValid.value && {
+        reason: `Needs a valid chain. ${definitions.validity}`,
+        lens: validity,
+      }) ||
+      disabledState(chip),
   });
 
   return [
@@ -172,8 +162,10 @@ export const lensChips = (graph: Graph): LensChipDefinition[] => {
         stat: () => yesNo(chain.isReversible.value),
       },
       disabled: () =>
-        chain.isReducible.value &&
-        'Needs an irreducible chain. A transient state holds none of the distribution, so detailed balance would pass over its one way transitions.',
+        chain.isReducible.value && {
+          reason:
+            'Needs an irreducible chain. A transient state holds none of the distribution, so detailed balance would pass over its one way transitions.',
+        },
       tooltipLabel: definitions.reversible,
     },
     {

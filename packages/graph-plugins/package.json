@@ -29,9 +29,11 @@
     "@graph/computed-tokens": "workspace:*",
     "@core/utils": "workspace:*",
     "fraction.js": "^5.3.4",
-    "@reactive/primitives": "workspace:*"
+    "@reactive/primitives": "workspace:*",
+    "tinycolor2": "catalog:"
   },
   "devDependencies": {
-    "ts-essentials": "^10.2.0"
+    "ts-essentials": "^10.2.0",
+    "@types/tinycolor2": "catalog:"
   }
 }

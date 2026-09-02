@@ -6,6 +6,15 @@ settings:
 
 catalogs:
   default:
+    '@types/tinycolor2':
+      specifier: ^1.4.6
+      version: 1.4.6
+    '@vueuse/core':
+      specifier: ^13.9.0
+      version: 13.9.0
+    tinycolor2:
+      specifier: ^1.6.0
+      version: 1.6.0
     vue:
       specifier: ^3.5.18
       version: 3.5.40
@@ -313,7 +322,13 @@ importers:
       fraction.js:
         specifier: ^5.3.4
         version: 5.3.4
+      tinycolor2:
+        specifier: 'catalog:'
+        version: 1.6.0
     devDependencies:
+      '@types/tinycolor2':
+        specifier: 'catalog:'
+        version: 1.4.6
       ts-essentials:
         specifier: ^10.2.0
         version: 10.2.1(typescript@6.0.3)

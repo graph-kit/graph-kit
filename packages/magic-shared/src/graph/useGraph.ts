@@ -54,9 +54,9 @@ const graphPlugins = (options: UseGraphOptions) => [
   adjacencyLists,
   transitionMatrix,
   characteristics,
+  phantom,
   interactive(options.interactive ?? {}),
   animation,
-  phantom,
   minimumSpanningTrees(options.minimumSpanningTrees ?? {}),
   readonly,
 ];

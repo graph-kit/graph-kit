@@ -48,6 +48,14 @@
     if (usingPointer.value) event.preventDefault();
   };
 
+  // reka opens by focusing the first control in the panel, which rings it as though
+  // the user had tabbed there; the panel takes focus instead so the trap still holds
+  const focusPanel = (event: Event) => {
+    usingPointer.value = false;
+    event.preventDefault();
+    if (event.target instanceof HTMLElement) event.target.focus({ preventScroll: true });
+  };
+
   defineSlots<{
     default?: () => unknown;
     trigger: () => unknown;
@@ -68,10 +76,11 @@
       <DialogContent
         v-bind="{ ...attrs, class: undefined, 'aria-describedby': undefined }"
         :class="classes"
+        tabindex="-1"
         @pointerdown="usingPointer = true"
         @keydown="usingPointer = false"
         @pointer-down-outside="usingPointer = true"
-        @open-auto-focus="usingPointer = false"
+        @open-auto-focus="focusPanel"
         @close-auto-focus="keepFocusPut"
       >
         <DialogTitle

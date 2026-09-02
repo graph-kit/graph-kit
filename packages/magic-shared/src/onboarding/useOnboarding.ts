@@ -9,16 +9,18 @@ import { ShellFlags } from '../product/flags.ts';
 import { ProductControls } from '../product/types.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { onboardingElements } from './elements.ts';
+import { hasOnboarded, markOnboarded } from './hasOnboarded.ts';
 import { onboardingLayout } from './layout.ts';
 import { onboardingPalette } from './palette.ts';
 import { OnboardingItem } from './types.ts';
 
 export type OnboardingControls = {
-  /** puts the card on whatever the canvas is showing right now */
+  /** puts the card on whatever the canvas is showing right now, unless this browser has already onboarded */
   open: () => void;
   /**
-   * takes it back down, whether or not it was up. what a product calls the moment its
-   * prompt stops being true, which only the product is in a position to know
+   * takes it back down, whether or not it was up, and marks this browser onboarded for
+   * good. what a product calls the moment its prompt stops being true, which only the
+   * product is in a position to know
    */
   close: () => void;
   /** whether the card is up */
@@ -52,13 +54,20 @@ export const useOnboarding = (
 
   const active = ref(false);
 
-  const close = () => {
+  const takeDown = () => {
     active.value = false;
     surface.aggregator.removeTransformer(transformer);
   };
 
+  const close = () => {
+    markOnboarded();
+    takeDown();
+  };
+
   const open = () => {
-    close();
+    if (hasOnboarded()) return;
+
+    takeDown();
     active.value = true;
 
     const layout = onboardingLayout(items, surface.visibleWorldRect.value);

@@ -24,6 +24,9 @@ const REARRANGE_DURATION_MS = 600;
 
 const EASTER_EGG_TOAST_MS = 5_000;
 
+const articleFor = (word: string) =>
+  'aeiou'.includes(word[0].toLowerCase()) ? 'An' : 'A';
+
 export const useWelcomeScene = (graph: Graph, shell: Shell) => {
   let arrangement = pickArrangement();
 
@@ -107,7 +110,7 @@ export const useWelcomeScene = (graph: Graph, shell: Shell) => {
     );
 
     toast.show({
-      title: `Is That A ${capitalize(arrangement.name)}?`,
+      title: `Is That ${articleFor(arrangement.name)} ${capitalize(arrangement.name)}?`,
       description: 'You hit the super secret space bar!',
       severity: 'magic',
       duration: EASTER_EGG_TOAST_MS,

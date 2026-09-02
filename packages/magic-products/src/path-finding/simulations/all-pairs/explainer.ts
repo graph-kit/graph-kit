@@ -79,7 +79,7 @@ export const allPairsExplainer =
         const detourCost = cost(graph, frame.detourDistance, frame.detourRoute);
 
         return {
-          content: `{${frame.from}} To {${frame.to}} Currently Costs ${keptCost.text} Which Is Not Less Than The Current Route Via {${frame.pivot}} Costing ${detourCost.text} So The Current Cost [Remains]`,
+          content: `The New Route Via {${frame.pivot}} Costs ${detourCost.text} Which Is Not Less Than The Current Route {${frame.from}} To {${frame.to}} Costing ${keptCost.text} So The Current Cost [Remains]`,
           highlights: [
             ...keptCost.highlights,
             ...detourCost.highlights,
@@ -105,7 +105,7 @@ export const allPairsExplainer =
         );
 
         return {
-          content: `The Detour Improves Against ${previousCost.text}, So The Cost For {${frame.from}} To {${frame.to}} [Improves] To ${improved.text}`,
+          content: `The Detour Costs Less Than ${previousCost.text}, So The Cost For {${frame.from}} To {${frame.to}} [Improves] To ${improved.text}`,
           highlights: [
             ...previousCost.highlights,
             highlights.improve,
@@ -121,7 +121,7 @@ export const allPairsExplainer =
         };
 
       case 'negative-cycle': {
-        const found = `{${frame.node}} Can Return To Itself For Less Than Nothing`;
+        const found = `{${frame.node}} Can Return To Itself For Less Than 0`;
 
         if (!frame.loop) {
           return {
@@ -133,7 +133,7 @@ export const allPairsExplainer =
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${found}: A [Negative Cycle] Costing ${lap.text} A Lap, So No Shortest Path Exists`,
+          content: `${found} meaning A [Negative Cycle] Costing ${lap.text} A Lap Exists`,
           highlights: [
             negativeCycle(graph, frame.loop.edges),
             ...lap.highlights,

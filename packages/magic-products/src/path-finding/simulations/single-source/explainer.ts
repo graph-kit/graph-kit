@@ -67,7 +67,7 @@ export const singleSourceExplainer =
       case 'end':
         if (frame.cycleEdgeIds?.length) {
           return {
-            content: `Cannot Finalize [Distances]. While A [Negative Cycle] Exists, We Cannot Find The Cheapest Path From {${frame.anchorNodeId}}`,
+            content: `Cannot Finalize [Distances] While A [Negative Cycle] Exists, We Cannot Find The Cheapest Path From {${frame.anchorNodeId}}`,
             highlights: [
               highlights.distances,
               negativeCycle(graph, frame.cycleEdgeIds),

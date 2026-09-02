@@ -75,8 +75,8 @@
   onMounted(() => routeThemer.themer.activate());
   onUnmounted(() => routeThemer.themer.deactivate());
 
-  const PIVOT_TINT = nodeRoleColors[nodeRoles.pivot] + '33';
-  const PAIR_TINT = nodeRoleColors[nodeRoles.pair] + '66';
+  const PIVOT_TINT = nodeRoleColors[nodeRoles.pivot];
+  const PAIR_TINT = nodeRoleColors[nodeRoles.pair];
 
   const hoveredTint = computed(() => {
     const firstEdge = hoveredRoute.value.at(0);

@@ -151,8 +151,9 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
       stat: () => msts.value.length,
     },
     disabled: () => {
-      if (graph.minimumSpanningTrees.all.value.skipped)
+      if (graph.minimumSpanningTrees.all.value.skipped) {
         return { reason: 'Too many nodes' };
+      }
       return false;
     },
     tooltipLabel: () => {

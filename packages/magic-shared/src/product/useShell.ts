@@ -122,8 +122,6 @@ export const useShell = (
     );
   }
 
-  // read-only has nothing to draw with, so the tools come out of standby with it and
-  // the panel closes behind them on `onDeactivated`
   if (annotations && multiplayer) {
     watch(
       multiplayer.room.isReadonly,
@@ -139,7 +137,6 @@ export const useShell = (
       id: 'shell/lens-chips',
       component: LensChipGroup,
       position: 'top-middle',
-      // should always be stuck to the top
       priority: -Infinity,
     });
   }
@@ -158,7 +155,6 @@ export const useShell = (
       id: 'shell/simulation-buttons',
       component: SimulationButtonGroup,
       position: 'bottom-middle',
-      // should always be stuck to the bottom
       priority: Infinity,
     });
   }
@@ -174,6 +170,12 @@ export const useShell = (
     shell.onboarding?.open();
 
     options.onSetupCompleted?.(shell);
+
+    shell.dialog.open({
+      title: 'Setup Complete',
+      description: 'Its all setup now',
+      actions: [{ textContent: 'Ok', onClick: () => {} }],
+    });
   });
 
   useShellShortcuts(shell);

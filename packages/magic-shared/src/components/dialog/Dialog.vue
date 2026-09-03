@@ -1,11 +1,16 @@
 <script setup lang="ts">
   import Dialog from '@core/components/Dialog';
 
-  defineProps<{
+  interface Props {
     title: string;
-    /** whether the heading is drawn, see the core dialog. @default true */
+    /**
+     * whether the core dialog draws the heading. off by default, since a caller laying
+     * out its own panel wants the title where it puts it, not above everything
+     */
     showHeader?: boolean;
-  }>();
+  }
+
+  withDefaults(defineProps<Props>(), { showHeader: false });
 
   const open = defineModel<boolean>('open', { default: false });
 

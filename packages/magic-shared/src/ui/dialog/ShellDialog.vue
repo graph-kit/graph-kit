@@ -30,21 +30,22 @@
     :open="true"
     @update:open="onOpenChanged"
   >
+    <h2 class="text-2xl font-bold">{{ dialog.entry.value.title }}</h2>
+
     <p
       v-if="dialog.entry.value.description"
-      class="opacity-80"
+      class="opacity-90"
     >
       {{ dialog.entry.value.description }}
     </p>
 
     <HStack
       v-if="dialog.entry.value.actions?.length"
-      class="justify-end mt-4"
+      class="mt-2"
     >
       <Button
         v-for="action of dialog.entry.value.actions"
         :key="action.textContent"
-        class="px-3 py-1"
         :href="action.href"
         @click="take(action)"
       >

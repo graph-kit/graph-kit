@@ -15,24 +15,59 @@ import { simplify } from './sets/other/simplifier/index.ts';
 import { extractVariables } from './sets/other/simplifier/truthTable.ts';
 import type { LatexQueryString, QueryId, Section, SetLabel } from './types.ts';
 
+/** `C`, `C or D`, `C, D or E` */
+const labelList = (labels: SetLabel[]) =>
+  labels.length < 3
+    ? labels.join(' or ')
+    : `${labels.slice(0, -1).join(', ')} or ${labels.at(-1)}`;
+
+/**
+ * why a query does not resolve, in the words the panel puts on it.
+ *
+ * one per way {@link analyzeQuery} can turn a query down, so a reason cannot be
+ * written without a branch that reaches it
+ */
+export const QUERY_ERRORS = {
+  /** the compute engine could not read it as an expression at all */
+  unreadable: 'Expression unfinished',
+  /** it reads as maths, but not as maths over sets: `A + B`, `2`, `\sin A` */
+  notSetNotation: 'Expression can only hold sets and set operators',
+  undefinedSets: (labels: SetLabel[]) =>
+    labels.length === 1
+      ? `No set named ${labels[0]} is on the canvas.`
+      : `No sets named ${labelList(labels)} are on the canvas.`,
+} as const;
+
 /**
  * one query read against the current set space. `isValid` gates `sections`, so
- * checking it hands back the resolved sections without a second null check
+ * checking it hands back the resolved sections without a second null check, and
+ * gates `error` the same way
  */
 type AnalyzedQuery =
-  | { latexQueryString: LatexQueryString; isValid: true; sections: Section[] }
-  | { latexQueryString: LatexQueryString; isValid: false; sections: null };
+  | {
+      latexQueryString: LatexQueryString;
+      isValid: true;
+      sections: Section[];
+    }
+  | {
+      latexQueryString: LatexQueryString;
+      isValid: false;
+      sections: null;
+      /** what to tell the reader, see {@link QUERY_ERRORS} */
+      error: string;
+    };
 
 const analyzeQuery = (
   latexQueryString: LatexQueryString,
   parse: ParseSetExpression,
   definedLabels: SetLabel[],
 ): AnalyzedQuery => {
-  const invalid = {
+  const invalid = (error: string): AnalyzedQuery => ({
     latexQueryString,
     isValid: false,
     sections: null,
-  } as const;
+    error,
+  });
 
   // an empty query is not an error, it just selects nothing
   if (!latexQueryString.trim()) {
@@ -40,23 +75,28 @@ const analyzeQuery = (
   }
 
   const mathJSON = parseMathJSON(latexQueryString);
-  if (!mathJSON.isValid) return invalid;
+  if (!mathJSON.isValid) return invalid(QUERY_ERRORS.unreadable);
 
   const sections = parse(mathJSON.json);
-  if (sections === null) return invalid;
+  if (sections === null) return invalid(QUERY_ERRORS.notSetNotation);
 
-  const namesAnUndefinedSet =
-    definedLabels.length > 0 &&
-    extractVariables(mathJSON.json).some(
-      (variable) => !definedLabels.includes(variable),
-    );
-  if (namesAnUndefinedSet) return invalid;
+  // with nothing drawn yet every label is unknown, so naming one is not yet a mistake
+  const undefinedSets =
+    definedLabels.length === 0
+      ? []
+      : extractVariables(mathJSON.json).filter(
+          (variable) => !definedLabels.includes(variable),
+        );
+  if (undefinedSets.length > 0) {
+    return invalid(QUERY_ERRORS.undefinedSets(undefinedSets));
+  }
 
   return { latexQueryString, isValid: true, sections };
 };
 
 export type QueryAnalysis = {
-  queryErrors: ComputedRef<Record<QueryId, boolean>>;
+  /** why each query does not resolve, undefined for one that reads fine */
+  queryErrors: ComputedRef<Record<QueryId, string | undefined>>;
   simplifiedQueries: ComputedRef<Record<QueryId, string | null>>;
   disambiguatedQueries: ComputedRef<Record<QueryId, string | null>>;
   // the sections each query resolves to, keyed by query, skipping erroring queries
@@ -92,10 +132,10 @@ export const useQueryAnalysis = (
   });
 
   const queryErrors = computed(() => {
-    const errors: Record<QueryId, boolean> = {};
+    const errors: Record<QueryId, string | undefined> = {};
 
-    for (const [queryId, { isValid }] of queryIdToAnalysis.value) {
-      errors[queryId] = !isValid;
+    for (const [queryId, analysis] of queryIdToAnalysis.value) {
+      errors[queryId] = analysis.isValid ? undefined : analysis.error;
     }
 
     return errors;

@@ -1,3 +1,4 @@
+import { IS_DEV } from '@core/utils/debugging';
 import {
   type TelemetryEnvelope,
   setTelemetrySink,
@@ -5,7 +6,7 @@ import {
 
 export default defineNuxtPlugin(() => {
   const { posthogKey } = useRuntimeConfig().public;
-  if (!posthogKey) return;
+  if (IS_DEV || !posthogKey) return;
 
   const router = useRouter();
 

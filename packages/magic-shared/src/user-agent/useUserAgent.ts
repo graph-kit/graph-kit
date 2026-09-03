@@ -1,5 +1,6 @@
 import {
   useDevicePixelRatio,
+  useMediaQuery,
   useOnline,
   usePreferredReducedMotion,
   useWindowSize,
@@ -18,6 +19,8 @@ export type UserAgentControls = {
   timezone: string;
   /** zero on hardware with no touch input */
   touchPoints: number;
+  /** touch is the only pointer, so a laptop with a touchscreen says no and a phone says yes */
+  isTouchOnly: ComputedRef<boolean>;
   /** logical cores, absent where the browser does not say */
   cores?: number;
   /** gigabytes of memory, chromium only */
@@ -37,10 +40,13 @@ export const useUserAgent = (): UserAgentControls => {
   const display = typeof screen === 'undefined' ? undefined : screen;
 
   const raw = client?.userAgent ?? '';
+  const touchPoints = client?.maxTouchPoints ?? 0;
 
   const { width, height } = useWindowSize();
   const { pixelRatio } = useDevicePixelRatio();
   const isOnline = useOnline();
+  // a mouse plugged into a tablet takes it back out of touch only
+  const hasFinePointer = useMediaQuery('(any-pointer: fine)');
   const reducedMotion = usePreferredReducedMotion();
 
   return {
@@ -48,7 +54,8 @@ export const useUserAgent = (): UserAgentControls => {
     raw,
     language: client?.language || UNKNOWN,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || UNKNOWN,
-    touchPoints: client?.maxTouchPoints ?? 0,
+    touchPoints,
+    isTouchOnly: computed(() => touchPoints > 0 && !hasFinePointer.value),
     cores: client?.hardwareConcurrency,
     deviceMemoryGb: (client as { deviceMemory?: number } | undefined)
       ?.deviceMemory,

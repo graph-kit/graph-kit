@@ -1,6 +1,6 @@
-import { GEdge, GNode, Graph } from '@magic/shared/graph';
-
 import { ComputedRef, computed } from 'vue';
+
+import { GEdge, GNode, Graph } from '../../graph/types.ts';
 
 export type AdjacencyMatrixGrid = {
   /** node ids, ordered by label, shared by both rows and columns */

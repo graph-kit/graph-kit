@@ -1,16 +1,15 @@
 <script setup lang="ts">
-  import Node from '@magic/shared/Node';
-  import TruncatedText from '@magic/shared/TruncatedText';
-  import VStack from '@magic/shared/VStack';
-  import Well from '@magic/shared/Well';
-  import { GEdge, GNode } from '@magic/shared/graph';
-  import { useProvidedGraph } from '@magic/shared/graph-shell';
-
   import { computed } from 'vue';
 
+  import { useProvidedGraph } from '../../graph-shell/context.ts';
+  import { GEdge, GNode } from '../../graph/types.ts';
+  import VStack from '../layout/VStack.vue';
+  import Well from '../layout/Well.vue';
+  import TruncatedText from '../truncated-text/TruncatedText.vue';
   import AdjacencyMatrixCell from './AdjacencyMatrixCell.vue';
-  import { useAdjacencyMatrixGrid } from './composables/useAdjacencyMatrixGrid.ts';
-  import { useMatrixDensity } from './composables/useMatrixDensity.ts';
+  import Node from './Node.vue';
+  import { useAdjacencyMatrixGrid } from './useAdjacencyMatrixGrid.ts';
+  import { useMatrixDensity } from './useMatrixDensity.ts';
 
   const graph = useProvidedGraph();
 

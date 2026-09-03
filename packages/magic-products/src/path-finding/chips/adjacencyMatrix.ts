@@ -1,6 +1,5 @@
+import AdjacencyMatrix from '@magic/shared/AdjacencyMatrix';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
-
-import AdjacencyMatrix from '../AdjacencyMatrix.vue';
 
 export const adjacencyMatrixChip = (): LensChipDefinition => {
   return {

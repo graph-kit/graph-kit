@@ -28,6 +28,10 @@
       "types": "./dist/types/components/magic/AdjacencyList.vue.d.ts",
       "default": "./src/components/magic/AdjacencyList.vue"
     },
+    "./AdjacencyMatrix": {
+      "types": "./dist/types/components/magic/AdjacencyMatrix.vue.d.ts",
+      "default": "./src/components/magic/AdjacencyMatrix.vue"
+    },
     "./ProductCard": {
       "types": "./dist/types/ui/product-card/ProductCard.vue.d.ts",
       "default": "./src/ui/product-card/ProductCard.vue"

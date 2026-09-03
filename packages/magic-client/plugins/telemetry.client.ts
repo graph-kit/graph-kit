@@ -33,7 +33,6 @@ export default defineNuxtPlugin(() => {
       posthog.capture(
         name,
         { productId, ...payload },
-        // a visit ends on a page the browser may already be tearing down
         name === 'product.closed' ? { transport: 'sendBeacon' } : undefined,
       );
     };

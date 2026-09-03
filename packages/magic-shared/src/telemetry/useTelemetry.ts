@@ -28,11 +28,7 @@ export const useTelemetry = (productId: ProductId): TelemetryControls => ({
   },
 });
 
-/**
- * reports the visit either side of the product's lifetime. the duration runs from mount to
- * the first terminal signal, counting a hidden tab as the end rather than a pause, since a
- * tab closed from there may never unload. a visit picked back up is not reported twice
- */
+/** reports when the user arrives and leaves the product. */
 export const useProductVisit = (telemetry: TelemetryControls) => {
   let openedAt: number | undefined;
 

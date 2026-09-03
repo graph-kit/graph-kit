@@ -4,7 +4,7 @@ import {
 } from '@magic/shared/telemetry';
 
 export default defineNuxtPlugin(() => {
-  const { posthogKey, posthogHost } = useRuntimeConfig().public;
+  const { posthogKey } = useRuntimeConfig().public;
   if (!posthogKey) return;
 
   const router = useRouter();
@@ -21,7 +21,9 @@ export default defineNuxtPlugin(() => {
 
   import('posthog-js').then(({ default: posthog }) => {
     posthog.init(posthogKey, {
-      api_host: posthogHost,
+      // so client-side blocklists like chrome extensions cant kill user analytics
+      api_host: 'https://oink.magicgraphs.app',
+      ui_host: 'https://us.posthog.com',
       // navigation is a full page load, so identity has to outlive the document to stitch a session
       persistence: 'localStorage',
       autocapture: false,

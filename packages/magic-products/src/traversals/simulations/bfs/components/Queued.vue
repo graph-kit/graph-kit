@@ -4,9 +4,9 @@
 
   import { computed } from 'vue';
 
-  import { TraversalFrame } from '../frame.ts';
+  import { BfsFrame } from '../frame.ts';
 
-  const currentFrame = useCurrentFrame<TraversalFrame>();
+  const currentFrame = useCurrentFrame<BfsFrame>();
   const queued = computed(() => currentFrame.value?.queuedNodeIds ?? []);
 </script>
 

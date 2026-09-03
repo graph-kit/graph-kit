@@ -24,6 +24,10 @@
       "types": "./dist/types/components/magic/NodeList.vue.d.ts",
       "default": "./src/components/magic/NodeList.vue"
     },
+    "./AdjacencyList": {
+      "types": "./dist/types/components/magic/AdjacencyList.vue.d.ts",
+      "default": "./src/components/magic/AdjacencyList.vue"
+    },
     "./ProductCard": {
       "types": "./dist/types/ui/product-card/ProductCard.vue.d.ts",
       "default": "./src/ui/product-card/ProductCard.vue"

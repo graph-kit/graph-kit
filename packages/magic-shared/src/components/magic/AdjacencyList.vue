@@ -1,13 +1,14 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
-  import HStack from '@magic/shared/HStack';
-  import Icon from '@magic/shared/Icon';
-  import Node from '@magic/shared/Node';
-  import ToolTip from '@magic/shared/Tooltip';
-  import VStack from '@magic/shared/VStack';
-  import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { mdiArrowRight } from '@mdi/js';
+
+  import { useProvidedGraph } from '../../graph-shell/context.ts';
+  import Icon from '../icon/Icon.vue';
+  import HStack from '../layout/HStack.vue';
+  import VStack from '../layout/VStack.vue';
+  import Well from '../layout/Well.vue';
+  import ToolTip from '../tooltip/Tooltip.vue';
+  import Node from './Node.vue';
 
   const graph = useProvidedGraph();
 
@@ -30,12 +31,11 @@
   const focusEdge = (edgeId: string, nodeId: string) =>
     graph.focus.set([edgeId, nodeId]);
 
-  const edgeWeightLabel = (
-    edgeId: string,
-    sourceId: string,
-    targetId: string,
-  ) =>
-    `Edge ${labelOf(sourceId)}${labelOf(targetId)} costs ${graph.getEdge(edgeId).weight.toFraction()}`;
+  const edgeLabel = (edgeId: string, sourceId: string, targetId: string) => {
+    const pair = `${labelOf(sourceId)}${labelOf(targetId)}`;
+    if (!graph.metadata.weighted) return;
+    return `Edge ${pair} costs ${graph.getEdge(edgeId).weight.toFraction()}`;
+  };
 
   const noTargetsLabel = (sourceId: string) =>
     `Node ${labelOf(sourceId)} doesn't have any outgoing edges`;
@@ -72,11 +72,7 @@
               v-for="targetId in targetIds"
               :key="edgeIdBetween(sourceId, targetId)"
               :label="
-                edgeWeightLabel(
-                  edgeIdBetween(sourceId, targetId),
-                  sourceId,
-                  targetId,
-                )
+                edgeLabel(edgeIdBetween(sourceId, targetId), sourceId, targetId)
               "
             >
               <template #trigger>

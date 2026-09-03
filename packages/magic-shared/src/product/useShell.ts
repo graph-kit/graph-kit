@@ -16,6 +16,7 @@ import {
 import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
 import { useShellAppearance } from '../ui/appearance/useShellAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
+import { useShellDialog } from '../ui/dialog/useShellDialog.ts';
 import { useHelpMenuState } from '../ui/help-menu/useHelpMenuState.ts';
 import JumpToContentButton from '../ui/jump-to-content/JumpToContentButton.vue';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
@@ -83,6 +84,7 @@ export const useShell = (
     helpMenu: useHelpMenuState(shortcuts, options.helpMenu),
     telemetry,
     toast: useToastState(),
+    dialog: useShellDialog(),
     annotations,
     simulationButtons: options.simulationButtons,
     surface: host.surface,

@@ -11,7 +11,8 @@
 
   defineSlots<{
     default?: () => unknown;
-    trigger: () => unknown;
+    /** absent for a dialog opened programmatically, see the core dialog */
+    trigger?: () => unknown;
   }>();
 </script>
 
@@ -22,7 +23,12 @@
     :show-header="showHeader"
     v-model:open="open"
   >
-    <template #trigger><slot name="trigger" /></template>
+    <template
+      v-if="$slots.trigger"
+      #trigger
+    >
+      <slot name="trigger" />
+    </template>
     <slot />
   </Dialog>
 </template>

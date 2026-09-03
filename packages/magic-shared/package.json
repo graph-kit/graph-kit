@@ -184,6 +184,10 @@
       "types": "./dist/types/ui/toast/index.d.ts",
       "default": "./src/ui/toast/index.ts"
     },
+    "./dialog": {
+      "types": "./dist/types/ui/dialog/index.d.ts",
+      "default": "./src/ui/dialog/index.ts"
+    },
     "./*": {
       "types": "./dist/types/*.d.ts",
       "default": "./src/*.ts"

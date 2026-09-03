@@ -17,7 +17,7 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
 
   return [
     {
-      name: 'Breath-First Search',
+      name: 'Breadth-First Search',
       definition: bfs,
       beforeStarting,
       disabled,

@@ -1,8 +1,8 @@
 import { Explainer, ExplainerHighlight } from '@magic/shared/explainer';
 import { Graph } from '@magic/shared/graph';
 
-import { TraversalFrame } from './frame.ts';
-import { slotIds } from './shared.ts';
+import { BfsFrame } from './frame.ts';
+import { slotIds } from './lens.ts';
 
 const componentSlotHighlight = (
   slot: keyof typeof slotIds,
@@ -30,18 +30,13 @@ const highlights = {
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 
-export const traversalExplainer =
+export const bfsExplainer =
   (graph: Graph) =>
-  (frame: TraversalFrame): Explainer | undefined => {
+  (frame: BfsFrame): Explainer | undefined => {
     if (frame.type === 'start') {
-      const queuedNode = frame.queuedNodeIds?.[0];
-      if (queuedNode)
-        return {
-          content: `Adding Starting Node {${queuedNode}} to [Queue]`,
-          highlights: [highlights.queue],
-        };
       return {
-        content: `Starting Depth-First Search at {${frame.node}}`,
+        content: `Adding Starting Node {${frame.node}} to [Queue]`,
+        highlights: [highlights.queue],
       };
     }
 
@@ -54,14 +49,9 @@ export const traversalExplainer =
     }
 
     if (frame.type === 'explore-node') {
-      const hasQueue = !!frame.queuedNodeIds;
-      if (hasQueue)
-        return {
-          content: `[Dequeuing] and Exploring {${frame.exploredNode}}`,
-          highlights: [highlights.dequeue],
-        };
       return {
-        content: `Exploring {${frame.exploredNode}}`,
+        content: `[Dequeuing] and Exploring {${frame.exploredNode}}`,
+        highlights: [highlights.dequeue],
       };
     }
 
@@ -74,7 +64,7 @@ export const traversalExplainer =
 
     if (frame.type === 'travel-edge') {
       const edges = frame.traveledEdgeIds?.map((id) => graph.getEdge(id)) ?? [];
-      const nodeTargets = edges.map((e) => e.target);
+      const nodeTargets = edges.map((edge) => edge.target);
       const nodeTargetsStr = nodeTargets.map((id) => `{${id}}`).join(', ');
       return { content: `Following Edge to ${nodeTargetsStr}` };
     }

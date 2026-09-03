@@ -4,9 +4,9 @@
 
   import { computed } from 'vue';
 
-  import { TraversalFrame } from '../frame.ts';
+  import { DfsFrame } from '../frame.ts';
 
-  const currentFrame = useCurrentFrame<TraversalFrame>();
+  const currentFrame = useCurrentFrame<DfsFrame>();
   const visited = computed(() => currentFrame.value?.visitedNodeIds ?? []);
 </script>
 

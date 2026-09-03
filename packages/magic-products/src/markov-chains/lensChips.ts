@@ -66,7 +66,7 @@ export const lensChips = (graph: Graph, shell: Shell): LensChipDefinition[] => {
     },
     name: 'Transition Matrix',
     tooltipLabel:
-      'The weight of the edge from each row node to each column node.',
+      'The weight of the edge from each row state to each column state.',
   };
 
   return [

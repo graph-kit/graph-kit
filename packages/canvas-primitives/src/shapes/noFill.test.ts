@@ -50,7 +50,9 @@ const recordingCtx = () => {
     }),
     createLinearGradient: () => ({ addColorStop: () => {} }),
     canvas: { width: 100, height: 100 },
-    getTransform: () => new DOMMatrix(),
+    // DOMMatrix is not in this environment, and an identity transform is all
+    // a draw reads off one
+    getTransform: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
   } as Record<string, unknown>;
 
   const ctx = new Proxy(target, {

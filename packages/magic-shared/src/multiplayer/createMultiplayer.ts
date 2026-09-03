@@ -467,7 +467,13 @@ export const createMultiplayer = ({
 
   const ensureSocket = () => {
     if (socket) return socket;
-    socket = connect(serverUrl, { transports: ['websocket'] });
+    socket = connect(serverUrl, {
+      transports: ['websocket'],
+      // the default 5s ceiling puts every client that was in a room back on the server
+      // within one window of it coming up, each pushing a whole document as it lands.
+      // backing off further spreads that arrival out, and socket.io jitters it by half
+      reconnectionDelayMax: 20_000,
+    });
     attachHandlers(socket);
     return socket;
   };

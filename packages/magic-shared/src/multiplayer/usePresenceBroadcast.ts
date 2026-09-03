@@ -1,6 +1,6 @@
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
-import { Point } from '@multiplayer/protocol/room';
+import { CameraState, DraggedElement, Point } from '@multiplayer/protocol/room';
 
 import { watch } from 'vue';
 
@@ -8,25 +8,31 @@ import { MultiplayerControls } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
 
 /**
- * A pointer reports up to 120 times a second and every report is a packet fanned out to
- * every peer, which makes this the one signal able to set the server's ceiling on its own.
+ * The pointer drives all three of these, and every report is a packet fanned out to every
+ * peer, which makes them the signals able to set the server's ceiling on their own.
  */
-const CURSOR_INTERVAL_MS = 33;
+const PRESENCE_INTERVAL_MS = 33;
+
+type Throttled<Value> = ((value: Value) => void) & {
+  /** sends what is withheld now, for a caller that has to order something after it */
+  flush: () => void;
+};
 
 /**
- * Sends on a fixed cadence, always following with the last value withheld, so a cursor
+ * Sends on a fixed cadence, always following with the last value withheld, so a signal
  * settles where it stopped rather than wherever the final interval happened to land.
  */
 const throttleTrailing = <Value>(
   send: (value: Value) => void,
   intervalMs: number,
-) => {
+): Throttled<Value> => {
   let lastSentAt = 0;
   // boxed, since the value being sent is itself nullable when the cursor leaves the canvas
   let withheld: { value: Value } | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
 
   const flush = () => {
+    if (timer !== null) clearTimeout(timer);
     timer = null;
     if (!withheld) return;
 
@@ -36,7 +42,7 @@ const throttleTrailing = <Value>(
     send(value);
   };
 
-  return (value: Value) => {
+  const throttled = (value: Value) => {
     const sinceLast = Date.now() - lastSentAt;
     if (sinceLast >= intervalMs) {
       lastSentAt = Date.now();
@@ -47,6 +53,8 @@ const throttleTrailing = <Value>(
     withheld = { value };
     if (timer === null) timer = setTimeout(flush, intervalMs - sinceLast);
   };
+
+  return Object.assign(throttled, { flush });
 };
 
 /**
@@ -70,18 +78,23 @@ export const usePresenceBroadcast = (options: {
 
   const sendCursor = throttleTrailing(
     (position: Point | null) => presence()?.moveCursor(position),
-    CURSOR_INTERVAL_MS,
+    PRESENCE_INTERVAL_MS,
   );
 
   surface.events.canvas.subscribe('onMouseMove', (event) => {
     sendCursor(surface.toWorldCoordinates(event));
   });
 
+  const sendCamera = throttleTrailing(
+    (state: CameraState) => presence()?.moveCamera(state),
+    PRESENCE_INTERVAL_MS,
+  );
+
   const camera = surface.camera.state;
   watch(
     () => [camera.panX.value, camera.panY.value, camera.zoom.value],
     () =>
-      presence()?.moveCamera({
+      sendCamera({
         panX: camera.panX.value,
         panY: camera.panY.value,
         zoom: camera.zoom.value,
@@ -108,11 +121,19 @@ export const usePresenceBroadcast = (options: {
   );
   annotations?.events.subscribe('onStrokeEnded', () => presence()?.endStroke());
 
+  const sendDragMove = throttleTrailing(
+    (elements: DraggedElement[]) => presence()?.updateDrag(elements),
+    PRESENCE_INTERVAL_MS,
+  );
+
   host.drag?.subscribe('onDragStarted', (elements) =>
     presence()?.startDrag(elements),
   );
-  host.drag?.subscribe('onDragMoved', (elements) =>
-    presence()?.updateDrag(elements),
-  );
-  host.drag?.subscribe('onDragEnded', () => presence()?.endDrag());
+  host.drag?.subscribe('onDragMoved', sendDragMove);
+  host.drag?.subscribe('onDragEnded', () => {
+    // a withheld move landing after the end is read as a new drag, which would hold the
+    // elements for peers until the room's staleness sweep let go of them
+    sendDragMove.flush();
+    presence()?.endDrag();
+  });
 };

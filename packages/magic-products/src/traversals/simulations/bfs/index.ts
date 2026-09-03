@@ -15,10 +15,11 @@ import { BfsFrame } from './frame.ts';
 import { bfsLens } from './lens.ts';
 
 const createFrame =
-  (visited: Set<string>, queue: string[]) =>
+  (visited: Set<string>, queue: string[], traveled: string[]) =>
   <T extends BfsFrame>(fields: T) => ({
     visitedNodeIds: [...visited],
     queuedNodeIds: [...queue],
+    traveledEdgeIds: [...traveled],
     ...fields,
   });
 
@@ -38,7 +39,9 @@ const collectBfsFrames = (
 
   const visited = new Set<string>();
   const queue = [startNodeId];
-  const frame = createFrame(visited, queue);
+  // stays lit for as long as the nodes on the far end are being processed
+  const traveled: string[] = [];
+  const frame = createFrame(visited, queue, traveled);
 
   frameCollector.add(
     frame({
@@ -49,6 +52,20 @@ const collectBfsFrames = (
 
   while (queue.length > 0) {
     const node = nullThrows(queue.shift(), 'queue emptied mid dequeue');
+    traveled.length = 0;
+
+    // a stale node is dequeued and dropped in one beat, since there is nothing
+    // to explore once it turns out to be visited
+    if (visited.has(node)) {
+      frameCollector.add(
+        frame({
+          type: 'dequeued-node-already-visited',
+          node,
+          exploredNode: node,
+        }),
+      );
+      continue;
+    }
 
     frameCollector.add(
       frame({
@@ -56,16 +73,6 @@ const collectBfsFrames = (
         exploredNode: node,
       }),
     );
-
-    if (visited.has(node)) {
-      frameCollector.add(
-        frame({
-          type: 'dequeued-node-already-visited',
-          node,
-        }),
-      );
-      continue;
-    }
 
     visited.add(node);
 
@@ -76,25 +83,25 @@ const collectBfsFrames = (
       }),
     );
 
-    const neighbors = adjList[node] ?? [];
+    // resolved once so the lit set and the active edge can never disagree
+    const crossings = (adjList[node] ?? []).map((neighbor) => ({
+      neighbor,
+      edgeId: edgeBetween(graph, node, neighbor),
+    }));
 
-    if (neighbors.length > 0) {
-      frameCollector.add(
-        frame({
-          type: 'travel-edge',
-          traveledEdgeIds: neighbors.map((neighbor) =>
-            edgeBetween(graph, node, neighbor),
-          ),
-        }),
-      );
+    if (crossings.length > 0) {
+      for (const { edgeId } of crossings) traveled.push(edgeId);
+
+      frameCollector.add(frame({ type: 'travel-edge' }));
     }
 
-    for (const neighbor of neighbors) {
+    for (const { neighbor, edgeId } of crossings) {
       if (visited.has(neighbor)) {
         frameCollector.add(
           frame({
             type: 'previously-visited',
             node: neighbor,
+            activeEdgeId: edgeId,
           }),
         );
         continue;
@@ -105,11 +112,13 @@ const collectBfsFrames = (
         frame({
           type: 'enqueue-node',
           node: neighbor,
+          activeEdgeId: edgeId,
         }),
       );
     }
   }
 
+  traveled.length = 0;
   frameCollector.add(frame({ type: 'end' }));
 };
 

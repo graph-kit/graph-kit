@@ -15,10 +15,11 @@ import { DfsFrame } from './frame.ts';
 import { dfsLens } from './lens.ts';
 
 const createFrame =
-  (visited: Set<string>, stack: string[]) =>
+  (visited: Set<string>, stack: string[], traveled: string[]) =>
   <T extends DfsFrame>(fields: T) => ({
     visitedNodeIds: [...visited],
     stackNodeIds: [...stack],
+    traveledEdgeIds: [...traveled],
     ...fields,
   });
 
@@ -43,7 +44,9 @@ const collectDfsFrames = (
 
   const visited = new Set<string>();
   const stack = [startNodeId];
-  const frame = createFrame(visited, stack);
+  // stays lit for as long as the nodes on the far end are being processed
+  const traveled: string[] = [];
+  const frame = createFrame(visited, stack, traveled);
 
   frameCollector.add(
     frame({
@@ -54,6 +57,7 @@ const collectDfsFrames = (
 
   while (stack.length > 0) {
     const node = nullThrows(stack.pop(), 'stack emptied mid pop');
+    traveled.length = 0;
 
     frameCollector.add(
       frame({
@@ -81,26 +85,26 @@ const collectDfsFrames = (
       }),
     );
 
-    const neighbors = adjList[node] ?? [];
+    // resolved once so the lit set and the active edge can never disagree
+    const crossings = (adjList[node] ?? []).map((neighbor) => ({
+      neighbor,
+      edgeId: edgeBetween(graph, node, neighbor),
+    }));
 
-    if (neighbors.length > 0) {
-      frameCollector.add(
-        frame({
-          type: 'travel-edge',
-          traveledEdgeIds: neighbors.map((neighbor) =>
-            edgeBetween(graph, node, neighbor),
-          ),
-        }),
-      );
+    if (crossings.length > 0) {
+      for (const { edgeId } of crossings) traveled.push(edgeId);
+
+      frameCollector.add(frame({ type: 'travel-edge' }));
     }
 
     // to keep same visit order the recursive version would have
-    for (const neighbor of [...neighbors].reverse()) {
+    for (const { neighbor, edgeId } of [...crossings].reverse()) {
       if (visited.has(neighbor)) {
         frameCollector.add(
           frame({
             type: 'previously-visited',
             node: neighbor,
+            activeEdgeId: edgeId,
           }),
         );
         continue;
@@ -111,11 +115,13 @@ const collectDfsFrames = (
         frame({
           type: 'push-node',
           node: neighbor,
+          activeEdgeId: edgeId,
         }),
       );
     }
   }
 
+  traveled.length = 0;
   frameCollector.add(frame({ type: 'end' }));
 };
 

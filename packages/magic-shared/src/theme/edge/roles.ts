@@ -11,12 +11,13 @@ import colors, { Color } from '@core/utils/colors';
  *
  * two conventions when mapping:
  *
- * - 'crossing' describes one edge at a time. the rest describe sets.
+ * - 'active' and 'crossing' describe one edge at a time. the rest describe sets.
  * - a product must not map two roles onto one state, or one role onto two
  *   states. a state that fits no role is a signal that the vocabulary is
  *   missing something, not a license to reach past this record for a color.
  */
 export type EdgeRole =
+  | 'active'
   | 'crossing'
   | 'weighing'
   | 'crossed'
@@ -32,6 +33,8 @@ export type EdgeRole =
  * excluded node.
  */
 export const edgeRoleColors = {
+  /** is the algorithm examining this one edge right now? */
+  active: colors.RED_700,
   /** is the algorithm crossing this edge right now? */
   crossing: colors.AMBER_500,
   /** is it being weighed against other edges this frame, but not yet taken? */

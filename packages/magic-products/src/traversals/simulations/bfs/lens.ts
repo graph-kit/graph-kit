@@ -17,9 +17,10 @@ export const bfsLens = (graph: Graph) => {
   const queued = createNodeIdThemer(graph, nodeRoles.pending);
   const visited = createNodeIdThemer(graph, nodeRoles.visited);
   const traveled = createEdgeIdThemer(graph, edgeRoles.traveled);
+  const active = createEdgeIdThemer(graph, edgeRoles.active);
 
   // order matters: latter elements take priority over earlier ones
-  const themers = [queued, visited, current, traveled];
+  const themers = [queued, visited, current, traveled, active];
 
   const lens: Lens = {
     id: 'bfs',
@@ -40,6 +41,7 @@ export const bfsLens = (graph: Graph) => {
     queued.setIds(frame.queuedNodeIds ?? []);
     visited.setIds(frame.visitedNodeIds ?? []);
     traveled.setIds(frame.traveledEdgeIds ?? []);
+    active.setId(frame.activeEdgeId);
   };
 
   return { lens, syncToFrame };

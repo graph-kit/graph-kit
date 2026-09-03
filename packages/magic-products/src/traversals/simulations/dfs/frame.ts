@@ -10,6 +10,8 @@ type DfsPayload = {
   /** on the stack but not explored yet, top of the stack last */
   stackNodeIds?: readonly GNode['id'][];
   traveledEdgeIds?: readonly GEdge['id'][];
+  /** the one edge whose far end the current frame is deciding on */
+  activeEdgeId?: GEdge['id'];
 };
 
 export type DfsFrame = (

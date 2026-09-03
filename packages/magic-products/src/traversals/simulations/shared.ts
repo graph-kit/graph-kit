@@ -17,10 +17,12 @@ export const nodeRoles = {
 } as const satisfies Record<TraversalConcept, NodeRole>;
 
 // traveled = an edge leading out of the node being explored this frame.
-type TraversalEdgeConcept = 'traveled';
+// active = the single edge whose far end is being decided on right now.
+type TraversalEdgeConcept = 'traveled' | 'active';
 
 export const edgeRoles = {
   traveled: 'crossing',
+  active: 'active',
 } as const satisfies Record<TraversalEdgeConcept, EdgeRole>;
 
 export type StartNodeId = Ref<GNode['id'] | undefined>;

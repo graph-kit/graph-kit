@@ -9,7 +9,7 @@ export const createHasNodeCheck =
     return {
       id: 'min-nodes',
       explainer: {
-        content: `Need at least ${minNodes} nodes. Graph has ${nodeCount} nodes!`,
+        content: `Need at least ${minNodes} node${minNodes === 1 ? '' : 's'}. Graph has ${nodeCount} node${nodeCount === 1 ? '' : 's'}!`,
       },
     };
   };

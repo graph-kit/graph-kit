@@ -92,13 +92,13 @@ export const manifests = {
       card: {
         name: 'Path Finding',
         description:
-          'Run Dijkstra, Bellman-Ford and Floyd Warshall to surface every shortest path.',
+          "Run Dijkstra's, Bellman-Ford and Floyd-Warshall to surface every shortest path.",
       },
     },
     meta: {
       title: 'Path Finding | Magic Graphs',
       description:
-        "Run Dijkstra's, Bellman-Ford and Floyd Warshall on a weighted graph you build and trace the shortest paths as they take shape, step by step.",
+        "Run Dijkstra's, Bellman-Ford and Floyd-Warshall on a weighted graph you build and trace the shortest paths as they take shape, step by step.",
       ogImage: productThumbnail('path-finding', 'dark'),
     },
   },

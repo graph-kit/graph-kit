@@ -32,6 +32,14 @@ export const isOutsideAllSetsSection = (section: Section) => {
 // labels reserved for structural use, so they cannot name a set
 export const RESERVED_LABELS = [OUTSIDE_ALL_SETS.label] as const;
 
+/**
+ * how many sets a canvas holds.
+ *
+ * every set doubles the partition the whole product works over, so an 8 set
+ * canvas is already 256 regions to resolve a query against on every keystroke.
+ */
+export const MAX_SETS = 8;
+
 export const DEFAULT_CIRCLE_RADIUS = 70;
 
 // kept above the edge grab buffer so a shrunken circle stays resizable

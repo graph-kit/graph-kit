@@ -2,7 +2,7 @@ import { TreeNode } from './tree/TreeNode.ts';
 
 export const definitions = {
   treeHeight:
-    'The number of nodes on the longest path from the root down to a leaf. Note: in Magic Graphs, a lone node has a height of 1 and an empty tree 0, those counting edges instead would call its height 0.',
+    'The number of nodes on the longest path from the root down to a leaf. Note: in Magic Graphs, a lone node has a height of 1 and an empty tree 0; under the edge-counting convention a lone node is height 0 instead.',
   treeBalance:
     'A node is unbalanced when its balance factor falls outside -1 to 1.',
   balanceFactor:

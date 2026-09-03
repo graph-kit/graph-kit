@@ -26,7 +26,7 @@
 
   const displayString = computed(() => {
     if (!edgeId.value) return;
-    return `{${edgeId.value}} Is In ${frequencyOf(edgeId.value)}/${totalMsts.value} Of This Graphs Minimum Spanning
+    return `{${edgeId.value}} Is In ${frequencyOf(edgeId.value)}/${totalMsts.value} Of This Graph's Minimum Spanning
     ${isGraphConnected.value ? 'Trees' : 'Forests'}`;
   });
 </script>

@@ -31,7 +31,7 @@
     room.value.controls.setTier(props.member.userId, tier);
 
   const tierInfo: Record<Tier, string> = {
-    host: 'Hosts opened the session. Can do anything, cannot be reassigned or removed, and ends the session for everyone on leaving.',
+    host: 'Host opened the session. Can do anything, cannot be reassigned or removed, and ends the session for everyone on leaving.',
     admin:
       'Admins can edit, move anyone between experiences, and reassign or remove anyone ranked below them, up to and including making them an admin. Only the host can change an admin.',
     write: 'Writers can edit, but cannot move, reassign or remove anyone.',

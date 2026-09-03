@@ -7,6 +7,7 @@ import { useLabelGetter } from './sets/composables/useLabel.ts';
 import { getSetDefinition } from './sets/other/circleUtils.ts';
 import {
   DEFAULT_CIRCLE_RADIUS,
+  MAX_SETS,
   OUTSIDE_ALL_SETS,
 } from './sets/other/constants.ts';
 import type { SetDefinition, SetDefinitionId, SetLabel } from './types.ts';
@@ -16,7 +17,8 @@ export type SetDefinitions = {
   // the only authority on what a label typed into a query means, reserved labels included
   idByLabel: ComputedRef<Record<SetLabel, SetDefinitionId>>;
   getDefinition: (id: SetDefinitionId) => SetDefinition;
-  addDefinition: (at: Coordinate) => SetDefinition;
+  /** undefined when the canvas already holds {@link MAX_SETS} */
+  addDefinition: (at: Coordinate) => SetDefinition | undefined;
   removeDefinition: (id: SetDefinitionId) => void;
 };
 
@@ -34,6 +36,8 @@ export const createSetDefinitions = (): SetDefinitions => {
     return ids;
   });
 
+  const atCapacity = computed(() => definitions.value.length >= MAX_SETS);
+
   return {
     definitions,
     idByLabel,
@@ -41,6 +45,8 @@ export const createSetDefinitions = (): SetDefinitions => {
     getDefinition: (id) => getSetDefinition(definitions.value, id),
 
     addDefinition: (at) => {
+      if (atCapacity.value) return;
+
       const definition: SetDefinition = {
         id: generateId(),
         label: nextLabel(),

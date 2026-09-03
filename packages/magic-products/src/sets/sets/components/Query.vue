@@ -22,7 +22,10 @@
 
   const query = queries.getQuery(props.queryId);
 
-  const hasError = computed(() => queryAnalysis.queryErrors.value[query.id]);
+  // undefined while the query reads fine, which is also what leaves the tooltip off
+  const errorReason = computed(() => queryAnalysis.queryErrors.value[query.id]);
+
+  const hasError = computed(() => errorReason.value !== undefined);
 
   const editor = useQueryEditor(query);
 
@@ -50,18 +53,22 @@
     <QueryToggleHidden :query="query" />
 
     <HStack class="relative">
-      <!-- not a v-model, since the query's latex is read only and moves through replace -->
-      <LatexInputWithPreview
-        :model-value="query.latexQueryString"
-        @update:model-value="query.editor.replace"
-        :error="hasError"
-        :preview-value="previewValue"
-        placeholder="\text{e.g. } A \cup B"
-        @mounted="editor.onMounted"
-        @unmounted="editor.onUnmounted"
-        :width="latexInputWidthPx"
-        :data-query-focus="query.id"
-      />
+      <TooltipVue :label="errorReason">
+        <template #trigger>
+          <!-- not a v-model, since the query's latex is read only and moves through replace -->
+          <LatexInputWithPreview
+            :model-value="query.latexQueryString"
+            @update:model-value="query.editor.replace"
+            :error="hasError"
+            :preview-value="previewValue"
+            placeholder="\text{e.g. } A \cup B"
+            @mounted="editor.onMounted"
+            @unmounted="editor.onUnmounted"
+            :width="latexInputWidthPx"
+            :data-query-focus="query.id"
+          />
+        </template>
+      </TooltipVue>
       <QueryInputModifiers
         v-model="previewValue"
         :query="query"

@@ -10,6 +10,17 @@ const CANVAS = {
   [OUTSIDE_ALL_SETS.label]: OUTSIDE_ALL_SETS.identity,
 };
 
+// six sets is the smallest canvas whose partition outgrows a 32 bit truth table
+const SIX_SET_CANVAS = {
+  A: 'set-a',
+  B: 'set-b',
+  C: 'set-c',
+  D: 'set-d',
+  E: 'set-e',
+  F: 'set-f',
+  [OUTSIDE_ALL_SETS.label]: OUTSIDE_ALL_SETS.identity,
+};
+
 describe(simplify, () => {
   it('writes a query covering every section as the universal set', () => {
     expect(simplify('\\Omega \\cup \\Omega', CANVAS)).toBe('\\Omega');
@@ -39,5 +50,21 @@ describe(simplify, () => {
     expect(simplify('\\neg (A \\cup B) \\cup S', CANVAS)).toBe(
       '\\neg \\left(A \\cup B\\right)',
     );
+  });
+
+  /*
+    six sets partition the space into 64 atoms, which is past the 32 a truth
+    table held in a number can address. the sixth set is the one whose atoms all
+    land above that line, so it is the one a folded table reads as covering
+    everything
+  */
+  it('keeps reading a set apart from the universal set past 32 atoms', () => {
+    expect(simplify('A \\cup F', SIX_SET_CANVAS)).toBeNull();
+    expect(simplify('F \\cup F', SIX_SET_CANVAS)).toBe('F');
+    expect(simplify('F \\cap \\neg F', SIX_SET_CANVAS)).toBe('');
+    expect(simplify('F \\cup \\neg F', SIX_SET_CANVAS)).toBe('\\Omega');
+    expect(
+      simplify('(A \\cap F) \\cup (A \\cap \\neg F)', SIX_SET_CANVAS),
+    ).toBe('A');
   });
 });

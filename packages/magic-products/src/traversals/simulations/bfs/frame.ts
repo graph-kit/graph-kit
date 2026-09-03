@@ -17,7 +17,7 @@ export type BfsFrame = (
   | { type: 'start'; node: GNode['id'] }
   | { type: 'end' }
   | { type: 'explore-node' }
-  | { type: 'travel-edge' }
+  | { type: 'travel-edge'; node: GNode['id'] }
   | { type: 'enqueue-node'; node: GNode['id'] }
   | { type: 'mark-visited'; node: GNode['id'] }
   | { type: 'previously-visited'; node: GNode['id'] }

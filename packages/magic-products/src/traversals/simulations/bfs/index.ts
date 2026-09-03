@@ -92,7 +92,7 @@ const collectBfsFrames = (
     if (crossings.length > 0) {
       for (const { edgeId } of crossings) traveled.push(edgeId);
 
-      frameCollector.add(frame({ type: 'travel-edge' }));
+      frameCollector.add(frame({ type: 'travel-edge', node }));
     }
 
     for (const { neighbor, edgeId } of crossings) {
@@ -138,7 +138,7 @@ export const bfsSimulation = (
     const { lens, syncToFrame } = bfsLens(options.graph);
     return {
       lens,
-      explainer: bfsExplainer(options.graph),
+      explainer: bfsExplainer,
       onSetupCompleted: syncToFrame,
       onFrameTransition: syncToFrame,
       onViolation: context.stopSimulation,

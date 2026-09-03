@@ -21,7 +21,7 @@ const listEdges = (graph: Graph, edgeIds: readonly string[]) => {
     .sort((a, b) => a.weight.compare(b.weight))
     .map((edge) => `{${edge.id}}`);
   if (described.length <= 1) return described.join('');
-  return `${described.slice(0, -1).join(', ')} and ${described.at(-1)}`;
+  return `${described.slice(0, -1).join(', ')} And ${described.at(-1)}`;
 };
 
 const componentSlotHighlight = (slotId: string): ExplainerHighlight => ({
@@ -36,24 +36,19 @@ const sharedHighlights = {
   tree: {
     tooltipLabel: 'The edges in the minimum spanning tree',
   },
-  nonTree: {
-    tooltipLabel: 'The edges not yet in the minimum spanning tree',
-  },
   added: {
-    tooltipLabel: 'This edge is now part of the minimum spanning tree',
+    tooltipLabel: 'Edge added to the solution',
   },
 } as const satisfies Record<string, ExplainerHighlight>;
 
 const highlights = {
   ...sharedHighlights,
   considering: {
-    tooltipLabel:
-      'Every edge that connects a tree node to a non-tree node is currently eligible to be added to the minimum spanning tree',
+    tooltipLabel: 'Edges eligible to be added. The cheapest one wins',
     ...componentSlotHighlight(primsSlotIds.considering),
   },
   excluded: {
-    tooltipLabel:
-      'Edges ruled out because both ends are already in the minimum spanning tree and adding it would create a loop',
+    tooltipLabel: 'Edges left out of the minimum spanning tree',
     ...componentSlotHighlight(primsSlotIds.excluded),
   },
 } as const satisfies Record<string, ExplainerHighlight>;
@@ -82,78 +77,60 @@ export const primsExplainer =
   (frame: PrimsFrame): Explainer | undefined => {
     if (frame.type === 'start') {
       return {
-        content: `Starting the [Tree] at {${frame.start}}`,
+        content: `Starting Prim's At {${frame.anchorNodeId}}`,
         highlights: [highlights.tree],
       };
     }
 
     if (frame.type === 'end') {
-      const edges = frame.treeEdgeIds.length;
       const cost = frame.treeEdgeIds
         .map((id) => graph.getEdge(id).weight)
-        .reduce((sum, weight) => sum.add(weight));
+        .reduce((sum, weight) => sum.add(weight), new Fraction(0));
       return {
-        content: `Done! The [Tree] is complete with ${edges} edge${edges === 1 ? '' : 's'} and a total cost of <${cost}>`,
+        content: `Done! The Final [Tree] Costs <${cost}>`,
         highlights: [highlights.tree],
       };
     }
 
     if (frame.type === 'consider-edges') {
       return {
-        content: `The list of edges [In Consideration] now includes every edge connecting a [Tree] node to a [Non-Tree] node: ${listEdges(graph, frame.edges)}`,
-        highlights: [
-          highlights.considering,
-          highlights.tree,
-          highlights.nonTree,
-        ],
+        content: `Every Edge On The [Tree]'s Border Goes [In Consideration]`,
+        highlights: [highlights.tree, highlights.considering],
       };
     }
 
     if (frame.type === 'select-edge') {
-      const winner = `{${frame.edge}}`;
-
       if (frame.tiedEdges) {
-        const tied = listEdges(graph, frame.tiedEdges);
         return {
-          content: `Edges ${tied} are tied for cheapest of the edges [In Consideration], so ${winner} is chosen arbitrarily and [Added] to the [Tree]`,
-          highlights: [
-            highlights.considering,
-            highlights.added,
-            highlights.tree,
-          ],
+          content: `${listEdges(graph, frame.tiedEdges)} Tie For Cheapest, So {${frame.edge}} Is [Added]`,
+          highlights: [highlights.added],
         };
       }
 
       return {
-        content: `Edge ${winner} is the cheapest of the edges [In Consideration], so it gets [Added] to the [Tree]`,
-        highlights: [highlights.considering, highlights.added, highlights.tree],
-      };
-    }
-
-    if (frame.type === 'excluding-edges') {
-      const excluded = listEdges(graph, frame.edges);
-      const plural = frame.edges.length > 1;
-      return {
-        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} [Excluded] because both ends are already in the [Tree], therefore ${plural ? 'they' : 'it'} would create a cycle`,
-        highlights: [highlights.excluded, highlights.tree],
+        content: `{${frame.edge}} Is The Cheapest [In Consideration], So It's [Added]`,
+        highlights: [highlights.considering, highlights.added],
       };
     }
 
     if (frame.type === 'exclude-edges') {
-      const excluded = listEdges(graph, frame.edges);
       const plural = frame.edges.length > 1;
       return {
-        content: `Edge${plural ? 's' : ''} ${excluded} ${plural ? 'are' : 'is'} added to the [Excluded] list`,
+        content: `${listEdges(graph, frame.edges)} Would Create A Cycle, So ${plural ? "They're" : "It's"} [Excluded]`,
         highlights: [highlights.excluded],
       };
     }
 
+    // nodes only go unreached if the graph is disconnected
     if (frame.type === 'unreachable') {
       const count = frame.nodes.length;
-      const plural = count > 1;
+      const themer = highlightNodes(graph, frame.nodes);
       return {
-        content: `${count} node${plural ? 's' : ''} never ${plural ? 'connect' : 'connects'} to the [Tree] because the graph is disconnected`,
-        highlights: [highlights.tree],
+        content:
+          count === 1
+            ? `[1 Node] Can't Be Reached From {${frame.anchorNodeId}}, So It Is Left Out`
+            : `[${count} Nodes] Can't Be Reached From {${frame.anchorNodeId}}, So They Are Left Out`,
+        highlights: [themer],
       };
     }
   };

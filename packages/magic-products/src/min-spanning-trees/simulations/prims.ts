@@ -14,15 +14,10 @@ export const prims: PrimsFunction =
 
     const inTree = new Set<GNode['id']>([startNodeId]);
     const treeEdges: GEdge['id'][] = [];
-
-    // edges that will no longer be considered (creates loop for example)
     const excludedEdges: GEdge['id'][] = [];
 
     const farNode = (edge: Pick<GEdge, 'source' | 'target'>) =>
       inTree.has(edge.source) ? edge.target : edge.source;
-
-    const treeNode = (edge: Pick<GEdge, 'source' | 'target'>) =>
-      inTree.has(edge.source) ? edge.source : edge.target;
 
     let candidateEdges: GEdge[] = [];
 
@@ -57,41 +52,21 @@ export const prims: PrimsFunction =
       return newlyExcluded;
     };
 
-    const frame = <T extends PrimsStep>(
-      fields: T & PrimsHighlights,
-    ): PrimsFrame => ({
+    const frame = (fields: PrimsStep & PrimsHighlights): PrimsFrame => ({
       treeNodeIds: [...inTree],
       treeEdgeIds: [...treeEdges],
       excludedEdgeIds: [...excludedEdges],
+      candidateEdges: candidateEdges.map((edge) => edge.id),
       anchorNodeId: startNodeId,
       ...fields,
     });
 
-    frameCollector.add(
-      frame({ type: 'start', start: startNodeId, activeNodeId: startNodeId }),
-    );
+    frameCollector.add(frame({ type: 'start' }));
 
     growTree(startNodeId);
 
     while (candidateEdges.length > 0) {
-      const candidateEdgeIds = candidateEdges.map((edge) => edge.id);
-      const candidateNodeIds = [...new Set(candidateEdges.map(farNode))];
-
-      /*
-      no activeNodeId here on purpose: candidates can come from several
-      different tree nodes at once, so there is no single node to point to
-      yet. pinning it to "whichever node grew the tree last" would draw the
-      eye to a spot that may have nothing to do with whichever edge turns out
-      cheapest
-    */
-      frameCollector.add(
-        frame({
-          type: 'consider-edges',
-          edges: candidateEdgeIds,
-          pendingNodeIds: candidateNodeIds,
-          candidateEdges: candidateEdgeIds,
-        }),
-      );
+      frameCollector.add(frame({ type: 'consider-edges' }));
 
       let cheapestSoFar = candidateEdges[0];
       for (let i = 1; i < candidateEdges.length; i++) {
@@ -106,17 +81,13 @@ export const prims: PrimsFunction =
       );
       const winner = tied[0];
       const winnerNode = farNode(winner);
-      const winnerSource = treeNode(winner);
 
       frameCollector.add(
         frame({
           type: 'select-edge',
           edge: winner.id,
-          node: winnerNode,
           tiedEdges: tied.length > 1 ? tied.map((edge) => edge.id) : undefined,
-          activeNodeId: winnerSource,
-          pendingNodeIds: candidateNodeIds,
-          candidateEdges: candidateEdgeIds,
+          activeNodeIds: [winner.source, winner.target],
           selectedEdge: winner.id,
         }),
       );
@@ -125,18 +96,18 @@ export const prims: PrimsFunction =
       const newlyExcluded = growTree(winnerNode);
 
       if (newlyExcluded.length > 0) {
-        frameCollector.add(
-          frame({
-            type: 'excluding-edges',
-            edges: newlyExcluded,
-            excludingEdges: newlyExcluded,
-          }),
-        );
+        const endpoints = newlyExcluded.flatMap((id) => {
+          const edge = graph.getEdge(id);
+          return [edge.source, edge.target];
+        });
 
         excludedEdges.push(...newlyExcluded);
-
         frameCollector.add(
-          frame({ type: 'exclude-edges', edges: newlyExcluded }),
+          frame({
+            type: 'exclude-edges',
+            edges: newlyExcluded,
+            activeNodeIds: [...new Set(endpoints)],
+          }),
         );
       }
     }

@@ -12,23 +12,22 @@ const componentSlotHighlight = (
 });
 
 /*
-  the copy never names a stack or a call frame, because neither is what makes
-  this depth first. the only rule that matters is which node we pick up next:
-  the one we found most recently, which is what keeps us walking away from the
-  start instead of fanning out around it
+  deliberately the queue explainer with one word swapped, because the swap is
+  the whole lesson: same walk, same bookkeeping, and the only thing that makes
+  it depth first is taking off the top instead of off the front
 */
 const highlights = {
-  frontier: {
-    tooltipLabel: 'Everything we have found but not explored yet',
-    ...componentSlotHighlight('frontier'),
+  stack: {
+    tooltipLabel: 'The pile. Last one on is the first one off',
+    ...componentSlotHighlight('stack'),
   },
-  discover: {
-    tooltipLabel: 'Just found, so it goes ahead of everything already waiting',
-    ...componentSlotHighlight('frontier'),
+  push: {
+    tooltipLabel: 'Drop it on top of the stack!',
+    ...componentSlotHighlight('stack'),
   },
-  takeNewest: {
-    tooltipLabel: 'Take what we found most recently, not what we found first',
-    ...componentSlotHighlight('frontier'),
+  pop: {
+    tooltipLabel: 'Grab whoever is on top of the stack',
+    ...componentSlotHighlight('stack'),
   },
   visited: {
     tooltipLabel: 'Nodes we have already seen, nothing new here',
@@ -41,8 +40,8 @@ export const dfsExplainer =
   (frame: DfsFrame): Explainer | undefined => {
     if (frame.type === 'start') {
       return {
-        content: `Adding Starting Node {${frame.node}} to the [Frontier]`,
-        highlights: [highlights.frontier],
+        content: `Adding Starting Node {${frame.node}} to [Stack]`,
+        highlights: [highlights.stack],
       };
     }
 
@@ -56,8 +55,8 @@ export const dfsExplainer =
 
     if (frame.type === 'explore-node') {
       return {
-        content: `Taking {${frame.exploredNode}}, Our [Newest Find], and Exploring It`,
-        highlights: [highlights.takeNewest],
+        content: `[Popping] and Exploring {${frame.exploredNode}}`,
+        highlights: [highlights.pop],
       };
     }
 
@@ -75,10 +74,10 @@ export const dfsExplainer =
       return { content: `Following Edge to ${nodeTargetsStr}` };
     }
 
-    if (frame.type === 'discover-node') {
+    if (frame.type === 'push-node') {
       return {
-        content: `{${frame.node}} Not In [Visited], Therefore, It [Cuts the Line]`,
-        highlights: [highlights.visited, highlights.discover],
+        content: `{${frame.node}} Not In [Visited], Therefore, [Pushing]`,
+        highlights: [highlights.visited, highlights.push],
       };
     }
 
@@ -89,10 +88,10 @@ export const dfsExplainer =
       };
     }
 
-    if (frame.type === 'taken-node-already-visited') {
+    if (frame.type === 'popped-node-already-visited') {
       return {
-        content: `It Seems {${frame.node}} Has Been [Visited] Since Joining the [Frontier]! Let's Ignore It`,
-        highlights: [highlights.visited, highlights.frontier],
+        content: `It Seems {${frame.node}} Has Been [Visited] Since Being Added to [Stack]! Let's Ignore It`,
+        highlights: [highlights.visited, highlights.stack],
       };
     }
   };

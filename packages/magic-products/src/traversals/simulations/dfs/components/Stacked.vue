@@ -7,9 +7,9 @@
   import { DfsFrame } from '../frame.ts';
 
   const currentFrame = useCurrentFrame<DfsFrame>();
-  const frontier = computed(() => currentFrame.value?.frontierNodeIds ?? []);
+  const stacked = computed(() => currentFrame.value?.stackNodeIds ?? []);
 </script>
 
 <template>
-  <NodeList :ids="frontier" />
+  <NodeList :ids="stacked" />
 </template>

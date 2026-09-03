@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import { useProvidedGraph } from '@magic/shared/graph-shell';
-  import { useEdgeStyles } from '@magic/shared/theme/edge';
-
   import { onUnmounted } from 'vue';
+
+  import { useProvidedGraph } from '../../graph-shell/context.ts';
+  import { useEdgeStyles } from '../../theme/edge/index.ts';
 
   const props = defineProps<{ edgeId: string }>();
 

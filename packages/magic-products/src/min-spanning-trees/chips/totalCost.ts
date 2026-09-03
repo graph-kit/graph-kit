@@ -9,6 +9,7 @@ import tinycolor from 'tinycolor2';
 import { computed } from 'vue';
 
 import MSTCost from '../MSTCost.vue';
+import { useMstConnected } from './connected.ts';
 
 export const totalCostChip = (graph: Graph): LensChipDefinition => {
   const result = computed(() => graph.minimumSpanningTrees.all.value);
@@ -44,15 +45,19 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
 
   const displayCost = computed(() => displayNumber(totalMstCost.value));
 
-  const costExplanation =
-    'The total cost if you sum up all the edges making up the minimum spanning tree.';
+  const mstConnected = useMstConnected(graph);
+
+  const costExplanation = () =>
+    mstConnected.value
+      ? 'The total cost if you sum up all the edges making up the minimum spanning tree.'
+      : 'The total cost if you sum up all the edges making up the minimum spanning forest, one tree per component.';
 
   return {
-    name: () => `Total Cost: ${displayCost.value.primary}`,
-    tooltipLabel: () => {
-      const { secondary } = displayCost.value;
-      return secondary ? `${secondary}: ${costExplanation}` : costExplanation;
+    name: {
+      headline: 'Total Cost',
+      stat: () => displayCost.value.primary,
     },
+    tooltipLabel: costExplanation,
     lens: {
       id: 'total-mst-cost',
       ...themer,

@@ -12,6 +12,8 @@ import { DeepReadonly } from 'ts-essentials';
 
 import { computed } from 'vue';
 
+import { useMstConnected } from './connected.ts';
+
 const MST_COLORS = [
   colors.AMBER_500,
   colors.RED_500,
@@ -33,6 +35,8 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
     const result = graph.minimumSpanningTrees.all.value;
     return result.skipped ? [] : result.msts;
   });
+
+  const mstConnected = useMstConnected(graph);
 
   const mstIndexFromId = (edgeId: string) => Number(edgeId.split('-').at(0));
   let activeMstIndex: number | undefined = undefined;
@@ -142,11 +146,16 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
   };
 
   return {
-    name: () => {
-      return `Unique MSTs: ${msts.value.length}`;
+    name: {
+      headline: 'Unique MSTs',
+      stat: () => msts.value.length,
     },
     tooltipLabel: () => {
-      return `This graph has ${msts.value.length} unique minimum spanning tree${msts.value.length === 1 ? '' : 's'}.`;
+      const count = msts.value.length;
+      const noun = mstConnected.value
+        ? 'minimum spanning tree'
+        : 'minimum spanning forest';
+      return `This graph has ${count} unique ${noun}${count === 1 ? '' : 's'}.`;
     },
     lens,
   };

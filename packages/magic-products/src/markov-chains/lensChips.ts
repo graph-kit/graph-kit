@@ -1,3 +1,4 @@
+import AdjacencyMatrix from '@magic/shared/AdjacencyMatrix';
 import { Graph } from '@magic/shared/graph';
 import { Lens } from '@magic/shared/lens/types';
 import { Shell } from '@magic/shared/product';
@@ -52,6 +53,21 @@ export const lensChips = (graph: Graph, shell: Shell): LensChipDefinition[] => {
       }) ||
       disabledState(chip),
   });
+
+  const transitionMatrix: LensChipDefinition = {
+    lens: {
+      id: 'transition-matrix',
+      components: [
+        {
+          component: AdjacencyMatrix,
+          position: 'center-right',
+        },
+      ],
+    },
+    name: 'Transition Matrix',
+    tooltipLabel:
+      'The weight of the edge from each row state to each column state.',
+  };
 
   return [
     {
@@ -221,5 +237,6 @@ export const lensChips = (graph: Graph, shell: Shell): LensChipDefinition[] => {
       name: () => 'Mean Recurrence Time',
       tooltipLabel: definitions.meanRecurrenceTime,
     },
+    transitionMatrix,
   ].map(requiresValidChain);
 };

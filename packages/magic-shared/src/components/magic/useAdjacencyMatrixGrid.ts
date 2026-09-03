@@ -1,15 +1,15 @@
-import { GEdge, GNode, Graph } from '@magic/shared/graph';
-
 import { ComputedRef, computed } from 'vue';
 
-export type TransitionMatrixGrid = {
+import { GEdge, GNode, Graph } from '../../graph/types.ts';
+
+export type AdjacencyMatrixGrid = {
   /** node ids, ordered by label, shared by both rows and columns */
   nodeIds: ComputedRef<GNode['id'][]>;
   /** grid[fromIndex][toIndex] is the edge from nodeIds[fromIndex] to nodeIds[toIndex], or undefined if none exists */
   grid: ComputedRef<(GEdge | undefined)[][]>;
 };
 
-export const useTransitionMatrixGrid = (graph: Graph): TransitionMatrixGrid => {
+export const useAdjacencyMatrixGrid = (graph: Graph): AdjacencyMatrixGrid => {
   const nodeIds = computed(() =>
     graph.nodes.value
       .map((node) => node.id)

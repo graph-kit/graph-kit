@@ -1,21 +1,19 @@
 <script setup lang="ts">
-  import { nullThrows } from '@core/utils/assert';
-  import Node from '@magic/shared/Node';
-  import TruncatedText from '@magic/shared/TruncatedText';
-  import VStack from '@magic/shared/VStack';
-  import Well from '@magic/shared/Well';
-  import { GNode } from '@magic/shared/graph';
-  import { useProvidedGraph } from '@magic/shared/graph-shell';
-
   import { computed } from 'vue';
 
-  import TransitionMatrixCell from './TransitionMatrixCell.vue';
-  import { useMatrixDensity } from './composables/useMatrixDensity.ts';
-  import { useTransitionMatrixGrid } from './composables/useTransitionMatrixGrid.ts';
+  import { useProvidedGraph } from '../../graph-shell/context.ts';
+  import { GEdge, GNode } from '../../graph/types.ts';
+  import VStack from '../layout/VStack.vue';
+  import Well from '../layout/Well.vue';
+  import TruncatedText from '../truncated-text/TruncatedText.vue';
+  import AdjacencyMatrixCell from './AdjacencyMatrixCell.vue';
+  import Node from './Node.vue';
+  import { useAdjacencyMatrixGrid } from './useAdjacencyMatrixGrid.ts';
+  import { useMatrixDensity } from './useMatrixDensity.ts';
 
   const graph = useProvidedGraph();
 
-  const { nodeIds, grid } = useTransitionMatrixGrid(graph);
+  const { nodeIds, grid } = useAdjacencyMatrixGrid(graph);
 
   const labelOf = (id: GNode['id']) => graph.getNode(id).label;
 
@@ -33,26 +31,14 @@
   const cellLabel = (sourceId: GNode['id'], targetId: GNode['id']) =>
     `${labelOf(sourceId)}→${labelOf(targetId)}`;
 
-  const transitionMatrixIndexOf = computed(() => {
-    const map = new Map<string, number>();
-    graph.nodes.value.forEach((node, index) => map.set(node.id, index));
-    return map;
-  });
+  const cellText = (edgeId: GEdge['id']) =>
+    graph.getEdge(edgeId).weight.toFraction();
 
-  const cellText = (sourceId: GNode['id'], targetId: GNode['id']) => {
-    const targetIndex = nullThrows(
-      transitionMatrixIndexOf.value.get(targetId),
-      `no matrix index for node ${targetId}`,
-    );
-    const sourceIndex = nullThrows(
-      transitionMatrixIndexOf.value.get(sourceId),
-      `no matrix index for node ${sourceId}`,
-    );
-    return graph.transitionMatrix.value[sourceIndex][targetIndex].toFraction();
-  };
-
-  const cellTooltip = (sourceId: GNode['id'], targetId: GNode['id']) =>
-    `${cellLabel(sourceId, targetId)}: ${cellText(sourceId, targetId)}`;
+  const cellTooltip = (
+    sourceId: GNode['id'],
+    targetId: GNode['id'],
+    edgeId: GEdge['id'],
+  ) => `${cellLabel(sourceId, targetId)}: ${cellText(edgeId)}`;
 
   const focusSourceNodeAndOutboundEdges = (
     sourceId: GNode['id'],
@@ -137,7 +123,7 @@
                 v-for="cell in row.cells"
                 :key="`${row.id}::${cell.id}`"
               >
-                <TransitionMatrixCell
+                <AdjacencyMatrixCell
                   v-if="cell.edge"
                   :edge-id="cell.edge.id"
                   v-slot="{ color, cursor }"
@@ -151,14 +137,14 @@
                     >
                       <TruncatedText
                         class="block w-full px-1"
-                        :tooltip="cellTooltip(row.id, cell.id)"
+                        :tooltip="cellTooltip(row.id, cell.id, cell.edge.id)"
                         :delay="400"
                       >
-                        {{ cellText(row.id, cell.id) }}
+                        {{ cellText(cell.edge.id) }}
                       </TruncatedText>
                     </button>
                   </td>
-                </TransitionMatrixCell>
+                </AdjacencyMatrixCell>
                 <td
                   v-else
                   :class="emptyCellClass"
@@ -174,7 +160,7 @@
     <span
       v-else
       class="font-bold text-lg"
-      >Add Nodes For Transition Matrix</span
+      >Add Nodes For Adjacency Matrix</span
     >
   </Well>
 </template>

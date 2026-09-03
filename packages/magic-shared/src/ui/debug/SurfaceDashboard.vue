@@ -96,7 +96,7 @@
   });
 
   /*
-    the suspend flags outlive this panel, so leaving debug mode with one held would
+    the suspend flags outlive this panel, so leaving debug screen with one held would
     strand the canvas in a state nothing on screen can undo
   */
   onBeforeUnmount(() => {

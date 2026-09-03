@@ -63,8 +63,8 @@ export const useShellShortcuts = (shell: Shell) => {
     },
     {
       id: 'shell/toggle-debug',
-      helpMenu: { category: 'View', name: 'Toggle Debug Mode' },
-      key: 'd',
+      helpMenu: { category: 'View', name: 'Toggle Debug' },
+      key: 'mod+d',
       callback: shell.debug.toggle,
     },
     {

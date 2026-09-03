@@ -3,6 +3,7 @@
   import TruncatedText from '@magic/shared/TruncatedText';
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
+  import { useMatrixDensity } from '@magic/shared/components/magic/useMatrixDensity';
   import { GNode, GraphPath } from '@magic/shared/graph';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useCurrentFrame } from '@magic/shared/simulation';
@@ -10,7 +11,6 @@
 
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
-  import { useMatrixDensity } from '../../composables/useMatrixDensity.ts';
   import { createPathThemer } from '../createPathThemer.ts';
   import { formatDistance } from '../distance.ts';
   import { nodeRoles } from './effects.ts';

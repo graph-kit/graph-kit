@@ -1,3 +1,5 @@
+import { isMac } from '@core/utils/keyboard';
+
 import { ComputedRef, computed, ref } from 'vue';
 
 import { ComponentSlot } from '../../component-slot/types.ts';
@@ -69,10 +71,8 @@ export const useDebugState = (
     else activate();
 
     toast.show({
-      title: isActive.value ? 'Debug Mode On' : 'Debug Mode Off',
-      description: isActive.value
-        ? 'Press d to turn it back off.'
-        : 'Press d to turn it back on.',
+      title: isActive.value ? 'Debug On' : 'Debug Off',
+      description: 'Toggle with ' + (isMac() ? '⌘ Command + D' : 'Ctrl + D'),
       severity: 'info',
       duration: TOGGLE_TOAST_MS,
     });

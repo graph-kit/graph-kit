@@ -14,9 +14,9 @@ export const definitions = {
   ergodic:
     'Irreducible and aperiodic. ⚠️ This also goes by the name "regular chain" and may be used to mean just irreducible.',
   stationaryDistribution:
-    'The vector of state probabilities that returns itself when multiplied against the transition matrix. Unique when the chain has 1 recurrent class.',
+    'The distribution of state probabilities that returns itself when multiplied against the transition matrix. Unique when the chain has 1 recurrent class.',
   limitingDistribution:
-    'The vector that every starting vector settles on when multiplied against the transition matrix over and over. Also called converging to a steady state. Needs 1 recurrent class that is aperiodic.',
+    'The distribution that every starting distribution settles on when multiplied against the transition matrix over and over. Also called converging to a steady state. Needs 1 recurrent class that is aperiodic.',
   meanRecurrenceTime:
     'The average number of steps before the chain comes back to a state.',
   reversible:

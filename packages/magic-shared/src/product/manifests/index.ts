@@ -72,7 +72,7 @@ export const manifests = {
       card: {
         name: 'Traversals',
         description:
-          'Step through BFS and DFS one visit at a time, tracking the queue and visited set.',
+          'Step through BFS and DFS one visit at a time, tracking the queue, the stack and the visited set.',
       },
     },
     meta: {

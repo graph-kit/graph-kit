@@ -18,6 +18,7 @@ import { OnboardingControls, OnboardingItem } from '../onboarding/index.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
+import { TelemetryControls } from '../telemetry/useTelemetry.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
@@ -200,6 +201,7 @@ export type Shell = {
   shortcuts: ShortcutControls;
   debug: DebugControls;
   helpMenu: HelpMenuControls;
+  telemetry: TelemetryControls;
   /** the app wide toast queue, which every product shares, see {@link ToastControls} */
   toast: ToastControls;
   surface: CanvasSurface;

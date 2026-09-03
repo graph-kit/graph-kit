@@ -13,6 +13,7 @@ const SlotComponent = defineComponent({ template: '<div />' });
 type Frame = { step: number };
 
 const definition = (frameCount = 3) => ({
+  id: 'test-sim',
   collectFrames: (collector: { add: (frame: Frame) => void }) => {
     for (let i = 0; i < frameCount; i++) collector.add({ step: i });
   },
@@ -96,6 +97,7 @@ describe('useSimulationState', () => {
 
 describe('useSimulationState with a generated frame source', () => {
   const generated = () => ({
+    id: 'test-sim',
     frameAt: (position: number): Frame => ({ step: position }),
     setup: () => undefined,
   });
@@ -135,6 +137,7 @@ describe('useSimulationState with a generated frame source', () => {
 
     let offset = 0;
     simulation.start({
+      id: 'test-sim',
       frameAt: (position: number): Frame => ({ step: position + offset }),
       setup: () => undefined,
     });
@@ -153,6 +156,7 @@ describe('useSimulationState with a generated frame source', () => {
   it('rejects a definition supplying both frame sources', () => {
     // @ts-expect-error a definition supplies exactly one frame source
     const both: SimulationDefinition<Frame> = {
+      id: 'test-sim',
       collectFrames: (collector: { add: (frame: Frame) => void }) =>
         collector.add({ step: 0 }),
       frameAt: (position: number): Frame => ({ step: position }),

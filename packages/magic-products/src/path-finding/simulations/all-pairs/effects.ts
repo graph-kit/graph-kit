@@ -101,9 +101,11 @@ const allPairsEffects = (
 };
 
 export const allPairsSimulationDefinition = (
+  id: string,
   algorithm: AllPairsFunction,
   options: AllPairsOptions,
 ): SimulationDefinition<AllPairsFrame> => ({
+  id,
   guard: new SimulationGuardBuilder(options.graph).minNodes(1).build(),
   collectFrames: (collector) => {
     algorithm(options.graph)(collector);

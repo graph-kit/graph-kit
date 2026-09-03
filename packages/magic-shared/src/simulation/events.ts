@@ -1,8 +1,8 @@
 import { EventMapToEventRegistry } from '@core/events/types';
 
 export type SimulationEventMap = {
-  onSimulationStarted: () => void;
-  onSimulationEnded: () => void;
+  onSimulationStarted: (simulationId: string) => void;
+  onSimulationEnded: (simulationId: string) => void;
 };
 
 type SimulationEventRegistry = EventMapToEventRegistry<SimulationEventMap>;

@@ -17,6 +17,7 @@
     "@core/utils": "workspace:*",
     "@magic/shared": "workspace:*",
     "nuxt": "^4.1.2",
+    "posthog-js": "^1.424.1",
     "vue": "catalog:"
   },
   "devDependencies": {

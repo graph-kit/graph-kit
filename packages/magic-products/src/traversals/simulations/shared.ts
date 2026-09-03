@@ -112,10 +112,12 @@ const traversalThemers = (graph: Graph): TraversalThemers => {
 };
 
 export const traversalSimulationDefinition = (
+  id: string,
   traversal: TraversalFunction,
   options: TraversalSimulationOptions,
 ): SimulationDefinition<TraversalFrame> => {
   return {
+    id,
     guard: new SimulationGuardBuilder(options.graph)
       .custom(() => {
         const startNodeInNodes =

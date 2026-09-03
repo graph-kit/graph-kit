@@ -14,11 +14,11 @@ export const usePrimsSimulation = (graph: Graph) => {
   const startNodeId: StartNodeId = ref();
 
   return {
-    prims: primsSimulationDefinition(prims, { graph, startNodeId }),
+    prims: primsSimulationDefinition('prims', prims, { graph, startNodeId }),
     startNodeId,
   };
 };
 
 export const useKruskalsSimulation = (graph: Graph) => ({
-  kruskals: kruskalsSimulationDefinition(kruskals, { graph }),
+  kruskals: kruskalsSimulationDefinition('kruskals', kruskals, { graph }),
 });

@@ -161,9 +161,11 @@ const singleSourceEffects = (
 };
 
 export const singleSourceSimulationDefinition = (
+  id: string,
   algorithm: SingleSourceFunction,
   options: SingleSourceOptions,
 ): SimulationDefinition<SingleSourceFrame> => ({
+  id,
   guard: new SimulationGuardBuilder(options.graph)
     .custom(() => {
       if (!options.requiresNonNegativeWeights) return;

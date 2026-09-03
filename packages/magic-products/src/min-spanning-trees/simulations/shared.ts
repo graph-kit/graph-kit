@@ -177,9 +177,11 @@ const primsEffects = (
 };
 
 export const primsSimulationDefinition = (
+  id: string,
   prims: PrimsFunction,
   options: PrimsSimulationOptions,
 ): SimulationDefinition<PrimsFrame> => ({
+  id,
   guard: new SimulationGuardBuilder(options.graph)
     .custom(() => {
       const startNodeInNodes = options.graph.nodes.value.some(
@@ -317,9 +319,11 @@ const kruskalsEffects = (
 };
 
 export const kruskalsSimulationDefinition = (
+  id: string,
   kruskals: KruskalsFunction,
   options: KruskalsSimulationOptions,
 ): SimulationDefinition<KruskalsFrame> => ({
+  id,
   guard: new SimulationGuardBuilder(options.graph)
     .minNodes(2)
     .custom(() => {

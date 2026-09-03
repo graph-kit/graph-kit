@@ -156,6 +156,10 @@
       "types": "./dist/types/ui/index.d.ts",
       "default": "./src/ui/index.ts"
     },
+    "./telemetry": {
+      "types": "./dist/types/telemetry/index.d.ts",
+      "default": "./src/telemetry/index.ts"
+    },
     "./simulation": {
       "types": "./dist/types/simulation/index.d.ts",
       "default": "./src/simulation/index.ts"

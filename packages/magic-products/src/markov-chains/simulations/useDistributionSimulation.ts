@@ -42,6 +42,7 @@ export const distributionSimulationDefinition = (
   const distribution = computed(() => currentFrame.value);
 
   return {
+    id: 'markov-distribution',
     /*
       every step walks from the starting distribution rather than from the step
       before it, so a frame never depends on one the playhead has already left

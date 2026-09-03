@@ -41,6 +41,9 @@ type FrameSourceDefinition<Frame> =
   | { frameAt: FrameGeneratorFn<Frame>; collectFrames?: never };
 
 export type SimulationDefinition<Frame> = {
+  /** stable identity for this simulation, reported when it starts and ends */
+  id: string;
+
   /**
    * Runs before frames are (re)computed on every graph structure
    * change. When `guard()` returns a violation, the simulation

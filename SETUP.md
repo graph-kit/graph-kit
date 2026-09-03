@@ -29,7 +29,7 @@ One setting worth turning off in your own `settings.json`:
 
 By default VSCode treats `.` as a commit character, so typing a dot inside a string auto-accepts whatever suggestion happens to be highlighted. Dot-path tokens like `node.default.border.color` are common here, and the string gets silently mangled as you type it.
 
-## Run the client
+## Run Magic Graphs
 
 ```sh
 pnpm dev
@@ -48,7 +48,7 @@ Run them separately with `pnpm dev:client` and `pnpm dev:server` if you only nee
 
 **Turning multiplayer off.** `MULTIPLAYER_SERVER_URL=` (empty) runs the app with multiplayer disabled entirely. That is also the default for any non-dev build, so a deployment without a room server is a normal configuration rather than a broken one.
 
-## Build the client
+## Build the Magic Graphs client
 
 ```sh
 pnpm build
@@ -56,7 +56,9 @@ pnpm build
 
 Runs `nuxt generate` for `@magic/client`, producing a static site in `packages/magic-client/.output/public` — deployable to any static host (e.g. Netlify) with no server process required.
 
-## Build the room server
+**Analytics.** Off by default; `POSTHOG_KEY` turns telemetry on.
+
+## Build the Magic Graphs multiplayer server
 
 ```sh
 pnpm --filter @multiplayer/server build

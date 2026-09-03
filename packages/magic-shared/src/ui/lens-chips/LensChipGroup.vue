@@ -44,6 +44,8 @@
     // unpinning has to read as off right away, so the hover the click came with
     // is ignored until the cursor leaves the chip
     hoverSuppressedLensId.value = wasPinned ? lensId : undefined;
+
+    if (!wasPinned) shell.telemetry.track('lens-chip.pinned', { lensId });
   };
 
   const setHovered = (chip: LensChipDefinition, hovered: boolean) => {

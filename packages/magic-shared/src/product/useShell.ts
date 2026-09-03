@@ -23,6 +23,7 @@ import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useToastState } from '../ui/toast/useToastState.ts';
 import { useShellUI } from '../ui/useShellUI.ts';
+import { useUserAgent } from '../user-agent/useUserAgent.ts';
 import { provideShell } from './context.ts';
 import { resolveShellFlags } from './flags.ts';
 import { useJumpToContent } from './internals/useJumpToContent.ts';
@@ -85,6 +86,7 @@ export const useShell = (
     telemetry,
     toast: useToastState(),
     dialog: useShellDialog(),
+    userAgent: useUserAgent(),
     annotations,
     simulationButtons: options.simulationButtons,
     surface: host.surface,
@@ -170,12 +172,6 @@ export const useShell = (
     shell.onboarding?.open();
 
     options.onSetupCompleted?.(shell);
-
-    shell.dialog.open({
-      title: 'Setup Complete',
-      description: 'Its all setup now',
-      actions: [{ textContent: 'Ok', onClick: () => {} }],
-    });
   });
 
   useShellShortcuts(shell);

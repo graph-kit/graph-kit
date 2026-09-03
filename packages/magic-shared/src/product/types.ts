@@ -27,6 +27,7 @@ import { HelpMenuItem } from '../ui/help-menu/types.ts';
 import { HelpMenuControls } from '../ui/help-menu/useHelpMenuState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
+import { UserAgentControls } from '../user-agent/useUserAgent.ts';
 import { ShellFlagOptions, ShellFlags } from './flags.ts';
 import { JumpToContentControls } from './internals/useJumpToContent.ts';
 import { LocalStorageControls } from './internals/useShellLocalStorage.ts';
@@ -207,6 +208,8 @@ export type Shell = {
   toast: ToastControls;
   /** the app wide dialog, which every product shares, see {@link DialogControls} */
   dialog: DialogControls;
+  /** what the browser says about itself, read once, see {@link UserAgentControls} */
+  userAgent: UserAgentControls;
   surface: CanvasSurface;
   transit?: TransitField;
   history?: ShellHistory;

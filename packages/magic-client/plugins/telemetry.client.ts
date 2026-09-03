@@ -9,12 +9,9 @@ export default defineNuxtPlugin(() => {
 
   const router = useRouter();
 
-  /*
-    posthog is fetched rather than bundled into the entry, so it costs nothing on a build
-    without a key and never blocks hydration on one with it. that leaves a window where the
-    shell is already reporting, so the sink goes up now and what arrives early waits here
-  */
   let send: ((envelope: TelemetryEnvelope) => void) | undefined;
+
+  /** for events that occur before post-hog loads in */
   const waiting: TelemetryEnvelope[] = [];
 
   setTelemetrySink((envelope) => {
@@ -25,13 +22,8 @@ export default defineNuxtPlugin(() => {
   import('posthog-js').then(({ default: posthog }) => {
     posthog.init(posthogKey, {
       api_host: posthogHost,
-      // there are no accounts to tie events to, so nothing here is worth a cookie
+      // eventually move it over to localStorage or auth based to track retention data
       persistence: 'memory',
-      respect_dnt: true,
-      /*
-        the products are a canvas over panels of user typed labels, so anything automatic
-        would be both noise and content we have no business collecting
-      */
       autocapture: false,
       disable_session_recording: true,
       capture_pageview: false,

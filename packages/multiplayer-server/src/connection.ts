@@ -11,7 +11,7 @@ import {
 
 import { productChannel } from './channels.ts';
 import { clearPresence, ensurePresence, presenceIn } from './presence.ts';
-import { Room } from './rooms.ts';
+import { Room, canReachProduct } from './rooms.ts';
 import { Connection, MemberSocket, Relay, ServerContext } from './types.ts';
 
 export const createConnection = (
@@ -90,14 +90,20 @@ export const createConnection = (
     if (currentProductId === productId) currentProductId = null;
   };
 
+  /** @returns whether the room let this socket onto the product */
   const enterProduct = (productId: ProductId) => {
-    if (currentRoomId === null) return;
+    if (currentRoomId === null) return false;
+
+    const current = room();
+    // refused before the socket leaves where it is, so a rejected move is a no-op rather
+    // than one that strands them on no product at all
+    if (current && !canReachProduct(current, productId)) return false;
+
     if (currentProductId !== null) leaveProduct(currentProductId);
     currentProductId = productId;
     socket.join(productChannel(currentRoomId, productId));
 
-    const current = room();
-    if (!current) return;
+    if (!current) return false;
 
     // recorded before announced, so the next arrival is handed this member too
     const presence = ensurePresence(current, productId, currentUserId);
@@ -105,6 +111,7 @@ export const createConnection = (
       userId: currentUserId,
       presence,
     });
+    return true;
   };
 
   const broadcastRoster = (current: Room) => {

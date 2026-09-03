@@ -20,8 +20,8 @@ export const registerProductEvents = ({
     const current = room();
     // the same quiet answer syncDoc gives, since either way there is nothing to apply
     if (!current) return callback({ doc: null, presence: {} });
+    if (!enterProduct(target)) return callback({ doc: null, presence: {} });
 
-    enterProduct(target);
     setMemberProduct(current, userId(), target);
     callback({
       doc: encodeProductDoc(current, target),

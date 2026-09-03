@@ -5,6 +5,7 @@ import {
   DisbandReason,
   JoinResult,
   ProductEntryState,
+  StartResult,
 } from '@multiplayer/protocol/events';
 import {
   ProductId,
@@ -466,7 +467,13 @@ export const createMultiplayer = ({
 
   const ensureSocket = () => {
     if (socket) return socket;
-    socket = connect(serverUrl, { transports: ['websocket'] });
+    socket = connect(serverUrl, {
+      transports: ['websocket'],
+      // the default 5s ceiling puts every client that was in a room back on the server
+      // within one window of it coming up, each pushing a whole document as it lands.
+      // backing off further spreads that arrival out, and socket.io jitters it by half
+      reconnectionDelayMax: 20_000,
+    });
     attachHandlers(socket);
     return socket;
   };
@@ -508,7 +515,7 @@ export const createMultiplayer = ({
     start: async ({ productId, host }) => {
       const activeSocket = ensureSocket();
       const doc = seedFromProduct({ productId, host });
-      const started = await requestFromServer<RoomMembership>((respond) =>
+      const result = await requestFromServer<StartResult>((respond) =>
         activeSocket
           .timeout(ACK_TIMEOUT_MS)
           .emit(
@@ -518,12 +525,18 @@ export const createMultiplayer = ({
           ),
       );
 
-      adoptMembership(started);
+      // nothing to hold a connection open for, since no room was opened
+      if (!result.started) {
+        closeSocket();
+        return result;
+      }
+
+      adoptMembership(result);
 
       // the id becomes shareable the moment the room exists, and survives a refresh
-      roomIdUrl.write(started.roomId);
+      roomIdUrl.write(result.roomId);
 
-      return started.roomId;
+      return result;
     },
 
     join: async ({ roomId }) => {

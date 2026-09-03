@@ -59,13 +59,21 @@ export const clearDrag = (
   delete product.dragTouchedAt[userId];
 };
 
+/**
+ * @returns the stroke as the room kept it, which is what peers are sent: the cap belongs
+ * on the way in, or an opening payload would carry a length no later delta could reach.
+ */
 export const setStroke = (
   room: Room,
   productId: ProductId,
   userId: UserId,
   stroke: PeerStroke,
-): void => {
-  setPresence(room, productId, userId, { stroke });
+): PeerStroke => {
+  const kept: PeerStroke = { ...stroke, points: [] };
+  appendStrokePoints(kept, stroke.points);
+
+  setPresence(room, productId, userId, { stroke: kept });
+  return kept;
 };
 
 /**

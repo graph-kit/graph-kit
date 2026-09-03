@@ -8,6 +8,7 @@ import {
   JoinResult,
   ProductEntryState,
   ServerToClientEvents,
+  StartResult,
 } from '@multiplayer/protocol/events';
 import {
   RoomMembership,
@@ -88,8 +89,8 @@ const addNodeUpdate = (id: string) => {
   return Y.encodeStateAsUpdate(doc);
 };
 
-const startRoom = (socket: ClientSocket) =>
-  new Promise<RoomMembership>((resolve) => {
+const startRoomResult = (socket: ClientSocket) =>
+  new Promise<StartResult>((resolve) => {
     socket.emit(
       'startRoom',
       {
@@ -100,6 +101,13 @@ const startRoom = (socket: ClientSocket) =>
       resolve,
     );
   });
+
+/** a refusal is never what these are testing, so it fails the test rather than the assert */
+const startRoom = async (socket: ClientSocket): Promise<RoomMembership> => {
+  const result = await startRoomResult(socket);
+  if (!result.started) throw new Error(`room refused: ${result.reason}`);
+  return result;
+};
 
 const joinRoom = (socket: ClientSocket, roomId: string, seat?: Seat) =>
   new Promise<JoinResult>((resolve) => {
@@ -410,6 +418,85 @@ describe('seats', () => {
   });
 });
 
+describe('room command scoping', () => {
+  it('refuses a kick aimed at a member of another room', async () => {
+    const victimHost = await connectClient();
+    const victimRoom = await startRoom(victimHost);
+    const victim = await connectClient();
+    const joined = await joinRoomOrThrow(victim, victimRoom.roomId);
+
+    // a host of their own room, and a stranger to the one they are aiming at. the id is
+    // the only thing they need, and every roster hands it to everybody in the room
+    const outsider = await connectClient();
+    await startRoom(outsider);
+    outsider.emit('kickUser', { userId: joined.userId });
+
+    await expectNoEvent(victim, 'kicked');
+
+    const roster = await nextEvent(victimHost, 'rosterChanged', 250).catch(
+      () => null,
+    );
+    expect(roster).toBeNull();
+  });
+
+  it('refuses a move aimed at a member of another room', async () => {
+    const victimHost = await connectClient();
+    const victimRoom = await startRoom(victimHost);
+    const victim = await connectClient();
+    const joined = await joinRoomOrThrow(victim, victimRoom.roomId);
+
+    const outsider = await connectClient();
+    await startRoom(outsider);
+    outsider.emit('moveUser', {
+      userId: joined.userId,
+      productId: 'basic-trees',
+    });
+
+    await expectNoEvent(victim, 'movedToProduct');
+  });
+});
+
+describe('room capacity', () => {
+  it('refuses to open more rooms than a socket is allowed in a window', async () => {
+    const host = await connectClient();
+
+    const results = [];
+    for (let i = 0; i < 6; i++) results.push(await startRoomResult(host));
+
+    expect(results.slice(0, 5).every((result) => result.started)).toBe(true);
+    expect(results[5]).toEqual({
+      started: false,
+      reason: 'tooManyAttempts',
+    });
+  });
+
+  it('refuses a product beyond what one room may hold, leaving the client where it was', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    await joinRoomAt(student, roomId, 'traversals');
+
+    // the room is born holding one, so this walks it up to the bound and one past it
+    for (let i = 0; i < 23; i++) await enterProduct(host, `product-${i}`);
+
+    const refused = await enterProduct(host, 'one-too-many');
+    expect(refused).toEqual({ doc: null, presence: {} });
+
+    // still on the last product it was let onto, rather than stranded on none
+    host.emit('moveCursor', { position: { x: 5, y: 5 } });
+    await expectNoEvent(student, 'cursorMoved');
+  });
+
+  it('refuses an unreasonably long product id', async () => {
+    const host = await connectClient();
+    await startRoom(host);
+
+    const refused = await enterProduct(host, 'x'.repeat(65));
+    expect(refused).toEqual({ doc: null, presence: {} });
+  });
+});
+
 describe('room inactivity', () => {
   /** long enough to send something inside, short enough for a test to wait one out */
   const INACTIVE_AFTER_MS = 200;
@@ -712,6 +799,42 @@ describe('presence scoping', () => {
     expect((await moved).position).toEqual({ x: 5, y: 5 });
   });
 
+  it('seats a host on their product in time to accept the camera they send next', async () => {
+    const host = await connectClient();
+    const { roomId, userId: hostId } = await startRoom(host);
+
+    // the client seeds its camera the moment it is in a room, having moved nothing, which
+    // is the only thing that makes a member who sits perfectly still jumpable to
+    const camera = { panX: 40, panY: 50, zoom: 2 };
+    host.emit('moveCamera', { camera });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const student = await connectClient();
+    const { presence } = await joinRoomAt(student, roomId, 'traversals');
+
+    expect(presence[hostId].cameraState).toEqual(camera);
+  });
+
+  it('drops a camera sent before the sender has entered a product', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    const joined = await joinRoomOrThrow(student, roomId);
+
+    // a joiner is in the room but on no product yet, which is why seeding waits on the
+    // product answering rather than on the room
+    student.emit('moveCamera', { camera: { panX: 1, panY: 2, zoom: 3 } });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const { presence } = await enterProduct(student, 'traversals');
+    expect(presence[joined.userId]).toBeUndefined();
+
+    const observer = await connectClient();
+    const seen = await joinRoomAt(observer, roomId, 'traversals');
+    expect(seen.presence[joined.userId]?.cameraState).toBeNull();
+  });
+
   it('hands an arriving client what everyone on the product is already doing', async () => {
     const host = await connectClient();
     const { roomId, userId: hostId } = await startRoom(host);
@@ -928,6 +1051,28 @@ describe('live strokes', () => {
         { x: 1, y: 0 },
       ],
     });
+  });
+
+  it('caps an opening stroke, so peers are sent what the room kept', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+    const student = await connectClient();
+    await joinRoomAt(student, roomId, 'traversals');
+
+    const overLength = Array.from({ length: 200 }, (_unused, i) => ({
+      x: i,
+      y: i,
+    }));
+    const relayed = nextEvent(student, 'strokeStarted');
+    host.emit('startStroke', {
+      stroke: { ...stroke, mode: 'laser' as const, points: overLength },
+    });
+
+    // the laser bound, which the opening payload has to be held to as well or no later
+    // delta could ever bring it back down
+    const relayedStroke = (await relayed).stroke;
+    expect(relayedStroke.points).toHaveLength(64);
+    expect(relayedStroke.points[0]).toEqual({ x: 136, y: 136 });
   });
 
   it('drops a delta for a stroke it has no record of', async () => {

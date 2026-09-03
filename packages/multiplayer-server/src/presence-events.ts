@@ -102,8 +102,8 @@ export const registerPresenceEvents = ({
     if (!target) return;
     const { userId } = target;
 
-    setStroke(target.room, target.productId, userId, stroke);
-    relayToProduct(target.productId, 'strokeStarted', { userId, stroke });
+    const kept = setStroke(target.room, target.productId, userId, stroke);
+    relayToProduct(target.productId, 'strokeStarted', { userId, stroke: kept });
   });
 
   socket.on('extendStroke', ({ points }) => {

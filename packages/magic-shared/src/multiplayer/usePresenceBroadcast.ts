@@ -1,10 +1,61 @@
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
+import { CameraState, DraggedElement, Point } from '@multiplayer/protocol/room';
 
-import { watch } from 'vue';
+import { onUnmounted, watch } from 'vue';
 
 import { MultiplayerControls } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
+
+/**
+ * The pointer drives all three of these, and every report is a packet fanned out to every
+ * peer, which makes them the signals able to set the server's ceiling on their own.
+ */
+const PRESENCE_INTERVAL_MS = 33;
+
+type Throttled<Value> = ((value: Value) => void) & {
+  /** sends what is withheld now, for a caller that has to order something after it */
+  flush: () => void;
+};
+
+/**
+ * Sends on a fixed cadence, always following with the last value withheld, so a signal
+ * settles where it stopped rather than wherever the final interval happened to land.
+ */
+const throttleTrailing = <Value>(
+  send: (value: Value) => void,
+  intervalMs: number,
+): Throttled<Value> => {
+  let lastSentAt = 0;
+  // boxed, since the value being sent is itself nullable when the cursor leaves the canvas
+  let withheld: { value: Value } | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const flush = () => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    if (!withheld) return;
+
+    const { value } = withheld;
+    withheld = null;
+    lastSentAt = Date.now();
+    send(value);
+  };
+
+  const throttled = (value: Value) => {
+    const sinceLast = Date.now() - lastSentAt;
+    if (sinceLast >= intervalMs) {
+      lastSentAt = Date.now();
+      send(value);
+      return;
+    }
+
+    withheld = { value };
+    if (timer === null) timer = setTimeout(flush, intervalMs - sinceLast);
+  };
+
+  return Object.assign(throttled, { flush });
+};
 
 /**
  * Sends what this user is doing, one signal at a time. Each has its own trigger, so a
@@ -25,20 +76,50 @@ export const usePresenceBroadcast = (options: {
     return room.controls.presence;
   };
 
+  const sendCursor = throttleTrailing(
+    (position: Point | null) => presence()?.moveCursor(position),
+    PRESENCE_INTERVAL_MS,
+  );
+
   surface.events.canvas.subscribe('onMouseMove', (event) => {
-    presence()?.moveCursor(surface.toWorldCoordinates(event));
+    sendCursor(surface.toWorldCoordinates(event));
   });
 
+  const sendCamera = throttleTrailing(
+    (state: CameraState) => presence()?.moveCamera(state),
+    PRESENCE_INTERVAL_MS,
+  );
+
   const camera = surface.camera.state;
+  const currentCamera = (): CameraState => ({
+    panX: camera.panX.value,
+    panY: camera.panY.value,
+    zoom: camera.zoom.value,
+  });
+
   watch(
     () => [camera.panX.value, camera.panY.value, camera.zoom.value],
-    () =>
-      presence()?.moveCamera({
-        panX: camera.panX.value,
-        panY: camera.panY.value,
-        zoom: camera.zoom.value,
-      }),
+    () => sendCamera(currentCamera()),
   );
+
+  /**
+   * A camera is otherwise only ever heard about when it moves, which leaves anyone who
+   * arrives and sits still with nothing for a peer to jump to. Both events are needed and
+   * neither is enough: a host is seated by starting the room, a joiner only once the
+   * product answers, and the server drops a camera sent before either.
+   */
+  const seedCamera = () => {
+    presence()?.moveCamera(currentCamera());
+  };
+
+  multiplayer.events.subscribe('onRoomJoined', seedCamera);
+  multiplayer.events.subscribe('onPresenceSeeded', seedCamera);
+
+  // the connection outlives the product, so these would go on reporting a dead surface
+  onUnmounted(() => {
+    multiplayer.events.unsubscribe('onRoomJoined', seedCamera);
+    multiplayer.events.unsubscribe('onPresenceSeeded', seedCamera);
+  });
 
   // the tools toggle from a keystroke or a button press, neither of which moves the
   // cursor, so nothing else would carry the change out to the room
@@ -60,11 +141,19 @@ export const usePresenceBroadcast = (options: {
   );
   annotations?.events.subscribe('onStrokeEnded', () => presence()?.endStroke());
 
+  const sendDragMove = throttleTrailing(
+    (elements: DraggedElement[]) => presence()?.updateDrag(elements),
+    PRESENCE_INTERVAL_MS,
+  );
+
   host.drag?.subscribe('onDragStarted', (elements) =>
     presence()?.startDrag(elements),
   );
-  host.drag?.subscribe('onDragMoved', (elements) =>
-    presence()?.updateDrag(elements),
-  );
-  host.drag?.subscribe('onDragEnded', () => presence()?.endDrag());
+  host.drag?.subscribe('onDragMoved', sendDragMove);
+  host.drag?.subscribe('onDragEnded', () => {
+    // a withheld move landing after the end is read as a new drag, which would hold the
+    // elements for peers until the room's staleness sweep let go of them
+    sendDragMove.flush();
+    presence()?.endDrag();
+  });
 };

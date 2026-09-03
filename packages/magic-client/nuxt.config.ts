@@ -33,6 +33,10 @@ export default defineNuxtConfig({
       multiplayerServerUrl:
         process.env.MULTIPLAYER_SERVER_URL ??
         (process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : ''),
+      // read at runtime, so multiplayer can be switched off without a build. point it at
+      // any host to get a switch that does not wait on a deploy either
+      multiplayerConfigUrl:
+        process.env.MULTIPLAYER_CONFIG_URL ?? '/multiplayer-config.json',
       posthogKey: process.env.POSTHOG_KEY ?? '',
     },
   },

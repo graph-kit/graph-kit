@@ -39,6 +39,22 @@ const createProductRoom = (doc: Y.Doc): ProductRoom => ({
 export const productIn = (room: Room, productId: ProductId): ProductRoom =>
   (room.products[productId] ??= createProductRoom(new Y.Doc()));
 
+const MAX_PRODUCT_ID_LENGTH = 64;
+
+/** far above what the app has, since the point is only to bound an unknown id */
+const MAX_PRODUCTS_PER_ROOM = 24;
+
+/**
+ * The server never learns what a productId names, so the only thing it can ask is whether
+ * a room is being used as storage: every distinct id costs it a document for the room's life.
+ */
+export const canReachProduct = (room: Room, productId: ProductId): boolean => {
+  if (productId.length === 0) return false;
+  if (productId.length > MAX_PRODUCT_ID_LENGTH) return false;
+  if (room.products[productId]) return true;
+  return Object.keys(room.products).length < MAX_PRODUCTS_PER_ROOM;
+};
+
 export const createRoom = (options: {
   hostId: UserId;
   hostToken: SeatToken;
@@ -78,6 +94,8 @@ export type RoomStore = {
   set: (roomId: RoomId, room: Room) => void;
   delete: (roomId: RoomId) => void;
   has: (roomId: RoomId) => boolean;
+  /** what the capacity refusal is measured against */
+  size: () => number;
   /** only the drag sweep has a use for this */
   entries: () => [RoomId, Room][];
 };
@@ -94,6 +112,7 @@ export const createRoomStore = (): RoomStore => {
       roomIdToRoom.delete(roomId);
     },
     has: (roomId) => roomIdToRoom.has(roomId),
+    size: () => roomIdToRoom.size,
     entries: () => [...roomIdToRoom.entries()],
   };
 };

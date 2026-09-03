@@ -1,4 +1,5 @@
 import { applyProductDocUpdate, encodeProductDocDiff } from './documents.ts';
+import { canReachProduct } from './rooms.ts';
 import { canWriteProduct } from './roster.ts';
 import { Connection } from './types.ts';
 
@@ -12,6 +13,7 @@ export const registerDocumentEvents = ({
   socket.on('docUpdate', ({ productId, update }) => {
     const current = room();
     if (!current || !canWriteProduct(current, userId())) return;
+    if (!canReachProduct(current, productId)) return;
 
     applyProductDocUpdate(current, productId, update);
     relayToProduct(productId, 'docUpdated', { productId, update });

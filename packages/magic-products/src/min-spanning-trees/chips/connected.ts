@@ -14,21 +14,24 @@ const COLOR_LIST = [
   colors.PURPLE_500,
 ];
 
+/*
+  over the mst cap nothing is enumerated, but connectivity does not need an mst to
+  answer: one component means one tree spans the graph
+*/
+export const useMstConnected = (graph: Graph) =>
+  computed(() => {
+    const result = graph.minimumSpanningTrees.all.value;
+    return result.skipped
+      ? graph.characteristics.connected.value.components.value.length === 1
+      : result.connected;
+  });
+
 export const connectedChip = (graph: Graph): LensChipDefinition => {
   const components = computed(
     () => graph.characteristics.connected.value.components,
   );
 
-  /*
-    over the mst cap nothing is enumerated, but connectivity does not need an mst to
-    answer: one component means one tree spans the graph
-  */
-  const mstConnected = computed(() => {
-    const result = graph.minimumSpanningTrees.all.value;
-    return result.skipped
-      ? components.value.value.length === 1
-      : result.connected;
-  });
+  const mstConnected = useMstConnected(graph);
 
   const themer = createNodeThemer(graph, (node) => {
     const componentIndex = nullThrows(
@@ -41,7 +44,10 @@ export const connectedChip = (graph: Graph): LensChipDefinition => {
   const componentCount = computed(() => components.value.value.length);
 
   return {
-    name: () => `Connected: ${mstConnected.value ? 'Yes' : 'No'}`,
+    name: {
+      headline: 'Connected',
+      stat: () => (mstConnected.value ? 'Yes' : 'No'),
+    },
     tooltipLabel: () =>
       mstConnected.value
         ? 'Every node can be reached from every other, so a single tree of edges spans the whole graph.'

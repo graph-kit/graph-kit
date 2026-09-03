@@ -56,6 +56,8 @@ pnpm build
 
 Runs `nuxt generate` for `@magic/client`, producing a static site in `packages/magic-client/.output/public` — deployable to any static host (e.g. Netlify) with no server process required.
 
+**Analytics.** `POSTHOG_KEY` turns telemetry on; without it the shell reports into a sink that goes nowhere, which is what keeps local runs and preview builds out of the numbers. `POSTHOG_HOST` overrides the ingestion endpoint, and is what you point at a same-origin proxy path once one exists. The library is fetched on demand rather than bundled, so a build without a key does not ship it.
+
 ## Build the room server
 
 ```sh

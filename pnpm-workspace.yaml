@@ -5,6 +5,8 @@ overrides:
   vite: ^8.1.4
 
 allowBuilds:
+  # posthog-js pulls it in; its install script only prints a funding banner
+  core-js: false
   esbuild: true
   vue-demi: true
 

@@ -29,6 +29,7 @@
 
     try {
       await navigator.clipboard.writeText(result.link);
+      shell.telemetry.track('link.shared');
       toast.show({
         title: 'Link Copied',
         description: 'The link carries a copy of what is on screen.',

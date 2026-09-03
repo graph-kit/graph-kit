@@ -8,6 +8,7 @@ import { useShellShortcuts } from '../shortcuts/useShellShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import SimulationButtonGroup from '../simulation/start-buttons/ButtonGroup.vue';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
+import { useProductVisit, useTelemetry } from '../telemetry/useTelemetry.ts';
 import {
   ANIMATION_SPEED_DURATION_MS,
   readAnimationSpeed,
@@ -51,6 +52,9 @@ export const useShell = (
 
   const manifest = manifests[options.productId];
 
+  const telemetry = useTelemetry(manifest.id);
+  useProductVisit(telemetry);
+
   const localStorage = useShellLocalStorage(manifest.id, host, flags);
   const jumpToContent = useJumpToContent(host, flags);
   const onboarding = useOnboarding(host, flags, appearance, options.onboarding);
@@ -77,6 +81,7 @@ export const useShell = (
     shortcuts,
     debug,
     helpMenu: useHelpMenuState(shortcuts, options.helpMenu),
+    telemetry,
     toast: useToastState(),
     annotations,
     simulationButtons: options.simulationButtons,
@@ -95,6 +100,13 @@ export const useShell = (
   shell.surface.camera.events.subscribe(
     'onCameraChange',
     localStorage.invalidate,
+  );
+
+  simulation.events.subscribe('onSimulationStarted', (simulationId) =>
+    telemetry.track('simulation.started', { simulationId }),
+  );
+  simulation.events.subscribe('onSimulationEnded', (simulationId) =>
+    telemetry.track('simulation.ended', { simulationId }),
   );
 
   host.annotations?.events.subscribe('onStrokeBegan', () =>

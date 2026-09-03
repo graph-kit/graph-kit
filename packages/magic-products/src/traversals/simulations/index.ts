@@ -16,8 +16,8 @@ export const useTraversalSimulations = (graph: Graph) => {
   const options: TraversalSimulationOptions = { graph, startNodeId };
 
   return {
-    bfs: traversalSimulationDefinition(bfs, options),
-    dfs: traversalSimulationDefinition(dfs, options),
+    bfs: traversalSimulationDefinition('bfs', bfs, options),
+    dfs: traversalSimulationDefinition('dfs', dfs, options),
     startNodeId,
   };
 };

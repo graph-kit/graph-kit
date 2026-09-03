@@ -218,7 +218,7 @@ export const useSimulationState = (
     }
 
     simulation.value.onSetupCompleted?.(setupContext.currentFrame.value);
-    events.emit('onSimulationStarted');
+    events.emit('onSimulationStarted', definition.id);
   };
 
   const stop = () => {
@@ -231,7 +231,7 @@ export const useSimulationState = (
     if (sim.lens) lensControls.remove(sim.lens.id);
     sim.onTeardownCompleted?.();
     simulation.value = undefined;
-    events.emit('onSimulationEnded');
+    events.emit('onSimulationEnded', sim.definition.id);
   };
 
   // reconciles sim.violation with a fresh guard check, swapping the

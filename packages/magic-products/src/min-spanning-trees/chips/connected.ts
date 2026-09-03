@@ -51,7 +51,7 @@ export const connectedChip = (graph: Graph): LensChipDefinition => {
     tooltipLabel: () =>
       mstConnected.value
         ? 'Every node can be reached from every other, so a single tree of edges spans the whole graph.'
-        : `Your graph breaks into ${componentCount.value} components, shown here by color. A spanning tree has to reach every node, so no single tree covers all of them and each component gets its own.`,
+        : `Your graph breaks into ${componentCount.value} components. A spanning tree has to reach every node, so no single tree covers all of them and each component gets its own.`,
     lens: {
       id: 'is-mst-connected',
       ...themer,

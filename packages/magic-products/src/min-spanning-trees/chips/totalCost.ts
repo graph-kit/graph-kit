@@ -57,11 +57,7 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
       headline: 'Total Cost',
       stat: () => displayCost.value.primary,
     },
-    tooltipLabel: () => {
-      const { secondary } = displayCost.value;
-      const explanation = costExplanation();
-      return secondary ? `${secondary}: ${explanation}` : explanation;
-    },
+    tooltipLabel: costExplanation,
     lens: {
       id: 'total-mst-cost',
       ...themer,

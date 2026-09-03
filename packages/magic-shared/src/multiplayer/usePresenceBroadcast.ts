@@ -1,10 +1,53 @@
 import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
+import { Point } from '@multiplayer/protocol/room';
 
 import { watch } from 'vue';
 
 import { MultiplayerControls } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
+
+/**
+ * A pointer reports up to 120 times a second and every report is a packet fanned out to
+ * every peer, which makes this the one signal able to set the server's ceiling on its own.
+ */
+const CURSOR_INTERVAL_MS = 33;
+
+/**
+ * Sends on a fixed cadence, always following with the last value withheld, so a cursor
+ * settles where it stopped rather than wherever the final interval happened to land.
+ */
+const throttleTrailing = <Value>(
+  send: (value: Value) => void,
+  intervalMs: number,
+) => {
+  let lastSentAt = 0;
+  // boxed, since the value being sent is itself nullable when the cursor leaves the canvas
+  let withheld: { value: Value } | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const flush = () => {
+    timer = null;
+    if (!withheld) return;
+
+    const { value } = withheld;
+    withheld = null;
+    lastSentAt = Date.now();
+    send(value);
+  };
+
+  return (value: Value) => {
+    const sinceLast = Date.now() - lastSentAt;
+    if (sinceLast >= intervalMs) {
+      lastSentAt = Date.now();
+      send(value);
+      return;
+    }
+
+    withheld = { value };
+    if (timer === null) timer = setTimeout(flush, intervalMs - sinceLast);
+  };
+};
 
 /**
  * Sends what this user is doing, one signal at a time. Each has its own trigger, so a
@@ -25,8 +68,13 @@ export const usePresenceBroadcast = (options: {
     return room.controls.presence;
   };
 
+  const sendCursor = throttleTrailing(
+    (position: Point | null) => presence()?.moveCursor(position),
+    CURSOR_INTERVAL_MS,
+  );
+
   surface.events.canvas.subscribe('onMouseMove', (event) => {
-    presence()?.moveCursor(surface.toWorldCoordinates(event));
+    sendCursor(surface.toWorldCoordinates(event));
   });
 
   const camera = surface.camera.state;

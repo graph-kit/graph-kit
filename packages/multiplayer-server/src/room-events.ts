@@ -3,8 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { JoinResult } from '@multiplayer/protocol/events';
 import { RoomId, Seat, SeatToken, UserId } from '@multiplayer/protocol/room';
 
+import { createRateLimit } from './rate-limit.ts';
 import { generateRoomId, normalizeRoomId } from './room-id.ts';
-import { Room, createRoom } from './rooms.ts';
+import { Room, canReachProduct, createRoom } from './rooms.ts';
 import {
   addMember,
   canRunRoomCommand,
@@ -24,6 +25,16 @@ const joinResultFor = (
   seatToken: SeatToken,
 ): JoinResult => ({ joined: true, roomId, userId, seatToken, data: room.data });
 
+/** every room is held in memory, so the count is what stands between a loop and an OOM */
+const MAX_ROOMS = Number(process.env.MAX_ROOMS ?? 500);
+
+const RATE_WINDOW_MS = 60_000;
+
+// both are far above what a person reaches by hand and far below what a script needs.
+// a reconnect arrives on a fresh socket, so its rejoin never counts against these
+const START_ROOM_LIMIT = 5;
+const JOIN_ROOM_LIMIT = 30;
+
 /** who is here: the roster, and the room lifecycle that writes it */
 export const registerRoomEvents = (connection: Connection) => {
   const {
@@ -42,9 +53,19 @@ export const registerRoomEvents = (connection: Connection) => {
     commander,
   } = connection;
 
+  const startLimit = createRateLimit(START_ROOM_LIMIT, RATE_WINDOW_MS);
+  const joinLimit = createRateLimit(JOIN_ROOM_LIMIT, RATE_WINDOW_MS);
+
   socket.on(
     'startRoom',
     ({ displayName, productId: target, doc }, callback) => {
+      if (!startLimit.allow()) {
+        return callback({ started: false, reason: 'tooManyAttempts' });
+      }
+      if (rooms.size() >= MAX_ROOMS) {
+        return callback({ started: false, reason: 'atCapacity' });
+      }
+
       const newRoomId = generateRoomId(rooms.has);
       const seatToken: SeatToken = randomUUID();
       const created = createRoom({
@@ -55,11 +76,17 @@ export const registerRoomEvents = (connection: Connection) => {
         doc,
       });
 
+      // held to the same bound as every later one, rather than trusted for arriving first
+      if (!canReachProduct(created, target)) {
+        return callback({ started: false, reason: 'atCapacity' });
+      }
+
       rooms.set(newRoomId, created);
       joinRoom(newRoomId);
       enterProduct(target);
 
       callback({
+        started: true,
         roomId: newRoomId,
         userId: userId(),
         seatToken,
@@ -96,6 +123,8 @@ export const registerRoomEvents = (connection: Connection) => {
   };
 
   socket.on('joinRoom', ({ roomId: target, displayName, seat }, callback) => {
+    if (!joinLimit.allow()) return callback({ joined: false });
+
     const targetRoomId = normalizeRoomId(target);
     const found = rooms.get(targetRoomId);
     if (!found) return callback({ joined: false });
@@ -163,6 +192,9 @@ export const registerRoomEvents = (connection: Connection) => {
   socket.on('kickUser', ({ userId: targetId }) => {
     const current = room();
     if (!current || !canRunRoomCommand(current, userId())) return;
+    // connections are indexed across every room at once, so without this a host reaches
+    // anyone whose id they have read off a roster, in any room they have never been in
+    if (!current.data.roster[targetId]) return;
     if (isHost(current, targetId)) return;
 
     const by = commander(current);

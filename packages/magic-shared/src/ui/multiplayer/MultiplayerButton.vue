@@ -12,6 +12,7 @@
     mdiHumanGreetingProximity,
     mdiKeyboardOutline,
   } from '@mdi/js';
+  import { StartRefusal } from '@multiplayer/protocol/events';
 
   import { computed, ref } from 'vue';
 
@@ -46,6 +47,14 @@
   });
 
   const roomCodeValid = computed(() => roomCodeInput.value.length === 4);
+
+  /** exhaustive, so a refusal added to the union is a compile error rather than silence */
+  const START_REFUSAL_DESCRIPTION: Record<StartRefusal, string> = {
+    atCapacity:
+      'The server is holding as many sessions as it can right now. Try again in a few minutes.',
+    tooManyAttempts:
+      'Too many sessions started from here just now. Wait a minute and try again.',
+  };
 
   const joiningSession = ref(false);
   const startingSession = ref(false);
@@ -89,10 +98,21 @@
   const startSession = async () => {
     startingSession.value = true;
     try {
-      const roomId = await multiplayer.value.room.start();
+      const result = await multiplayer.value.room.start();
+
+      if (!result.started) {
+        toast.show({
+          title: 'Could Not Start A Session',
+          description: START_REFUSAL_DESCRIPTION[result.reason],
+          severity: 'warn',
+          duration: SESSION_FAILED_TOAST_MS,
+        });
+        return;
+      }
+
       toast.show({
         title: 'Session Started',
-        description: `Session live with code ${roomId.toUpperCase()}.`,
+        description: `Session live with code ${result.roomId.toUpperCase()}.`,
         severity: 'success',
         duration: SESSION_STARTED_TOAST_MS,
       });

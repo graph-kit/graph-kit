@@ -60,7 +60,8 @@ export type Connection = {
   joinRoom: (roomId: RoomId) => void;
   /** takes on a seat proven to belong to this socket, index and all */
   claimSeat: (userId: UserId) => void;
-  enterProduct: (productId: ProductId) => void;
+  /** false when the room refused the product, which leaves this socket where it was */
+  enterProduct: (productId: ProductId) => boolean;
   /** clears presence there and says so, which is what releases their drag */
   leaveProduct: (productId: ProductId) => void;
   /** a live socket in no room, which is what both a kick and a leave end at */

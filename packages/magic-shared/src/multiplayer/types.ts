@@ -3,6 +3,7 @@ import {
   ClientToServerEvents,
   JoinResult,
   ServerToClientEvents,
+  StartResult,
 } from '@multiplayer/protocol/events';
 import {
   CameraState,
@@ -36,7 +37,7 @@ export type ProductBinding = {
 };
 
 export type RoomActions = {
-  start: (options: ProductBinding) => Promise<RoomId>;
+  start: (options: ProductBinding) => Promise<StartResult>;
   join: (options: { roomId: RoomId }) => Promise<JoinResult>;
   leave: () => void;
 };
@@ -54,7 +55,7 @@ export type ProductActions = {
 export type ProductMultiplayer = {
   room: {
     state: ComputedRef<RoomState>;
-    start: () => Promise<RoomId>;
+    start: () => Promise<StartResult>;
     join: (options: { roomId: RoomId }) => Promise<JoinResult>;
     leave: () => void;
     /**

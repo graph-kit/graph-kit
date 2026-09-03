@@ -22,6 +22,13 @@ import { AssignableTier } from './tiers.ts';
 export type JoinResult =
   { joined: false } | (RoomMembership & { joined: true });
 
+export type StartRefusal = 'atCapacity' | 'tooManyAttempts';
+
+/** a refusal is not an error, so starting answers the way joining does */
+export type StartResult =
+  | { started: false; reason: StartRefusal }
+  | (RoomMembership & { started: true });
+
 /** who is arriving, which is all a room needs to admit someone */
 export type RoomEntryOptions = {
   displayName: string;
@@ -30,7 +37,7 @@ export type RoomEntryOptions = {
 export type ClientToServerEvents = {
   startRoom: (
     options: RoomEntryOptions & { productId: ProductId; doc: DocUpdate },
-    callback: (membership: RoomMembership) => void,
+    callback: (result: StartResult) => void,
   ) => void;
 
   /**

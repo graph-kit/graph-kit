@@ -48,6 +48,8 @@ Run them separately with `pnpm dev:client` and `pnpm dev:server` if you only nee
 
 **Turning multiplayer off.** `MULTIPLAYER_SERVER_URL=` (empty) runs the app with multiplayer disabled entirely. That is also the default for any non-dev build, so a deployment without a room server is a normal configuration rather than a broken one.
 
+**Turning multiplayer off without a build.** The client reads `public/multiplayer-config.json` at startup and stands the feature down on `{ "enabled": false }`. Anything else leaves it on, an unreachable or malformed file included, so a slow fetch never takes the feature down with it. `MULTIPLAYER_CONFIG_URL` repoints it at any host, which is what turns it into a switch that does not wait on a deploy either.
+
 ## Build the Magic Graphs client
 
 ```sh
@@ -65,6 +67,8 @@ pnpm --filter @multiplayer/server build
 ```
 
 Bundles to `packages/multiplayer-server/dist/index.js` with esbuild, then runs with `node`. It bundles rather than emitting plain `tsc` output because workspace packages are published as raw `.ts` through their `exports` maps, which Node cannot load directly. `railway.toml` in that package carries the deploy config.
+
+**Server environment.** `PORT` (default 4000), `CORS_ORIGINS` (comma separated, default `*`) and `MAX_ROOMS` (default 500). Rooms are held in memory, so `MAX_ROOMS` is what bounds the process against a client opening them in a loop; size it against the memory the container actually has. Note that in-memory state is also why the service cannot run more than one replica: two instances would not see each other's rooms.
 
 ## Other useful scripts
 

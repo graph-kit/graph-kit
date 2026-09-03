@@ -5,6 +5,7 @@ import {
   DisbandReason,
   JoinResult,
   ProductEntryState,
+  StartResult,
 } from '@multiplayer/protocol/events';
 import {
   ProductId,
@@ -508,7 +509,7 @@ export const createMultiplayer = ({
     start: async ({ productId, host }) => {
       const activeSocket = ensureSocket();
       const doc = seedFromProduct({ productId, host });
-      const started = await requestFromServer<RoomMembership>((respond) =>
+      const result = await requestFromServer<StartResult>((respond) =>
         activeSocket
           .timeout(ACK_TIMEOUT_MS)
           .emit(
@@ -518,12 +519,18 @@ export const createMultiplayer = ({
           ),
       );
 
-      adoptMembership(started);
+      // nothing to hold a connection open for, since no room was opened
+      if (!result.started) {
+        closeSocket();
+        return result;
+      }
+
+      adoptMembership(result);
 
       // the id becomes shareable the moment the room exists, and survives a refresh
-      roomIdUrl.write(started.roomId);
+      roomIdUrl.write(result.roomId);
 
-      return started.roomId;
+      return result;
     },
 
     join: async ({ roomId }) => {

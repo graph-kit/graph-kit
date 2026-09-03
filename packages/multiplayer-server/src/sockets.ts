@@ -29,6 +29,9 @@ export const createSocketServer = (
     // its socket: it costs them a greyed roster row and their cursor until they are back
     pingInterval: 10_000,
     pingTimeout: 10_000,
+    // deliberately no tighter than the default: a reconnect pushes its whole document,
+    // annotations included, and a message over this closes the socket rather than failing
+    maxHttpBufferSize: 1e6,
   });
 
   const server: ServerContext = {

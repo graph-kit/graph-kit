@@ -13,19 +13,20 @@ const componentSlotHighlight = (
 
 const highlights = {
   queue: {
-    tooltipLabel: 'The waiting line. First one in is the first one out',
+    tooltipLabel:
+      'A FIFO data structure. The first node in is the first node out.',
     ...componentSlotHighlight('queue'),
   },
   enqueue: {
-    tooltipLabel: 'Get in the back of the queue!',
+    tooltipLabel: 'Enqueue adds a node to the back of the queue.',
     ...componentSlotHighlight('queue'),
   },
   dequeue: {
-    tooltipLabel: 'Grab whoever is at the front of the queue',
+    tooltipLabel: 'Dequeue removes the first node in the queue.',
     ...componentSlotHighlight('queue'),
   },
   visited: {
-    tooltipLabel: 'Nodes we have already seen, nothing new here',
+    tooltipLabel: 'Nodes we have already explored.',
     ...componentSlotHighlight('visited'),
   },
 } as const satisfies Record<string, ExplainerHighlight>;
@@ -50,7 +51,7 @@ export const bfsExplainer =
 
     if (frame.type === 'explore-node') {
       return {
-        content: `[Dequeuing] and Exploring {${frame.exploredNode}}`,
+        content: `[Dequeuing] {${frame.exploredNode}} and Exploring It`,
         highlights: [highlights.dequeue],
       };
     }
@@ -71,7 +72,7 @@ export const bfsExplainer =
 
     if (frame.type === 'enqueue-node') {
       return {
-        content: `{${frame.node}} Not In [Visited], Therefore, [Enqueuing]`,
+        content: `{${frame.node}} Is Not In [Visited], Therefore, [Enqueuing]`,
         highlights: [highlights.visited, highlights.enqueue],
       };
     }

@@ -11,26 +11,22 @@ const componentSlotHighlight = (
   deactivate: ({ shell }) => shell.componentSlots.clearHighlighted(),
 });
 
-/*
-  deliberately the queue explainer with one word swapped, because the swap is
-  the whole lesson: same walk, same bookkeeping, and the only thing that makes
-  it depth first is taking off the top instead of off the front
-*/
 const highlights = {
   stack: {
-    tooltipLabel: 'The pile. Last one on is the first one off',
+    tooltipLabel:
+      'A LIFO data structure. The last node on is the first node to come off.',
     ...componentSlotHighlight('stack'),
   },
   push: {
-    tooltipLabel: 'Drop it on top of the stack!',
+    tooltipLabel: 'Push adds a node to the top of the stack.',
     ...componentSlotHighlight('stack'),
   },
   pop: {
-    tooltipLabel: 'Grab whoever is on top of the stack',
+    tooltipLabel: 'Pop removes the top node in the stack.',
     ...componentSlotHighlight('stack'),
   },
   visited: {
-    tooltipLabel: 'Nodes we have already seen, nothing new here',
+    tooltipLabel: 'Nodes we have already explored.',
     ...componentSlotHighlight('visited'),
   },
 } as const satisfies Record<string, ExplainerHighlight>;
@@ -55,7 +51,7 @@ export const dfsExplainer =
 
     if (frame.type === 'explore-node') {
       return {
-        content: `[Popping] and Exploring {${frame.exploredNode}}`,
+        content: `[Popping] {${frame.exploredNode}} and Exploring It`,
         highlights: [highlights.pop],
       };
     }

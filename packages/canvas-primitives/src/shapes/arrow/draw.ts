@@ -1,7 +1,16 @@
-import { calculateArrowHeadCorners, getArrowHeadSize } from '../../helpers.ts';
-import { line } from '../line/index.ts';
+import { calculateArrowHeadCorners } from '../../helpers.ts';
+import { drawLineWithCtx } from '../line/draw.ts';
 import { triangle } from '../triangle/index.ts';
 import type { ArrowSchemaWithDefaults } from './defaults.ts';
+
+/** covers antialiasing that happens when triangle and line get painted */
+const SEAM_OVERLAP_DEVICE_PX = 1;
+
+const getDevicePixelSize = (ctx: CanvasRenderingContext2D) => {
+  const { a, b } = ctx.getTransform();
+  const scale = Math.hypot(a, b);
+  return scale > 0 ? 1 / scale : 0;
+};
 
 export const drawArrowWithCtx = (schema: ArrowSchemaWithDefaults) => {
   const { start, end, lineWidth, fillGradient, fillColor } = schema;
@@ -12,17 +21,18 @@ export const drawArrowWithCtx = (schema: ArrowSchemaWithDefaults) => {
     lineWidth,
   });
 
-  const { arrowHeadHeight } = getArrowHeadSize(lineWidth);
+  const { pointB, pointC } = headSchema;
 
-  const angle = Math.atan2(end.y - start.y, end.x - start.x);
+  const baseMidpoint = {
+    x: (pointB.x + pointC.x) / 2,
+    y: (pointB.y + pointC.y) / 2,
+  };
 
-  const shaft = line({
-    ...schema,
-    end: {
-      x: end.x - arrowHeadHeight * Math.cos(angle) + Math.cos(angle),
-      y: end.y - arrowHeadHeight * Math.sin(angle) + Math.sin(angle),
-    },
-  });
+  const length = Math.hypot(end.x - start.x, end.y - start.y);
+  const unit = {
+    x: length > 0 ? (end.x - start.x) / length : 0,
+    y: length > 0 ? (end.y - start.y) / length : 0,
+  };
 
   const head = triangle({
     ...headSchema,
@@ -33,7 +43,17 @@ export const drawArrowWithCtx = (schema: ArrowSchemaWithDefaults) => {
   });
 
   return (ctx: CanvasRenderingContext2D) => {
-    shaft.drawShape(ctx);
+    const overlap = SEAM_OVERLAP_DEVICE_PX * getDevicePixelSize(ctx);
+
+    const drawShaft = drawLineWithCtx({
+      ...schema,
+      end: {
+        x: baseMidpoint.x + unit.x * overlap,
+        y: baseMidpoint.y + unit.y * overlap,
+      },
+    });
+
+    drawShaft(ctx);
     head.drawShape(ctx);
   };
 };

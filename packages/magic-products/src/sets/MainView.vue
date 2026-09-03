@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { Color } from '@core/utils/colors';
   import Shell from '@magic/shared/Shell';
+  import { toast } from '@magic/shared/toast';
 
   import { computed } from 'vue';
 
@@ -9,6 +10,7 @@
   import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
   import { useSetFocus } from './sets/composables/useSetFocus.ts';
   import { draw } from './sets/draw/index.ts';
+  import { MAX_SETS } from './sets/other/constants.ts';
   import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
   import { QueryId, Section } from './types.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
@@ -64,10 +66,35 @@
     return map;
   });
 
+  const CAPACITY_TOAST_MS = 5_000;
+
+  /* prevent a few angry clicks from popping 4 separate toasts */
+  let capacityToastId: string | undefined;
+
+  const sayCanvasIsFull = () => {
+    const stillUp = toast.entries.value.some(
+      (entry) => entry.id === capacityToastId && entry.open,
+    );
+    if (stillUp) return;
+
+    capacityToastId = toast.show({
+      title: 'Set Limit Reached',
+      description: `A canvas holds up to ${MAX_SETS} sets.`,
+      severity: 'info',
+      duration: CAPACITY_TOAST_MS,
+    });
+  };
+
   const createSetDefinition = () => {
     const definition = sets.addDefinition(
       shell.surface.cursorCoordinates.value,
     );
+
+    if (!definition) {
+      sayCanvasIsFull();
+      return;
+    }
+
     focus.set(definition.id);
     // the prompt was to make one of these
     shell.onboarding?.close();

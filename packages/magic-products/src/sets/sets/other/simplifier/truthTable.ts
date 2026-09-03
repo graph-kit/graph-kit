@@ -30,31 +30,34 @@ const buildPartition = (
     return atom.length === 0 ? [outsideId] : atom;
   });
 
+/** bigint needed to handle >5 set defs in the truth table */
+export type TruthTable = bigint;
+
 export const getTruthTable = (
   node: MathJsonExpression,
   variables: SetDefinitionId[],
   outsideId: SetDefinitionId,
-): number => {
+): TruthTable => {
   const partition = buildPartition(variables, outsideId);
   // node's leaves are already SetDefinitionIds by the time they reach here
   const parse = createSetExpressionParser(partition, (id) => id);
   const result = parse(node);
 
-  if (!result) return 0;
+  if (!result) return 0n;
 
   return partition.reduce((mask, atom, i) => {
     const inResult = result.some(
       (r) => r.length === atom.length && r.every((v) => atom.includes(v)),
     );
 
-    return inResult ? mask | (1 << i) : mask;
-  }, 0);
+    return inResult ? mask | (1n << BigInt(i)) : mask;
+  }, 0n);
 };
 
 export const getOneMinterms = (
-  truthTable: number,
+  truthTable: TruthTable,
   variableCount: number,
 ): number[] =>
   Array.from({ length: 2 ** variableCount }, (_, i) => i).filter(
-    (i) => (truthTable >> i) & 1,
+    (i) => (truthTable >> BigInt(i)) & 1n,
   );

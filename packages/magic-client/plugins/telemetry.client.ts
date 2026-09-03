@@ -27,6 +27,8 @@ export default defineNuxtPlugin(() => {
       autocapture: false,
       disable_session_recording: true,
       capture_pageview: false,
+      // its default rides on capture_pageview, and a session reads as the pair
+      capture_pageleave: true,
     });
 
     send = ({ name, productId, payload }) => {

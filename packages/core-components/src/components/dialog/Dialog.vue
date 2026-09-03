@@ -59,13 +59,17 @@
 
   defineSlots<{
     default?: () => unknown;
-    trigger: () => unknown;
+    /** absent for a dialog opened programmatically, which has nothing to hang off */
+    trigger?: () => unknown;
   }>();
 </script>
 
 <template>
   <DialogRoot v-model:open="open">
-    <DialogTrigger as-child>
+    <DialogTrigger
+      v-if="$slots.trigger"
+      as-child
+    >
       <slot name="trigger" />
     </DialogTrigger>
     <DialogPortal>

@@ -1,50 +1,36 @@
 <script setup lang="ts">
-  import {
-    useDevicePixelRatio,
-    useOnline,
-    usePreferredReducedMotion,
-    useWindowSize,
-  } from '@vueuse/core';
-
-  import { computed } from 'vue';
-
+  import { useProvidedShell } from '../../product/context.ts';
+  import { UNKNOWN } from '../../user-agent/parseUserAgent.ts';
   import DebugPanelMenu from './shared/DebugPanelMenu.vue';
   import DebugRow from './shared/DebugRow.vue';
   import DebugSection from './shared/DebugSection.vue';
   import DebugStatus from './shared/DebugStatus.vue';
   import { LABEL, VALUE } from './shared/classes.ts';
-  import { UNKNOWN, parseUserAgent } from './shared/parseUserAgent.ts';
 
-  const client = typeof navigator === 'undefined' ? undefined : navigator;
-  const display = typeof screen === 'undefined' ? undefined : screen;
+  const { userAgent } = useProvidedShell();
 
-  const userAgent = client?.userAgent ?? '';
-  const parsed = parseUserAgent(userAgent);
+  const {
+    parsed,
+    raw,
+    language,
+    touchPoints,
+    cores,
+    deviceMemoryGb,
+    pixelRatio,
+    isOnline,
+    prefersReducedMotion,
+  } = userAgent;
 
-  /** chromium only */
-  const deviceMemoryGb = (client as { deviceMemory?: number } | undefined)
-    ?.deviceMemory;
+  const { width, height } = userAgent.window;
 
-  const cores = client?.hardwareConcurrency;
-  const language = client?.language || UNKNOWN;
-  const touchPoints = client?.maxTouchPoints ?? 0;
-
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || UNKNOWN;
-
-  const { width, height } = useWindowSize();
-  const { pixelRatio } = useDevicePixelRatio();
-  const isOnline = useOnline();
-  const reducedMotion = usePreferredReducedMotion();
-
-  const badge = computed(() =>
+  const badge =
     parsed.version === UNKNOWN
       ? parsed.browser
-      : `${parsed.browser} ${parsed.version}`,
-  );
+      : `${parsed.browser} ${parsed.version}`;
 
-  const screenSize = computed(() =>
-    display ? `${display.width} × ${display.height}` : UNKNOWN,
-  );
+  const screenSize = userAgent.screen
+    ? `${userAgent.screen.width} × ${userAgent.screen.height}`
+    : UNKNOWN;
 </script>
 
 <template>
@@ -110,9 +96,9 @@
       <DebugRow label="language">{{ language }}</DebugRow>
       <!-- <DebugRow
         label="timezone"
-        :title="timezone"
+        :title="userAgent.timezone"
       >
-        {{ timezone }}
+        {{ userAgent.timezone }}
       </DebugRow> -->
     </DebugSection>
 
@@ -123,13 +109,13 @@
       />
       <DebugStatus
         label="reduced motion"
-        :is-on="reducedMotion === 'reduce'"
+        :is-on="prefersReducedMotion"
       />
     </DebugSection>
 
     <DebugSection title="Raw">
       <span :class="[VALUE, 'cursor-text select-all break-all']">
-        {{ userAgent || UNKNOWN }}
+        {{ raw || UNKNOWN }}
       </span>
     </DebugSection>
   </DebugPanelMenu>

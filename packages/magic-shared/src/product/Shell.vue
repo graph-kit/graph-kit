@@ -4,6 +4,7 @@
   import { computed } from 'vue';
 
   import ComponentSlots from '../component-slot/ComponentSlots.vue';
+  import ShellDialog from '../ui/dialog/ShellDialog.vue';
   import { useProvidedShell } from './context.ts';
   import { useDisablePointerEvents } from './internals/useDisablePointerEvents.ts';
 
@@ -25,14 +26,6 @@
 </script>
 
 <template>
-  <!--
-    the slot layer spans the viewport so it can clip what leaves it. a panel
-    animating in comes from past the edge it is anchored to, and with nothing
-    clipping that the page grew scrollbars for the duration of the slide
-
-    it takes no pointer events of its own, since covering the canvas is the
-    whole point: the slots claim them individually
-  -->
   <div
     v-if="!shell.componentSlots.visibility.isHidden.value"
     class="fixed inset-0 overflow-hidden pointer-events-none"
@@ -50,4 +43,6 @@
   </div>
 
   <CanvasSurface v-bind="{ ...shell.surface.ref, $attrs }" />
+
+  <ShellDialog />
 </template>

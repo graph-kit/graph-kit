@@ -22,10 +22,12 @@ import { TelemetryControls } from '../telemetry/useTelemetry.ts';
 import { AnnotationsUIControls } from '../ui/annotations/useAnnotationsUI.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { DebugControls } from '../ui/debug/useDebugState.ts';
+import { DialogControls } from '../ui/dialog/types.ts';
 import { HelpMenuItem } from '../ui/help-menu/types.ts';
 import { HelpMenuControls } from '../ui/help-menu/useHelpMenuState.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
 import { ToastControls } from '../ui/toast/types.ts';
+import { UserAgentControls } from '../user-agent/useUserAgent.ts';
 import { ShellFlagOptions, ShellFlags } from './flags.ts';
 import { JumpToContentControls } from './internals/useJumpToContent.ts';
 import { LocalStorageControls } from './internals/useShellLocalStorage.ts';
@@ -204,6 +206,10 @@ export type Shell = {
   telemetry: TelemetryControls;
   /** the app wide toast queue, which every product shares, see {@link ToastControls} */
   toast: ToastControls;
+  /** the app wide dialog, which every product shares, see {@link DialogControls} */
+  dialog: DialogControls;
+  /** what the browser says about itself, read once, see {@link UserAgentControls} */
+  userAgent: UserAgentControls;
   surface: CanvasSurface;
   transit?: TransitField;
   history?: ShellHistory;

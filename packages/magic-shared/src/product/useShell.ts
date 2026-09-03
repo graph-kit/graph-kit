@@ -16,17 +16,20 @@ import {
 import { useAnnotationsUI } from '../ui/annotations/useAnnotationsUI.ts';
 import { useShellAppearance } from '../ui/appearance/useShellAppearance.ts';
 import { useDebugState } from '../ui/debug/useDebugState.ts';
+import { useShellDialog } from '../ui/dialog/useShellDialog.ts';
 import { useHelpMenuState } from '../ui/help-menu/useHelpMenuState.ts';
 import JumpToContentButton from '../ui/jump-to-content/JumpToContentButton.vue';
 import LensChipGroup from '../ui/lens-chips/LensChipGroup.vue';
 import { loadFromLinkPayload } from '../ui/link-sharing/linkPayload.ts';
 import { useToastState } from '../ui/toast/useToastState.ts';
 import { useShellUI } from '../ui/useShellUI.ts';
+import { useUserAgent } from '../user-agent/useUserAgent.ts';
 import { provideShell } from './context.ts';
 import { resolveShellFlags } from './flags.ts';
 import { useJumpToContent } from './internals/useJumpToContent.ts';
 import { useShellHistory } from './internals/useShellHistory.ts';
 import { useShellLocalStorage } from './internals/useShellLocalStorage.ts';
+import { useTouchScreenWarning } from './internals/useTouchScreenWarning.ts';
 import { manifests } from './manifests/index.ts';
 import { ProductControls, Shell, ShellOptions } from './types.ts';
 
@@ -83,6 +86,8 @@ export const useShell = (
     helpMenu: useHelpMenuState(shortcuts, options.helpMenu),
     telemetry,
     toast: useToastState(),
+    dialog: useShellDialog(),
+    userAgent: useUserAgent(),
     annotations,
     simulationButtons: options.simulationButtons,
     surface: host.surface,
@@ -120,8 +125,6 @@ export const useShell = (
     );
   }
 
-  // read-only has nothing to draw with, so the tools come out of standby with it and
-  // the panel closes behind them on `onDeactivated`
   if (annotations && multiplayer) {
     watch(
       multiplayer.room.isReadonly,
@@ -137,7 +140,6 @@ export const useShell = (
       id: 'shell/lens-chips',
       component: LensChipGroup,
       position: 'top-middle',
-      // should always be stuck to the top
       priority: -Infinity,
     });
   }
@@ -156,7 +158,6 @@ export const useShell = (
       id: 'shell/simulation-buttons',
       component: SimulationButtonGroup,
       position: 'bottom-middle',
-      // should always be stuck to the bottom
       priority: Infinity,
     });
   }
@@ -173,6 +174,8 @@ export const useShell = (
 
     options.onSetupCompleted?.(shell);
   });
+
+  useTouchScreenWarning(shell.userAgent);
 
   useShellShortcuts(shell);
   provideShell(shell);

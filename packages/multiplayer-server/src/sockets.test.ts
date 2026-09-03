@@ -799,6 +799,42 @@ describe('presence scoping', () => {
     expect((await moved).position).toEqual({ x: 5, y: 5 });
   });
 
+  it('seats a host on their product in time to accept the camera they send next', async () => {
+    const host = await connectClient();
+    const { roomId, userId: hostId } = await startRoom(host);
+
+    // the client seeds its camera the moment it is in a room, having moved nothing, which
+    // is the only thing that makes a member who sits perfectly still jumpable to
+    const camera = { panX: 40, panY: 50, zoom: 2 };
+    host.emit('moveCamera', { camera });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const student = await connectClient();
+    const { presence } = await joinRoomAt(student, roomId, 'traversals');
+
+    expect(presence[hostId].cameraState).toEqual(camera);
+  });
+
+  it('drops a camera sent before the sender has entered a product', async () => {
+    const host = await connectClient();
+    const { roomId } = await startRoom(host);
+
+    const student = await connectClient();
+    const joined = await joinRoomOrThrow(student, roomId);
+
+    // a joiner is in the room but on no product yet, which is why seeding waits on the
+    // product answering rather than on the room
+    student.emit('moveCamera', { camera: { panX: 1, panY: 2, zoom: 3 } });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const { presence } = await enterProduct(student, 'traversals');
+    expect(presence[joined.userId]).toBeUndefined();
+
+    const observer = await connectClient();
+    const seen = await joinRoomAt(observer, roomId, 'traversals');
+    expect(seen.presence[joined.userId]?.cameraState).toBeNull();
+  });
+
   it('hands an arriving client what everyone on the product is already doing', async () => {
     const host = await connectClient();
     const { roomId, userId: hostId } = await startRoom(host);

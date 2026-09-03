@@ -2,7 +2,7 @@ import { CanvasSurface } from '@canvas/surface/types';
 import { AnnotationsControls } from '@core/annotations/index';
 import { CameraState, DraggedElement, Point } from '@multiplayer/protocol/room';
 
-import { watch } from 'vue';
+import { onUnmounted, watch } from 'vue';
 
 import { MultiplayerControls } from '../product/types.ts';
 import { ProductMultiplayer } from './types.ts';
@@ -91,15 +91,35 @@ export const usePresenceBroadcast = (options: {
   );
 
   const camera = surface.camera.state;
+  const currentCamera = (): CameraState => ({
+    panX: camera.panX.value,
+    panY: camera.panY.value,
+    zoom: camera.zoom.value,
+  });
+
   watch(
     () => [camera.panX.value, camera.panY.value, camera.zoom.value],
-    () =>
-      sendCamera({
-        panX: camera.panX.value,
-        panY: camera.panY.value,
-        zoom: camera.zoom.value,
-      }),
+    () => sendCamera(currentCamera()),
   );
+
+  /**
+   * A camera is otherwise only ever heard about when it moves, which leaves anyone who
+   * arrives and sits still with nothing for a peer to jump to. Both events are needed and
+   * neither is enough: a host is seated by starting the room, a joiner only once the
+   * product answers, and the server drops a camera sent before either.
+   */
+  const seedCamera = () => {
+    presence()?.moveCamera(currentCamera());
+  };
+
+  multiplayer.events.subscribe('onRoomJoined', seedCamera);
+  multiplayer.events.subscribe('onPresenceSeeded', seedCamera);
+
+  // the connection outlives the product, so these would go on reporting a dead surface
+  onUnmounted(() => {
+    multiplayer.events.unsubscribe('onRoomJoined', seedCamera);
+    multiplayer.events.unsubscribe('onPresenceSeeded', seedCamera);
+  });
 
   // the tools toggle from a keystroke or a button press, neither of which moves the
   // cursor, so nothing else would carry the change out to the room

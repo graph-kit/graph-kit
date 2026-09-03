@@ -32,7 +32,10 @@ export const connectedChip = (graph: Graph): LensChipDefinition => {
   });
 
   return {
-    name: () => `Connected: ${isConnected.value ? 'Yes' : 'No'}`,
+    name: {
+      headline: 'Connected',
+      stat: () => (isConnected.value ? 'Yes' : 'No'),
+    },
     tooltipLabel: () =>
       isConnected.value
         ? 'Every node is joined to the rest by some chain of edges.'

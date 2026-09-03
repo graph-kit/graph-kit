@@ -6,7 +6,6 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 import { computed } from 'vue';
 
-// violet leads so a graph with a single loop looks the way it always has
 const CYCLE_COLORS = [
   colors.VIOLET_500,
   colors.CYAN_500,
@@ -16,14 +15,9 @@ const CYCLE_COLORS = [
   colors.TEAL_500,
 ];
 
-/** the reason both searches carry a visited list, made visible */
 export const cyclesChip = (graph: Graph): LensChipDefinition => {
   const cycles = computed(() => graph.characteristics.cycles.value);
 
-  /*
-    a node can sit on more than one loop, and it can only wear one color, so the
-    map upstream has already picked which loop claims it
-  */
   const cycleOfNode = computed(() => cycles.value.nodeIdToCycle);
   const cycleCount = computed(() => cycles.value.cycles.length);
 
@@ -37,7 +31,10 @@ export const cyclesChip = (graph: Graph): LensChipDefinition => {
   });
 
   return {
-    name: () => `Cycles: ${cycleCount.value}`,
+    name: {
+      headline: 'Cycles',
+      stat: () => cycleCount.value,
+    },
     tooltipLabel: () => {
       if (cycleCount.value === 0) {
         return 'No loops, so following edges can never bring a search back to a node it already left.';

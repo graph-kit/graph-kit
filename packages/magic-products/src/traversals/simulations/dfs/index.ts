@@ -59,22 +59,25 @@ const collectDfsFrames = (
     const node = nullThrows(stack.pop(), 'stack emptied mid pop');
     traveled.length = 0;
 
+    // a stale node is popped and dropped in one beat, since there is nothing
+    // to explore once it turns out to be visited
+    if (visited.has(node)) {
+      frameCollector.add(
+        frame({
+          type: 'popped-node-already-visited',
+          node,
+          exploredNode: node,
+        }),
+      );
+      continue;
+    }
+
     frameCollector.add(
       frame({
         type: 'explore-node',
         exploredNode: node,
       }),
     );
-
-    if (visited.has(node)) {
-      frameCollector.add(
-        frame({
-          type: 'popped-node-already-visited',
-          node,
-        }),
-      );
-      continue;
-    }
 
     visited.add(node);
 
@@ -94,7 +97,7 @@ const collectDfsFrames = (
     if (crossings.length > 0) {
       for (const { edgeId } of crossings) traveled.push(edgeId);
 
-      frameCollector.add(frame({ type: 'travel-edge' }));
+      frameCollector.add(frame({ type: 'travel-edge', node }));
     }
 
     // to keep same visit order the recursive version would have
@@ -141,7 +144,7 @@ export const dfsSimulation = (
     const { lens, syncToFrame } = dfsLens(options.graph);
     return {
       lens,
-      explainer: dfsExplainer(options.graph),
+      explainer: dfsExplainer,
       onSetupCompleted: syncToFrame,
       onFrameTransition: syncToFrame,
       onViolation: context.stopSimulation,

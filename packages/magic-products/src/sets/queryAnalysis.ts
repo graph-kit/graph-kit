@@ -34,8 +34,8 @@ export const QUERY_ERRORS = {
   notSetNotation: 'Expression can only hold sets and set operators',
   undefinedSets: (labels: SetLabel[]) =>
     labels.length === 1
-      ? `No set named ${labels[0]} is on the canvas.`
-      : `No sets named ${labelList(labels)} are on the canvas.`,
+      ? `No set named ${labels[0]} is on the canvas`
+      : `No sets named ${labelList(labels)} are on the canvas`,
 } as const;
 
 /**
@@ -80,13 +80,14 @@ const analyzeQuery = (
   const sections = parse(mathJSON.json);
   if (sections === null) return invalid(QUERY_ERRORS.notSetNotation);
 
-  // with nothing drawn yet every label is unknown, so naming one is not yet a mistake
-  const undefinedSets =
-    definedLabels.length === 0
-      ? []
-      : extractVariables(mathJSON.json).filter(
-          (variable) => !definedLabels.includes(variable),
-        );
+  /*
+    an empty canvas defines no labels, so naming any set on one is naming a set
+    that is not there. reserved labels are not names a set can hold, so S and
+    Omega are never counted here and stay readable with nothing drawn
+  */
+  const undefinedSets = extractVariables(mathJSON.json).filter(
+    (variable) => !definedLabels.includes(variable),
+  );
   if (undefinedSets.length > 0) {
     return invalid(QUERY_ERRORS.undefinedSets(undefinedSets));
   }

@@ -121,11 +121,12 @@ export const allPairsExplainer =
         };
 
       case 'negative-cycle': {
-        const found = `{${frame.node}} Can Return To Itself For Less Than 0`;
+        // the same finding either way, so tracing the loop only adds what a lap costs
+        const found = `{${frame.node}} Can Return To Itself For Less Than 0, So A [Negative Cycle] Runs Through It And No Shortest Path Exists`;
 
         if (!frame.loop) {
           return {
-            content: `${found}, So A [Negative Cycle] Runs Through It And No Shortest Path Exists`,
+            content: found,
             highlights: [negativeCycle(graph)],
           };
         }
@@ -133,7 +134,7 @@ export const allPairsExplainer =
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${found} meaning A [Negative Cycle] Costing ${lap.text} A Lap Exists`,
+          content: `${found}. Each Lap Costs ${lap.text}`,
           highlights: [
             negativeCycle(graph, frame.loop.edges),
             ...lap.highlights,

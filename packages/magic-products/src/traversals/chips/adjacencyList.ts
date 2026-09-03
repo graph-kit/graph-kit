@@ -4,7 +4,8 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 export const adjacencyListChip = (): LensChipDefinition => {
   return {
     name: 'Adjacency List',
-    tooltipLabel: 'The nodes each node points to, directly, as a list.',
+    tooltipLabel:
+      'The neighbors each node points to, as a list. This is what a search reads to work out where it can go next.',
 
     lens: {
       id: 'adjacency-list',

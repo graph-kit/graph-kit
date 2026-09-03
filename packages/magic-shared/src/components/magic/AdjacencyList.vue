@@ -30,12 +30,11 @@
   const focusEdge = (edgeId: string, nodeId: string) =>
     graph.focus.set([edgeId, nodeId]);
 
-  const edgeWeightLabel = (
-    edgeId: string,
-    sourceId: string,
-    targetId: string,
-  ) =>
-    `Edge ${labelOf(sourceId)}${labelOf(targetId)} costs ${graph.getEdge(edgeId).weight.toFraction()}`;
+  const edgeLabel = (edgeId: string, sourceId: string, targetId: string) => {
+    const pair = `${labelOf(sourceId)}${labelOf(targetId)}`;
+    if (!graph.metadata.weighted) return;
+    return `Edge ${pair} costs ${graph.getEdge(edgeId).weight.toFraction()}`;
+  };
 
   const noTargetsLabel = (sourceId: string) =>
     `Node ${labelOf(sourceId)} doesn't have any outgoing edges`;
@@ -72,11 +71,7 @@
               v-for="targetId in targetIds"
               :key="edgeIdBetween(sourceId, targetId)"
               :label="
-                edgeWeightLabel(
-                  edgeIdBetween(sourceId, targetId),
-                  sourceId,
-                  targetId,
-                )
+                edgeLabel(edgeIdBetween(sourceId, targetId), sourceId, targetId)
               "
             >
               <template #trigger>

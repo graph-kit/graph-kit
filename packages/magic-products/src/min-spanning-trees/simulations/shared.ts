@@ -37,32 +37,6 @@ import {
   PrimsFunction,
 } from './frame.ts';
 
-// exploring = the tree side node the current decision is anchored to, plus
-//   both endpoints of the edge just selected, so the edge and the node it's
-//   about to add to the tree read as one event
-// settled = already grown into the tree
-// frontier = the far side of a potential edge
-// anchor = start node (user picked)
-type PrimsNodeConcept = 'exploring' | 'settled' | 'frontier' | 'anchor';
-
-const nodeRoles = {
-  exploring: 'active',
-  settled: 'settled',
-  frontier: 'candidate',
-  anchor: 'anchor',
-} as const satisfies Record<PrimsNodeConcept, NodeRole>;
-
-// candidate = a currently eligible edge,
-// crossing = the one or two edges being weighed against each other right now
-// tree = an edge grown into the tree so far
-type PrimsEdgeConcept = 'candidate' | 'crossing' | 'tree';
-
-const edgeRoles = {
-  candidate: 'weighing',
-  crossing: 'crossing',
-  tree: 'tree',
-} as const satisfies Record<PrimsEdgeConcept, EdgeRole>;
-
 export type StartNodeId = Ref<GNode['id'] | undefined>;
 
 export type PrimsSimulationOptions = {
@@ -70,11 +44,34 @@ export type PrimsSimulationOptions = {
   startNodeId: StartNodeId;
 };
 
+const createDecisionThemer = (graph: Graph, color: Color) => {
+  let edgeIds: readonly GEdge['id'][] = [];
+  let nodeIds: readonly GNode['id'][] = [];
+
+  return {
+    themers: [
+      createEdgeThemer(graph, (edge) =>
+        edgeIds.includes(edge.id) ? color : undefined,
+      ),
+      createNodeThemer(graph, (node) =>
+        nodeIds.includes(node.id) ? color : undefined,
+      ),
+    ],
+    set: (edges: readonly GEdge['id'][], nodes: readonly GNode['id'][]) => {
+      edgeIds = edges;
+      nodeIds = nodes;
+    },
+  };
+};
+
+const defaultFadedOpacity = 0.35;
+
 const createFadedEdgeThemer = (graph: Graph) => {
   const fadedIds = new Set<string>();
+  let opacity = defaultFadedOpacity;
   const fade = (edge: CoreEdge, resolveUnderneath: () => Color) => {
     if (!fadedIds.has(edge.id)) return;
-    return tinycolor(resolveUnderneath()).setAlpha(0.35).toHex8String();
+    return tinycolor(resolveUnderneath()).setAlpha(opacity).toHex8String();
   };
   const themer = graph.theme.createThemer({
     surface: {
@@ -91,6 +88,9 @@ const createFadedEdgeThemer = (graph: Graph) => {
       fadedIds.clear();
       for (const id of ids) fadedIds.add(id);
     },
+    setOpacity: (next: number) => {
+      opacity = next;
+    },
   };
 };
 
@@ -98,51 +98,49 @@ const primsEffects = (
   graph: Graph,
   context: SetupContext<PrimsFrame>,
 ): SimulationEffects<PrimsFrame> => {
-  const frontier = createNodeIdThemer(graph, nodeRoles.frontier);
-  const settled = createNodeIdThemer(graph, nodeRoles.settled);
-  const anchor = createNodeIdThemer(graph, nodeRoles.anchor);
-  const exploring = createNodeIdThemer(graph, nodeRoles.exploring);
+  // registered first so a decision this frame paints over it
+  const visited = createDecisionThemer(graph, colors.AMBER_500);
+  const considering = createDecisionThemer(graph, colors.PURPLE_600);
+  const added = createDecisionThemer(graph, colors.GREEN_600);
+  const excluded = createDecisionThemer(graph, colors.RED_600);
+  const dimmedEdge = createFadedEdgeThemer(graph);
 
-  const tree = createEdgeIdThemer(graph, edgeRoles.tree);
-  const candidateEdge = createEdgeIdThemer(graph, edgeRoles.candidate);
-  const crossingEdge = createEdgeIdThemer(graph, edgeRoles.crossing);
-  // colored solid before excludedEdgeIds picks them up and fades them
-  const excludingEdge = createEdgeIdThemer(graph, 'rejected');
-  const excludedEdge = createFadedEdgeThemer(graph);
-
-  const themers = [
-    frontier,
-    settled,
-    anchor,
-    exploring,
-    tree,
-    candidateEdge,
-    crossingEdge,
-    excludingEdge,
-    excludedEdge,
+  const themers: Themer[] = [
+    ...visited.themers,
+    ...considering.themers,
+    ...added.themers,
+    ...excluded.themers,
+    dimmedEdge.themer,
   ];
 
   const syncToFrame = (frame: PrimsFrame) => {
-    const selectedEdgeEndpoints = frame.selectedEdge
-      ? [
-          graph.getEdge(frame.selectedEdge).source,
-          graph.getEdge(frame.selectedEdge).target,
-        ]
-      : [];
+    const isSelect = frame.type === 'select-edge';
+    const isExclude = frame.type === 'exclude-edges';
+    const endpoints = frame.activeNodeIds ?? [];
+    const candidates =
+      frame.type === 'consider-edges' ? frame.candidateEdges : [];
+    // solid red on the frame that rules them out, faded red from then on
+    const justExcluded = isExclude ? frame.edges : [];
 
-    exploring.setIds(
-      frame.activeNodeId
-        ? [frame.activeNodeId, ...selectedEdgeEndpoints]
-        : selectedEdgeEndpoints,
+    // once the tree is final nothing else matters, so the rest all but vanishes
+    dimmedEdge.setOpacity(frame.type === 'end' ? 0.05 : defaultFadedOpacity);
+
+    visited.set([], frame.treeNodeIds);
+    considering.set(candidates, []);
+    added.set(isSelect ? [frame.edge] : [], isSelect ? endpoints : []);
+    excluded.set(frame.excludedEdgeIds, isExclude ? endpoints : []);
+
+    const lit = new Set([
+      ...frame.treeEdgeIds,
+      ...candidates,
+      ...justExcluded,
+      frame.selectedEdge,
+    ]);
+    dimmedEdge.setIds(
+      graph.edges.value
+        .filter((edge) => !lit.has(edge.id))
+        .map((edge) => edge.id),
     );
-    settled.setIds(frame.treeNodeIds);
-    frontier.setIds(frame.pendingNodeIds ?? []);
-    anchor.setId(frame.anchorNodeId);
-    tree.setIds(frame.treeEdgeIds);
-    candidateEdge.setIds(frame.candidateEdges ?? []);
-    crossingEdge.setIds(frame.selectedEdge ? [frame.selectedEdge] : []);
-    excludingEdge.setIds(frame.excludingEdges ?? []);
-    excludedEdge.setIds(frame.excludedEdgeIds);
   };
 
   const lens: Lens = {
@@ -160,10 +158,10 @@ const primsEffects = (
       },
     ],
     activate: () => {
-      for (const { themer } of themers) themer.activate();
+      for (const themer of themers) themer.activate();
     },
     deactivate: () => {
-      for (const { themer } of themers) themer.deactivate();
+      for (const themer of themers) themer.deactivate();
     },
   };
 
@@ -220,26 +218,6 @@ type KruskalsEdgeConcept = 'crossing';
 const kruskalsEdgeRoles = {
   crossing: 'crossing',
 } as const satisfies Record<KruskalsEdgeConcept, EdgeRole>;
-
-const createDecisionThemer = (graph: Graph, color: Color) => {
-  let edgeIds: readonly GEdge['id'][] = [];
-  let nodeIds: readonly GNode['id'][] = [];
-
-  return {
-    themers: [
-      createEdgeThemer(graph, (edge) =>
-        edgeIds.includes(edge.id) ? color : undefined,
-      ),
-      createNodeThemer(graph, (node) =>
-        nodeIds.includes(node.id) ? color : undefined,
-      ),
-    ],
-    set: (edges: readonly GEdge['id'][], nodes: readonly GNode['id'][]) => {
-      edgeIds = edges;
-      nodeIds = nodes;
-    },
-  };
-};
 
 export type KruskalsSimulationOptions = {
   graph: Graph;

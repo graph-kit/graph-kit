@@ -8,32 +8,26 @@ export type PrimsFunction = (
 
 type StartFrame = {
   type: 'start';
-  start: GNode['id'];
 };
 
 type EndFrame = {
   type: 'end';
 };
 
-// considering every edge connecting the tree to a node outside of it
+// every edge with one end in the tree and one end outside it is eligible
 type ConsiderEdgesFrame = {
   type: 'consider-edges';
-  edges: readonly GEdge['id'][];
 };
 
-// the edge that was chosen to grow the tree
+// the cheapest of the eligible edges, which grows the tree by one node
 type SelectEdgeFrame = {
   type: 'select-edge';
   edge: GEdge['id'];
-  node: GNode['id'];
   tiedEdges?: readonly GEdge['id'][];
 };
 
-type ExcludingEdgesFrame = {
-  type: 'excluding-edges';
-  edges: readonly GEdge['id'][];
-};
-
+// the new node put both ends of these edges in the tree, so taking any of them
+// would only close a loop
 type ExcludeEdgesFrame = {
   type: 'exclude-edges';
   edges: readonly GEdge['id'][];
@@ -49,7 +43,6 @@ export type PrimsStep =
   | EndFrame
   | ConsiderEdgesFrame
   | SelectEdgeFrame
-  | ExcludingEdgesFrame
   | ExcludeEdgesFrame
   | UnreachableFrame;
 
@@ -57,15 +50,13 @@ type PrimsState = {
   treeNodeIds: readonly GNode['id'][];
   treeEdgeIds: readonly GEdge['id'][];
   excludedEdgeIds: readonly GEdge['id'][];
+  candidateEdges: readonly GEdge['id'][];
   anchorNodeId: GNode['id'];
 };
 
 export type PrimsHighlights = {
-  activeNodeId?: GNode['id'];
-  pendingNodeIds?: readonly GNode['id'][];
-  candidateEdges?: readonly GEdge['id'][];
+  activeNodeIds?: readonly GNode['id'][];
   selectedEdge?: GEdge['id'];
-  excludingEdges?: readonly GEdge['id'][];
 };
 
 export type PrimsFrame = PrimsStep & PrimsState & PrimsHighlights;

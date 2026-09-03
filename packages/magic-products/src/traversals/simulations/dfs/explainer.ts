@@ -66,7 +66,7 @@ export const dfsExplainer = (frame: DfsFrame): Explainer | undefined => {
 
   if (frame.type === 'push-node') {
     return {
-      content: `{${frame.node}} Not In [Visited], Therefore, [Pushing]`,
+      content: `{${frame.node}} Is Not In [Visited], Therefore, [Pushing]`,
       highlights: [highlights.visited, highlights.push],
     };
   }

@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import Shell from '@magic/shared/Shell';
   import { useGraphShell } from '@magic/shared/graph-shell';
+  import { Lens } from '@magic/shared/lens/types';
+  import { SIMULATION_BUTTONS_SLOT_ID } from '@magic/shared/simulation/start-buttons/types';
   import { useFocusedNode } from '@magic/shared/utilities';
 
   import { shallowReactive } from 'vue';
@@ -53,7 +55,7 @@
         { disabled: emptyTree, render: ResetTree },
       ];
     },
-    lensChips: (graph) => {
+    lensChips: (graph, shell) => {
       const root = () => {
         const sim = shell.simulation.current.value;
         const frame: AVLFrame | undefined = sim?.getFrame(
@@ -65,6 +67,19 @@
       const balanceFactorTheme = createBalanceFactorThemer(graph, root);
       const treeHeightTheme = createTreeHeightThemer(graph, root);
 
+      const insertPrompt: Lens = {
+        id: 'no-root',
+        activate: () =>
+          shell.componentSlots.setHighlighted(SIMULATION_BUTTONS_SLOT_ID),
+        deactivate: () => shell.componentSlots.clearHighlighted(),
+      };
+
+      const needsRoot = () =>
+        root() === undefined && {
+          reason: 'No root. Insert a node',
+          lens: insertPrompt,
+        };
+
       return [
         {
           lens: {
@@ -72,10 +87,11 @@
             ...balanceFactorTheme,
           },
           tooltipLabel: definitions.balanceFactor,
-          name: () => {
-            const bf = root() === undefined ? 'N/A' : getBalanceFactor(root());
-            return 'Root Balance Factor: ' + bf;
+          name: {
+            headline: 'Root Balance Factor',
+            stat: () => getBalanceFactor(root()),
           },
+          disabled: needsRoot,
         },
         {
           lens: {
@@ -83,10 +99,11 @@
             ...treeHeightTheme,
           },
           tooltipLabel: definitions.treeHeight,
-          name: () => {
-            const height = root() === undefined ? 'N/A' : getTreeHeight(root());
-            return 'Root Height: ' + height;
+          name: {
+            headline: 'Root Height',
+            stat: () => getTreeHeight(root()),
           },
+          disabled: needsRoot,
         },
       ];
     },

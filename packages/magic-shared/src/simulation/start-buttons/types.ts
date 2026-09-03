@@ -11,3 +11,6 @@ export type SimulationButtonDefinition = Partial<{
   disabled: () => string | false;
   render: Component;
 }>;
+
+/** the slot the shell puts the button group in, so a lens can point at the buttons */
+export const SIMULATION_BUTTONS_SLOT_ID = 'shell/simulation-buttons';

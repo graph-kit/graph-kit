@@ -7,6 +7,7 @@ import { useOnboarding } from '../onboarding/index.ts';
 import { useShellShortcuts } from '../shortcuts/useShellShortcuts.ts';
 import { useShortcuts } from '../shortcuts/useShortcuts.ts';
 import SimulationButtonGroup from '../simulation/start-buttons/ButtonGroup.vue';
+import { SIMULATION_BUTTONS_SLOT_ID } from '../simulation/start-buttons/types.ts';
 import { useSimulationState } from '../simulation/useSimulationState.ts';
 import { useProductVisit, useTelemetry } from '../telemetry/useTelemetry.ts';
 import {
@@ -155,7 +156,7 @@ export const useShell = (
 
   if (shell.simulationButtons) {
     shell.componentSlots.add({
-      id: 'shell/simulation-buttons',
+      id: SIMULATION_BUTTONS_SLOT_ID,
       component: SimulationButtonGroup,
       position: 'bottom-middle',
       priority: Infinity,

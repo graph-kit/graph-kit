@@ -33,9 +33,7 @@ export default defineNuxtConfig({
       multiplayerServerUrl:
         process.env.MULTIPLAYER_SERVER_URL ??
         (process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : ''),
-      // absent outside a deployed build, which is what keeps local runs out of the numbers
       posthogKey: process.env.POSTHOG_KEY ?? '',
-      posthogHost: process.env.POSTHOG_HOST ?? 'https://us.i.posthog.com',
     },
   },
 

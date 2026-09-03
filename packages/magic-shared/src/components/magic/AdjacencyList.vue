@@ -1,13 +1,14 @@
 <script setup lang="ts">
   import { nullThrows } from '@core/utils/assert';
-  import HStack from '@magic/shared/HStack';
-  import Icon from '@magic/shared/Icon';
-  import Node from '@magic/shared/Node';
-  import ToolTip from '@magic/shared/Tooltip';
-  import VStack from '@magic/shared/VStack';
-  import Well from '@magic/shared/Well';
-  import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { mdiArrowRight } from '@mdi/js';
+
+  import { useProvidedGraph } from '../../graph-shell/context.ts';
+  import Icon from '../icon/Icon.vue';
+  import HStack from '../layout/HStack.vue';
+  import VStack from '../layout/VStack.vue';
+  import Well from '../layout/Well.vue';
+  import ToolTip from '../tooltip/Tooltip.vue';
+  import Node from './Node.vue';
 
   const graph = useProvidedGraph();
 

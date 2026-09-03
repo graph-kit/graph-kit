@@ -150,6 +150,11 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
       headline: 'Unique MSTs',
       stat: () => msts.value.length,
     },
+    disabled: () => {
+      if (graph.minimumSpanningTrees.all.value.skipped)
+        return { reason: 'Too many nodes' };
+      return false;
+    },
     tooltipLabel: () => {
       const count = msts.value.length;
       const noun = mstConnected.value

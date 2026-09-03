@@ -94,7 +94,8 @@ const collectDfsFrames = (
       );
     }
 
-    for (const neighbor of neighbors) {
+    // to keep same visit order the recursive version would have
+    for (const neighbor of [...neighbors].reverse()) {
       if (visited.has(neighbor)) {
         frameCollector.add(
           frame({

@@ -22,8 +22,8 @@ export default defineNuxtPlugin(() => {
   import('posthog-js').then(({ default: posthog }) => {
     posthog.init(posthogKey, {
       api_host: posthogHost,
-      // eventually move it over to localStorage or auth based to track retention data
-      persistence: 'memory',
+      // navigation is a full page load, so identity has to outlive the document to stitch a session
+      persistence: 'localStorage',
       autocapture: false,
       disable_session_recording: true,
       capture_pageview: false,

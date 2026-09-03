@@ -31,14 +31,7 @@ export type UserAgentControls = {
   prefersReducedMotion: ComputedRef<boolean>;
 };
 
-/**
- * What the browser says about itself, read once and handed around through the shell so a
- * debug panel, a bug report and a telemetry event all quote the same reading rather than
- * each asking navigator their own way.
- *
- * Everything the page cannot change is a plain value; only what moves under it, a resize
- * or the network dropping, is reactive.
- */
+/** what the browser says about itself */
 export const useUserAgent = (): UserAgentControls => {
   const client = typeof navigator === 'undefined' ? undefined : navigator;
   const display = typeof screen === 'undefined' ? undefined : screen;

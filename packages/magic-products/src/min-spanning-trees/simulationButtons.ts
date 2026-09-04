@@ -24,9 +24,9 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
         startNodeId.value = nullThrows(node.value?.id, 'no start node');
       },
       disabled: () => {
-        if (noNodes()) return 'Add nodes first';
-        if (noEdges()) return 'Add edges first';
-        if (!node.value) return 'Click a node to start from';
+        if (noNodes()) return { reason: 'Add a node' };
+        if (noEdges()) return { reason: 'Add an edge' };
+        if (!node.value) return { reason: 'Click a node to start from' };
         return false;
       },
     },
@@ -34,8 +34,8 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
       name: "Kruskal's",
       definition: kruskals,
       disabled: () => {
-        if (noNodes()) return 'Add nodes first';
-        if (noEdges()) return 'Add edges first';
+        if (noNodes()) return { reason: 'Add a node' };
+        if (noEdges()) return { reason: 'Add an edge' };
         return false;
       },
     },

@@ -40,12 +40,12 @@
       const node = useFocusedNode(graph);
 
       const emptyTree = () =>
-        graph.nodes.value.length === 0 ? 'No nodes in tree' : false;
+        graph.nodes.value.length === 0 ? { reason: 'No nodes in tree' } : false;
 
       const cannotRemove = () => {
         const empty = emptyTree();
         if (empty) return empty;
-        if (!node.value) return 'Click a node to remove from tree';
+        if (!node.value) return { reason: 'Click a node to remove from tree' };
         return false;
       };
 

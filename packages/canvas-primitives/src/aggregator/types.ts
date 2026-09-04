@@ -39,7 +39,7 @@ export type CanvasElement = {
   paintOnly?: boolean;
   /**
    * attached metadata. a handful of keys are reserved by the code that reads them, each declared
-   * as a constant alongside it: `CANVAS_ELEMENT_CURSOR_FIELD_KEY` in `setupCanvasCursor`
+   * as a constant alongside it: `CANVAS_ELEMENT_CURSOR_FIELD_KEY` in `@canvas/surface/cursor`
    */
   data?: Record<string, unknown>;
 };

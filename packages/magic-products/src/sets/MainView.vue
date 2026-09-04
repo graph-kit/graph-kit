@@ -1,69 +1,34 @@
 <script setup lang="ts">
-  import { Color } from '@core/utils/colors';
   import Shell from '@magic/shared/Shell';
   import { toast } from '@magic/shared/toast';
 
-  import { computed } from 'vue';
-
-  import { useCircleDrag } from './sets/composables/useCircleDrag.ts';
-  import { useCircleResize } from './sets/composables/useCircleResize.ts';
-  import { useCursorStyle } from './sets/composables/useCursorStyle.ts';
-  import { useSetFocus } from './sets/composables/useSetFocus.ts';
-  import { draw } from './sets/draw/index.ts';
-  import { MAX_SETS } from './sets/other/constants.ts';
-  import { type SectionKey, getSectionKey } from './sets/other/sectionKey.ts';
-  import { QueryId, Section } from './types.ts';
+  import { useCircleDrag } from './composables/useCircleDrag.ts';
+  import { useCircleResize } from './composables/useCircleResize.ts';
+  import { useSetsRendering } from './composables/useSetsRendering.ts';
+  import { MAX_SETS } from './constants.ts';
   import { useSetsProduct } from './useSetsProduct.ts';
 
   const {
     shell,
-    setsProductState: { sets, sections, queryAnalysis, theme, queries },
+    setsProductState: { sets, sections, queryAnalysis, theme, queries, focus },
   } = useSetsProduct();
 
-  const { queryIdToSections } = queryAnalysis;
-
-  // the eye-toggle in Query hides a query's paint without touching whether it resolves
-  const visibleQueryIdToSections = computed(() => {
-    const sectionsByQueryId = new Map<QueryId, Section[]>();
-
-    for (const [queryId, sections] of queryIdToSections.value) {
-      if (queries.getQuery(queryId).hidden) continue;
-      sectionsByQueryId.set(queryId, sections);
-    }
-
-    return sectionsByQueryId;
-  });
-
-  const { isResizing } = useCircleResize({
-    surface: shell.surface,
-    definitions: sets.definitions,
-  });
+  useCircleResize({ surface: shell.surface, definitions: sets.definitions });
 
   useCircleDrag({
     surface: shell.surface,
     definitions: sets.definitions,
-    isResizing,
+    theme,
   });
 
-  const focus = useSetFocus({
+  useSetsRendering({
     surface: shell.surface,
-    definitions: sets.definitions,
-  });
-
-  const sectionKeyToColors = computed(() => {
-    const map = new Map<SectionKey, Color[]>();
-
-    for (const [queryId, sections] of visibleQueryIdToSections.value) {
-      const { color } = queries.getQuery(queryId);
-      for (const section of sections) {
-        const key = getSectionKey(section);
-        const existing = map.get(key) ?? [];
-        existing.push(color);
-        map.set(key, existing);
-      }
-    }
-
-    return map;
+    sets,
+    queries,
+    sections,
+    queryIdToSections: queryAnalysis.queryIdToSections,
+    focus,
+    theme,
   });
 
   const CAPACITY_TOAST_MS = 5_000;
@@ -107,20 +72,6 @@
     for (const setId of focusedSetIds) sets.removeDefinition(setId);
   };
 
-  shell.surface.draw.content.value = (ctx) => {
-    draw(
-      ctx,
-      {
-        definitions: sets.definitions.value,
-        sections: sections.value,
-        sectionKeyToColors: sectionKeyToColors.value,
-        isSetFocused: focus.isFocused,
-        bounds: shell.surface.visibleWorldRect.value,
-      },
-      theme.value.set,
-    );
-  };
-
   shell.surface.events.canvas.subscribe('onDblClick', createSetDefinition);
 
   shell.shortcuts.add({
@@ -129,8 +80,6 @@
     callback: deleteFocusedSetDefinitions,
     key: 'backspace',
   });
-
-  useCursorStyle(sets.definitions, shell.surface);
 </script>
 
 <template>

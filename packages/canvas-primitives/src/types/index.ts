@@ -10,6 +10,7 @@ import type { EllipseSchema } from '../shapes/ellipse/types.ts';
 import type { ImageSchema } from '../shapes/image/types.ts';
 import type { LineSchema } from '../shapes/line/types.ts';
 import type { RectSchema } from '../shapes/rect/types.ts';
+import type { RegionSchema } from '../shapes/region/types.ts';
 import type { ScribbleSchema } from '../shapes/scribble/types.ts';
 import type { SquareSchema } from '../shapes/square/types.ts';
 import type { StarSchema } from '../shapes/star/types.ts';
@@ -30,7 +31,8 @@ export type ShapeName =
   | 'scribble'
   | 'ellipse'
   | 'star'
-  | 'image';
+  | 'image'
+  | 'region';
 
 /**
  * interface for shapes that support text areas
@@ -107,6 +109,14 @@ export type ShapeProps = {
    * of the area comprising the bounding box
    */
   getBoundingBox: () => BoundingBox;
+
+  /**
+   * this shape's fill outline, in world coordinates.
+   *
+   * ℹ️ present only on shapes with an interior to enclose. a stroke-only shape
+   * such as a line has no path, because what it paints is the stroke itself
+   */
+  path?: () => Path2D;
 } & Partial<ShapeTextProps>;
 
 /**
@@ -143,6 +153,7 @@ export type ShapeNameToSchema = {
   image: ImageSchema;
   line: LineSchema;
   rect: RectSchema;
+  region: RegionSchema;
   scribble: ScribbleSchema;
   square: SquareSchema;
   star: StarSchema;
@@ -171,4 +182,5 @@ export const shapeProps: Set<keyof Shape> = new Set([
   'overlapsBox',
   'getBoundingBox',
   'getCenterPoint',
+  'path',
 ]);

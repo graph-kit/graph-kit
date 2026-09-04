@@ -1,8 +1,8 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
 import { nullThrows } from '@core/utils/assert';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../surface/setupCursor.ts';
 import { createLabelThemer } from './createLabelThemer.ts';
 import {
   PhantomEdge,

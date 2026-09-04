@@ -1,12 +1,14 @@
 import { crossPattern } from '@canvas/surface/crossPattern';
 import { useCanvasSurface } from '@canvas/surface/index';
-import { createThemeController } from '@core/themes/index';
+import {
+  canvasCursorOverride,
+  createThemeController,
+} from '@core/themes/index';
 import { CoreEdge } from '@graph/primitives/types';
 
 import { SURFACE_PLUGIN_ID } from './constants.ts';
 import { createNodeCanvasElementPriorityGetter } from './nodeCanvasElementPriority.ts';
 import { createNodePaintOrder } from './nodePaintOrder.ts';
-import { setupCursor } from './setupCursor.ts';
 import {
   createSurfaceDetectors,
   createSurfaceThemeOverrides,
@@ -14,18 +16,14 @@ import {
 import { SurfacePlugin } from './types.ts';
 
 export const surface: SurfacePlugin = ({ controls, getters }) => {
-  const canvasSurface = useCanvasSurface();
-  const { aggregator } = canvasSurface;
-
   const theme = createThemeController(createSurfaceThemeOverrides());
 
-  setupCursor({
-    canvas: canvasSurface.canvas,
-    getNode: getters.getNode,
-    subscribe: aggregator.events.subscribe,
-    resolveToken: theme._resolveToken,
-    elementsUnderCursor: canvasSurface.elementsUnderCursor,
+  const canvasSurface = useCanvasSurface({
+    // the fallback sentinel is a theme concept, spent here rather than taught to the surface
+    canvasCursor: () =>
+      canvasCursorOverride(theme._resolveToken('canvas.cursor')),
   });
+  const { aggregator } = canvasSurface;
 
   const paintOrder = createNodePaintOrder();
 

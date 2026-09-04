@@ -1,6 +1,7 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type { CircleSchema } from '@canvas/primitives/shapes/circle/types';
 import type { WithId } from '@canvas/primitives/types/index';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
 import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
@@ -10,7 +11,6 @@ import { CoreNode } from '@graph/primitives/types';
 import { DeepReadonly } from 'ts-essentials';
 
 import { SURFACE_PLUGIN_ID } from '../surface/constants.ts';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '../surface/setupCursor.ts';
 import { ANCHOR_PLUGIN_ID } from './constants.ts';
 import { createAnchorDragState } from './createAnchorDragState.ts';
 import { createAnchorDragThemer } from './createAnchorDragThemer.ts';

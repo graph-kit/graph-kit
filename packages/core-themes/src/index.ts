@@ -21,5 +21,5 @@ export type {
 } from './internals/types.ts';
 
 /** All cursor values supported by the browser. */
-export { CURSOR_FALLBACK } from './internals/cursor.ts';
+export { CURSOR_FALLBACK, canvasCursorOverride } from './internals/cursor.ts';
 export type { CursorFallback } from './internals/cursor.ts';

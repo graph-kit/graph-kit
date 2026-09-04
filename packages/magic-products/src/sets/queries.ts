@@ -5,7 +5,7 @@ import type { MathfieldElement } from '@magic/shared/latex';
 
 import { type ComputedRef, computed, ref } from 'vue';
 
-import { QUERY_COLORS } from './sets/other/constants.ts';
+import { QUERY_COLORS } from './constants.ts';
 import type { LatexQueryString, QueryId } from './types.ts';
 
 /** Handed the mathfield the query mounted, the one place one is guaranteed to exist. */

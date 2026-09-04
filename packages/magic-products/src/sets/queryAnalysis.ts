@@ -1,18 +1,15 @@
 import { type ComputedRef, computed } from 'vue';
 
-import type { Queries } from './queries.ts';
-import type { SetDefinitions } from './setDefinitions.ts';
 import {
   type ParseSetExpression,
   createSetExpressionParser,
-} from './sets/other/createSetExpressionParser.ts';
-import {
-  getDisambiguatedLatex,
-  isAmbiguous,
-} from './sets/other/disambiguate.ts';
-import { parseMathJSON } from './sets/other/parseMathJSON.ts';
-import { simplify } from './sets/other/simplifier/index.ts';
-import { extractVariables } from './sets/other/simplifier/truthTable.ts';
+} from './parsing/createSetExpressionParser.ts';
+import { getDisambiguatedLatex, isAmbiguous } from './parsing/disambiguate.ts';
+import { parseMathJSON } from './parsing/parseMathJSON.ts';
+import { simplify } from './parsing/simplifier/index.ts';
+import { extractVariables } from './parsing/simplifier/truthTable.ts';
+import type { Queries } from './queries.ts';
+import type { SetDefinitions } from './setDefinitions.ts';
 import type { LatexQueryString, QueryId, Section, SetLabel } from './types.ts';
 
 /** `C`, `C or D`, `C, D or E` */

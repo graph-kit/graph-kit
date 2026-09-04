@@ -63,3 +63,14 @@ export type FillGradient = {
    */
   fillGradient?: readonly GradientStop[];
 };
+
+export type FillHatch = {
+  /**
+   * diagonal stripes of these colors, in order, as the background paint.
+   * takes precedence over {@link FillColor.fillColor}
+   */
+  fillHatch?: {
+    colors: readonly string[];
+    stripeWidth?: number;
+  };
+};

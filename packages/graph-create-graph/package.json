@@ -23,6 +23,7 @@
     "@graph/plugins": "workspace:*",
     "@graph/primitives": "workspace:*",
     "@graph/render-functions": "workspace:*",
+    "@canvas/surface": "workspace:*",
     "@core/themes": "workspace:*",
     "@graph/computed-tokens": "workspace:*",
     "@core/utils": "workspace:*",

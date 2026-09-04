@@ -7,6 +7,7 @@ import { cross } from './cross/index.ts';
 import { ellipse } from './ellipse/index.ts';
 import { line } from './line/index.ts';
 import { rect } from './rect/index.ts';
+import { region } from './region/index.ts';
 import { scribble } from './scribble/index.ts';
 import { square } from './square/index.ts';
 import { star } from './star/index.ts';
@@ -88,6 +89,12 @@ const colorlessShapes = {
   line: () => line({ start: at, end: { x: 50, y: 50 } }),
   rect: () => rect({ at, width: 10, height: 10 }),
   roundedRect: () => rect({ at, width: 10, height: 10, borderRadius: 4 }),
+  region: () =>
+    region({
+      inside: [{ shape: 'circle', at, radius: 10 }],
+      outside: [],
+      bounds: { at, width: 10, height: 10 },
+    }),
   scribble: () => scribble({ type: 'draw', points: [at, { x: 5, y: 5 }] }),
   square: () => square({ at, size: 10 }),
   star: () => star({ at, innerRadius: 5, outerRadius: 10 }),

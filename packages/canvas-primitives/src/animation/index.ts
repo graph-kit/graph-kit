@@ -365,6 +365,7 @@ export const createAnimatedShapes = (): AnimatedShapes => {
     image: animatedFactory(shapes.image, 'image'),
     line: animatedFactory(shapes.line, 'line'),
     rect: animatedFactory(shapes.rect, 'rect'),
+    region: animatedFactory(shapes.region, 'region'),
     scribble: animatedFactory(shapes.scribble, 'scribble'),
     square: animatedFactory(shapes.square, 'square'),
     star: animatedFactory(shapes.star, 'star'),

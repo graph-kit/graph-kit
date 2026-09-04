@@ -5,6 +5,7 @@ import { resolveEllipseDefaults } from '../shapes/ellipse/defaults.ts';
 import { resolveImageDefaults } from '../shapes/image/defaults.ts';
 import { resolveLineDefaults } from '../shapes/line/defaults.ts';
 import { resolveRectDefaults } from '../shapes/rect/defaults.ts';
+import { resolveRegionDefaults } from '../shapes/region/defaults.ts';
 import { resolveScribbleDefaults } from '../shapes/scribble/defaults.ts';
 import { resolveSquareDefaults } from '../shapes/square/defaults.ts';
 import { resolveStarDefaults } from '../shapes/star/defaults.ts';
@@ -19,6 +20,7 @@ export const getSchemaWithDefaults = {
   image: resolveImageDefaults,
   line: resolveLineDefaults,
   rect: resolveRectDefaults,
+  region: resolveRegionDefaults,
   scribble: resolveScribbleDefaults,
   square: resolveSquareDefaults,
   star: resolveStarDefaults,

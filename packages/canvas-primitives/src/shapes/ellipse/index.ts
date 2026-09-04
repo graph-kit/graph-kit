@@ -9,6 +9,7 @@ import {
   ellipseOverlapsBox,
   getEllipseBoundingBox,
 } from './hitbox.ts';
+import { getEllipsePath } from './path.ts';
 import type { EllipseSchema } from './types.ts';
 
 export const ellipse: ShapeFactory<EllipseSchema> = (options) => {
@@ -44,6 +45,8 @@ export const ellipse: ShapeFactory<EllipseSchema> = (options) => {
 
     hitbox,
     shapeHitbox,
+
+    path: getEllipsePath(schema),
 
     overlapsBox,
     getBoundingBox,

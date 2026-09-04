@@ -4,7 +4,7 @@ Vue 3 component and composable for interactive HTML5 canvas rendering. Provides 
 
 It also owns the aggregator every frame is painted from, along with the animated shape
 factories and renderer behind it, so anything holding a surface can push canvas elements
-without a graph in the picture. `draw.content` starts as that aggregator's draw and can
-be replaced by a consumer that paints its own way.
+without a graph in the picture. Every frame is that aggregator's draw, so painting means
+contributing canvas elements to it rather than reaching for the context.
 
 **Key exports:** `useCanvas`, `CanvasSurface.vue`

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { useSections } from './composables/useSections.ts';
 import { createQueries } from './queries.ts';
 import { QUERY_ERRORS, useQueryAnalysis } from './queryAnalysis.ts';
 import { createSetDefinitions } from './setDefinitions.ts';
-import { useSections } from './sets/composables/useSections.ts';
 
 /**
  * a canvas holding `setCount` overlapping sets, labelled A onwards, with one query

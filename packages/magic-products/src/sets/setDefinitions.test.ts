@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { MAX_SETS } from './constants.ts';
 import { createSetDefinitions } from './setDefinitions.ts';
-import { MAX_SETS } from './sets/other/constants.ts';
 
 const at = { x: 0, y: 0 };
 

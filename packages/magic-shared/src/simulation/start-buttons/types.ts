@@ -1,5 +1,6 @@
 import { Component } from 'vue';
 
+import { DisabledLens } from '../../lens/types.ts';
 import { SimulationDefinition } from '../types.ts';
 
 export type SimulationButtonDefinition = Partial<{
@@ -8,7 +9,8 @@ export type SimulationButtonDefinition = Partial<{
   name: string;
   /** runs right after the user clicked and before the simulation begins */
   beforeStarting: () => void;
-  disabled: () => string | false;
+  /** why the simulation cannot run, with an optional lens */
+  disabled: () => DisabledLens | false;
   render: Component;
 }>;
 

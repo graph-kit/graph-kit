@@ -1,6 +1,5 @@
 import AdjacencyMatrix from '@magic/shared/AdjacencyMatrix';
 import { Graph } from '@magic/shared/graph';
-import { Lens } from '@magic/shared/lens/types';
 import { Shell } from '@magic/shared/product';
 import {
   LensChipDefinition,
@@ -17,8 +16,8 @@ import { recurrentClassesThemer } from './themers/recurrentClasses.ts';
 import { recurrentStatesThemer } from './themers/recurrentStates.ts';
 import { stationaryDistributionThemer } from './themers/stationaryDistribution.ts';
 import { transientStatesThemer } from './themers/transientStates.ts';
+import { useChainDisabledState } from './useChainDisabledState.ts';
 import { useMarkovChain } from './useMarkovChain.ts';
-import { VALIDITY_EXPLAINER_SLOT_ID, validityLens } from './validityLens.ts';
 
 const yesNo = (answer: boolean | undefined) => {
   if (answer === undefined) return 'N/A';
@@ -27,31 +26,13 @@ const yesNo = (answer: boolean | undefined) => {
 
 export const lensChips = (graph: Graph, shell: Shell): LensChipDefinition[] => {
   const chain = useMarkovChain(graph);
-
-  const validity = validityLens(graph, chain);
-
-  const explainValidity: Lens = {
-    ...validity,
-    activate: () => {
-      validity.activate?.();
-      shell.componentSlots.setHighlighted(VALIDITY_EXPLAINER_SLOT_ID);
-    },
-    deactivate: () => {
-      shell.componentSlots.clearHighlighted();
-      validity.deactivate?.();
-    },
-  };
+  const chainDisabled = useChainDisabledState(shell, graph, chain);
 
   const requiresValidChain = (
     chip: LensChipDefinition,
   ): LensChipDefinition => ({
     ...chip,
-    disabled: () =>
-      (!chain.isValid.value && {
-        reason: 'Needs a valid chain',
-        lens: explainValidity,
-      }) ||
-      disabledState(chip),
+    disabled: () => chainDisabled.value || disabledState(chip),
   });
 
   const transitionMatrix: LensChipDefinition = {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import Button from '@magic/shared/Button';
+  import DisabledLensButton from '@magic/shared/DisabledLensButton';
   import Dropdown from '@magic/shared/Dropdown';
   import HStack from '@magic/shared/HStack';
   import Icon from '@magic/shared/Icon';
@@ -16,20 +17,15 @@
 
   import { computed, ref, shallowRef } from 'vue';
 
-  import { definitions } from './definitions.ts';
   import { distributionSimulationDefinition } from './simulations/useDistributionSimulation.ts';
+  import { useChainDisabledState } from './useChainDisabledState.ts';
   import { useMarkovChain } from './useMarkovChain.ts';
 
   const graph = useProvidedGraph();
   const shell = useProvidedShell();
   const chain = useMarkovChain(graph);
 
-  const stepDisabled = computed(() => {
-    if (graph.nodes.value.length === 0) return 'Needs at least one state.';
-    if (!chain.isValid.value)
-      return `Needs a valid chain. ${definitions.validity}`;
-    return false;
-  });
+  const chainDisabled = useChainDisabledState(shell, graph, chain);
 
   const startingDistribution = shallowRef<Fraction[]>([]);
   const simplify = ref(true);
@@ -54,10 +50,8 @@
 
   const cleanedInput = (rawInput: string) => {
     const trimmed = rawInput.trim();
-    // a state left blank is one the distribution never starts in
     if (trimmed === '') return new Fraction(0);
 
-    // fraction throws on input it cannot read and on divide by zero
     try {
       const probability = new Fraction(trimmed);
       const outOfRange = probability.lt(0) || probability.gt(1);
@@ -106,12 +100,12 @@
 <template>
   <Dropdown align="center">
     <template #trigger>
-      <Button :disabled="stepDisabled">
+      <DisabledLensButton :disabled="chainDisabled">
         <template #start>
           <Icon :path="mdiPlay" />
         </template>
         Step The Distribution
-      </Button>
+      </DisabledLensButton>
     </template>
     <Well>
       <VStack>

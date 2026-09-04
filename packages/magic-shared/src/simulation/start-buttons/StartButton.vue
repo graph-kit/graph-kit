@@ -4,13 +4,15 @@
 
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';
+  import { DisabledLens } from '../../lens/types.ts';
   import { useProvidedShell } from '../../product/context.ts';
+  import DisabledLensButton from '../../ui/disabled-lens-button/DisabledLensButton.vue';
   import { SimulationDefinition } from '../types.ts';
 
   const props = defineProps<{
     definition: SimulationDefinition<any> | undefined;
     name: string | undefined;
-    disabled: string | false;
+    disabled: DisabledLens | false;
     beforeStarting?: () => void;
   }>();
 
@@ -25,7 +27,7 @@
 </script>
 
 <template>
-  <Button
+  <DisabledLensButton
     v-if="definition && name"
     :disabled="disabled"
     @click="start"
@@ -34,7 +36,7 @@
       <Icon :path="mdiPlay" />
     </template>
     {{ name }}
-  </Button>
+  </DisabledLensButton>
   <Button
     v-else
     disabled="This button cannot function due to a developer error in the configuration of this experience"

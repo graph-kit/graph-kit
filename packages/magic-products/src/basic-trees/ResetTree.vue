@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import Button from '@magic/shared/Button';
+  import DisabledLensButton from '@magic/shared/DisabledLensButton';
   import Icon from '@magic/shared/Icon';
   import { mdiRestart } from '@mdi/js';
 
@@ -9,7 +9,7 @@
 </script>
 
 <template>
-  <Button
+  <DisabledLensButton
     @click="resetTree"
     class="hover:bg-red-600 active:bg-red-700 dark:hover:bg-red-600 dark:active:bg-red-700 hover:text-white"
   >
@@ -17,5 +17,5 @@
       <Icon :path="mdiRestart" />
     </template>
     Reset Tree
-  </Button>
+  </DisabledLensButton>
 </template>

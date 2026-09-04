@@ -1,6 +1,6 @@
 import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 
-import { Lens } from '../../lens/types.ts';
+import { DisabledLens, Lens } from '../../lens/types.ts';
 
 /** the split form renders as `headline: stat`, with the stat replaced by `N/A` while the chip is disabled */
 export type LensChipName =
@@ -10,19 +10,12 @@ export type LensChipName =
       stat: MaybeGetter<string | number>;
     };
 
-export type LensChipDisabled = {
-  /** shown in place of the tooltip label */
-  reason?: string;
-  /** previewed on hover in place of the chip's own lens, to show on the canvas what the reason describes */
-  lens?: Lens;
-};
-
 export type LensChipDefinition = {
   name: LensChipName;
   lens: Lens;
   tooltipLabel?: MaybeGetter<string>;
   /** present disables the chip, both fields included, so `{}` disables with no explanation */
-  disabled?: MaybeGetter<LensChipDisabled | false | undefined>;
+  disabled?: MaybeGetter<DisabledLens | false | undefined>;
 };
 
 export const disabledState = (chip: LensChipDefinition) =>

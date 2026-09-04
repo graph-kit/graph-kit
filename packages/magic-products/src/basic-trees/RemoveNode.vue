@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { assert } from '@core/utils/assert';
-  import Button from '@magic/shared/Button';
+  import DisabledLensButton from '@magic/shared/DisabledLensButton';
   import Icon from '@magic/shared/Icon';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useFocusedNode } from '@magic/shared/utilities/useFocusedNode';
@@ -19,10 +19,10 @@
 </script>
 
 <template>
-  <Button @click="remove">
+  <DisabledLensButton @click="remove">
     <template #start>
       <Icon :path="mdiPlay" />
     </template>
     Remove {{ node?.label ?? 'Node' }}
-  </Button>
+  </DisabledLensButton>
 </template>

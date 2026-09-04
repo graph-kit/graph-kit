@@ -8,6 +8,10 @@
       "types": "./dist/types/components/button/Button.vue.d.ts",
       "default": "./src/components/button/Button.vue"
     },
+    "./DisabledLensButton": {
+      "types": "./dist/types/ui/disabled-lens-button/DisabledLensButton.vue.d.ts",
+      "default": "./src/ui/disabled-lens-button/DisabledLensButton.vue"
+    },
     "./TextInput": {
       "types": "./dist/types/components/text-input/TextInput.vue.d.ts",
       "default": "./src/components/text-input/TextInput.vue"

@@ -1,1 +1,1 @@
-export type { Lens } from './types.ts';
+export type { DisabledLens, Lens } from './types.ts';

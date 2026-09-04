@@ -10,8 +10,8 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   const node = useFocusedNode(graph);
 
   const disabled = () => {
-    if (graph.nodes.value.length === 0) return 'Add a node first';
-    if (!node.value) return 'Click a node';
+    if (graph.nodes.value.length === 0) return { reason: 'Add a node first' };
+    if (!node.value) return { reason: 'Click a node' };
     return false;
   };
 

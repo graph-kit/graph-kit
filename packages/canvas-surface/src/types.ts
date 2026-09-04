@@ -14,17 +14,9 @@ import type { ElementsUnderCursor, SurfaceEvents } from './events/index.ts';
 
 export type { BoundingBox, Coordinate };
 
-export type DrawContent = (ctx: CanvasRenderingContext2D) => void;
-
 export type DrawFns = {
-  /**
-   * @deprecated paint through {@link CanvasSurface.aggregator} instead. sets is the last
-   * consumer, because its clip composed section fills have no primitive to express them
-   * as canvas elements yet. this field goes the moment sets migrates.
-   */
-  content: Ref<DrawContent>;
   backgroundPattern: Ref<DrawPattern>;
-  /** holds the canvas on its background pattern alone, leaving content undrawn */
+  /** holds the canvas on its background pattern alone, leaving the aggregator undrawn */
   contentSuspended: Ref<boolean>;
   /** the mirror of {@link DrawFns.contentSuspended}, leaving the pattern undrawn */
   backgroundPatternSuspended: Ref<boolean>;

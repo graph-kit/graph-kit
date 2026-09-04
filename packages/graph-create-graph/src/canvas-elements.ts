@@ -1,8 +1,8 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
 import { nullThrows } from '@core/utils/assert';
 import { ComputedTokenResolver } from '@graph/computed-tokens/index';
 import { CoreControls } from '@graph/core/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@graph/plugins/surface/setupCursor';
 import { SurfaceControls } from '@graph/plugins/surface/types';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import {

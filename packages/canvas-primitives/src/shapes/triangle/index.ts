@@ -10,6 +10,7 @@ import {
   triangleHitbox,
   triangleOverlapsBox,
 } from './hitbox.ts';
+import { getTrianglePath } from './path.ts';
 import type { TriangleSchema } from './types.ts';
 
 export const triangle: ShapeFactory<TriangleSchema> = (options) => {
@@ -42,6 +43,8 @@ export const triangle: ShapeFactory<TriangleSchema> = (options) => {
     shapeHitbox,
     overlapsBox,
     getBoundingBox,
+
+    path: getTrianglePath(schema),
 
     ...textProps,
   });

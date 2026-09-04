@@ -3,6 +3,7 @@ import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
+import type { Cursor } from '@core/utils/cursor';
 
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -11,13 +12,14 @@ import { useCamera } from './camera/index.ts';
 import { CANVAS_MISSING } from './constants.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
 import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
+import { setupCursor } from './cursor.ts';
 import {
   createCanvasBoundEvents,
   createCanvasLifecycleEventRegistry,
   createDocumentBoundEvents,
   createElementsUnderCursor,
 } from './events/index.ts';
-import type { CanvasSurface, DrawContent } from './types.ts';
+import type { CanvasSurface } from './types.ts';
 
 const REPAINT_FPS = 60;
 
@@ -52,7 +54,17 @@ const sizeCanvas = (canvasRef: HTMLCanvasElement | undefined) => {
   return { rect, resized };
 };
 
-export const useCanvasSurface = (): CanvasSurface => {
+export type CanvasSurfaceOptions = {
+  /**
+   * a cursor for the whole canvas, overriding whatever the pointer is over.
+   * `undefined` defers to the element beneath it, which is the usual answer
+   */
+  canvasCursor?: () => Cursor | undefined;
+};
+
+export const useCanvasSurface = (
+  options: CanvasSurfaceOptions = {},
+): CanvasSurface => {
   const canvas = ref<HTMLCanvasElement>();
 
   /** the layout box as of the last resize, in css pixels */
@@ -61,7 +73,6 @@ export const useCanvasSurface = (): CanvasSurface => {
   const { shapes, ...renderer } = createAnimatedShapes();
   const aggregator = createAggregator(renderer);
 
-  const drawContent = ref<DrawContent>(aggregator.draw);
   const drawBackgroundPattern = ref<DrawPattern>(() => () => {});
   const contentSuspended = ref(false);
   const backgroundPatternSuspended = ref(false);
@@ -142,6 +153,13 @@ export const useCanvasSurface = (): CanvasSurface => {
       domEvents,
     });
 
+  setupCursor({
+    subscribe: aggregator.events.subscribe,
+    canvas,
+    elementsUnderCursor,
+    canvasCursor: options.canvasCursor,
+  });
+
   const pattern = useBackgroundPattern(
     camera.state,
     drawBackgroundPattern,
@@ -155,7 +173,7 @@ export const useCanvasSurface = (): CanvasSurface => {
     lifecycleEvents.emit('onBeforeRepaint');
     camera.transformAndClear(ctx);
     if (!backgroundPatternSuspended.value) pattern.draw(ctx);
-    if (!contentSuspended.value) drawContent.value(ctx);
+    if (!contentSuspended.value) aggregator.draw(ctx);
     lifecycleEvents.emit('onAfterRepaint');
   };
 
@@ -169,7 +187,6 @@ export const useCanvasSurface = (): CanvasSurface => {
       canvasRef: (ref) => (canvas.value = ref),
     },
     draw: {
-      content: drawContent,
       backgroundPattern: drawBackgroundPattern,
       contentSuspended,
       backgroundPatternSuspended,

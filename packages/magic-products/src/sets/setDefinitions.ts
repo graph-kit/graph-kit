@@ -3,13 +3,13 @@ import { generateId } from '@core/utils/id';
 
 import { type ComputedRef, type Ref, computed, ref } from 'vue';
 
-import { useLabelGetter } from './sets/composables/useLabel.ts';
-import { getSetDefinition } from './sets/other/circleUtils.ts';
+import { getSetDefinition } from './circleUtils.ts';
+import { useLabelGetter } from './composables/useLabel.ts';
 import {
   DEFAULT_CIRCLE_RADIUS,
   MAX_SETS,
   OUTSIDE_ALL_SETS,
-} from './sets/other/constants.ts';
+} from './constants.ts';
 import type { SetDefinition, SetDefinitionId, SetLabel } from './types.ts';
 
 export type SetDefinitions = {

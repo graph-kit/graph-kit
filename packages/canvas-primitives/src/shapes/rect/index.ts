@@ -7,6 +7,7 @@ import type { Coordinate } from '../../types/utility.ts';
 import { resolveRectDefaults } from './defaults.ts';
 import { drawRectWithCtx } from './draw.ts';
 import { getRectBoundingBox, rectHitbox, rectOverlapsBox } from './hitbox.ts';
+import { getRectPath } from './path.ts';
 import type { RectSchema } from './types.ts';
 
 export const rect: ShapeFactory<RectSchema> = (options) => {
@@ -46,6 +47,8 @@ export const rect: ShapeFactory<RectSchema> = (options) => {
     overlapsBox,
 
     getBoundingBox,
+
+    path: getRectPath(schema),
 
     ...textProps,
   });

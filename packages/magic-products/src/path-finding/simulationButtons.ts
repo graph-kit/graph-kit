@@ -27,13 +27,14 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
   const negativeWeights = negativeWeightsLens(graph);
 
   const dijkstrasDisabled = () => {
+    if (findNegativeWeightEdge(graph))
+      return {
+        reason: 'Cannot run with negative edge weights',
+        lens: negativeWeights,
+      };
     const shared = disabled();
     if (shared) return shared;
-    if (!findNegativeWeightEdge(graph)) return false;
-    return {
-      reason: 'Cannot run with negative edge weights',
-      lens: negativeWeights,
-    };
+    return false;
   };
 
   return [

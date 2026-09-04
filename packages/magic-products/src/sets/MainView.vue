@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { getCenterPoint } from '@canvas/primitives/helpers';
   import Shell from '@magic/shared/Shell';
   import { toast } from '@magic/shared/toast';
 
@@ -50,10 +51,14 @@
     });
   };
 
+  const newSetAt = () => {
+    const cursorAt = shell.surface.cursorCoordinates.value;
+    if (cursorAt) return cursorAt;
+    return getCenterPoint(shell.surface.visibleWorldRect.value);
+  };
+
   const createSetDefinition = () => {
-    const definition = sets.addDefinition(
-      shell.surface.cursorCoordinates.value,
-    );
+    const definition = sets.addDefinition(newSetAt());
 
     if (!definition) {
       sayCanvasIsFull();

@@ -1,4 +1,5 @@
 import type { AggregatorControls } from '@canvas/primitives/aggregator/index';
+import type { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type { EventHub, ReadonlyEventHub } from '@core/events/createEventHub';
 import type { EventMapToEventRegistry } from '@core/events/types';
 import type { Coordinate } from '@core/utils/canvas/index';
@@ -6,10 +7,17 @@ import { DeepReadonly } from 'ts-essentials';
 
 import type { CanvasBoundEvents } from './canvas.ts';
 import type { DocumentBoundEvents } from './dom.ts';
-import type { ElementEvents, ElementsUnderCursor } from './elements.ts';
+import type { ElementEvents } from './elements.ts';
 
-/** a native mouse event resolved against whatever was drawn where it landed */
-export type ElementMouseEvent = DeepReadonly<ElementsUnderCursor> & {
+/**
+ * a native mouse event resolved against whatever was drawn where it landed
+ */
+export type ElementMouseEvent = {
+  coords: Coordinate;
+  /** every element whose hitbox contains the event, back to front */
+  elements: DeepReadonly<CanvasElement[]>;
+  /** the topmost element the event landed on, equivalent to `elements.at(-1)` */
+  topElement: DeepReadonly<CanvasElement> | undefined;
   event: MouseEvent;
 };
 

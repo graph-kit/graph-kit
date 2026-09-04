@@ -32,8 +32,11 @@ export type SetsCanvasElementsProps = {
   isSetFocused: SetFocusControls['isFocused'];
   /** the area to paint within, which every clip is taken against */
   bounds: BoundingBox;
-  /** where the pointer is, which is what aims a resize arrow */
-  cursorAt: Coordinate;
+  /**
+   * where the pointer is, which is what aims a resize arrow. undefined until it
+   * is first seen over the canvas
+   */
+  cursorAt: Coordinate | undefined;
   shapes: AnimatedShapeFactories;
   resolveToken: SetsTheme['_resolveToken'];
 };
@@ -132,7 +135,9 @@ const circleElements = (props: SetsCanvasElementsProps): CanvasElement[] => {
  */
 const DIAGONAL_RADIANS = 0.75;
 
-const resizeCursor = (at: Coordinate, cursorAt: Coordinate) => {
+const resizeCursor = (at: Coordinate, cursorAt: Coordinate | undefined) => {
+  if (!cursorAt) return undefined;
+
   const angle = Math.atan2(
     Math.abs(cursorAt.y - at.y),
     Math.abs(cursorAt.x - at.x),

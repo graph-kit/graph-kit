@@ -29,7 +29,10 @@ export type CanvasRef = {
 export type CanvasSurface = {
   canvas: Ref<HTMLCanvasElement | undefined>;
   camera: Camera;
-  cursorCoordinates: Ref<Coordinate>;
+  /**
+   * where the cursor is; in world coordinates.
+   */
+  cursorCoordinates: ComputedRef<Coordinate | undefined>;
   /** where a mouse event landed in world coordinates, for hit tests against the event itself */
   toWorldCoordinates: (ev: MouseEvent) => Coordinate;
   /** the slice of the world on screen, for fills and clips that cover everything visible */

@@ -92,7 +92,7 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
     { coords }: DeepReadonly<GraphUnderCursor>,
     consume: () => void,
   ) => {
-    if (!marqueeBox) return;
+    if (!marqueeBox || !coords) return;
     consume();
 
     const { x, y } = coords;

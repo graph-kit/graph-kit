@@ -25,7 +25,7 @@ const setup = () => {
   let underCursor: CanvasElement[] = [];
   aggregator.getCanvasElementsAtCoordinate = () => underCursor;
 
-  const cursorCoordinates = ref({ x: 0, y: 0 });
+  const cursorCoordinates = ref<{ x: number; y: number }>();
   const canvasEvents = createEventHub({
     onClick: new Set(),
     onMouseDown: new Set(),
@@ -44,7 +44,7 @@ const setup = () => {
   const tracked = createElementsUnderCursor({
     aggregator,
     cursorCoordinates,
-    toWorldCoordinates: () => cursorCoordinates.value,
+    toWorldCoordinates: () => ({ x: 0, y: 0 }),
     canvasEvents: canvasEvents as any,
     domEvents: domEvents as any,
   });
@@ -54,8 +54,14 @@ const setup = () => {
   return {
     ...tracked,
     cursorCoordinates,
-    /** puts elements under the cursor and runs the frame that picks them up */
+    /** puts elements under a pointer that has been seen, and runs the frame that picks them up */
     hover: (elements: CanvasElement[]) => {
+      cursorCoordinates.value = { x: 0, y: 0 };
+      underCursor = elements;
+      aggregator.draw(ctx);
+    },
+    /** a frame drawn before the pointer has ever been seen over the canvas */
+    drawUnseen: (elements: CanvasElement[]) => {
       underCursor = elements;
       aggregator.draw(ctx);
     },
@@ -67,6 +73,26 @@ describe(createElementsUnderCursor, () => {
     const { elementsUnderCursor } = setup();
     expect(elementsUnderCursor.elements).toEqual([]);
     expect(elementsUnderCursor.topElement).toBeUndefined();
+  });
+
+  /*
+    a page loaded under a cursor that never moves gets no mouse event, and the
+    hit test has no point to run against until it does
+  */
+  it('reports nothing under a pointer that has not been seen', () => {
+    const { elementsUnderCursor, drawUnseen } = setup();
+    drawUnseen([makeElement('at-the-world-origin')]);
+    expect(elementsUnderCursor.elements).toEqual([]);
+    expect(elementsUnderCursor.topElement).toBeUndefined();
+  });
+
+  it('does not report a hover before the pointer is seen', () => {
+    const { events, drawUnseen } = setup();
+    const callback = vi.fn();
+    events.subscribe('onHoveredElementChange', callback);
+
+    drawUnseen([makeElement('at-the-world-origin')]);
+    expect(callback).not.toHaveBeenCalled();
   });
 
   it('reports the topmost element as hovered', () => {

@@ -1,6 +1,6 @@
 import type { ReadonlyEventHub } from '@core/events/createEventHub';
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import type { Camera } from '../camera/index.ts';
 import type { CanvasBoundEvents } from '../events/index.ts';
@@ -12,22 +12,27 @@ import { Coordinate } from '../types.ts';
  */
 export const useWorldCoordinates = (
   { panX, panY, zoom }: Camera['state'],
-  domEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>,
+  canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>,
 ) => {
-  // offset is already relative to the canvas the listener sits on, so nothing is measured
-  const toWorldCoordinates = (ev: MouseEvent): Coordinate => ({
-    x: (ev.offsetX - panX.value) / zoom.value,
-    y: (ev.offsetY - panY.value) / zoom.value,
+  const toWorld = ({ x, y }: Coordinate): Coordinate => ({
+    x: (x - panX.value) / zoom.value,
+    y: (y - panY.value) / zoom.value,
   });
 
-  const worldCoordinates = ref<Coordinate>({ x: 0, y: 0 });
+  // offset is already relative to the canvas the listener sits on, so nothing is measured
+  const toWorldCoordinates = (ev: MouseEvent) =>
+    toWorld({ x: ev.offsetX, y: ev.offsetY });
 
-  const captureWorldCoords = (ev: MouseEvent) =>
-    (worldCoordinates.value = toWorldCoordinates(ev));
+  const screenCoordinates = ref<Coordinate>();
 
-  domEvents.subscribe('onMouseMove', captureWorldCoords);
-  // zooming moves the world under a stationary cursor, so the point changes without a mousemove
-  domEvents.subscribe('onWheel', captureWorldCoords);
+  canvasEvents.subscribe(
+    'onMouseMove',
+    (ev) => (screenCoordinates.value = { x: ev.offsetX, y: ev.offsetY }),
+  );
+
+  const worldCoordinates = computed<Coordinate | undefined>(() =>
+    screenCoordinates.value ? toWorld(screenCoordinates.value) : undefined,
+  );
 
   return { worldCoordinates, toWorldCoordinates };
 };

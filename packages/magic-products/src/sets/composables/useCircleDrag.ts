@@ -29,7 +29,7 @@ export const useCircleDrag = ({
       if (identity?.part !== 'body') return;
       return definitions.value.find(({ id }) => id === identity.setId);
     },
-    (definition, diff) => {
+    (definition, { diff }) => {
       const { at } = definition.display;
       at.x += diff.x;
       at.y += diff.y;

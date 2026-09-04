@@ -15,9 +15,10 @@
 
   useCircleResize({ surface: shell.surface, definitions: sets.definitions });
 
-  const { isDragging } = useCircleDrag({
+  useCircleDrag({
     surface: shell.surface,
     definitions: sets.definitions,
+    theme,
   });
 
   useSetsRendering({
@@ -28,7 +29,6 @@
     queryIdToSections: queryAnalysis.queryIdToSections,
     focus,
     theme,
-    isGrabbing: isDragging,
   });
 
   const CAPACITY_TOAST_MS = 5_000;

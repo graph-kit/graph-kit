@@ -48,7 +48,6 @@ const build = (
     isSetFocused: () => false,
     bounds,
     cursorAt: { x: 0, y: 0 },
-    isGrabbing: false,
     shapes,
     resolveToken: theme._resolveToken,
   });

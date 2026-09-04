@@ -34,8 +34,6 @@ export type SetsCanvasElementsProps = {
   bounds: BoundingBox;
   /** where the pointer is, which is what aims a resize arrow */
   cursorAt: Coordinate;
-  /** whether a set is being dragged right now, for grab versus grabbing */
-  isGrabbing: boolean;
   shapes: AnimatedShapeFactories;
   resolveToken: SetsTheme['_resolveToken'];
 };
@@ -97,15 +95,14 @@ const sectionElements = (props: SetsCanvasElementsProps): CanvasElement[] => {
 };
 
 const circleElements = (props: SetsCanvasElementsProps): CanvasElement[] => {
-  const { definitions, isSetFocused, shapes, resolveToken, isGrabbing } = props;
+  const { definitions, isSetFocused, shapes, resolveToken } = props;
 
   return definitions.toSorted(byDescendingRadius).map((definition) => ({
     id: definition.id,
     priority: CIRCLE_PRIORITY,
     data: {
-      [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: isGrabbing
-        ? CURSOR.GRABBING
-        : resolveToken('set.cursor'),
+      // grabbing is the canvas's to say, see useCircleDrag
+      [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: resolveToken('set.cursor'),
     },
     shape: shapes.circle({
       id: definition.id,

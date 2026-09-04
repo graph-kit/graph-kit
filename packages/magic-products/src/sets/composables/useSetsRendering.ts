@@ -5,7 +5,7 @@ import type {
 import type { CanvasSurface } from '@canvas/surface/types';
 import type { Color } from '@core/utils/colors';
 
-import { type ComputedRef, type Ref, computed, onBeforeUnmount } from 'vue';
+import { type ComputedRef, computed, onBeforeUnmount } from 'vue';
 
 import { setsCanvasElements } from '../draw/canvasElements.ts';
 import type { Queries } from '../queries.ts';
@@ -23,8 +23,6 @@ type SetsRenderingProps = {
   queryIdToSections: ComputedRef<Map<QueryId, Section[]>>;
   focus: SetFocusControls;
   theme: SetsTheme;
-  /** whether a set is being dragged, which is the only thing grabbing means */
-  isGrabbing: Ref<boolean>;
 };
 
 /**
@@ -63,7 +61,6 @@ export const useSetsRendering = (props: SetsRenderingProps) => {
         isSetFocused: props.focus.isFocused,
         bounds: surface.visibleWorldRect.value,
         cursorAt: surface.cursorCoordinates.value,
-        isGrabbing: props.isGrabbing.value,
         shapes: surface.shapes,
         resolveToken: props.theme._resolveToken,
       }),

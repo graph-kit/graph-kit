@@ -17,5 +17,8 @@ export const outboundTotalsThemer = (
     surface: {
       'node.default.text.content': totalText,
     },
+    focus: {
+      'node.focus.text.content': totalText,
+    },
   });
 };

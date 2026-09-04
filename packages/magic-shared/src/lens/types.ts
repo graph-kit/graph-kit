@@ -15,3 +15,11 @@ export type Lens = {
   /** Reverses everything activate did, restoring prior state when the lens becomes inactive. */
   deactivate?: () => void;
 };
+
+/** why a control is unavailable, said in words and shown on the canvas */
+export type DisabledLens = {
+  /** shown in place of the control's own tooltip label */
+  reason?: string;
+  /** previewed while the control is pointed at, to show what the reason describes */
+  lens?: Lens;
+};

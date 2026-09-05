@@ -5,11 +5,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ref } from 'vue';
 
-import { createQueries } from '../queries.ts';
 import { createSetDefinitions } from '../setDefinitions.ts';
 import { createSetGestures } from '../setGestures.ts';
 import { createSetsHistory } from './history.ts';
-import { createSetsTransit } from './transit.ts';
 
 const stubSurface = () =>
   ({
@@ -32,15 +30,12 @@ const stroke = (id: string): Annotation => ({
 
 const setup = () => {
   const sets = createSetDefinitions();
-  const queries = createQueries();
   const annotations = createAnnotations({ surface: stubSurface() });
   const gestures = createSetGestures();
-  const surface = stubSurface();
 
-  const transit = createSetsTransit({ sets, queries, annotations, surface });
-  const history = createSetsHistory({ transit, sets, annotations, gestures });
+  const history = createSetsHistory({ sets, annotations, gestures });
 
-  return { sets, annotations, gestures, history, transit };
+  return { sets, annotations, gestures, history };
 };
 
 /** a whole gesture: take hold, move, let go */
@@ -200,6 +195,34 @@ describe(createSetsHistory, () => {
 
     expect(world.history.canRedo.value).toBe(false);
     expect(labelsOf(world.sets)).toEqual(['A', 'B']);
+  });
+
+  it('keeps a set the same set through an undo and a redo', () => {
+    const added = world.sets.addDefinition({ x: 0, y: 0 });
+    if (!added) throw new Error('the canvas was empty');
+    dragTo(world, added.id, { x: 40, y: 0 });
+
+    world.history.undo();
+    world.history.redo();
+
+    /*
+      the id is what focus holds, what a gesture in flight is moving and what a room knows
+      a circle by, so walking through it must not hand back a different set
+    */
+    expect(world.sets.definitions.value[0].id).toBe(added.id);
+    expect(world.sets.hasDefinition(added.id)).toBe(true);
+  });
+
+  it('leaves a step holding its own copy, not the live set', () => {
+    const added = world.sets.addDefinition({ x: 0, y: 0 });
+    if (!added) throw new Error('the canvas was empty');
+    dragTo(world, added.id, { x: 40, y: 0 });
+
+    // a later gesture must not reach back and rewrite where undo would return to
+    dragTo(world, added.id, { x: 100, y: 0 });
+    world.history.undo();
+
+    expect(positionOf(world.sets, 'A')).toEqual({ x: 40, y: 0 });
   });
 
   it('makes what is on screen the new starting point when cleared', () => {

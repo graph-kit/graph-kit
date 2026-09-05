@@ -29,11 +29,6 @@ export type SetsTransitPayload = SetsSharedState & {
   camera: { panX: number; panY: number; zoom: number };
 };
 
-export type SetsTransit = TransitField & {
-  encodeSets: () => EncodedSet[];
-  applySets: (encoded: EncodedSet[]) => void;
-};
-
 export type SetsTransitParts = {
   sets: SetDefinitions;
   queries: Queries;
@@ -70,10 +65,7 @@ export const createSetsTransit = ({
   queries,
   annotations,
   surface,
-}: SetsTransitParts): SetsTransit => ({
-  encodeSets: () => encodeSets(sets),
-  applySets: (encoded) => decodeSets(sets, encoded),
-
+}: SetsTransitParts): TransitField => ({
   encode: (): SetsTransitPayload => {
     const { panX, panY, zoom } = surface.camera.state;
     return {

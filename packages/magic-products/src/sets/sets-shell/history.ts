@@ -8,23 +8,34 @@ import { computed, ref } from 'vue';
 
 import type { SetDefinitions } from '../setDefinitions.ts';
 import type { SetGestures } from '../setGestures.ts';
-import type { EncodedSet, SetsTransit } from './transit.ts';
+import type { SetDefinition } from '../types.ts';
 
 const MAX_HISTORY = 100;
 
 type HistoryStep =
-  | { kind: 'sets'; before: EncodedSet[]; after: EncodedSet[] }
+  | { kind: 'sets'; before: SetDefinition[]; after: SetDefinition[] }
   | { kind: 'annotations'; change: AnnotationsChange };
 
 export type SetsHistoryParts = {
-  transit: Pick<SetsTransit, 'encodeSets' | 'applySets'>;
   sets: SetDefinitions;
   annotations: AnnotationsControls;
   gestures: SetGestures;
 };
 
+/*
+  snapshots carry ids, unlike the ones transit puts in a link. an undo returns to a canvas
+  the user is still looking at, where the id is what focus is holding, what a gesture in
+  flight is moving and what a room knows a circle by. minting new ones would drop the
+  selection and read to a peer as every set being removed and put back
+*/
+const snapshotOf = (sets: SetDefinitions): SetDefinition[] =>
+  sets.definitions.value.map(({ id, label, display }) => ({
+    id,
+    label,
+    display: { at: { ...display.at }, radius: display.radius },
+  }));
+
 export const createSetsHistory = ({
-  transit,
   sets,
   annotations,
   gestures,
@@ -34,7 +45,7 @@ export const createSetsHistory = ({
   let cursor = -1;
 
   /** what the canvas held as of the cursor, the `before` of whatever is recorded next */
-  let heldSets = transit.encodeSets();
+  let heldSets = snapshotOf(sets);
 
   /*
     a restore writes through the same stores everything else does, and they report it the
@@ -60,7 +71,7 @@ export const createSetsHistory = ({
   const recordSets = () => {
     if (restoring) return;
 
-    const after = transit.encodeSets();
+    const after = snapshotOf(sets);
     // a press that let go where it started is not a step, and neither is a gesture that
     // put a circle back where it found it
     if (JSON.stringify(after) === JSON.stringify(heldSets)) return;
@@ -78,9 +89,10 @@ export const createSetsHistory = ({
     }
   };
 
-  const applySets = (encoded: EncodedSet[]) => {
-    write(() => transit.applySets(encoded));
-    heldSets = encoded;
+  const applySets = (snapshot: SetDefinition[]) => {
+    // setAll copies what it admits, so the step keeps holding its own arrays
+    write(() => sets.setAll(snapshot));
+    heldSets = snapshot;
   };
 
   const applyAnnotations = ({ added, removed }: AnnotationsChange) =>
@@ -143,7 +155,7 @@ export const createSetsHistory = ({
     clear: () => {
       steps.length = 0;
       cursor = -1;
-      heldSets = transit.encodeSets();
+      heldSets = snapshotOf(sets);
       changed();
     },
   };

@@ -51,7 +51,7 @@ export const useSetsShell = (): {
     surface,
     annotations,
     transit: { ...transit, compression: setsTransitCompression },
-    history: createSetsHistory({ transit, sets, annotations, gestures }),
+    history: createSetsHistory({ sets, annotations, gestures }),
     isContent: ({ id }) => sets.hasDefinition(id),
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {

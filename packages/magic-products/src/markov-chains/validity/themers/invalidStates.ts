@@ -10,6 +10,7 @@ export const invalidStatesThemer = (
   graph: Graph,
   invalidStates: ComputedRef<Set<GNode['id']>>,
 ): Themer =>
-  createNodeThemer(graph, ({ id }: CoreNode) =>
-    invalidStates.value.has(id) ? colors.RED_600 : colors.GREEN_600,
-  );
+  createNodeThemer(graph, ({ id }: CoreNode) => {
+    if (invalidStates.value.size === 0) return;
+    return invalidStates.value.has(id) ? colors.RED_600 : colors.GREEN_600;
+  });

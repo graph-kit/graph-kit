@@ -24,13 +24,8 @@ export const useMarkovChain = (graph: Graph) => {
     recurrentClasses,
   );
 
-  const {
-    outboundTotals,
-    statesNotSummingToOne,
-    negativeTransitions,
-    invalidStates,
-    isValid,
-  } = useChainValidity(graph);
+  const { outboundTotals, negativeTransitions, invalidStates, isValid } =
+    useChainValidity(graph);
 
   const { isReducible, isChainAbsorbing, isErgodic, isDoublyStochastic } =
     useChainProperties(
@@ -72,7 +67,6 @@ export const useMarkovChain = (graph: Graph) => {
     isErgodic,
     isDoublyStochastic,
     outboundTotals,
-    statesNotSummingToOne,
     negativeTransitions,
     invalidStates,
     isValid,

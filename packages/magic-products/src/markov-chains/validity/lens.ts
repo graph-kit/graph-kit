@@ -14,8 +14,7 @@ export const validityLens = (graph: Graph, chain: MarkovChain): Lens => ({
   id: 'valid',
   ...layered(
     invalidStatesThemer(graph, chain.invalidStates),
-    outboundTotalsThemer(graph, chain.outboundTotals),
-    // a state can add up to 1 and still be broken, so what makes it red has to show as well
+    outboundTotalsThemer(graph, chain.outboundTotals, chain.invalidStates),
     negativeTransitionsThemer(graph, chain.negativeTransitions),
   ),
 });

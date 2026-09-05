@@ -53,7 +53,7 @@ export const useChainValidity = (graph: Graph) => {
     return getOutboundTotals(stateIds, transitions.value);
   });
 
-  const statesNotSummingToOne = computed(() =>
+  const invalidStates = computed(() =>
     getStatesNotSummingToOne(outboundTotals.value),
   );
 
@@ -61,19 +61,13 @@ export const useChainValidity = (graph: Graph) => {
     getNegativeTransitions(transitions.value),
   );
 
-  const invalidStates = computed(() => {
-    const states = new Set(statesNotSummingToOne.value);
-    for (const transition of negativeTransitions.value) {
-      states.add(transition.source);
-    }
-    return states;
-  });
-
-  const isValid = computed(() => invalidStates.value.size === 0);
+  const isValid = computed(
+    () =>
+      invalidStates.value.size === 0 && negativeTransitions.value.length === 0,
+  );
 
   return {
     outboundTotals,
-    statesNotSummingToOne,
     negativeTransitions,
     invalidStates,
     isValid,

@@ -45,7 +45,7 @@
   const problems = computed(() => {
     const problems: Problem[] = [];
 
-    if (chain.statesNotSummingToOne.value.size > 0) {
+    if (chain.invalidStates.value.size > 0) {
       problems.push({
         content: 'Some [States] Do Not Add Up To 1',
         highlight: statesHighlight,

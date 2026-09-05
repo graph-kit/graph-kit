@@ -9,9 +9,12 @@ import { ComputedRef } from 'vue';
 export const outboundTotalsThemer = (
   graph: Graph,
   outboundTotals: ComputedRef<Map<GNode['id'], Fraction>>,
+  invalidStates: ComputedRef<Set<GNode['id']>>,
 ): Themer => {
-  const totalText = ({ id }: CoreNode) =>
-    outboundTotals.value.get(id)?.toFraction();
+  const totalText = ({ id }: CoreNode) => {
+    if (invalidStates.value.size === 0) return;
+    return outboundTotals.value.get(id)?.toFraction();
+  };
 
   return graph.theme.createThemer({
     surface: {

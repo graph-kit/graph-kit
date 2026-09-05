@@ -27,7 +27,6 @@ export const useSetsShell = (): {
   const theme = useSetsTheme();
 
   const surface = useCanvasSurface({
-    // the fallback sentinel is a theme concept, spent here rather than taught to the surface
     canvasCursor: () =>
       canvasCursorOverride(theme._resolveToken('canvas.cursor')),
   });
@@ -49,8 +48,6 @@ export const useSetsShell = (): {
       ...createSetsTransit({ sets, queries, annotations, surface }),
       compression: setsTransitCompression,
     },
-    // the circles themselves. a resize band is not somewhere to jump back to, and an
-    // annotation is drawn over content rather than being any
     isContent: ({ id }) => sets.hasDefinition(id),
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {
@@ -75,7 +72,6 @@ export const useSetsShell = (): {
       },
     ],
     onboarding: SETS_ONBOARDING,
-    // restored state is an answered prompt, the same as a set drawn by hand
     onSetupCompleted: () => {
       if (sets.definitions.value.length > 0) shell.onboarding?.close();
     },
@@ -89,8 +85,6 @@ export const useSetsShell = (): {
     shell.localStorage.invalidate,
   );
 
-  // the first set is the prompt answered. a restore lands before onboarding opens, which
-  // is what onSetupCompleted above is for
   sets.events.subscribe('onDefinitionsChanged', () =>
     shell.onboarding?.close(),
   );

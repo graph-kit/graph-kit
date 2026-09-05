@@ -5,7 +5,7 @@ export const manifests = {
   sets: {
     id: 'sets',
     multiplayer: false,
-    name: 'Magic Sets',
+    name: 'Magic Set Theory',
     abbreviatedName: 'SET',
     navigation: {
       slug: 'sets',

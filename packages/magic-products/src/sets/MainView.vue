@@ -50,7 +50,6 @@
     }
 
     focus.set(definition.id);
-    shell.onboarding?.close();
   };
 
   const deleteFocusedSetDefinitions = () => {

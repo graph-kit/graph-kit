@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@types/tinycolor2": "catalog:",
+    "lz-string": "^1.5.0",
     "ts-essentials": "^10.2.0"
   }
 }

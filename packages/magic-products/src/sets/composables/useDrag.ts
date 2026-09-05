@@ -18,6 +18,8 @@ type DragOptions<Item> = {
   getItem: (event: ElementMouseEvent) => Item | undefined;
   /** `at` is where the cursor is now, `diff` how far it moved since the last frame */
   onMove: (item: Item, cursor: { at: Coordinate; diff: Coordinate }) => void;
+  /** the gesture let go, whether or not it moved anything */
+  onDrop: (item: Item) => void;
 };
 
 export const useDrag = <Item>({
@@ -25,6 +27,7 @@ export const useDrag = <Item>({
   handlerId,
   getItem,
   onMove,
+  onDrop,
 }: DragOptions<Item>) => {
   const activeDrag = ref<ActiveDrag<Item>>();
 
@@ -48,7 +51,9 @@ export const useDrag = <Item>({
   };
 
   const drop = () => {
+    const settled = activeDrag.value;
     activeDrag.value = undefined;
+    if (settled) onDrop(settled.item);
   };
 
   surface.events.elements.handle('onMouseDown', beginDrag, handlerId);

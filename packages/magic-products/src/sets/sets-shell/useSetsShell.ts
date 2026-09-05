@@ -11,9 +11,11 @@ import { useSetsAnnotations } from '../composables/useSetsAnnotations.ts';
 import { createQueries } from '../queries.ts';
 import { useQueryAnalysis } from '../queryAnalysis.ts';
 import { createSetDefinitions } from '../setDefinitions.ts';
+import { createSetGestures } from '../setGestures.ts';
 import { useCanvasAppearance } from '../theme/useCanvasAppearance.ts';
 import { useSetsTheme } from '../theme/useSetsTheme.ts';
 import { provideSetsState } from './context.ts';
+import { createSetsHistory } from './history.ts';
 import { SETS_ONBOARDING } from './onboarding.ts';
 import { setsTransitCompression } from './transit-compression.ts';
 import { createSetsTransit } from './transit.ts';
@@ -38,16 +40,18 @@ export const useSetsShell = (): {
   const sections = useSections(sets.definitions);
   const focus = useSetFocus({ surface });
 
-  useCircleResize({ surface, sets });
-  useCircleDrag({ surface, sets, theme });
+  const gestures = createSetGestures();
+
+  useCircleResize({ surface, sets, gestures });
+  useCircleDrag({ surface, sets, gestures, theme });
+
+  const transit = createSetsTransit({ sets, queries, annotations, surface });
 
   const product: ProductControls = {
     surface,
     annotations,
-    transit: {
-      ...createSetsTransit({ sets, queries, annotations, surface }),
-      compression: setsTransitCompression,
-    },
+    transit: { ...transit, compression: setsTransitCompression },
+    history: createSetsHistory({ sets, annotations, gestures }),
     isContent: ({ id }) => sets.hasDefinition(id),
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {

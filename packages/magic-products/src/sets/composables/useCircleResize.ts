@@ -3,15 +3,21 @@ import type { CanvasSurface } from '@canvas/surface/types';
 import { INPUT_HANDLER_ID } from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';
 import type { SetDefinitions } from '../setDefinitions.ts';
+import type { SetGestures } from '../setGestures.ts';
 import type { SetDefinitionId } from '../types.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleResizeProps = {
   surface: CanvasSurface;
   sets: SetDefinitions;
+  gestures: SetGestures;
 };
 
-export const useCircleResize = ({ surface, sets }: CircleResizeProps) => {
+export const useCircleResize = ({
+  surface,
+  sets,
+  gestures,
+}: CircleResizeProps) => {
   const { isDragging: isResizing } = useDrag<SetDefinitionId>({
     surface,
     handlerId: INPUT_HANDLER_ID.circleResize,
@@ -20,6 +26,8 @@ export const useCircleResize = ({ surface, sets }: CircleResizeProps) => {
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'edge') return;
       if (!sets.hasDefinition(identity.setId)) return;
+
+      gestures.report.held(identity.setId);
       return identity.setId;
     },
 
@@ -31,6 +39,8 @@ export const useCircleResize = ({ surface, sets }: CircleResizeProps) => {
         Math.hypot(at.x - coords.x, at.y - coords.y),
       );
     },
+
+    onDrop: (setId) => gestures.report.released(setId),
   });
 
   return {

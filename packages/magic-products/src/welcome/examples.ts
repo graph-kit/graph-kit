@@ -1,11 +1,9 @@
+import { nullThrows } from '@core/utils/assert';
 import { Coordinate } from '@core/utils/canvas/index';
-import { ProductId } from '@magic/shared/product';
+import { ProductId, products } from '@magic/shared/product';
 
-/**
- * every product the canvas can stand up an example of. sets is absent until we work out
- * what a set drawing looks like here, so no card can name an example that is missing
- */
-export type ExampleProductId = Exclude<ProductId, 'dev' | 'welcome' | 'sets'>;
+/** every product the canvas can stand up an example of, which is all of them */
+export type ExampleProductId = Exclude<ProductId, 'dev' | 'welcome'>;
 
 export type ExampleNode = {
   /** what the node reads as, so an AVL example can hold values and a chain can hold states */
@@ -31,7 +29,8 @@ export type ExampleEdge = {
   ghosted?: boolean;
 };
 
-export type ProductExample = {
+export type GraphExample = {
+  kind: 'graph';
   /**
    * whether edges are drawn with arrowheads. the canvas graph itself is directed no matter
    * what, since directedness is fixed at construction, so this is the rendering alone
@@ -43,9 +42,41 @@ export type ProductExample = {
   edges: ExampleEdge[];
 };
 
+/** one circle of a set diagram, placed the way an example node is */
+export type ExampleSet = {
+  label: string;
+  at: Coordinate;
+  radius: number;
+};
+
+/**
+ * one query and the atomic regions it lights. queries are colored in order from the same
+ * palette the product assigns from, and a region two of them both select is painted in
+ * both, which is what the hatch is for
+ */
+export type ExampleQuery = {
+  /** the query this stands for, for whoever is reading the example */
+  selects: string;
+  /** each entry names the sets a region falls inside; every set it omits it falls outside */
+  sections: string[][];
+};
+
+/**
+ * sets is the one product that draws no graph, so its example is circles and the regions a
+ * query lights up rather than nodes and edges
+ */
+export type SetsExample = {
+  kind: 'sets';
+  sets: ExampleSet[];
+  queries: ExampleQuery[];
+};
+
+export type ProductExample = GraphExample | SetsExample;
+
 /** the graph each product greets you with, laid out the way that product would */
 export const productExamples: Record<ExampleProductId, ProductExample> = {
   traversals: {
+    kind: 'graph',
     directed: true,
     weighted: false,
     // laid out in layers running left to right, which is the order a breadth first sweep
@@ -76,6 +107,7 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
   },
 
   'path-finding': {
+    kind: 'graph',
     directed: true,
     weighted: true,
     nodes: [
@@ -99,6 +131,7 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
   },
 
   'min-spanning-trees': {
+    kind: 'graph',
     directed: false,
     weighted: true,
     nodes: [
@@ -124,6 +157,7 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
   },
 
   'avl-trees': {
+    kind: 'graph',
     directed: false,
     weighted: false,
     nodes: [
@@ -146,6 +180,7 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
   },
 
   'markov-chains': {
+    kind: 'graph',
     directed: true,
     weighted: true,
     // every state's outbound weights sum to one, the way a valid chain reads in the product
@@ -165,12 +200,48 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
       { from: 3, to: 0, weight: 1 },
     ],
   },
-};
 
-/** what the canvas stands up before anyone has pointed at a card */
-export const DEFAULT_EXAMPLE: ExampleProductId = 'traversals';
+  sets: {
+    kind: 'sets',
+    // every pair overlaps and all three share a middle, so the diagram shows off the
+    // regions a query has to choose between. C is the odd one out on size, since sets in
+    // the product are drawn at whatever radius they were dragged to
+    sets: [
+      { label: 'A', at: { x: -110, y: -80 }, radius: 170 },
+      { label: 'B', at: { x: 110, y: -80 }, radius: 170 },
+      { label: 'C', at: { x: 0, y: 110 }, radius: 130 },
+    ],
+    // two queries whose results overlap on the middle region, which is the one that ends
+    // up striped in both their colors
+    queries: [
+      {
+        selects: 'A ∩ B',
+        sections: [
+          ['A', 'B'],
+          ['A', 'B', 'C'],
+        ],
+      },
+      {
+        selects: 'C',
+        sections: [['C'], ['A', 'C'], ['B', 'C'], ['A', 'B', 'C']],
+      },
+    ],
+  },
+};
 
 /** narrows a product id off a manifest, which is only ever typed as a string */
 export const isExampleProductId = (
   productId: string,
 ): productId is ExampleProductId => productId in productExamples;
+
+/**
+ * what the canvas stands up before anyone has pointed at a card: whichever card the rail
+ * lists first. read off the manifests rather than named here, so reordering the products
+ * moves the default with them instead of leaving it pointing into the middle of the list
+ */
+export const DEFAULT_EXAMPLE: ExampleProductId = nullThrows(
+  products.flatMap(({ id, navigation }) =>
+    navigation.card && isExampleProductId(id) ? [id] : [],
+  )[0],
+  'no product offers both a navigation card and an example',
+);

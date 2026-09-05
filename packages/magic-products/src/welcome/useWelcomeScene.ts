@@ -11,17 +11,21 @@ import {
   DEFAULT_EXAMPLE,
   ExampleEdge,
   ExampleProductId,
+  GraphExample,
   ProductExample,
+  SetsExample,
   isExampleProductId,
   productExamples,
 } from './examples.ts';
 import {
   NODE_RADIUS,
+  PlacementPoint,
   edgeIdOf,
   nodeIdOf,
   resolveColors,
   resolvePositions,
 } from './scene.ts';
+import { createSetsRenderer } from './setsRenderer.ts';
 
 /** how far back an edge the product's answer passed over is pushed */
 const GHOSTED_OPACITY = 0.35;
@@ -86,7 +90,7 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
    * directedness is fixed when a graph is built. arrowheads and weight labels are the
    * renderer's call instead, so each example can look like the product it stands for
    */
-  const applyEdgeRendering = ({ directed, weighted }: ProductExample) => {
+  const applyEdgeRendering = ({ directed, weighted }: GraphExample) => {
     graph.setRenderFunction(
       'edge',
       createPhantomAwareEdgeRenderFunction(
@@ -102,23 +106,37 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
     );
   };
 
-  const positionsOf = (example: ProductExample) =>
-    resolvePositions(example, graph.surface.visibleWorldRect.value, {
+  const place = (points: readonly PlacementPoint[]) =>
+    resolvePositions(points, graph.surface.visibleWorldRect.value, {
       reservedLeftPx: reservedLeftPx.value,
       zoom: graph.surface.camera.state.zoom.value,
     });
+
+  const nodePoints = ({ nodes }: GraphExample): PlacementPoint[] =>
+    nodes.map(({ at }) => ({ at, reach: NODE_RADIUS }));
+
+  const setPoints = ({ sets }: SetsExample): PlacementPoint[] =>
+    sets.map(({ at, radius }) => ({ at, reach: radius }));
+
+  const setsRenderer = createSetsRenderer(graph);
 
   /** which handover the elements on the canvas belong to */
   let generation = 0;
 
   let drawn: ProductExample | undefined;
 
-  /** clears the canvas and stands the example up in its place */
-  const draw = (example: ProductExample) => {
-    generation += 1;
+  /** empties the canvas of whatever the example before it left behind */
+  const clearCanvas = () => {
+    setsRenderer.clear();
+    graph.actions.removeElements({
+      nodes: graph.nodes.value.map(({ id }) => ({ id })),
+      edges: graph.edges.value.map(({ id }) => ({ id })),
+    });
+  };
 
+  const drawGraph = (example: GraphExample) => {
     paintByNodeId.clear();
-    for (const { index, color } of resolveColors(example)) {
+    for (const { index, color } of resolveColors(example.nodes)) {
       paintByNodeId.set(nodeIdOf(generation, index), color);
     }
 
@@ -128,14 +146,10 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
     }
 
     applyEdgeRendering(example);
-
-    graph.actions.removeElements({
-      nodes: graph.nodes.value.map(({ id }) => ({ id })),
-      edges: graph.edges.value.map(({ id }) => ({ id })),
-    });
+    clearCanvas();
 
     graph.actions.addElements({
-      nodes: positionsOf(example).map(({ index, position }) => ({
+      nodes: place(nodePoints(example)).map((position, index) => ({
         id: nodeIdOf(generation, index),
         label: example.nodes[index].label,
         position,
@@ -147,7 +161,18 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
         weight: weightOf(edge),
       })),
     });
+  };
 
+  const drawSets = (example: SetsExample) => {
+    clearCanvas();
+    setsRenderer.show({ example, centers: place(setPoints(example)) });
+  };
+
+  /** clears the canvas and stands the example up in its place */
+  const draw = (example: ProductExample) => {
+    generation += 1;
+    if (example.kind === 'sets') drawSets(example);
+    else drawGraph(example);
     drawn = example;
   };
 
@@ -169,8 +194,14 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
   // it leaves uncovered, so a change in what it takes re-places whatever is drawn
   watch(reservedLeftPx, () => {
     if (!drawn) return;
+
+    if (drawn.kind === 'sets') {
+      setsRenderer.show({ example: drawn, centers: place(setPoints(drawn)) });
+      return;
+    }
+
     graph.positions.setMany(
-      positionsOf(drawn).map(({ index, position }) => ({
+      place(nodePoints(drawn)).map((position, index) => ({
         nodeId: nodeIdOf(generation, index),
         update: position,
       })),

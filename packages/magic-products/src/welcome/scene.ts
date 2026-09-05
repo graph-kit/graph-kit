@@ -1,7 +1,7 @@
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import colors, { Color } from '@core/utils/colors';
 
-import { ProductExample } from './examples.ts';
+import { ExampleNode } from './examples.ts';
 
 export const NODE_RADIUS = 40;
 
@@ -31,29 +31,41 @@ const WIPE: Color[] = [
  * spends the wipe across the example, so a node's color falls out of where it sits
  * horizontally rather than being written down per product
  */
-export const resolveColors = ({ nodes }: ProductExample) =>
+export const resolveColors = (nodes: readonly ExampleNode[]) =>
   nodes
     .map((node, index) => ({ node, index }))
     .sort(({ node: a }, { node: b }) => a.at.x - b.at.x || a.at.y - b.at.y)
     .map(({ index }, rank) => ({ index, color: WIPE[rank % WIPE.length] }));
 
-const midpointOf = (values: number[]) =>
-  (Math.min(...values) + Math.max(...values)) / 2;
+/**
+ * a point to place, and how far the thing sitting on it reaches from it. reach is what
+ * keeps a diagram of unequal circles centered on what you actually see rather than on the
+ * centers alone; where every reach is the same it cancels out
+ */
+export type PlacementPoint = {
+  at: Coordinate;
+  reach: number;
+};
+
+const midpointOf = (points: readonly PlacementPoint[], axis: 'x' | 'y') => {
+  const low = Math.min(...points.map(({ at, reach }) => at[axis] - reach));
+  const high = Math.max(...points.map(({ at, reach }) => at[axis] + reach));
+  return (low + high) / 2;
+};
 
 /** world units the scene sits below the viewport center, clearing the banner above it */
 const VERTICAL_BIAS = 30;
 
 /**
- * lands the example's bounding box on the center of the canvas the rail is not covering, so
- * the graph arrives centered in the room it actually has at any window size
+ * lands a set of points on the center of the canvas the rail is not covering, so whatever
+ * an example is made of arrives centered in the room it actually has at any window size.
+ * answers in the order it was given, since callers pair the result back up by index
  */
 export const resolvePositions = (
-  example: ProductExample,
+  points: readonly PlacementPoint[],
   viewport: BoundingBox,
   { reservedLeftPx, zoom }: { reservedLeftPx: number; zoom: number },
-) => {
-  const offsets = example.nodes.map(({ at }) => at);
-
+): Coordinate[] => {
   // on a window too narrow to hold both, honoring the rail in full would shove the graph
   // clean off the right edge, so it never gives up more than half of what it can see
   const reserved = Math.min(
@@ -66,16 +78,13 @@ export const resolvePositions = (
       viewport.at.x +
       reserved +
       (viewport.width - reserved) / 2 -
-      midpointOf(offsets.map(({ x }) => x)),
+      midpointOf(points, 'x'),
     y:
       viewport.at.y +
       viewport.height / 2 +
       VERTICAL_BIAS -
-      midpointOf(offsets.map(({ y }) => y)),
+      midpointOf(points, 'y'),
   };
 
-  return example.nodes.map(({ at }, index) => ({
-    index,
-    position: { x: origin.x + at.x, y: origin.y + at.y },
-  }));
+  return points.map(({ at }) => ({ x: origin.x + at.x, y: origin.y + at.y }));
 };

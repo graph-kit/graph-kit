@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import Well from '@magic/shared/Well';
   import { products } from '@magic/shared/product';
   import { useElementBounding } from '@vueuse/core';
 
@@ -30,16 +31,17 @@
 </script>
 
 <template>
-  <div
-    ref="rail"
-    class="flex w-fit flex-col gap-2 select-none"
-    @pointerleave="scene.hover(undefined)"
-  >
-    <RailCard
-      v-for="{ product, card } in cards"
-      :key="product.id"
-      :product-id="product.id"
-      :card="card"
-    />
-  </div>
+  <Well>
+    <div
+      ref="rail"
+      class="flex w-fit flex-col gap-2 select-none"
+    >
+      <RailCard
+        v-for="{ product, card } in cards"
+        :key="product.id"
+        :product-id="product.id"
+        :card="card"
+      />
+    </div>
+  </Well>
 </template>

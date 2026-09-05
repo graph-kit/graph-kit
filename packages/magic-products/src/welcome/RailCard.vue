@@ -27,6 +27,7 @@
       class="w-full justify-between gap-3 bg-transparent p-3 text-left transition-colors hover:bg-gray-100 dark:bg-transparent dark:hover:bg-gray-900"
       :class="lit ? 'bg-gray-100 dark:bg-gray-900' : ''"
       @pointerenter="scene.hover(productId)"
+      @pointerleave="scene.hover(undefined)"
       @focus="scene.hover(productId)"
       @blur="scene.hover(undefined)"
     >

@@ -33,7 +33,7 @@ export type MultiplayerSocket = Socket<
 /** what a room needs from the product it opens on, supplied by the shell */
 export type ProductBinding = {
   productId: ProductId;
-  host: MultiplayerControls;
+  controls: MultiplayerControls;
 };
 
 export type RoomActions = {

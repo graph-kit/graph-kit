@@ -75,7 +75,7 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 describe('useJumpToContent', () => {
-  it('stays away when the host names no content', () => {
+  it('stays away when the product names no content', () => {
     const surface = {} as unknown as CanvasSurface;
     expect(useJumpToContent({ surface }, flags)).toBeUndefined();
   });

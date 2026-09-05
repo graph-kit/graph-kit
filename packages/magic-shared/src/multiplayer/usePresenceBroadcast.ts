@@ -65,10 +65,10 @@ const throttleTrailing = <Value>(
 export const usePresenceBroadcast = (options: {
   surface: CanvasSurface;
   multiplayer: ProductMultiplayer;
-  host: MultiplayerControls;
+  controls: MultiplayerControls;
   annotations?: AnnotationsControls;
 }) => {
-  const { surface, multiplayer, host, annotations } = options;
+  const { surface, multiplayer, controls, annotations } = options;
 
   const presence = () => {
     const room = multiplayer.room.state.value;
@@ -146,11 +146,11 @@ export const usePresenceBroadcast = (options: {
     PRESENCE_INTERVAL_MS,
   );
 
-  host.drag?.subscribe('onDragStarted', (elements) =>
+  controls.drag?.subscribe('onDragStarted', (elements) =>
     presence()?.startDrag(elements),
   );
-  host.drag?.subscribe('onDragMoved', sendDragMove);
-  host.drag?.subscribe('onDragEnded', () => {
+  controls.drag?.subscribe('onDragMoved', sendDragMove);
+  controls.drag?.subscribe('onDragEnded', () => {
     // a withheld move landing after the end is read as a new drag, which would hold the
     // elements for peers until the room's staleness sweep let go of them
     sendDragMove.flush();

@@ -35,16 +35,13 @@ export const useSetsShell = (): {
   const sections = useSections(sets.definitions);
   const focus = useSetFocus({ surface });
 
-  // sets has no serializable state yet, so there is nothing to mirror either way. it
-  // is not flagged multiplayer, and giving it real transit is what would unblock both,
-  // along with the local storage and link sharing that transit gates.
-  const host: ProductControls = {
+  // no transit, so no: multiplayer, local storage and link sharing
+  const product: ProductControls = {
     surface,
     annotations,
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {
       bind: () => {},
-      // nothing to hold down: sets is not flagged multiplayer and has no state to write
       tiers: {
         host: {},
         admin: {},
@@ -54,7 +51,7 @@ export const useSetsShell = (): {
     },
   };
 
-  const shell = useShell(host, {
+  const shell = useShell(product, {
     productId: 'sets',
     helpMenu: [
       {

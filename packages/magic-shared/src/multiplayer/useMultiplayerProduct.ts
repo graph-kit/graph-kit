@@ -15,7 +15,7 @@ import { useTierBehavior } from './useTierBehavior.ts';
 
 type MultiplayerProductOptions = {
   productId: ProductId;
-  host: MultiplayerControls;
+  controls: MultiplayerControls;
   componentSlots: ComponentSlotControls;
 };
 
@@ -26,7 +26,7 @@ type MultiplayerProductOptions = {
  */
 export const useMultiplayerProduct = ({
   productId,
-  host,
+  controls,
   componentSlots,
 }: MultiplayerProductOptions): ProductMultiplayer | undefined => {
   const multiplayer = useProvidedMultiplayer();
@@ -40,9 +40,9 @@ export const useMultiplayerProduct = ({
   }
 
   const { actions, room, events } = multiplayer;
-  const binding = { productId, host };
+  const binding = { productId, controls };
 
-  useTierBehavior({ room, tiers: host.tiers });
+  useTierBehavior({ room, tiers: controls.tiers });
 
   onMounted(async () => {
     if (room.value.connected) {

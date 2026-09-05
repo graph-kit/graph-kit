@@ -5,10 +5,10 @@ import { ProductControls, TransitField } from './types.ts';
 
 const transit: TransitField = { encode: () => ({}), decode: () => {} };
 
-type Host = Pick<ProductControls, 'transit' | 'isContent'>;
+type Product = Pick<ProductControls, 'transit' | 'isContent'>;
 
-const hosting: Host = { transit, isContent: () => true };
-const stateless: Host = {};
+const supporting: Product = { transit, isContent: () => true };
+const stateless: Product = {};
 
 const warnings = () => vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -16,7 +16,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('resolveShellFlags', () => {
   it('falls back to the defaults a product says nothing about', () => {
-    expect(resolveShellFlags({}, hosting)).toEqual({
+    expect(resolveShellFlags({}, supporting)).toEqual({
       history: true,
       localStorage: true,
       annotations: true,
@@ -30,7 +30,7 @@ describe('resolveShellFlags', () => {
   it('takes what the product asked for over the default', () => {
     const flags = resolveShellFlags(
       { history: false, annotations: false },
-      hosting,
+      supporting,
     );
 
     expect(flags.history).toBe(false);
@@ -40,18 +40,18 @@ describe('resolveShellFlags', () => {
   });
 
   it('reads an explicit undefined as no opinion', () => {
-    const flags = resolveShellFlags({ history: undefined }, hosting);
+    const flags = resolveShellFlags({ history: undefined }, supporting);
     expect(flags.history).toBe(true);
   });
 
   it('hands back a fresh object each time', () => {
-    const flags = resolveShellFlags({}, hosting);
+    const flags = resolveShellFlags({}, supporting);
     flags.history = false;
 
-    expect(resolveShellFlags({}, hosting).history).toBe(true);
+    expect(resolveShellFlags({}, supporting).history).toBe(true);
   });
 
-  describe('without host transit', () => {
+  describe('without product transit', () => {
     it('forces off the flags transit backs', () => {
       const flags = resolveShellFlags({}, stateless);
 
@@ -99,7 +99,7 @@ describe('resolveShellFlags', () => {
     });
   });
 
-  describe('without host isContent', () => {
+  describe('without product isContent', () => {
     it('forces off jump to content', () => {
       const flags = resolveShellFlags({}, { transit });
 
@@ -122,10 +122,10 @@ describe('resolveShellFlags', () => {
     });
   });
 
-  it('warns about nothing when the host carries transit', () => {
+  it('warns about nothing when the product carries transit', () => {
     const warn = warnings();
 
-    resolveShellFlags({ localStorage: true, linkSharing: true }, hosting);
+    resolveShellFlags({ localStorage: true, linkSharing: true }, supporting);
 
     expect(warn).not.toHaveBeenCalled();
   });

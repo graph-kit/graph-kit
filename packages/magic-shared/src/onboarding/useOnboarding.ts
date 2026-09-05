@@ -34,12 +34,12 @@ export type OnboardingControls = {
  * Absent when the product flagged it off or contributed no items
  */
 export const useOnboarding = (
-  host: Pick<ProductControls, 'surface'>,
+  product: Pick<ProductControls, 'surface'>,
   flags: ShellFlags,
   appearance: AppearanceControls,
   items: OnboardingItem[] = [],
 ): OnboardingControls | undefined => {
-  const { surface } = host;
+  const { surface } = product;
   if (!flags.onboarding || items.length === 0) return;
 
   // nothing to paint until `open` builds the card

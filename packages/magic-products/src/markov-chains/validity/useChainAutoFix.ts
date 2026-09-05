@@ -6,10 +6,8 @@ import Fraction from 'fraction.js';
 
 import { computed } from 'vue';
 
-import { MarkovChain } from './useMarkovChain.ts';
+import { MarkovChain } from '../useMarkovChain.ts';
 
-// if total outgoing is 1, it's valid, no fix
-// if total outgoing is != 1:
 // if there is one edge, that edge fix is 1
 // if there is multiple edges, sum the total weight and normalize
 const getWeightAdjustments = (nodes: GNode[], edges: GEdge[]) => {
@@ -19,20 +17,27 @@ const getWeightAdjustments = (nodes: GNode[], edges: GEdge[]) => {
     const outboundEdges = edges.filter((e) => e.source === node.id);
 
     const total = sum(outboundEdges.map((e) => e.weight.abs()));
-    if (total.equals(1)) continue;
 
     if (outboundEdges.length === 0) continue;
 
     if (outboundEdges.length === 1) {
-      output.set(outboundEdges[0].id, new Fraction(1));
+      const [only] = outboundEdges;
+      if (!only.weight.equals(1)) output.set(only.id, new Fraction(1));
+      continue;
+    }
+
+    // special case where every outbound edge is 0
+    if (total.equals(0)) {
+      for (const edge of outboundEdges) {
+        output.set(edge.id, new Fraction(1 / outboundEdges.length));
+      }
       continue;
     }
 
     for (const edge of outboundEdges) {
-      const absWeight = edge.weight.abs();
-      const suggested = absWeight.div(total);
-      if (suggested.equals(absWeight)) continue;
-      output.set(edge.id, absWeight.div(total));
+      const suggested = edge.weight.abs().div(total);
+      if (suggested.equals(edge.weight)) continue;
+      output.set(edge.id, suggested);
     }
   }
 
@@ -53,7 +58,7 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
   const toBeRemoved = (edgeId: string) => {
     if (!graph.isEdge(edgeId)) return false;
     const edge = graph.getEdge(edgeId);
-    return edge.weight.equals(0);
+    return edge.weight.equals(0) && !weightAdjustments.value.get(edgeId);
   };
 
   const previewWeightColorFix = (

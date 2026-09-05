@@ -24,4 +24,6 @@ export const definitions = {
   doublyStochastic: 'Every row and column of the transition matrix sums to 1.',
   validity:
     'The sum of all transitions leaving a state must add up to exactly 1.',
+  negativeTransitions:
+    'A transition carries a probability, so it can never fall below 0.',
 };

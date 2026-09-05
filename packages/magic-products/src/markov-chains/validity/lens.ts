@@ -1,10 +1,11 @@
 import { Graph } from '@magic/shared/graph';
 import { Lens } from '@magic/shared/lens/types';
 
+import { layered } from '../themers/layered.ts';
+import { MarkovChain } from '../useMarkovChain.ts';
 import { invalidStatesThemer } from './themers/invalidStates.ts';
-import { layered } from './themers/layered.ts';
+import { negativeTransitionsThemer } from './themers/negativeTransitions.ts';
 import { outboundTotalsThemer } from './themers/outboundTotals.ts';
-import { MarkovChain } from './useMarkovChain.ts';
 
 export const VALIDITY_EXPLAINER_SLOT_ID = 'markov-chains/validity-explainer';
 
@@ -14,5 +15,16 @@ export const validityLens = (graph: Graph, chain: MarkovChain): Lens => ({
   ...layered(
     invalidStatesThemer(graph, chain.invalidStates),
     outboundTotalsThemer(graph, chain.outboundTotals),
+    // a state can add up to 1 and still be broken, so what makes it red has to show as well
+    negativeTransitionsThemer(graph, chain.negativeTransitions),
   ),
+});
+
+/** paints the transitions that carry a probability below zero */
+export const negativeTransitionsLens = (
+  graph: Graph,
+  chain: MarkovChain,
+): Lens => ({
+  id: 'negative-transitions',
+  ...layered(negativeTransitionsThemer(graph, chain.negativeTransitions)),
 });

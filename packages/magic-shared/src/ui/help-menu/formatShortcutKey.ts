@@ -7,7 +7,7 @@ const modifierSymbols = () => ({
   meta: isMac() ? '⌘ Command' : 'Meta',
   shift: '⇧ Shift',
   alt: isMac() ? '⌥ Option' : 'Alt',
-  ctrl: isMac() ? '⌃' : 'Ctrl',
+  ctrl: isMac() ? '⌃ Ctrl' : 'Ctrl',
 });
 
 const KEY_SYMBOLS: Record<string, string> = {

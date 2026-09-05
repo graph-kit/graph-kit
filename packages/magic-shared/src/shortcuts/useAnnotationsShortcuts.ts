@@ -50,7 +50,7 @@ export const useAnnotationsShortcuts = (shell: Shell): ShortcutItem[] => {
     {
       id: 'shell/annotations/clear',
       helpMenu: { category: 'Annotations', name: 'Clear All' },
-      key: 'alt+c',
+      key: 'shift+c',
       callback: () => {
         if (isReadonly.value) return;
         annotations.clear();

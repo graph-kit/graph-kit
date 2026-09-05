@@ -476,6 +476,9 @@ importers:
       '@core/components':
         specifier: workspace:*
         version: link:../core-components
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/themes':
         specifier: workspace:*
         version: link:../core-themes
@@ -503,6 +506,9 @@ importers:
       '@mdi/js':
         specifier: ^7.4.47
         version: 7.4.47
+      '@multiplayer/protocol':
+        specifier: workspace:*
+        version: link:../multiplayer-protocol
       '@vueuse/core':
         specifier: 'catalog:'
         version: 13.9.0(vue@3.5.40(typescript@6.0.3))
@@ -515,10 +521,16 @@ importers:
       vue:
         specifier: ^3.5.18
         version: 3.5.40(typescript@6.0.3)
+      yjs:
+        specifier: ^13.6.32
+        version: 13.6.32
     devDependencies:
       '@types/tinycolor2':
         specifier: 'catalog:'
         version: 1.4.6
+      lz-string:
+        specifier: ^1.5.0
+        version: 1.5.0
       ts-essentials:
         specifier: ^10.2.0
         version: 10.2.1(typescript@6.0.3)

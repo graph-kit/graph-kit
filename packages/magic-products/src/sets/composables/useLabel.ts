@@ -5,7 +5,7 @@ import type { Ref } from 'vue';
 import { ALPHABET, RESERVED_LABELS } from '../constants.ts';
 import type { SetDefinition } from '../types.ts';
 
-const SET_LABEL_SEQUENCE = ALPHABET.filter(
+export const SET_LABEL_SEQUENCE = ALPHABET.filter(
   (letter) => !(RESERVED_LABELS as readonly string[]).includes(letter),
 );
 

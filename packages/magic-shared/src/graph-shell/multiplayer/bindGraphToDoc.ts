@@ -1,4 +1,3 @@
-import { Coordinate } from '@canvas/surface/types';
 import { Annotation, AnnotationsChange } from '@core/annotations/index';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { ConsumerEventMap } from '@graph/create-graph/consumer-events';
@@ -9,7 +8,20 @@ import * as Y from 'yjs';
 import { computed, ref } from 'vue';
 
 import { Graph } from '../../graph/types.ts';
-import { DocBindMode, DocBinding, HistoryField } from '../../product/types.ts';
+import {
+  DocAnnotation,
+  annotationFromDoc,
+  annotationToDoc,
+  readAnnotationsMap,
+} from '../../multiplayer/doc/annotations.ts';
+import { createDocHistory } from '../../multiplayer/doc/history.ts';
+import {
+  BINDING_ORIGIN,
+  RECONCILE_ORIGIN,
+  isOwnWrite,
+} from '../../multiplayer/doc/origins.ts';
+import { createDocWriter } from '../../multiplayer/doc/writer.ts';
+import { DocBindMode, DocBinding } from '../../product/types.ts';
 
 /** named rather than inline so unbind can hand back the very same reference */
 type GraphSubscriber<Name extends keyof ConsumerEventMap> =
@@ -34,31 +46,6 @@ type DocEdge = {
 };
 
 /**
- * The room's view of an annotation, keyed by its id. Everything an annotation is except
- * the id and the type, which is always a draw: an erased stroke leaves the map rather
- * than staying in it as an erasure.
- */
-type DocAnnotation = {
-  points: Coordinate[];
-  fillColor?: string;
-  brushWeight?: number;
-};
-
-/**
- * Marks writes this binding makes into the document, so this binding skips them when
- * they come back around as a transaction.
- * Distinct from the connection's remote origin, which decides what goes on the wire.
- */
-const BINDING_ORIGIN = Symbol('graph-shell/binding');
-
-/**
- * The same, for a write that tidies the document rather than carrying an edit of this
- * user's. Kept apart so undo, which tracks BINDING_ORIGIN, cannot reverse it: a client
- * clearing up after somebody else's removal has nothing to put back.
- */
-const RECONCILE_ORIGIN = Symbol('graph-shell/reconcile');
-
-/**
  * The keys one transaction touched. The reconcile is scoped to these rather than run
  * over the whole document, so a change to one element cannot reach any other: a node
  * someone is dragging right now is ahead of the document by design, and a full diff
@@ -69,11 +56,6 @@ type DocChanges = {
   edgeIds: Set<string>;
   annotationIds: Set<string>;
 };
-
-const readNodes = (doc: Y.Doc) => doc.getMap<DocNode>('nodes');
-const readEdges = (doc: Y.Doc) => doc.getMap<DocEdge>('edges');
-const readAnnotations = (doc: Y.Doc) =>
-  doc.getMap<DocAnnotation>('annotations');
 
 /** yjs keys its changed map by a supertype no concrete Y.Map is assignable to */
 type ChangedType = Parameters<Y.Transaction['changed']['get']>[0];
@@ -100,16 +82,8 @@ const presentEntries = <T>(map: Y.Map<T>, ids: Set<string>): [string, T][] => {
   return entries;
 };
 
-const annotationToDoc = ({
-  points,
-  fillColor,
-  brushWeight,
-}: Annotation): DocAnnotation => ({ points, fillColor, brushWeight });
-
-const annotationFromDoc = (
-  id: string,
-  annotation: DocAnnotation,
-): Annotation => ({ id, type: 'draw', ...annotation });
+const readNodes = (doc: Y.Doc) => doc.getMap<DocNode>('nodes');
+const readEdges = (doc: Y.Doc) => doc.getMap<DocEdge>('edges');
 
 const nodeFromGraph = (graph: Graph, nodeId: string): DocNode => {
   const { x, y } = graph.positions.get(nodeId);
@@ -125,47 +99,6 @@ const edgeFromGraph = (graph: Graph, edgeId: string): DocEdge | undefined => {
     target: edge.target,
     weight: edge.weight.toString(),
   };
-};
-
-/**
- * Undo over the shared types rather than over whole graph snapshots, which is what makes
- * it safe with other people writing: it reverses the items this client wrote and merges
- * with everything else, where restoring a snapshot would rewrite a peer's work too.
- */
-const createDocHistory = (doc: Y.Doc): HistoryField => {
-  const undoManager = new Y.UndoManager(
-    [readNodes(doc), readEdges(doc), readAnnotations(doc)],
-    {
-      // BINDING_ORIGIN is the only origin a local edit carries, so tracking it and
-      // nothing else is what scopes undo to this client
-      trackedOrigins: new Set([BINDING_ORIGIN]),
-    },
-  );
-
-  const refresh = ref(0);
-  const bump = () => refresh.value++;
-  undoManager.on('stack-item-added', bump);
-  undoManager.on('stack-item-popped', bump);
-  undoManager.on('stack-cleared', bump);
-
-  const history: HistoryField = {
-    canUndo: computed(() => {
-      refresh.value;
-      return undoManager.undoStack.length > 0;
-    }),
-    canRedo: computed(() => {
-      refresh.value;
-      return undoManager.redoStack.length > 0;
-    }),
-    undo: () => undoManager.undo(),
-    redo: () => undoManager.redo(),
-    clear: () => undoManager.clear(),
-  };
-
-  // the doc outlives no product, so the manager goes with it
-  doc.on('destroy', () => undoManager.destroy());
-
-  return history;
 };
 
 /**
@@ -185,25 +118,9 @@ export const bindGraphToDoc = (
 ): DocBinding => {
   const nodes = readNodes(doc);
   const edges = readEdges(doc);
-  const annotations = readAnnotations(doc);
+  const annotations = readAnnotationsMap(doc);
 
-  // graph events emit synchronously inside the mutation's own stack frame, so a handler
-  // always observes the flag the apply that triggered it set
-  let applyingFromDoc = false;
-
-  const intoDoc = (write: () => void, origin: symbol = BINDING_ORIGIN) => {
-    if (applyingFromDoc) return;
-    doc.transact(write, origin);
-  };
-
-  const intoGraph = (apply: () => void) => {
-    applyingFromDoc = true;
-    try {
-      apply();
-    } finally {
-      applyingFromDoc = false;
-    }
-  };
+  const { intoDoc, intoProduct: intoGraph } = createDocWriter(doc);
 
   /** reconciles the document to match the graph exactly, additions and removals alike */
   const writeWholeGraph = () => {
@@ -381,12 +298,7 @@ export const bindGraphToDoc = (
   //
   // the document is the source for everything except what this binding just wrote
   const onTransaction = (transaction: Y.Transaction) => {
-    if (
-      transaction.origin === BINDING_ORIGIN ||
-      transaction.origin === RECONCILE_ORIGIN
-    ) {
-      return;
-    }
+    if (isOwnWrite(transaction)) return;
     const changes: DocChanges = {
       nodeIds: changedKeys(transaction, nodes),
       edgeIds: changedKeys(transaction, edges),
@@ -448,12 +360,12 @@ export const bindGraphToDoc = (
   };
 
   // the settled stroke rather than every point of it, the same boundary node drags use
-  const onAnnotationsChanged = ({ added, removedIds }: AnnotationsChange) => {
+  const onAnnotationsChanged = ({ added, removed }: AnnotationsChange) => {
     intoDoc(() => {
       for (const annotation of added) {
         annotations.set(annotation.id, annotationToDoc(annotation));
       }
-      for (const annotationId of removedIds) annotations.delete(annotationId);
+      for (const annotation of removed) annotations.delete(annotation.id);
     });
   };
 
@@ -553,7 +465,7 @@ export const bindGraphToDoc = (
 
   return {
     // after the seed, so undoing on a freshly opened product cannot empty the document
-    history: createDocHistory(doc),
+    history: createDocHistory(doc, [nodes, edges, annotations]),
     unbind,
     applyPeerDrag,
     endPeerDrag,

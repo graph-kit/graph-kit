@@ -57,7 +57,7 @@ describe('annotations', () => {
     ]);
     expect(annotation.fillColor).toBe('#ff0000');
     expect(annotation.brushWeight).toBe(9);
-    expect(changes).toEqual([{ added: [annotation], removedIds: [] }]);
+    expect(changes).toEqual([{ added: [annotation], removed: [] }]);
   });
 
   it('leaves nothing behind for a laser stroke', () => {
@@ -82,7 +82,7 @@ describe('annotations', () => {
     annotations.endStroke();
 
     expect(annotations.annotations()).toEqual([untouched]);
-    expect(changes).toEqual([{ added: [], removedIds: [erased.id] }]);
+    expect(changes).toEqual([{ added: [], removed: [erased] }]);
   });
 
   it('reports only what actually changed when the whole set is written', () => {
@@ -94,7 +94,7 @@ describe('annotations', () => {
 
     annotations.setAll([kept, arriving]);
 
-    expect(changes).toEqual([{ added: [arriving], removedIds: [] }]);
+    expect(changes).toEqual([{ added: [arriving], removed: [] }]);
     expect(annotations.annotations()).toEqual([kept, arriving]);
   });
 

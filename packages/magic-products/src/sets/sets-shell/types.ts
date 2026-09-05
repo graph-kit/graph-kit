@@ -1,4 +1,4 @@
-import { ComputedRef } from 'vue';
+import { ComputedRef, Ref } from 'vue';
 
 import { SetFocusControls } from '../composables/useSetFocus.ts';
 import { Queries } from '../queries.ts';
@@ -15,4 +15,6 @@ export type SetsState = {
   theme: SetsTheme;
   sections: ComputedRef<Section[]>;
   focus: SetFocusControls;
+  /** true while the room has this user on the read tier, see `MultiplayerControls.tiers` */
+  isReadonly: Readonly<Ref<boolean>>;
 };

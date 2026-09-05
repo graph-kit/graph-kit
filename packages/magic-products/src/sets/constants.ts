@@ -1,4 +1,4 @@
-import colors from '@core/utils/colors';
+import colors, { type Color } from '@core/utils/colors';
 
 import type { Section } from './types.ts';
 
@@ -22,7 +22,7 @@ export const ANNOTATION_HANDLER_PRIORITY = {
 } as const;
 
 // the palette a query's color is assigned from, in creation order
-export const QUERY_COLORS = [
+export const QUERY_COLORS: Color[] = [
   colors.RED_500,
   colors.BLUE_500,
   colors.EMERALD_500,

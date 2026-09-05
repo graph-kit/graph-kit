@@ -24,6 +24,7 @@
     "@canvas/surface": "workspace:*",
     "@core/annotations": "workspace:*",
     "@core/components": "workspace:*",
+    "@core/events": "workspace:*",
     "@core/themes": "workspace:*",
     "@core/utils": "workspace:*",
     "@cortex-js/compute-engine": "^0.102.0",
@@ -32,13 +33,16 @@
     "@graph/primitives": "workspace:*",
     "@graph/theme-presets": "workspace:*",
     "@magic/shared": "workspace:*",
+    "@multiplayer/protocol": "workspace:*",
     "@mdi/js": "^7.4.47",
     "@vueuse/core": "catalog:",
     "fraction.js": "^5.3.4",
-    "tinycolor2": "catalog:"
+    "tinycolor2": "catalog:",
+    "yjs": "^13.6.32"
   },
   "devDependencies": {
     "@types/tinycolor2": "catalog:",
+    "lz-string": "^1.5.0",
     "ts-essentials": "^10.2.0"
   }
 }

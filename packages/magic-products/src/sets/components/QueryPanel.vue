@@ -4,7 +4,7 @@
   import VStack from '@magic/shared/VStack';
   import Well from '@magic/shared/Well';
   import { mdiPlus } from '@mdi/js';
-  import { useActiveElement } from '@vueuse/core';
+  import { useActiveElement, useMounted } from '@vueuse/core';
 
   import { computed } from 'vue';
 
@@ -12,6 +12,8 @@
   import type { QueryId } from '../types.ts';
   import InsertSetOpButtons from './InsertSetOpButtons.vue';
   import Query from './Query.vue';
+
+  const mounted = useMounted();
 
   const MAX_NUMBER_OF_QUERIES = 5;
 
@@ -41,7 +43,7 @@
 </script>
 
 <template>
-  <VStack>
+  <VStack v-if="mounted">
     <!-- the ops extend the field they act on, so pressing them must never pull focus out of it -->
     <Well
       v-if="focusedQueryId"

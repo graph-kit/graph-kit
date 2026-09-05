@@ -476,6 +476,9 @@ importers:
       '@core/components':
         specifier: workspace:*
         version: link:../core-components
+      '@core/events':
+        specifier: workspace:*
+        version: link:../core-events
       '@core/themes':
         specifier: workspace:*
         version: link:../core-themes

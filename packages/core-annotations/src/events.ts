@@ -5,7 +5,11 @@ import type { Annotation, InFlightStroke } from './types.ts';
 
 export type AnnotationsChange = {
   added: Annotation[];
-  removedIds: string[];
+  /**
+   * the annotations themselves rather than their ids, so a change is enough to undo on
+   * its own: a stroke is only ever added or removed, never edited
+   */
+  removed: Annotation[];
 };
 
 export type AnnotationsEventMap = {

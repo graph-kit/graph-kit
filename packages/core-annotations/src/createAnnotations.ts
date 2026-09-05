@@ -60,9 +60,20 @@ export const createAnnotations = ({
   const isErasing = () => mode() === 'erasing';
   const isLaserPointing = () => mode() === 'laser';
 
-  const emitChange = (added: Annotation[], removedIds: string[]) => {
-    if (added.length === 0 && removedIds.length === 0) return;
-    events.emit('onAnnotationsChanged', { added, removedIds });
+  const emitChange = (added: Annotation[], removed: Annotation[]) => {
+    if (added.length === 0 && removed.length === 0) return;
+    events.emit('onAnnotationsChanged', { added, removed });
+  };
+
+  const takeAll = (ids: Iterable<string>) => {
+    const taken: Annotation[] = [];
+    for (const id of ids) {
+      const annotation = annotationsById.get(id);
+      if (!annotation) continue;
+      annotationsById.delete(id);
+      taken.push(annotation);
+    }
+    return taken;
   };
 
   // an annotation never changes once committed, so an id already held is already identical
@@ -74,18 +85,12 @@ export const createAnnotations = ({
     emitChange(added, []);
   };
 
-  const remove = (ids: string[]) => {
-    const removedIds: string[] = [];
-    for (const id of ids) {
-      if (annotationsById.delete(id)) removedIds.push(id);
-    }
-    emitChange([], removedIds);
-  };
+  const remove = (ids: string[]) => emitChange([], takeAll(ids));
 
   const setAll = (next: Annotation[]) => {
     const nextIds = new Set(next.map(({ id }) => id));
-    const removedIds = [...annotationsById.keys()].filter(
-      (id) => !nextIds.has(id),
+    const removed = takeAll(
+      [...annotationsById.keys()].filter((id) => !nextIds.has(id)),
     );
     const added = next.filter(({ id }) => !annotationsById.has(id));
 
@@ -94,14 +99,10 @@ export const createAnnotations = ({
       annotationsById.set(annotation.id, annotation);
     }
 
-    emitChange(added, removedIds);
+    emitChange(added, removed);
   };
 
-  const clear = () => {
-    const removedIds = [...annotationsById.keys()];
-    annotationsById.clear();
-    emitChange([], removedIds);
-  };
+  const clear = () => emitChange([], takeAll([...annotationsById.keys()]));
 
   const markErased = (coords: Coordinate) => {
     const eraserBox = circle({

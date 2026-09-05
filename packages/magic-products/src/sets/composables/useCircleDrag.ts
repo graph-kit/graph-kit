@@ -1,42 +1,41 @@
 import type { CanvasSurface } from '@canvas/surface/types';
 import { CURSOR } from '@core/utils/cursor';
 
-import { type Ref, onBeforeUnmount } from 'vue';
+import { onBeforeUnmount } from 'vue';
 
 import { INPUT_HANDLER_ID } from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';
+import type { SetDefinitions } from '../setDefinitions.ts';
 import type { SetsTheme } from '../theme/useSetsTheme.ts';
-import type { SetDefinition } from '../types.ts';
+import type { SetDefinitionId } from '../types.ts';
 import { useDrag } from './useDrag.ts';
 
 const DRAG_THEME_LAYER_ID = 'sets/useCircleDrag';
 
 type CircleDragProps = {
   surface: CanvasSurface;
-  definitions: Ref<SetDefinition[]>;
+  sets: SetDefinitions;
   theme: SetsTheme;
 };
 
-export const useCircleDrag = ({
-  surface,
-  definitions,
-  theme,
-}: CircleDragProps) => {
-  const drag = useDrag(
+export const useCircleDrag = ({ surface, sets, theme }: CircleDragProps) => {
+  const drag = useDrag<SetDefinitionId>({
     surface,
-    INPUT_HANDLER_ID.circleDrag,
-    ({ topElement }) => {
+    handlerId: INPUT_HANDLER_ID.circleDrag,
+
+    // the id rather than the definition, so a set removed mid gesture leaves the drag
+    // moving nothing instead of mutating an orphan
+    getItem: ({ topElement }) => {
       // the resize band sits above the circle, so landing on the edge is not a drag
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'body') return;
-      return definitions.value.find(({ id }) => id === identity.setId);
+      if (!sets.hasDefinition(identity.setId)) return;
+      return identity.setId;
     },
-    (definition, { diff }) => {
-      const { at } = definition.display;
-      at.x += diff.x;
-      at.y += diff.y;
-    },
-  );
+
+    onMove: (setId, { diff }) => sets.moveDefinition(setId, diff),
+    onDrop: (setId) => sets.commitDisplay([setId]),
+  });
 
   const cursorLayer = theme.createLayer(DRAG_THEME_LAYER_ID);
   cursorLayer.set('canvas.cursor', () =>

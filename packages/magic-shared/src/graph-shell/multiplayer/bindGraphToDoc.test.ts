@@ -460,14 +460,14 @@ describe(bindGraphToDoc, () => {
     };
     author.annotationEvents.emit('onAnnotationsChanged', {
       added: [stroke],
-      removedIds: [],
+      removed: [],
     } as never);
     sync(author.doc, peer.doc);
     expect(peer.annotationsOf().map(({ id }) => id)).toEqual(['stroke-1']);
 
     author.annotationEvents.emit('onAnnotationsChanged', {
       added: [],
-      removedIds: ['stroke-1'],
+      removed: [stroke],
     } as never);
     sync(author.doc, peer.doc);
     expect(peer.annotationsOf()).toEqual([]);

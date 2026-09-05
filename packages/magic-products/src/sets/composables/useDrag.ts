@@ -8,28 +8,44 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 type ActiveDrag<Item> = {
   startingCoords: Coordinate;
   item: Item;
+  /** whether the pointer has actually travelled since the press */
+  moved: boolean;
 };
 
-export const useDrag = <Item>(
-  surface: CanvasSurface,
+type DragOptions<Item> = {
+  surface: CanvasSurface;
   /** what this drag is called by whatever has to take the pointer ahead of it */
-  handlerId: string,
+  handlerId: string;
   /** what the press landed on, or undefined for a press this drag ignores */
-  getItem: (event: ElementMouseEvent) => Item | undefined,
+  getItem: (event: ElementMouseEvent) => Item | undefined;
   /** `at` is where the cursor is now, `diff` how far it moved since the last frame */
-  setItemCoords: (
-    item: Item,
-    cursor: { at: Coordinate; diff: Coordinate },
-  ) => void,
-) => {
+  onMove: (item: Item, cursor: { at: Coordinate; diff: Coordinate }) => void;
+  /**
+   * the gesture settled. skipped for a press that moved nothing, so a click is never
+   * reported as a change to whatever is listening for one
+   */
+  onDrop: (item: Item) => void;
+};
+
+export const useDrag = <Item>({
+  surface,
+  handlerId,
+  getItem,
+  onMove,
+  onDrop,
+}: DragOptions<Item>) => {
   const activeDrag = ref<ActiveDrag<Item>>();
 
   const beginDrag = (elementEvent: ElementMouseEvent) => {
     if (elementEvent.event.button !== MOUSE_BUTTONS.left) return;
     const item = getItem(elementEvent);
-    if (!item) return;
+    if (item === undefined) return;
     // the press carries its own position, so a drag never depends on a mousemove preceding it
-    activeDrag.value = { item, startingCoords: elementEvent.coords };
+    activeDrag.value = {
+      item,
+      startingCoords: elementEvent.coords,
+      moved: false,
+    };
   };
 
   const drag = (event: MouseEvent) => {
@@ -39,12 +55,15 @@ export const useDrag = <Item>(
     const at = surface.toWorldCoordinates(event);
     const diff = { x: at.x - startingCoords.x, y: at.y - startingCoords.y };
 
-    setItemCoords(item, { at, diff });
+    onMove(item, { at, diff });
     activeDrag.value.startingCoords = at;
+    activeDrag.value.moved = true;
   };
 
   const drop = () => {
+    const settled = activeDrag.value;
     activeDrag.value = undefined;
+    if (settled?.moved) onDrop(settled.item);
   };
 
   surface.events.elements.handle('onMouseDown', beginDrag, handlerId);

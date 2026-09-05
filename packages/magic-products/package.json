@@ -24,6 +24,7 @@
     "@canvas/surface": "workspace:*",
     "@core/annotations": "workspace:*",
     "@core/components": "workspace:*",
+    "@core/events": "workspace:*",
     "@core/themes": "workspace:*",
     "@core/utils": "workspace:*",
     "@cortex-js/compute-engine": "^0.102.0",

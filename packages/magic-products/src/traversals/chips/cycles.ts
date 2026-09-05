@@ -31,9 +31,9 @@ export const cyclesChip = (graph: Graph): LensChipDefinition => {
   });
 
   return {
-    name: {
-      headline: 'Cycles',
-      stat: () => cycleCount.value,
+    label: {
+      term: 'Cycles',
+      value: () => cycleCount.value,
     },
     tooltipLabel: () => {
       if (cycleCount.value === 0) {

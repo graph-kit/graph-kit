@@ -87,9 +87,9 @@
             ...balanceFactorTheme,
           },
           tooltipLabel: definitions.balanceFactor,
-          name: {
-            headline: 'Root Balance Factor',
-            stat: () => getBalanceFactor(root()),
+          label: {
+            term: 'Root Balance Factor',
+            value: () => getBalanceFactor(root()),
           },
           disabled: needsRoot,
         },
@@ -99,9 +99,9 @@
             ...treeHeightTheme,
           },
           tooltipLabel: definitions.treeHeight,
-          name: {
-            headline: 'Root Height',
-            stat: () => getTreeHeight(root()),
+          label: {
+            term: 'Root Height',
+            value: () => getTreeHeight(root()),
           },
           disabled: needsRoot,
         },

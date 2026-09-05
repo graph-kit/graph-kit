@@ -44,9 +44,9 @@ export const connectedChip = (graph: Graph): LensChipDefinition => {
   const componentCount = computed(() => components.value.value.length);
 
   return {
-    name: {
-      headline: 'Connected',
-      stat: () => (mstConnected.value ? 'Yes' : 'No'),
+    label: {
+      term: 'Connected',
+      value: () => (mstConnected.value ? 'Yes' : 'No'),
     },
     tooltipLabel: () =>
       mstConnected.value

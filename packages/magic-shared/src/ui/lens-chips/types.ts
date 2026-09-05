@@ -2,16 +2,19 @@ import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 
 import { DisabledLens, Lens } from '../../lens/types.ts';
 
-/** the split form renders as `headline: stat`, with the stat replaced by `N/A` while the chip is disabled */
-export type LensChipName =
+/** the split form renders as `term: value`, with the value replaced by `N/A` while the chip is disabled */
+export type LensChipLabel =
   | MaybeGetter<string>
   | {
-      headline: MaybeGetter<string>;
-      stat: MaybeGetter<string | number>;
+      /** what the chip measures, such as `Total Cost` */
+      term: MaybeGetter<string>;
+      /** the current reading of the term, such as `42` */
+      value: MaybeGetter<string | number>;
     };
 
 export type LensChipDefinition = {
-  name: LensChipName;
+  /** the text the chip displays */
+  label: LensChipLabel;
   lens: Lens;
   tooltipLabel?: MaybeGetter<string>;
   /** present disables the chip, both fields included, so `{}` disables with no explanation */
@@ -27,9 +30,9 @@ export const lensFor = (chip: LensChipDefinition) => {
   return disabled ? disabled.lens : chip.lens;
 };
 
-export const chipName = (chip: LensChipDefinition) => {
-  const { name } = chip;
-  if (typeof name !== 'object') return getValue(name);
-  const stat = disabledState(chip) ? 'N/A' : getValue(name.stat);
-  return `${getValue(name.headline)}: ${stat}`;
+export const chipLabel = (chip: LensChipDefinition) => {
+  const { label } = chip;
+  if (typeof label !== 'object') return getValue(label);
+  const value = disabledState(chip) ? 'N/A' : getValue(label.value);
+  return `${getValue(label.term)}: ${value}`;
 };

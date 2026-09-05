@@ -3,7 +3,7 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 export const adjacencyListChip = (): LensChipDefinition => {
   return {
-    name: 'Adjacency List',
+    label: 'Adjacency List',
     tooltipLabel: 'The neighbors each node points to.',
 
     lens: {

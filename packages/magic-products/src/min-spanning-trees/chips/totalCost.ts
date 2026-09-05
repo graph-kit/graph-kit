@@ -42,9 +42,9 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
       : 'The total cost if you sum up all the edges making up the minimum spanning forest, one tree per component.';
 
   return {
-    name: {
-      headline: 'Total Cost',
-      stat: () => displayCost.value.primary,
+    label: {
+      term: 'Total Cost',
+      value: () => displayCost.value.primary,
     },
     tooltipLabel: costExplanation,
     lens: {

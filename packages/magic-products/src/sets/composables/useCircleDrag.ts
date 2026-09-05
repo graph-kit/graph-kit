@@ -31,7 +31,6 @@ export const useCircleDrag = ({ surface, sets, theme }: CircleDragProps) => {
     },
 
     onMove: (setId, { diff }) => sets.moveDefinition(setId, diff),
-    onDrop: (setId) => sets.commitDisplay([setId]),
   });
 
   const cursorLayer = theme.createLayer(DRAG_THEME_LAYER_ID);

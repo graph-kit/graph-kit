@@ -63,10 +63,7 @@ export type Queries = {
   addQuery: () => Query;
   /** Does nothing when no query carries the id. */
   removeQuery: (queryId: QueryId) => void;
-  /**
-   * Makes queries exactly these, in order. An empty list still leaves one blank query,
-   * since the panel is written around always having a field to type into.
-   */
+  /** Makes queries exactly these, in order. */
   setAll: (queries: EncodedQuery[]) => void;
 };
 

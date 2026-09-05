@@ -31,8 +31,6 @@ export const useCircleResize = ({ surface, sets }: CircleResizeProps) => {
         Math.hypot(at.x - coords.x, at.y - coords.y),
       );
     },
-
-    onDrop: (setId) => sets.commitDisplay([setId]),
   });
 
   return {

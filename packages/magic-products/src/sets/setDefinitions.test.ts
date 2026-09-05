@@ -158,15 +158,15 @@ describe(createSetDefinitions, () => {
       ]);
     });
 
-    it('commits the display of a set that survived the write, which moved it', () => {
+    it('reports the display of a set that survived the write, which moved it', () => {
       const sets = createSetDefinitions();
       sets.setAll([definitionOf('kept', 'A')]);
-      const committed = vi.fn();
-      sets.events.subscribe('onDisplayCommitted', committed);
+      const displayChanged = vi.fn();
+      sets.events.subscribe('onDisplayChanged', displayChanged);
 
       sets.setAll([definitionOf('kept', 'A', { at: { x: 40, y: 40 } })]);
 
-      expect(committed).toHaveBeenCalledWith(['kept']);
+      expect(displayChanged).toHaveBeenCalledWith(['kept']);
     });
   });
 
@@ -174,16 +174,15 @@ describe(createSetDefinitions, () => {
     it('leaves a gesture against a removed set doing nothing', () => {
       const sets = filledTo(1);
       const [only] = sets.definitions.value;
-      const committed = vi.fn();
-      sets.events.subscribe('onDisplayCommitted', committed);
+      const displayChanged = vi.fn();
+      sets.events.subscribe('onDisplayChanged', displayChanged);
       sets.removeDefinition(only.id);
 
       sets.moveDefinition(only.id, { x: 10, y: 10 });
       sets.placeDefinition(only.id, { x: 10, y: 10 });
       sets.resizeDefinition(only.id, 100);
-      sets.commitDisplay([only.id]);
 
-      expect(committed).not.toHaveBeenCalled();
+      expect(displayChanged).not.toHaveBeenCalled();
     });
 
     it('clamps a resize the same way a decode is clamped', () => {
@@ -206,15 +205,18 @@ describe(createSetDefinitions, () => {
       expect(only.display.at).toEqual({ x: 100, y: 100 });
     });
 
-    it('reports the settled gesture once, and only for sets it still holds', () => {
-      const sets = filledTo(2);
-      const [first, second] = sets.definitions.value;
-      const committed = vi.fn();
-      sets.events.subscribe('onDisplayCommitted', committed);
+    it('reports every frame of a gesture, since settling is not the store to know', () => {
+      const sets = filledTo(1);
+      const [only] = sets.definitions.value;
+      const displayChanged = vi.fn();
+      sets.events.subscribe('onDisplayChanged', displayChanged);
 
-      sets.commitDisplay([first.id, 'not-a-set', second.id]);
+      sets.moveDefinition(only.id, { x: 5, y: 0 });
+      sets.moveDefinition(only.id, { x: 5, y: 0 });
+      sets.resizeDefinition(only.id, 100);
 
-      expect(committed).toHaveBeenCalledExactlyOnceWith([first.id, second.id]);
+      expect(displayChanged).toHaveBeenCalledTimes(3);
+      expect(displayChanged).toHaveBeenLastCalledWith([only.id]);
     });
   });
 });

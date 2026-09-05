@@ -12,18 +12,14 @@ export type DefinitionsChange = {
 export type SetDefinitionsEventMap = {
   /** triggered when a set is created or removed */
   onDefinitionsChanged: (change: Readonly<DefinitionsChange>) => void;
-  /**
-   * a gesture over a circle settled. the boundary history records at and a room writes
-   * at, the same one `onNodePositionsCommitted` draws for a graph. moving and resizing
-   * both land here, since both are the set's display changing
-   */
-  onDisplayCommitted: (setIds: readonly SetDefinitionId[]) => void;
+  /** a set moved or resized */
+  onDisplayChanged: (setIds: readonly SetDefinitionId[]) => void;
 };
 
 export const createSetDefinitionsEventRegistry =
   (): EventMapToEventRegistry<SetDefinitionsEventMap> => ({
     onDefinitionsChanged: new Set(),
-    onDisplayCommitted: new Set(),
+    onDisplayChanged: new Set(),
   });
 
 export type QueriesEventMap = {

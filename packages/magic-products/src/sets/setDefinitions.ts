@@ -48,8 +48,6 @@ export type SetDefinitions = {
   resizeDefinition: (id: SetDefinitionId, radius: number) => void;
   /** puts a set exactly here, which is what a peer's in flight drag does */
   placeDefinition: (id: SetDefinitionId, at: Coordinate) => void;
-  /** the gesture settled, see {@link SetDefinitionsEventMap.onDisplayCommitted} */
-  commitDisplay: (setIds: SetDefinitionId[]) => void;
 };
 
 const RESERVED = new Set<SetLabel>(RESERVED_LABELS);
@@ -182,12 +180,12 @@ export const createSetDefinitions = (): SetDefinitions => {
         events.emit('onDefinitionsChanged', { added, removedIds });
       }
 
-      // a set that survived the write is very likely somewhere else now, and no other
-      // event says so
+      // a set that survived the write is very likely somewhere else now, and the diff
+      // above says nothing about that
       const retained = admitted
         .filter(({ id }) => previousIds.has(id))
         .map(({ id }) => id);
-      if (retained.length > 0) events.emit('onDisplayCommitted', retained);
+      if (retained.length > 0) events.emit('onDisplayChanged', retained);
     },
 
     moveDefinition: (id, by) => {
@@ -195,12 +193,14 @@ export const createSetDefinitions = (): SetDefinitions => {
       if (!display) return;
       display.at.x += by.x;
       display.at.y += by.y;
+      events.emit('onDisplayChanged', [id]);
     },
 
     resizeDefinition: (id, radius) => {
       const definition = find(id);
       if (!definition) return;
       definition.display.radius = clampRadius(radius);
+      events.emit('onDisplayChanged', [id]);
     },
 
     placeDefinition: (id, at) => {
@@ -208,12 +208,7 @@ export const createSetDefinitions = (): SetDefinitions => {
       if (!display) return;
       display.at.x = at.x;
       display.at.y = at.y;
-    },
-
-    commitDisplay: (setIds) => {
-      const committed = setIds.filter((id) => !!find(id));
-      if (committed.length === 0) return;
-      events.emit('onDisplayCommitted', committed);
+      events.emit('onDisplayChanged', [id]);
     },
   };
 };

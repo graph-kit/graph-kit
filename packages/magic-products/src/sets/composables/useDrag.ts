@@ -8,8 +8,11 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 type ActiveDrag<Item> = {
   startingCoords: Coordinate;
   item: Item;
+<<<<<<< Updated upstream
   /** true if pointer travelled since the press */
   moved: boolean;
+=======
+>>>>>>> Stashed changes
 };
 
 type DragOptions<Item> = {
@@ -20,8 +23,11 @@ type DragOptions<Item> = {
   getItem: (event: ElementMouseEvent) => Item | undefined;
   /** `at` is where the cursor is now, `diff` how far it moved since the last frame */
   onMove: (item: Item, cursor: { at: Coordinate; diff: Coordinate }) => void;
+<<<<<<< Updated upstream
   /** the gesture settled. skipped for a press that moved nothing */
   onDrop: (item: Item) => void;
+=======
+>>>>>>> Stashed changes
 };
 
 export const useDrag = <Item>({
@@ -29,7 +35,6 @@ export const useDrag = <Item>({
   handlerId,
   getItem,
   onMove,
-  onDrop,
 }: DragOptions<Item>) => {
   const activeDrag = ref<ActiveDrag<Item>>();
 
@@ -38,11 +43,7 @@ export const useDrag = <Item>({
     const item = getItem(elementEvent);
     if (item === undefined) return;
     // the press carries its own position, so a drag never depends on a mousemove preceding it
-    activeDrag.value = {
-      item,
-      startingCoords: elementEvent.coords,
-      moved: false,
-    };
+    activeDrag.value = { item, startingCoords: elementEvent.coords };
   };
 
   const drag = (event: MouseEvent) => {
@@ -54,13 +55,10 @@ export const useDrag = <Item>({
 
     onMove(item, { at, diff });
     activeDrag.value.startingCoords = at;
-    activeDrag.value.moved = true;
   };
 
   const drop = () => {
-    const settled = activeDrag.value;
     activeDrag.value = undefined;
-    if (settled?.moved) onDrop(settled.item);
   };
 
   surface.events.elements.handle('onMouseDown', beginDrag, handlerId);

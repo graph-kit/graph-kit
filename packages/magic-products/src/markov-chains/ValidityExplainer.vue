@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import Button from '@magic/shared/Button';
   import HStack from '@magic/shared/HStack';
   import IconVue from '@magic/shared/Icon';
+  import ThemerButton from '@magic/shared/ThemerButton';
   import { ExplainerHighlight, ExplainerText } from '@magic/shared/explainer';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { mdiAutoFix } from '@mdi/js';
@@ -33,16 +33,15 @@
 <template>
   <HStack v-if="!chain.isValid.value">
     <ExplainerText :explainer="explainer" />
-    <Button
-      class="text-2xl px-2 py-0 leading-8"
+    <ThemerButton
       @click="autoFix.apply"
-      @mouseenter="autoFix.themer.activate"
-      @mouseleave="autoFix.themer.deactivate"
+      :themer="autoFix.themer"
+      class="text-2xl px-2 py-0 leading-8"
     >
       <template #start>
         <IconVue :path="mdiAutoFix" />
       </template>
       Auto Fix
-    </Button>
+    </ThemerButton>
   </HStack>
 </template>

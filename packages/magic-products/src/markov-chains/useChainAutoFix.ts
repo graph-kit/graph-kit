@@ -8,6 +8,10 @@ import { computed } from 'vue';
 
 import { MarkovChain } from './useMarkovChain.ts';
 
+// if total outgoing is 1, it's valid, no fix
+// if total outgoing is != 1:
+// if there is one edge, that edge fix is 1
+// if there is multiple edges, sum the total weight and normalize
 const getWeightAdjustments = (nodes: GNode[], edges: GEdge[]) => {
   const output = new Map<GEdge['id'], GEdge['weight']>();
 
@@ -35,15 +39,10 @@ const getWeightAdjustments = (nodes: GNode[], edges: GEdge[]) => {
   return output;
 };
 
-const REMOVE_PREVIEW_OPACITY = 0.35;
+const ADD_REMOVE_PREVIEW_OPACITY = 0.35;
 
 export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
   const weightAdjustments = computed(() => {
-    // if total outgoing is 1, it's valid, no suggestion
-    // if total outgoing is != 1:
-    // if there is one edge, that edge suggestion is 1
-    // if there is multiple edges, sum the total weight, and normalize
-    // if there are 0 due to no edges outgoing, let edge additions handle that
     return getWeightAdjustments(graph.nodes.value, graph.edges.value);
   });
 
@@ -61,7 +60,8 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
     { id: edgeId }: { id: string },
     underneath: () => string,
   ) => {
-    if (toBeRemoved(edgeId)) return fade(underneath(), REMOVE_PREVIEW_OPACITY);
+    if (toBeRemoved(edgeId))
+      return fade(underneath(), ADD_REMOVE_PREVIEW_OPACITY);
     return weightAdjustments.value.has(edgeId) ? colors.AMBER_500 : undefined;
   };
 
@@ -69,7 +69,8 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
     { id: edgeId }: { id: string },
     underneath: () => string,
   ) => {
-    if (toBeRemoved(edgeId)) return fade(underneath(), REMOVE_PREVIEW_OPACITY);
+    if (toBeRemoved(edgeId))
+      return fade(underneath(), ADD_REMOVE_PREVIEW_OPACITY);
   };
 
   const edgeTextColor = graph.theme.createThemer({
@@ -112,7 +113,7 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
     underneath: () => string,
   ) => {
     if (graph.phantom.isEdge(edgeId)) {
-      return fade(underneath(), REMOVE_PREVIEW_OPACITY);
+      return fade(underneath(), ADD_REMOVE_PREVIEW_OPACITY);
     }
   };
 

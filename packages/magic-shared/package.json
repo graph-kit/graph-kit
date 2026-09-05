@@ -12,6 +12,10 @@
       "types": "./dist/types/ui/disabled-lens-button/DisabledLensButton.vue.d.ts",
       "default": "./src/ui/disabled-lens-button/DisabledLensButton.vue"
     },
+    "./ThemerButton": {
+      "types": "./dist/types/ui/themer-button/ThemerButton.vue.d.ts",
+      "default": "./src/ui/themer-button/ThemerButton.vue"
+    },
     "./TextInput": {
       "types": "./dist/types/components/text-input/TextInput.vue.d.ts",
       "default": "./src/components/text-input/TextInput.vue"

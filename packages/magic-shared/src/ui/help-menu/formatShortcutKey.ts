@@ -6,7 +6,7 @@ const modifierSymbols = () => ({
   mod: isMac() ? '⌘ Command' : 'Ctrl',
   meta: isMac() ? '⌘ Command' : 'Meta',
   shift: '⇧ Shift',
-  alt: isMac() ? '⌥' : 'Alt',
+  alt: isMac() ? '⌥ Option' : 'Alt',
   ctrl: isMac() ? '⌃' : 'Ctrl',
 });
 

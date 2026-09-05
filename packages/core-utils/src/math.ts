@@ -201,3 +201,7 @@ export const average = (arr: number[]) => {
   if (arr.length === 0) return 0;
   return arr.reduce((acc, val) => acc + val, 0) / arr.length;
 };
+
+/** sum multiple fractions */
+export const sum = (fractions: Fraction[]) =>
+  fractions.reduce((acc, curr) => acc.add(curr), new Fraction(0));

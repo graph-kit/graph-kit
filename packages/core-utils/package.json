@@ -17,9 +17,11 @@
     "test": "vitest"
   },
   "dependencies": {
-    "fraction.js": "^5.3.4"
+    "fraction.js": "^5.3.4",
+    "tinycolor2": "catalog:"
   },
   "devDependencies": {
+    "@types/tinycolor2": "catalog:",
     "vitest": "^3.2.4",
     "ts-essentials": "^10.2.0",
     "vue": "catalog:"

@@ -1,7 +1,12 @@
+import tinycolor from 'tinycolor2';
+
 /**
  * alias used for all types that represent a color value
  */
 export type Color = string;
+
+export const fade = (color: Color, alpha: number) =>
+  tinycolor(color).setAlpha(alpha).toHex8String();
 
 /**
  * all tailwind v4 gray colors

@@ -1,8 +1,7 @@
-import colors, { Color } from '@core/utils/colors';
+import colors, { Color, fade } from '@core/utils/colors';
 import { PluginOptions } from '@graph/plugins-shared/plugins';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 import Fraction from 'fraction.js';
-import tinycolor from 'tinycolor2';
 
 import { NodeAnchor } from '../anchors/types.ts';
 import { INTERACTIVE_PLUGIN_ID } from './constants.ts';
@@ -17,9 +16,6 @@ const DROP_TARGET_BORDER_COLOR = colors.AMBER_500;
 const ACTIVE_DROP_TARGET_BORDER_COLOR = colors.RED_700;
 
 const DROP_PREVIEW_EDGE_ALPHA = 0.4;
-
-const fade = (color: Color, alpha: number) =>
-  tinycolor(color).setAlpha(alpha).toHex8String();
 
 export const createDropTargetPreview = (
   controls: PluginOptions<InteractivePlugin>['controls'],

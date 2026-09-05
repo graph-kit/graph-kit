@@ -3,6 +3,8 @@ import { canvasCursorOverride } from '@core/themes/index';
 import { ProductControls, Shell, useShell } from '@magic/shared/product';
 
 import QueryPanel from '../components/QueryPanel.vue';
+import { useCircleDrag } from '../composables/useCircleDrag.ts';
+import { useCircleResize } from '../composables/useCircleResize.ts';
 import { useSections } from '../composables/useSections.ts';
 import { useSetFocus } from '../composables/useSetFocus.ts';
 import { useSetsAnnotations } from '../composables/useSetsAnnotations.ts';
@@ -34,6 +36,9 @@ export const useSetsShell = (): {
   const queries = createQueries();
   const sections = useSections(sets.definitions);
   const focus = useSetFocus({ surface });
+
+  useCircleResize({ surface, sets });
+  useCircleDrag({ surface, sets, theme });
 
   // no transit, so no: multiplayer, local storage and link sharing
   const product: ProductControls = {

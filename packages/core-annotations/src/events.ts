@@ -5,7 +5,7 @@ import type { Annotation, InFlightStroke } from './types.ts';
 
 export type AnnotationsChange = {
   added: Annotation[];
-  removedIds: string[];
+  removed: Annotation[];
 };
 
 export type AnnotationsEventMap = {

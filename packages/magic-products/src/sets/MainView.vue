@@ -3,8 +3,6 @@
   import Shell from '@magic/shared/Shell';
   import { toast } from '@magic/shared/toast';
 
-  import { useCircleDrag } from './composables/useCircleDrag.ts';
-  import { useCircleResize } from './composables/useCircleResize.ts';
   import { useSetsRendering } from './composables/useSetsRendering.ts';
   import { INPUT_HANDLER_ID, MAX_SETS } from './constants.ts';
   import { useSetsShell } from './sets-shell/useSetsShell.ts';
@@ -13,14 +11,6 @@
     shell,
     setsState: { sets, sections, queryAnalysis, theme, queries, focus },
   } = useSetsShell();
-
-  useCircleResize({ surface: shell.surface, definitions: sets.definitions });
-
-  useCircleDrag({
-    surface: shell.surface,
-    definitions: sets.definitions,
-    theme,
-  });
 
   useSetsRendering({
     surface: shell.surface,
@@ -65,9 +55,9 @@
 
   const deleteFocusedSetDefinitions = () => {
     const focusedSetIds = sets.definitions.value
-      .map((s) => s.id)
+      .map((definition) => definition.id)
       .filter(focus.isFocused);
-    for (const setId of focusedSetIds) sets.removeDefinition(setId);
+    sets.remove(focusedSetIds);
   };
 
   shell.surface.events.elements.handle(

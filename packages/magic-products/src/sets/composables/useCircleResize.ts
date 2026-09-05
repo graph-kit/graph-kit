@@ -1,44 +1,37 @@
 import type { CanvasSurface } from '@canvas/surface/types';
 
-import type { Ref } from 'vue';
-
-import {
-  INPUT_HANDLER_ID,
-  MAX_CIRCLE_RADIUS,
-  MIN_CIRCLE_RADIUS,
-} from '../constants.ts';
+import { INPUT_HANDLER_ID } from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';
-import type { SetDefinition } from '../types.ts';
+import type { SetDefinitions } from '../setDefinitions.ts';
+import type { SetDefinitionId } from '../types.ts';
 import { useDrag } from './useDrag.ts';
 
 type CircleResizeProps = {
   surface: CanvasSurface;
-  definitions: Ref<SetDefinition[]>;
+  sets: SetDefinitions;
 };
 
-export const useCircleResize = ({
-  surface,
-  definitions,
-}: CircleResizeProps) => {
-  const { isDragging: isResizing } = useDrag(
+export const useCircleResize = ({ surface, sets }: CircleResizeProps) => {
+  const { isDragging: isResizing } = useDrag<SetDefinitionId>({
     surface,
-    INPUT_HANDLER_ID.circleResize,
-    ({ topElement }) => {
+    handlerId: INPUT_HANDLER_ID.circleResize,
+
+    getItem: ({ topElement }) => {
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'edge') return;
-      return definitions.value.find(({ id }) => id === identity.setId);
+      if (!sets.hasDefinition(identity.setId)) return;
+      return identity.setId;
     },
-    (definition, { at: coords }) => {
-      const { at } = definition.display;
-      const dx = at.x - coords.x;
-      const dy = at.y - coords.y;
-      const distanceFromCenterToCursor = Math.hypot(dx, dy);
-      definition.display.radius = Math.min(
-        Math.max(distanceFromCenterToCursor, MIN_CIRCLE_RADIUS),
-        MAX_CIRCLE_RADIUS,
+
+    onMove: (setId, { at: coords }) => {
+      if (!sets.hasDefinition(setId)) return;
+      const { at } = sets.getDefinition(setId).display;
+      sets.resizeDefinition(
+        setId,
+        Math.hypot(at.x - coords.x, at.y - coords.y),
       );
     },
-  );
+  });
 
   return {
     isResizing,

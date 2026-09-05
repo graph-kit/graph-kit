@@ -448,12 +448,12 @@ export const bindGraphToDoc = (
   };
 
   // the settled stroke rather than every point of it, the same boundary node drags use
-  const onAnnotationsChanged = ({ added, removedIds }: AnnotationsChange) => {
+  const onAnnotationsChanged = ({ added, removed }: AnnotationsChange) => {
     intoDoc(() => {
       for (const annotation of added) {
         annotations.set(annotation.id, annotationToDoc(annotation));
       }
-      for (const annotationId of removedIds) annotations.delete(annotationId);
+      for (const annotation of removed) annotations.delete(annotation.id);
     });
   };
 

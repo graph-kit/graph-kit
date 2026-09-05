@@ -57,7 +57,7 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
   });
 
   return {
-    name: 'Edge Frequency',
+    label: 'Edge Frequency',
     tooltipLabel:
       'How often each edge shows up across every possible minimum spanning tree',
     lens: {

@@ -3,7 +3,7 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 export const adjacencyMatrixChip = (): LensChipDefinition => {
   return {
-    name: 'Adjacency Matrix',
+    label: 'Adjacency Matrix',
     tooltipLabel:
       'The weight of the edge from each row node to each column node.',
 

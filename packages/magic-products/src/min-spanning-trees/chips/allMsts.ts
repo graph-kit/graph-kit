@@ -146,9 +146,9 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
   };
 
   return {
-    name: {
-      headline: 'Unique MSTs',
-      stat: () => msts.value.length,
+    label: {
+      term: 'Unique MSTs',
+      value: () => msts.value.length,
     },
     disabled: () => {
       if (graph.minimumSpanningTrees.all.value.skipped) {

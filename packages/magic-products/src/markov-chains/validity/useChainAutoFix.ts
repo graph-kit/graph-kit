@@ -7,10 +7,14 @@ import Fraction from 'fraction.js';
 import { computed } from 'vue';
 
 import { MarkovChain } from '../useMarkovChain.ts';
+import { Transition } from './useChainValidity.ts';
 
 // if there is one edge, that edge fix is 1
 // if there is multiple edges, sum the total weight and normalize
-const getWeightAdjustments = (nodes: GNode[], edges: GEdge[]) => {
+export const getWeightAdjustments = (
+  nodes: Pick<GNode, 'id'>[],
+  edges: Transition[],
+) => {
   const output = new Map<GEdge['id'], GEdge['weight']>();
 
   for (const node of nodes) {
@@ -91,20 +95,19 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
     },
   });
 
-  const previewAddedEdges = computed(() => {
-    return graph.nodes.value
+  const previewAddedEdges = () =>
+    graph.nodes.value
       .filter((n) => graph.helpers.nodes.getOutboundEdges(n.id).length === 0)
       .map((n) => ({
         id: generateId(),
         source: n.id,
         target: n.id,
       }));
-  });
 
   const previewSelLoops = {
     activate: () => {
       graph.phantom.addElements({
-        edges: previewAddedEdges.value.map((e) => ({ ...e, label: '1' })),
+        edges: previewAddedEdges().map((e) => ({ ...e, label: '1' })),
         nodes: [],
       });
     },
@@ -170,7 +173,7 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
       });
 
       graph.actions.addElements({
-        edges: previewAddedEdges.value,
+        edges: previewAddedEdges(),
         nodes: [],
       });
     },

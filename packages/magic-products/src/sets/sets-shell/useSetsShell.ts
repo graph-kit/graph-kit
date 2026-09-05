@@ -37,10 +37,6 @@ export const useSetsShell = (): {
   const sections = useSections(sets.definitions);
   const focus = useSetFocus({ surface });
 
-  /*
-    the gestures stand up here rather than in the view because what a room broadcasts as a
-    drag is driven by them, and that hub has to exist before the shell is built
-  */
   useCircleResize({ surface, sets });
   useCircleDrag({ surface, sets, theme });
 

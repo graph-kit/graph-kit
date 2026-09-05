@@ -23,7 +23,6 @@ export const useCircleResize = ({ surface, sets }: CircleResizeProps) => {
       return identity.setId;
     },
 
-    // the clamp lives on the mutator, so a decode cannot land somewhere a drag could not
     onMove: (setId, { at: coords }) => {
       if (!sets.hasDefinition(setId)) return;
       const { at } = sets.getDefinition(setId).display;

@@ -23,10 +23,7 @@ export const useCircleDrag = ({ surface, sets, theme }: CircleDragProps) => {
     surface,
     handlerId: INPUT_HANDLER_ID.circleDrag,
 
-    // the id rather than the definition, so a set removed mid gesture leaves the drag
-    // moving nothing instead of mutating an orphan
     getItem: ({ topElement }) => {
-      // the resize band sits above the circle, so landing on the edge is not a drag
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'body') return;
       if (!sets.hasDefinition(identity.setId)) return;

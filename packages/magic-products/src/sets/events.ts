@@ -2,14 +2,15 @@ import type { EventMapToEventRegistry } from '@core/events/types';
 
 import type { SetDefinition, SetDefinitionId } from './types.ts';
 
-/** what one add or remove did, never the whole list */
 export type DefinitionsChange = {
+  /** definitions added in this change */
   added: SetDefinition[];
+  /** definitions removed in this change */
   removedIds: SetDefinitionId[];
 };
 
 export type SetDefinitionsEventMap = {
-  /** a set arrived or left, whatever caused it: a double click, a decode, a peer */
+  /** triggered when a set is created or removed */
   onDefinitionsChanged: (change: Readonly<DefinitionsChange>) => void;
   /**
    * a gesture over a circle settled. the boundary history records at and a room writes

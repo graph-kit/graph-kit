@@ -8,7 +8,7 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 type ActiveDrag<Item> = {
   startingCoords: Coordinate;
   item: Item;
-  /** whether the pointer has actually travelled since the press */
+  /** true if pointer travelled since the press */
   moved: boolean;
 };
 
@@ -20,10 +20,7 @@ type DragOptions<Item> = {
   getItem: (event: ElementMouseEvent) => Item | undefined;
   /** `at` is where the cursor is now, `diff` how far it moved since the last frame */
   onMove: (item: Item, cursor: { at: Coordinate; diff: Coordinate }) => void;
-  /**
-   * the gesture settled. skipped for a press that moved nothing, so a click is never
-   * reported as a change to whatever is listening for one
-   */
+  /** the gesture settled. skipped for a press that moved nothing */
   onDrop: (item: Item) => void;
 };
 

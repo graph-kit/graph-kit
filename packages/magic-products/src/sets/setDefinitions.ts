@@ -28,7 +28,7 @@ export type SetDefinitions = {
   events: ReadonlyEventHub<SetDefinitionsEventMap>;
 
   getDefinition: (id: SetDefinitionId) => SetDefinition;
-  /** false for an id no set carries, which is how a gesture survives a peer's removal */
+  /** false for an id no set carries */
   hasDefinition: (id: SetDefinitionId) => boolean;
 
   /** the authoring path: takes a point and names the set itself */

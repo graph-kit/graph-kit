@@ -33,10 +33,12 @@
     "@graph/primitives": "workspace:*",
     "@graph/theme-presets": "workspace:*",
     "@magic/shared": "workspace:*",
+    "@multiplayer/protocol": "workspace:*",
     "@mdi/js": "^7.4.47",
     "@vueuse/core": "catalog:",
     "fraction.js": "^5.3.4",
-    "tinycolor2": "catalog:"
+    "tinycolor2": "catalog:",
+    "yjs": "^13.6.32"
   },
   "devDependencies": {
     "@types/tinycolor2": "catalog:",

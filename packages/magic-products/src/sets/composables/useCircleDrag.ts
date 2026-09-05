@@ -18,6 +18,8 @@ type CircleDragProps = {
   sets: SetDefinitions;
   gestures: SetGestures;
   theme: SetsTheme;
+  /** true while the room has this user on the read tier */
+  isReadonly: () => boolean;
 };
 
 export const useCircleDrag = ({
@@ -25,12 +27,14 @@ export const useCircleDrag = ({
   sets,
   gestures,
   theme,
+  isReadonly,
 }: CircleDragProps) => {
   const drag = useDrag<SetDefinitionId>({
     surface,
     handlerId: INPUT_HANDLER_ID.circleDrag,
 
     getItem: ({ topElement }) => {
+      if (isReadonly()) return;
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'body') return;
       if (!sets.hasDefinition(identity.setId)) return;

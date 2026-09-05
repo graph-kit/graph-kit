@@ -9,7 +9,15 @@
 
   const {
     shell,
-    setsState: { sets, sections, queryAnalysis, theme, queries, focus },
+    setsState: {
+      sets,
+      sections,
+      queryAnalysis,
+      theme,
+      queries,
+      focus,
+      isReadonly,
+    },
   } = useSetsShell();
 
   useSetsRendering({
@@ -42,6 +50,7 @@
   };
 
   const createSetDefinition = ({ coords }: ElementMouseEvent) => {
+    if (isReadonly.value) return;
     const definition = sets.addDefinition(coords);
 
     if (!definition) {
@@ -53,6 +62,7 @@
   };
 
   const deleteFocusedSetDefinitions = () => {
+    if (isReadonly.value) return;
     const focusedSetIds = sets.definitions.value
       .map((definition) => definition.id)
       .filter(focus.isFocused);

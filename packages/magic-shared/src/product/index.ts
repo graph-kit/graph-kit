@@ -1,10 +1,15 @@
 // the shell, product agnostic
 export { useShell } from './useShell.ts';
 export type {
+  DocBindMode,
+  DocBinding,
+  DragEventMap,
   HistoryField,
+  MultiplayerControls,
   Shell,
   ProductControls,
   ShellOptions,
+  TierBehavior,
   TransitCompression,
   TransitField,
 } from './types.ts';

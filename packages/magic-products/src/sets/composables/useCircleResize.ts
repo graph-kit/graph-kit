@@ -11,18 +11,22 @@ type CircleResizeProps = {
   surface: CanvasSurface;
   sets: SetDefinitions;
   gestures: SetGestures;
+  /** true while the room has this user on the read tier */
+  isReadonly: () => boolean;
 };
 
 export const useCircleResize = ({
   surface,
   sets,
   gestures,
+  isReadonly,
 }: CircleResizeProps) => {
   const { isDragging: isResizing } = useDrag<SetDefinitionId>({
     surface,
     handlerId: INPUT_HANDLER_ID.circleResize,
 
     getItem: ({ topElement }) => {
+      if (isReadonly()) return;
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'edge') return;
       if (!sets.hasDefinition(identity.setId)) return;

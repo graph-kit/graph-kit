@@ -2,6 +2,8 @@ import { useCanvasSurface } from '@canvas/surface/index';
 import { canvasCursorOverride } from '@core/themes/index';
 import { ProductControls, Shell, useShell } from '@magic/shared/product';
 
+import { computed, ref } from 'vue';
+
 import QueryPanel from '../components/QueryPanel.vue';
 import { useCircleDrag } from '../composables/useCircleDrag.ts';
 import { useCircleResize } from '../composables/useCircleResize.ts';
@@ -16,6 +18,8 @@ import { useCanvasAppearance } from '../theme/useCanvasAppearance.ts';
 import { useSetsTheme } from '../theme/useSetsTheme.ts';
 import { provideSetsState } from './context.ts';
 import { createSetsHistory } from './history.ts';
+import { bindSetsToDoc } from './multiplayer/bindSetsToDoc.ts';
+import { trackDraggedSets } from './multiplayer/trackDraggedSets.ts';
 import { SETS_ONBOARDING } from './onboarding.ts';
 import { setsTransitCompression } from './transit-compression.ts';
 import { createSetsTransit } from './transit.ts';
@@ -42,8 +46,15 @@ export const useSetsShell = (): {
 
   const gestures = createSetGestures();
 
-  useCircleResize({ surface, sets, gestures });
-  useCircleDrag({ surface, sets, gestures, theme });
+  /*
+    the room's read tier. without it a viewer goes on editing locally while the server
+    turns their writes away, and their canvas quietly stops matching everyone else's
+  */
+  const readonly = ref(false);
+  const isReadonly = () => readonly.value;
+
+  useCircleResize({ surface, sets, gestures, isReadonly });
+  useCircleDrag({ surface, sets, gestures, theme, isReadonly });
 
   const transit = createSetsTransit({ sets, queries, annotations, surface });
 
@@ -55,12 +66,17 @@ export const useSetsShell = (): {
     isContent: ({ id }) => sets.hasDefinition(id),
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {
-      bind: () => {},
+      bind: (doc, mode) =>
+        bindSetsToDoc({ sets, annotations, gestures }, doc, mode),
+      drag: trackDraggedSets({ sets, gestures }),
       tiers: {
         host: {},
         admin: {},
         write: {},
-        read: {},
+        read: {
+          enter: () => (readonly.value = true),
+          exit: () => (readonly.value = false),
+        },
       },
     },
   };
@@ -100,6 +116,7 @@ export const useSetsShell = (): {
     theme,
     sections,
     focus,
+    isReadonly: computed(() => readonly.value),
   };
 
   useCanvasAppearance(surface, theme);

@@ -4,7 +4,7 @@ import { ProductManifest } from './types.ts';
 export const manifests = {
   sets: {
     id: 'sets',
-    multiplayer: false,
+    multiplayer: true,
     name: 'Set Theory',
     abbreviatedName: 'SET',
     navigation: {

@@ -20,8 +20,22 @@ export type MinimumSpanningTreesResult =
   /** the graph was larger than the plugin's `maxNodes`, so nothing was enumerated */
   | { skipped: true };
 
+/** a single MST of the graph, or a single minimum spanning forest when disconnected */
+export type SingleMst = {
+  /** the ids of the edges making up the tree */
+  edges: CoreEdge['id'][];
+  /** the total weight of those edges */
+  cost: Fraction;
+};
+
 export type MinimumSpanningTreesControls = {
+  /** every MST of the graph, unless the graph was too large to enumerate */
   all: () => MinimumSpanningTreesResult;
+  /**
+   * a single MST of the graph, or a single minimum spanning forest when
+   * disconnected
+   */
+  one: () => SingleMst;
 };
 
 export type MinimumSpanningTreesPlugin = GraphPlugin<{

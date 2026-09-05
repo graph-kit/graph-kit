@@ -3,7 +3,6 @@ import { displayNumber } from '@core/utils/math';
 import { CoreEdge } from '@graph/primitives/types';
 import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
-import Fraction from 'fraction.js';
 import tinycolor from 'tinycolor2';
 
 import { computed } from 'vue';
@@ -12,20 +11,10 @@ import MSTCost from '../MSTCost.vue';
 import { useMstConnected } from './connected.ts';
 
 export const totalCostChip = (graph: Graph): LensChipDefinition => {
-  const result = computed(() => graph.minimumSpanningTrees.all.value);
-  const msts = computed(() => {
-    const value = result.value;
-    return value.skipped ? [] : value.msts;
-  });
-  const totalMstCost = computed(() => {
-    const value = result.value;
-    return value.skipped ? new Fraction(0) : value.totalWeight;
-  });
+  const mst = computed(() => graph.minimumSpanningTrees.one.value);
 
   const colorMstEdge = (edge: CoreEdge, resolveUnderneath: () => Color) => {
-    const mst = msts.value.at(0);
-    if (!mst) return;
-    const inMst = mst.some((e) => e.id === edge.id);
+    const inMst = mst.value.edges.some((edgeId) => edgeId === edge.id);
     if (inMst) return;
     return tinycolor(resolveUnderneath()).setAlpha(0.25).toHex8String();
   };
@@ -43,7 +32,7 @@ export const totalCostChip = (graph: Graph): LensChipDefinition => {
     },
   });
 
-  const displayCost = computed(() => displayNumber(totalMstCost.value));
+  const displayCost = computed(() => displayNumber(mst.value.cost));
 
   const mstConnected = useMstConnected(graph);
 

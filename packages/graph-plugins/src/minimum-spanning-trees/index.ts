@@ -1,4 +1,4 @@
-import { getAllMsts } from '@graph/algorithms/minimum-spanning-trees';
+import { getAllMsts, kruskals } from '@graph/algorithms/minimum-spanning-trees';
 import { computed } from '@reactive/primitives/index';
 
 import {
@@ -32,6 +32,12 @@ export const minimumSpanningTrees =
       ...options,
     };
 
+    const weightedEdges = computed(() =>
+      controls
+        .edges()
+        .map((e) => ({ ...e, weight: controls.weights.get(e.id) })),
+    );
+
     return {
       name: 'minimumSpanningTrees',
       controls: {
@@ -40,14 +46,18 @@ export const minimumSpanningTrees =
           if (nodes.length > maxNodes) return skipped(nodes.length, maxNodes);
 
           return {
-            ...getAllMsts(
-              nodes,
-              controls
-                .edges()
-                .map((e) => ({ ...e, weight: controls.weights.get(e.id) })),
-            ),
+            ...getAllMsts(nodes, weightedEdges()),
             skipped: false,
           };
+        }),
+
+        one: computed(() => {
+          const { edges, totalWeight } = kruskals(
+            controls.nodes(),
+            weightedEdges(),
+          );
+
+          return { edges: edges.map((e) => e.id), cost: totalWeight };
         }),
       },
     };

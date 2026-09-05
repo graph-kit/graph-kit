@@ -20,7 +20,7 @@ type Rank = Map<string, number>;
  *
  * where V = number of vertices and E = number of edges.
  */
-export const kruskals = (nodes: Node[], edges: Edge[]) => {
+export const kruskals = (nodes: readonly Node[], edges: readonly Edge[]) => {
   const find = (parent: Parent, nodeId: string): string => {
     if (parent.get(nodeId) !== nodeId) {
       parent.set(nodeId, find(parent, parent.get(nodeId)!));

@@ -8,11 +8,6 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 type ActiveDrag<Item> = {
   startingCoords: Coordinate;
   item: Item;
-<<<<<<< Updated upstream
-  /** true if pointer travelled since the press */
-  moved: boolean;
-=======
->>>>>>> Stashed changes
 };
 
 type DragOptions<Item> = {
@@ -23,11 +18,6 @@ type DragOptions<Item> = {
   getItem: (event: ElementMouseEvent) => Item | undefined;
   /** `at` is where the cursor is now, `diff` how far it moved since the last frame */
   onMove: (item: Item, cursor: { at: Coordinate; diff: Coordinate }) => void;
-<<<<<<< Updated upstream
-  /** the gesture settled. skipped for a press that moved nothing */
-  onDrop: (item: Item) => void;
-=======
->>>>>>> Stashed changes
 };
 
 export const useDrag = <Item>({

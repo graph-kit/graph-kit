@@ -7,6 +7,14 @@ export type OnboardingItem = {
   display: string;
 };
 
+export type OnboardingId = 'graph' | 'sets';
+
+/** a card and the completion it is remembered under */
+export type Onboarding = {
+  id: OnboardingId;
+  items: OnboardingItem[];
+};
+
 /** everything measuring and painting a string both need to agree on */
 export type OnboardingFont = {
   fontSize: number;

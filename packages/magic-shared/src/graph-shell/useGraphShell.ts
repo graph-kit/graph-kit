@@ -63,7 +63,7 @@ export const useGraphShell = (
     helpMenu: graphShellHelpMenu(graph, options.helpMenu),
     lensChips: (shell) => options.lensChips?.(graph, shell),
     simulationButtons,
-    onboarding: flags.onboarding ? GRAPH_ONBOARDING : [],
+    onboarding: flags.onboarding ? GRAPH_ONBOARDING : undefined,
     onSetupCompleted: () => {
       if (graph.nodes.value.length > 0) shell.onboarding?.close();
     },

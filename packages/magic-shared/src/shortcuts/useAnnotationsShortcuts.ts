@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { Shell } from '../product/types.ts';
 import { ShortcutItem } from './useShortcuts.ts';
 
+export const TOGGLE_ANNOTATIONS_KEY = 'a';
+
 export const useAnnotationsShortcuts = (shell: Shell): ShortcutItem[] => {
   const annotations = shell.annotations;
   if (!annotations) return [];
@@ -13,8 +15,8 @@ export const useAnnotationsShortcuts = (shell: Shell): ShortcutItem[] => {
   return [
     {
       id: 'shell/annotations/toggle',
-      helpMenu: { category: 'Annotations', name: 'Toggle Annotating' },
-      key: 'a',
+      helpMenu: { category: 'Annotations', name: 'Toggle Annotations Mode' },
+      key: TOGGLE_ANNOTATIONS_KEY,
       callback: () => {
         if (isReadonly.value) return;
         annotations.toggle();

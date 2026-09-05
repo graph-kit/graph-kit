@@ -12,7 +12,7 @@ import { onboardingElements } from './elements.ts';
 import { hasOnboarded, markOnboarded } from './hasOnboarded.ts';
 import { onboardingLayout } from './layout.ts';
 import { onboardingPalette } from './palette.ts';
-import { OnboardingItem } from './types.ts';
+import { Onboarding } from './types.ts';
 
 export type OnboardingControls = {
   /** puts the card on what the canvas is showing, unless this browser already onboarded */
@@ -37,10 +37,12 @@ export const useOnboarding = (
   product: Pick<ProductControls, 'surface'>,
   flags: ShellFlags,
   appearance: AppearanceControls,
-  items: OnboardingItem[] = [],
+  onboarding?: Onboarding,
 ): OnboardingControls | undefined => {
   const { surface } = product;
-  if (!flags.onboarding || items.length === 0) return;
+  if (!flags.onboarding || !onboarding || onboarding.items.length === 0) return;
+
+  const { id, items } = onboarding;
 
   // nothing to paint until `open` builds the card
   let elements: () => CanvasElement[] = () => [];
@@ -58,12 +60,12 @@ export const useOnboarding = (
   };
 
   const close = () => {
-    markOnboarded();
+    markOnboarded(id);
     takeDown();
   };
 
   const open = () => {
-    if (hasOnboarded()) return;
+    if (hasOnboarded(id)) return;
 
     takeDown();
     active.value = true;

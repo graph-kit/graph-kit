@@ -25,10 +25,16 @@ export const useWorldCoordinates = (
 
   const screenCoordinates = ref<Coordinate>();
 
-  canvasEvents.subscribe(
-    'onMouseMove',
-    (ev) => (screenCoordinates.value = { x: ev.offsetX, y: ev.offsetY }),
-  );
+  const seedFrom = (ev: MouseEvent) => {
+    screenCoordinates.value = { x: ev.offsetX, y: ev.offsetY };
+  };
+
+  canvasEvents.subscribe('onMouseMove', seedFrom);
+  canvasEvents.subscribe('onMouseDown', seedFrom);
+  canvasEvents.subscribe('onClick', seedFrom);
+  canvasEvents.subscribe('onDblClick', seedFrom);
+  canvasEvents.subscribe('onContextMenu', seedFrom);
+  canvasEvents.subscribe('onWheel', seedFrom);
 
   const worldCoordinates = computed<Coordinate | undefined>(() =>
     screenCoordinates.value ? toWorld(screenCoordinates.value) : undefined,

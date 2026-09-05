@@ -1,18 +1,18 @@
 <script setup lang="ts">
-  import { getCenterPoint } from '@canvas/primitives/helpers';
+  import type { ElementMouseEvent } from '@canvas/surface/events/index';
   import Shell from '@magic/shared/Shell';
   import { toast } from '@magic/shared/toast';
 
   import { useCircleDrag } from './composables/useCircleDrag.ts';
   import { useCircleResize } from './composables/useCircleResize.ts';
   import { useSetsRendering } from './composables/useSetsRendering.ts';
-  import { MAX_SETS } from './constants.ts';
-  import { useSetsProduct } from './useSetsProduct.ts';
+  import { INPUT_HANDLER_ID, MAX_SETS } from './constants.ts';
+  import { useSetsShell } from './sets-shell/useSetsShell.ts';
 
   const {
     shell,
-    setsProductState: { sets, sections, queryAnalysis, theme, queries, focus },
-  } = useSetsProduct();
+    setsState: { sets, sections, queryAnalysis, theme, queries, focus },
+  } = useSetsShell();
 
   useCircleResize({ surface: shell.surface, definitions: sets.definitions });
 
@@ -51,14 +51,8 @@
     });
   };
 
-  const newSetAt = () => {
-    const cursorAt = shell.surface.cursorCoordinates.value;
-    if (cursorAt) return cursorAt;
-    return getCenterPoint(shell.surface.visibleWorldRect.value);
-  };
-
-  const createSetDefinition = () => {
-    const definition = sets.addDefinition(newSetAt());
+  const createSetDefinition = ({ coords }: ElementMouseEvent) => {
+    const definition = sets.addDefinition(coords);
 
     if (!definition) {
       sayCanvasIsFull();
@@ -66,7 +60,6 @@
     }
 
     focus.set(definition.id);
-    // the prompt was to make one of these
     shell.onboarding?.close();
   };
 
@@ -77,7 +70,11 @@
     for (const setId of focusedSetIds) sets.removeDefinition(setId);
   };
 
-  shell.surface.events.canvas.subscribe('onDblClick', createSetDefinition);
+  shell.surface.events.elements.handle(
+    'onDblClick',
+    createSetDefinition,
+    INPUT_HANDLER_ID.createSet,
+  );
 
   shell.shortcuts.add({
     id: 'delete-set',

@@ -1,48 +1,25 @@
 import { useCanvasSurface } from '@canvas/surface/index';
 import { canvasCursorOverride } from '@core/themes/index';
-import { nullThrows } from '@core/utils/assert';
 import { ProductControls, Shell, useShell } from '@magic/shared/product';
 
-import { ComputedRef, inject, provide } from 'vue';
-
-import QueryPanel from './components/QueryPanel.vue';
-import { useSections } from './composables/useSections.ts';
-import {
-  type SetFocusControls,
-  useSetFocus,
-} from './composables/useSetFocus.ts';
+import QueryPanel from '../components/QueryPanel.vue';
+import { useSections } from '../composables/useSections.ts';
+import { useSetFocus } from '../composables/useSetFocus.ts';
+import { useSetsAnnotations } from '../composables/useSetsAnnotations.ts';
+import { createQueries } from '../queries.ts';
+import { useQueryAnalysis } from '../queryAnalysis.ts';
+import { createSetDefinitions } from '../setDefinitions.ts';
+import { useCanvasAppearance } from '../theme/useCanvasAppearance.ts';
+import { useSetsTheme } from '../theme/useSetsTheme.ts';
+import { provideSetsState } from './context.ts';
 import { SETS_ONBOARDING } from './onboarding.ts';
-import { type Queries, createQueries } from './queries.ts';
-import { type QueryAnalysis, useQueryAnalysis } from './queryAnalysis.ts';
-import { type SetDefinitions, createSetDefinitions } from './setDefinitions.ts';
-import { useCanvasAppearance } from './theme/useCanvasAppearance.ts';
-import { type SetsTheme, useSetsTheme } from './theme/useSetsTheme.ts';
-import { Section } from './types.ts';
+import { SetsState } from './types.ts';
 
-export type SetsProductState = {
-  queries: Queries;
-  sets: SetDefinitions;
-  // everything the queries resolve to once read against the set space
-  queryAnalysis: QueryAnalysis;
-  theme: SetsTheme;
-  sections: ComputedRef<Section[]>;
-  focus: SetFocusControls;
-};
-
-const SETS_PROVIDE_KEY = 'sets-product';
-
-const provideSetsProductState = (state: SetsProductState) => {
-  provide(SETS_PROVIDE_KEY, state);
-};
-
-export const useProvidedSetsProductState = () => {
-  return nullThrows(
-    inject<SetsProductState>(SETS_PROVIDE_KEY),
-    'sets product state not provided!',
-  );
-};
-
-export const useSetsProduct = () => {
+/** adapts sets to the shell's controls interface, see {@link useShell} */
+export const useSetsShell = (): {
+  shell: Shell;
+  setsState: SetsState;
+} => {
   const theme = useSetsTheme();
 
   const surface = useCanvasSurface({
@@ -50,6 +27,8 @@ export const useSetsProduct = () => {
     canvasCursor: () =>
       canvasCursorOverride(theme._resolveToken('canvas.cursor')),
   });
+
+  const annotations = useSetsAnnotations({ surface, theme });
 
   const sets = createSetDefinitions();
   const queries = createQueries();
@@ -61,6 +40,7 @@ export const useSetsProduct = () => {
   // along with the local storage and link sharing that transit gates.
   const host: ProductControls = {
     surface,
+    annotations,
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {
       bind: () => {},
@@ -76,7 +56,6 @@ export const useSetsProduct = () => {
 
   const shell = useShell(host, {
     productId: 'sets',
-    // MainView subscribes this to onDblClick
     helpMenu: [
       {
         id: 'sets/create-set',
@@ -88,7 +67,7 @@ export const useSetsProduct = () => {
     onboarding: SETS_ONBOARDING,
   });
 
-  const setsProductState: SetsProductState = {
+  const setsState: SetsState = {
     queries,
     sets,
     queryAnalysis: useQueryAnalysis(queries, sets, sections),
@@ -99,7 +78,7 @@ export const useSetsProduct = () => {
 
   useCanvasAppearance(surface, theme);
 
-  provideSetsProductState(setsProductState);
+  provideSetsState(setsState);
 
   shell.componentSlots.add({
     id: 'sets/query-panel',
@@ -107,5 +86,5 @@ export const useSetsProduct = () => {
     position: 'bottom-middle',
   });
 
-  return { shell, setsProductState };
+  return { shell, setsState };
 };

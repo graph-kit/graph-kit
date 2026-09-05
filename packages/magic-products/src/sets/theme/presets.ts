@@ -24,6 +24,7 @@ export const light: SetsPreset = {
   'set.outline.focused.color': colors.BLUE_600,
   'set.label.color': colors.GRAY_900,
   'canvas.color': colors.GRAY_300,
+  'annotations.eraser.outline.color': colors.GRAY_900,
 };
 
 export const dark: SetsPreset = {
@@ -32,6 +33,7 @@ export const dark: SetsPreset = {
   'set.outline.focused.color': colors.RED_700,
   'set.label.color': colors.WHITE,
   'canvas.color': colors.GRAY_600,
+  'annotations.eraser.outline.color': colors.GRAY_100,
 };
 
 export const SETS_PRESETS = { light, dark } as const;

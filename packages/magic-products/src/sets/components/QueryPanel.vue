@@ -8,8 +8,8 @@
 
   import { computed } from 'vue';
 
+  import { useProvidedSetsState } from '../sets-shell/context.ts';
   import type { QueryId } from '../types.ts';
-  import { useProvidedSetsProductState } from '../useSetsProduct.ts';
   import InsertSetOpButtons from './InsertSetOpButtons.vue';
   import Query from './Query.vue';
 
@@ -17,7 +17,7 @@
 
   const {
     queries: { queries, addQuery },
-  } = useProvidedSetsProductState();
+  } = useProvidedSetsState();
 
   const canAddQuery = computed(
     () => queries.value.length < MAX_NUMBER_OF_QUERIES,

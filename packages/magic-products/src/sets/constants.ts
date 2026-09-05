@@ -4,6 +4,23 @@ import type { Section } from './types.ts';
 
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
+export const INPUT_HANDLER_ID = {
+  annotations: 'sets/annotations',
+  circleDrag: 'sets/circle-drag',
+  circleResize: 'sets/circle-resize',
+  focus: 'sets/focus',
+  createSet: 'sets/create-set',
+} as const;
+
+export const ANNOTATION_HANDLER_PRIORITY = {
+  before: [
+    INPUT_HANDLER_ID.circleDrag,
+    INPUT_HANDLER_ID.circleResize,
+    INPUT_HANDLER_ID.focus,
+    INPUT_HANDLER_ID.createSet,
+  ],
+} as const;
+
 // the palette a query's color is assigned from, in creation order
 export const QUERY_COLORS = [
   colors.RED_500,

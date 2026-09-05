@@ -3,6 +3,7 @@ import { CURSOR } from '@core/utils/cursor';
 
 import { type Ref, onBeforeUnmount } from 'vue';
 
+import { INPUT_HANDLER_ID } from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';
 import type { SetsTheme } from '../theme/useSetsTheme.ts';
 import type { SetDefinition } from '../types.ts';
@@ -23,6 +24,7 @@ export const useCircleDrag = ({
 }: CircleDragProps) => {
   const drag = useDrag(
     surface,
+    INPUT_HANDLER_ID.circleDrag,
     ({ topElement }) => {
       // the resize band sits above the circle, so landing on the edge is not a drag
       const identity = setElementIdentity(topElement);

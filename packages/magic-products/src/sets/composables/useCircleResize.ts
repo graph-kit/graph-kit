@@ -2,7 +2,11 @@ import type { CanvasSurface } from '@canvas/surface/types';
 
 import type { Ref } from 'vue';
 
-import { MAX_CIRCLE_RADIUS, MIN_CIRCLE_RADIUS } from '../constants.ts';
+import {
+  INPUT_HANDLER_ID,
+  MAX_CIRCLE_RADIUS,
+  MIN_CIRCLE_RADIUS,
+} from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';
 import type { SetDefinition } from '../types.ts';
 import { useDrag } from './useDrag.ts';
@@ -18,6 +22,7 @@ export const useCircleResize = ({
 }: CircleResizeProps) => {
   const { isDragging: isResizing } = useDrag(
     surface,
+    INPUT_HANDLER_ID.circleResize,
     ({ topElement }) => {
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'edge') return;

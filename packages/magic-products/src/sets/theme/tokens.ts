@@ -22,6 +22,8 @@ export type SetsThemes = {
 
   'section.stripeWidth': ThemeValue<number>;
 
+  'annotations.eraser.outline.color': ThemeValue<Color>;
+
   'canvas.color': ThemeValue<Color>;
   /** takes the alpha and nothing else, resolved once a frame for every cell */
   'canvas.patternColor': ThemeValue<string, [alpha: string]>;
@@ -40,6 +42,8 @@ export const createSetsThemeOverrides = (): ThemeOverrides<SetsThemes> => ({
   'set.label.fontWeight': [],
 
   'section.stripeWidth': [],
+
+  'annotations.eraser.outline.color': [],
 
   'canvas.color': [],
   'canvas.patternColor': [],

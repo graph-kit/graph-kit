@@ -12,6 +12,8 @@ type ActiveDrag<Item> = {
 
 export const useDrag = <Item>(
   surface: CanvasSurface,
+  /** what this drag is called by whatever has to take the pointer ahead of it */
+  handlerId: string,
   /** what the press landed on, or undefined for a press this drag ignores */
   getItem: (event: ElementMouseEvent) => Item | undefined,
   /** `at` is where the cursor is now, `diff` how far it moved since the last frame */
@@ -45,12 +47,12 @@ export const useDrag = <Item>(
     activeDrag.value = undefined;
   };
 
-  surface.events.elements.subscribe('onMouseDown', beginDrag);
+  surface.events.elements.handle('onMouseDown', beginDrag, handlerId);
   surface.events.canvas.subscribe('onMouseMove', drag);
   surface.events.dom.subscribe('onMouseUp', drop);
 
   const cleanup = () => {
-    surface.events.elements.unsubscribe('onMouseDown', beginDrag);
+    surface.events.elements.unhandle('onMouseDown', beginDrag);
     surface.events.canvas.unsubscribe('onMouseMove', drag);
     surface.events.dom.unsubscribe('onMouseUp', drop);
   };

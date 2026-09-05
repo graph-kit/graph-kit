@@ -16,8 +16,8 @@ import type { Edge, Node } from '../types.ts';
  *
  * where V = number of vertices and E = number of edges.
  */
-export const prims = (nodes: Node[], edges: Edge[]) => {
-  const getMinEdge = (edges: Edge[], inMST: Set<string>) => {
+export const prims = (nodes: readonly Node[], edges: readonly Edge[]) => {
+  const getMinEdge = (edges: readonly Edge[], inMST: Set<string>) => {
     let minEdge: Edge | null = null;
 
     for (const edge of edges) {

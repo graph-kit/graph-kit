@@ -5,4 +5,5 @@ import { useSignals } from './utils/useSignal.ts';
 export const useMinimumSpanningTrees = (msts: MinimumSpanningTreesControls) =>
   useSignals({
     all: msts.all,
+    one: msts.one,
   });

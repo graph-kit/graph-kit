@@ -5,7 +5,7 @@ import { Shell } from '@magic/shared/product';
 import { ComputedRef, computed } from 'vue';
 
 import { MarkovChain } from './useMarkovChain.ts';
-import { VALIDITY_EXPLAINER_SLOT_ID, validityLens } from './validityLens.ts';
+import { VALIDITY_EXPLAINER_SLOT_ID, validityLens } from './validity/lens.ts';
 
 /**
  * why nothing can be said about the chain yet, or `false` once something can,

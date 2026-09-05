@@ -1,9 +1,14 @@
 import Fraction from 'fraction.js';
 import { describe, expect, it } from 'vitest';
 
-import { getInvalidStates, getOutboundTotals } from './useChainValidity.ts';
+import {
+  getNegativeTransitions,
+  getOutboundTotals,
+  getStatesNotSummingToOne,
+} from './useChainValidity.ts';
 
 const transition = (source: string, weight: string) => ({
+  id: `${source}-${weight}`,
   source,
   weight: new Fraction(weight),
 });
@@ -42,17 +47,17 @@ describe('getOutboundTotals', () => {
   });
 });
 
-describe('getInvalidStates', () => {
+describe('getStatesNotSummingToOne', () => {
   it('accepts a state whose transitions sum to one', () => {
     const totals = new Map([['a', new Fraction(1)]]);
 
-    expect(getInvalidStates(totals)).toEqual(new Set());
+    expect(getStatesNotSummingToOne(totals)).toEqual(new Set());
   });
 
   it('rejects a state with no transitions at all', () => {
     const totals = new Map([['a', new Fraction(0)]]);
 
-    expect(getInvalidStates(totals)).toEqual(new Set(['a']));
+    expect(getStatesNotSummingToOne(totals)).toEqual(new Set(['a']));
   });
 
   it('rejects a state whose transitions overshoot one', () => {
@@ -61,6 +66,20 @@ describe('getInvalidStates', () => {
       ['b', new Fraction(1)],
     ]);
 
-    expect(getInvalidStates(totals)).toEqual(new Set(['a']));
+    expect(getStatesNotSummingToOne(totals)).toEqual(new Set(['a']));
+  });
+});
+
+describe('getNegativeTransitions', () => {
+  it('finds the transitions below zero', () => {
+    const negative = transition('a', '-1/2');
+
+    expect(getNegativeTransitions([transition('a', '3/2'), negative])).toEqual([
+      negative,
+    ]);
+  });
+
+  it('keeps a zero transition, which is unreachable rather than impossible', () => {
+    expect(getNegativeTransitions([transition('a', '0')])).toEqual([]);
   });
 });

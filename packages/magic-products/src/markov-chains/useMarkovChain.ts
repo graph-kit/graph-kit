@@ -1,13 +1,13 @@
 import { Graph } from '@magic/shared/graph';
 
 import { useChainProperties } from './computations/useChainProperties.ts';
-import { useChainValidity } from './computations/useChainValidity.ts';
 import { useCommunicatingClasses } from './computations/useCommunicatingClasses.ts';
 import { useMeanRecurrenceTimes } from './computations/useMeanRecurrenceTimes.ts';
 import { usePeriodicity } from './computations/usePeriodicity.ts';
 import { useReversibility } from './computations/useReversibility.ts';
 import { useStateClassification } from './computations/useStateClassification.ts';
 import { useStationaryDistribution } from './computations/useStationaryDistribution.ts';
+import { useChainValidity } from './validity/useChainValidity.ts';
 
 export const useMarkovChain = (graph: Graph) => {
   const communicatingClasses = useCommunicatingClasses(graph);
@@ -24,7 +24,8 @@ export const useMarkovChain = (graph: Graph) => {
     recurrentClasses,
   );
 
-  const { outboundTotals, invalidStates, isValid } = useChainValidity(graph);
+  const { outboundTotals, negativeTransitions, invalidStates, isValid } =
+    useChainValidity(graph);
 
   const { isReducible, isChainAbsorbing, isErgodic, isDoublyStochastic } =
     useChainProperties(
@@ -66,6 +67,7 @@ export const useMarkovChain = (graph: Graph) => {
     isErgodic,
     isDoublyStochastic,
     outboundTotals,
+    negativeTransitions,
     invalidStates,
     isValid,
     hasUniqueStationaryDistribution,

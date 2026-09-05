@@ -1,25 +1,23 @@
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import colors, { Color } from '@core/utils/colors';
-import { getRandomElement } from '@core/utils/random';
-import { ProductId, products } from '@magic/shared/product';
 
-import {
-  WelcomeArrangement,
-  WelcomeProductId,
-  welcomeArrangements,
-} from './arrangements.ts';
+import { ProductExample } from './examples.ts';
 
-export const pickArrangement = (except?: WelcomeArrangement) => {
-  const options = welcomeArrangements.filter(
-    (candidate) => candidate !== except,
-  );
-  return getRandomElement(options.length > 0 ? options : welcomeArrangements);
-};
+export const NODE_RADIUS = 40;
 
-const entriesOf = ({ nodes }: WelcomeArrangement) =>
-  Object.entries(nodes) as [WelcomeProductId, Coordinate][];
+/**
+ * ids carry the handover they belong to, so an example never inherits a slot the one before
+ * it was using and no store keyed by id can carry anything across the switch
+ */
+export const nodeIdOf = (generation: number, index: number) =>
+  `welcome/${generation}/node/${index}`;
 
-/** handed out left to right, looping once the arrangement outruns it */
+export const edgeIdOf = (
+  generation: number,
+  { from, to }: { from: number; to: number },
+) => `welcome/${generation}/edge/${from}-${to}`;
+
+/** handed out left to right, looping once an example outruns it */
 const WIPE: Color[] = [
   colors.PURPLE_500,
   colors.FUCHSIA_500,
@@ -30,18 +28,14 @@ const WIPE: Color[] = [
 ];
 
 /**
- * spends the wipe across the arrangement, so a node's color falls out of where it
- * sits horizontally rather than being written down per layout
+ * spends the wipe across the example, so a node's color falls out of where it sits
+ * horizontally rather than being written down per product
  */
-export const resolveColors = (arrangement: WelcomeArrangement) =>
-  entriesOf(arrangement)
-    .sort(
-      ([, previous], [, next]) => previous.x - next.x || previous.y - next.y,
-    )
-    .map(([productId], index) => ({
-      productId,
-      color: WIPE[index % WIPE.length],
-    }));
+export const resolveColors = ({ nodes }: ProductExample) =>
+  nodes
+    .map((node, index) => ({ node, index }))
+    .sort(({ node: a }, { node: b }) => a.at.x - b.at.x || a.at.y - b.at.y)
+    .map(({ index }, rank) => ({ index, color: WIPE[rank % WIPE.length] }));
 
 const midpointOf = (values: number[]) =>
   (Math.min(...values) + Math.max(...values)) / 2;
@@ -50,20 +44,28 @@ const midpointOf = (values: number[]) =>
 const VERTICAL_BIAS = 30;
 
 /**
- * lands the arrangement's bounding box on the center of whatever the canvas is
- * showing, so the graph arrives centered at any window size
+ * lands the example's bounding box on the center of the canvas the rail is not covering, so
+ * the graph arrives centered in the room it actually has at any window size
  */
 export const resolvePositions = (
-  arrangement: WelcomeArrangement,
+  example: ProductExample,
   viewport: BoundingBox,
+  { reservedLeftPx, zoom }: { reservedLeftPx: number; zoom: number },
 ) => {
-  const entries = entriesOf(arrangement);
-  const offsets = entries.map(([, offset]) => offset);
+  const offsets = example.nodes.map(({ at }) => at);
+
+  // on a window too narrow to hold both, honoring the rail in full would shove the graph
+  // clean off the right edge, so it never gives up more than half of what it can see
+  const reserved = Math.min(
+    zoom > 0 ? reservedLeftPx / zoom : 0,
+    viewport.width / 2,
+  );
 
   const origin: Coordinate = {
     x:
       viewport.at.x +
-      viewport.width / 2 -
+      reserved +
+      (viewport.width - reserved) / 2 -
       midpointOf(offsets.map(({ x }) => x)),
     y:
       viewport.at.y +
@@ -72,21 +74,8 @@ export const resolvePositions = (
       midpointOf(offsets.map(({ y }) => y)),
   };
 
-  return entries.map(([productId, offset]) => ({
-    productId,
-    position: { x: origin.x + offset.x, y: origin.y + offset.y },
+  return example.nodes.map(({ at }, index) => ({
+    index,
+    position: { x: origin.x + at.x, y: origin.y + at.y },
   }));
 };
-
-export const NODE_RADIUS = 45;
-
-const NODE_ID_PREFIX = 'welcome/node/';
-
-export const nodeIdOf = (productId: ProductId) =>
-  `${NODE_ID_PREFIX}${productId}`;
-
-export const productOf = (nodeId: string) =>
-  products.find(({ id }) => `${NODE_ID_PREFIX}${id}` === nodeId);
-
-export const edgeIdOf = (arrangement: WelcomeArrangement, index: number) =>
-  `welcome/edge/${arrangement.name}/${index}`;

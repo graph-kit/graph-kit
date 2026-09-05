@@ -1,4 +1,5 @@
 import colors, { fade } from '@core/utils/colors';
+import { generateId } from '@core/utils/id';
 import { sum } from '@core/utils/math';
 import { GEdge, GNode, Graph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
@@ -46,10 +47,6 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
     return getWeightAdjustments(graph.nodes.value, graph.edges.value);
   });
 
-  const edgeAdditions = computed(() => {
-    // suggest self loops to add on every node that does not have any outgoing edges
-  });
-
   const previewContentWeightFix = ({ id: edgeId }: { id: string }) => {
     return weightAdjustments.value.get(edgeId)?.toFraction();
   };
@@ -88,9 +85,72 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
     },
   });
 
+  const previewAddedEdges = computed(() => {
+    return graph.nodes.value
+      .filter((n) => graph.helpers.nodes.getOutboundEdges(n.id).length === 0)
+      .map((n) => ({
+        id: generateId(),
+        source: n.id,
+        target: n.id,
+      }));
+  });
+
+  const previewSelLoops = {
+    activate: () => {
+      graph.phantom.addElements({
+        edges: previewAddedEdges.value.map((e) => ({ ...e, label: '1' })),
+        nodes: [],
+      });
+    },
+    deactivate: () => {
+      graph.phantom.removeAllEdges();
+    },
+  };
+
+  const fadePhantom = (
+    { id: edgeId }: { id: string },
+    underneath: () => string,
+  ) => {
+    if (graph.phantom.isEdge(edgeId)) {
+      return fade(underneath(), REMOVE_PREVIEW_OPACITY);
+    }
+  };
+
+  const colorPhantom = graph.theme.createThemer({
+    surface: {
+      'edge.default.text.color': fadePhantom,
+      'edge.default.color': fadePhantom,
+    },
+    focus: {
+      'edge.focus.text.color': fadePhantom,
+      'edge.focus.color': fadePhantom,
+    },
+  });
+
+  const themer = {
+    activate: () => {
+      edgeTextColor.activate();
+      previewSelLoops.activate();
+      colorPhantom.activate();
+      graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
+    },
+    deactivate: () => {
+      edgeTextColor.deactivate();
+      previewSelLoops.deactivate();
+      colorPhantom.deactivate();
+      graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
+    },
+  };
+
+  const handleStructureChange = () => {
+    themer.deactivate();
+    themer.activate();
+  };
+
   return {
-    themer: edgeTextColor,
+    themer,
     apply: () => {
+      themer.deactivate();
       graph.weights.setMany(
         Array.from(weightAdjustments.value).map(([edgeId, weight]) => ({
           edgeId,
@@ -100,6 +160,11 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
 
       graph.actions.removeElements({
         edges: graph.edges.value.filter((e) => e.weight.equals(0)),
+        nodes: [],
+      });
+
+      graph.actions.addElements({
+        edges: previewAddedEdges.value,
         nodes: [],
       });
     },

@@ -31,8 +31,8 @@ export const QUERY_ERRORS = {
   notSetNotation: 'Expression can only hold sets and set operators',
   undefinedSets: (labels: SetLabel[]) =>
     labels.length === 1
-      ? `No set named ${labels[0]} is on the canvas`
-      : `No sets named ${labelList(labels)} are on the canvas`,
+      ? `No set named ${labels[0]}`
+      : `No sets named ${labelList(labels)}`,
 } as const;
 
 /**

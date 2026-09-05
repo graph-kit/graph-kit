@@ -121,6 +121,7 @@ export const nodeDrag =
     ) => {
       // just in case a removal happened that never triggered onElementsRemoved
       abortDragOnTamper();
+      if (!coords) return;
 
       const dragData = dragState.applyMove(coords);
       if (!dragData) return;

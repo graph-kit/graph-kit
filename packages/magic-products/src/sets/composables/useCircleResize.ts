@@ -23,8 +23,7 @@ export const useCircleResize = ({
       if (identity?.part !== 'edge') return;
       return definitions.value.find(({ id }) => id === identity.setId);
     },
-    (definition) => {
-      const coords = surface.cursorCoordinates.value;
+    (definition, { at: coords }) => {
       const { at } = definition.display;
       const dx = at.x - coords.x;
       const dy = at.y - coords.y;

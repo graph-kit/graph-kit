@@ -106,8 +106,9 @@
   const round = (value: number) => Math.round(value).toLocaleString();
 
   const cursor = computed(() => {
-    const { x, y } = surface.cursorCoordinates.value;
-    return `${round(x)}, ${round(y)}`;
+    const at = surface.cursorCoordinates.value;
+    if (!at) return 'unseen';
+    return `${round(at.x)}, ${round(at.y)}`;
   });
 
   const zoom = computed(() => `${surface.camera.state.zoom.value.toFixed(2)}×`);

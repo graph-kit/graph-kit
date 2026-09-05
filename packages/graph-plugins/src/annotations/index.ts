@@ -48,6 +48,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     { coords }: DeepReadonly<GraphUnderCursor>,
     consume: () => void,
   ) => {
+    if (!coords) return;
     consume();
     engine.extendStroke(coords);
   };

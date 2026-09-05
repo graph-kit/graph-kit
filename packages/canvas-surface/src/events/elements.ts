@@ -19,7 +19,11 @@ import {
 } from './elementMouseEvents.ts';
 
 export type ElementsUnderCursor = {
-  coords: Coordinate;
+  /**
+   * undefined until the pointer is first seen over the canvas, which a page
+   * loaded under a cursor that never moves never reaches
+   */
+  coords: Coordinate | undefined;
   /** every element whose hitbox contains the cursor, back to front */
   elements: CanvasElement[];
   /** the topmost element under the cursor, equivalent to `elements.at(-1)` */
@@ -55,7 +59,7 @@ const sameElements = (previous: CanvasElement[], next: CanvasElement[]) => {
 
 type CreateElementsUnderCursorOptions = {
   aggregator: AggregatorControls;
-  cursorCoordinates: Ref<Coordinate>;
+  cursorCoordinates: Ref<Coordinate | undefined>;
   toWorldCoordinates: (ev: MouseEvent) => Coordinate;
   canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>;
   domEvents: Pick<ReadonlyEventHub<DocumentBoundEvents>, 'subscribe'>;
@@ -71,7 +75,7 @@ export const createElementsUnderCursor = ({
   const events = createEventHub(createElementEventRegistry());
 
   const elementsUnderCursor: ElementsUnderCursor = {
-    coords: { x: 0, y: 0 },
+    coords: undefined,
     elements: [],
     get topElement() {
       return this.elements.at(-1);
@@ -91,11 +95,13 @@ export const createElementsUnderCursor = ({
 
   const refresh = () => {
     const coords = cursorCoordinates.value;
-    const elements = aggregator.getCanvasElementsAtCoordinate(coords);
+    const elements = coords
+      ? aggregator.getCanvasElementsAtCoordinate(coords)
+      : [];
 
     const changed =
-      coords.x !== elementsUnderCursor.coords.x ||
-      coords.y !== elementsUnderCursor.coords.y ||
+      coords?.x !== elementsUnderCursor.coords?.x ||
+      coords?.y !== elementsUnderCursor.coords?.y ||
       !sameElements(elementsUnderCursor.elements, elements);
 
     elementsUnderCursor.coords = coords;

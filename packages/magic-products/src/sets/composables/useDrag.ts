@@ -14,7 +14,11 @@ export const useDrag = <Item>(
   surface: CanvasSurface,
   /** what the press landed on, or undefined for a press this drag ignores */
   getItem: (event: ElementMouseEvent) => Item | undefined,
-  setItemCoords: (item: Item, diff: Coordinate) => void,
+  /** `at` is where the cursor is now, `diff` how far it moved since the last frame */
+  setItemCoords: (
+    item: Item,
+    cursor: { at: Coordinate; diff: Coordinate },
+  ) => void,
 ) => {
   const activeDrag = ref<ActiveDrag<Item>>();
 
@@ -22,21 +26,19 @@ export const useDrag = <Item>(
     if (elementEvent.event.button !== MOUSE_BUTTONS.left) return;
     const item = getItem(elementEvent);
     if (!item) return;
-    activeDrag.value = {
-      item,
-      startingCoords: surface.cursorCoordinates.value,
-    };
+    // the press carries its own position, so a drag never depends on a mousemove preceding it
+    activeDrag.value = { item, startingCoords: elementEvent.coords };
   };
 
-  const drag = () => {
+  const drag = (event: MouseEvent) => {
     if (!activeDrag.value) return;
     const { startingCoords, item } = activeDrag.value;
 
-    const dx = surface.cursorCoordinates.value.x - startingCoords.x;
-    const dy = surface.cursorCoordinates.value.y - startingCoords.y;
+    const at = surface.toWorldCoordinates(event);
+    const diff = { x: at.x - startingCoords.x, y: at.y - startingCoords.y };
 
-    setItemCoords(item, { x: dx, y: dy });
-    activeDrag.value.startingCoords = surface.cursorCoordinates.value;
+    setItemCoords(item, { at, diff });
+    activeDrag.value.startingCoords = at;
   };
 
   const drop = () => {

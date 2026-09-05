@@ -52,21 +52,15 @@ describe('why a query is turned down', () => {
   });
 
   it('names the set that is not on the canvas', () => {
-    expect(errorFor('A \\cup C')).toBe('No set named C is on the canvas');
-    expect(errorFor('C \\cap D')).toBe(
-      'No sets named C or D are on the canvas',
-    );
-    expect(errorFor('C \\cup D \\cup E')).toBe(
-      'No sets named C, D or E are on the canvas',
-    );
+    expect(errorFor('A \\cup C')).toBe('No set named C');
+    expect(errorFor('C \\cap D')).toBe('No sets named C or D');
+    expect(errorFor('C \\cup D \\cup E')).toBe('No sets named C, D or E');
   });
 
   // an empty canvas defines no labels, so every set a query names is one that is not there
   it('names a set on an empty canvas as missing too', () => {
-    expect(errorFor('A', 0)).toBe('No set named A is on the canvas');
-    expect(errorFor('A \\cup B', 0)).toBe(
-      'No sets named A or B are on the canvas',
-    );
+    expect(errorFor('A', 0)).toBe('No set named A');
+    expect(errorFor('A \\cup B', 0)).toBe('No sets named A or B');
   });
 
   // neither is a name a set can hold, so neither goes missing with nothing drawn
@@ -103,7 +97,7 @@ describe('an error following the canvas it is read against', () => {
     const { sets, query, error } = canvas();
 
     query.editor.replace('A');
-    expect(error()).toBe('No set named A is on the canvas');
+    expect(error()).toBe('No set named A');
 
     sets.addDefinition({ x: 0, y: 0 });
     expect(error()).toBeUndefined();
@@ -117,7 +111,7 @@ describe('an error following the canvas it is read against', () => {
     expect(error()).toBeUndefined();
 
     sets.removeDefinition(sets.definitions.value[0].id);
-    expect(error()).toBe('No set named A is on the canvas');
+    expect(error()).toBe('No set named A');
   });
 
   it('follows the query being rewritten under a canvas that has not moved', () => {
@@ -125,7 +119,7 @@ describe('an error following the canvas it is read against', () => {
     sets.addDefinition({ x: 0, y: 0 });
 
     query.editor.replace('B');
-    expect(error()).toBe('No set named B is on the canvas');
+    expect(error()).toBe('No set named B');
 
     query.editor.replace('A');
     expect(error()).toBeUndefined();

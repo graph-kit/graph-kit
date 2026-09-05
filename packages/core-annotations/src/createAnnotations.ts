@@ -180,11 +180,11 @@ export const createAnnotations = ({
     if (wasDrawingStroke) events.emit('onStrokeEnded');
   };
 
-  const eraserCursorElement = (): AnnotationCanvasElement => ({
+  const eraserCursorElement = (at: Coordinate): AnnotationCanvasElement => ({
     id: ERASER_CURSOR_ID,
     priority: ANNOTATION_CURSOR_PRIORITY,
     shape: circle({
-      at: surface.cursorCoordinates.value,
+      at,
       radius: ERASER_BRUSH_RADIUS,
       fillColor: colors.TRANSPARENT,
       stroke: {
@@ -194,11 +194,11 @@ export const createAnnotations = ({
     }),
   });
 
-  const laserCursorElement = (): AnnotationCanvasElement => ({
+  const laserCursorElement = (at: Coordinate): AnnotationCanvasElement => ({
     id: LASER_CURSOR_ID,
     priority: ANNOTATION_CURSOR_PRIORITY,
     shape: circle({
-      at: surface.cursorCoordinates.value,
+      at,
       radius: brushWeight(),
       fillColor: color(),
     }),
@@ -223,8 +223,11 @@ export const createAnnotations = ({
     // they outlive the session that drew them, and a peer's arrive without one
     if (!isActive()) return elements;
 
+    // a tool cursor has nowhere to sit until the pointer is first seen over the canvas
+    const cursorAt = surface.cursorCoordinates.value;
+
     if (isErasing()) {
-      elements.push(eraserCursorElement());
+      if (cursorAt) elements.push(eraserCursorElement(cursorAt));
       return elements;
     }
 
@@ -232,7 +235,9 @@ export const createAnnotations = ({
     const strokeElement = inFlight?.element();
 
     if (strokeElement) elements.push(strokeElement);
-    else if (isLaserPointing()) elements.push(laserCursorElement());
+    else if (isLaserPointing() && cursorAt) {
+      elements.push(laserCursorElement(cursorAt));
+    }
 
     return elements;
   };

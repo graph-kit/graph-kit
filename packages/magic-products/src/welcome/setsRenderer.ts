@@ -1,7 +1,7 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { RegionMember } from '@canvas/primitives/shapes/region/types';
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
-import colors, { Color } from '@core/utils/colors';
+import colors, { Color, ORANGE_700 } from '@core/utils/colors';
 import { Graph } from '@magic/shared/graph';
 
 import { SetsExample } from './examples.ts';
@@ -26,7 +26,11 @@ const PALETTE = {
  * query selects hatches in a single color, which fills every pixel and so lands solid; a
  * region two of them both select hatches in both and comes out striped
  */
-const QUERY_COLORS: Color[] = [colors.RED_500, colors.BLUE_500];
+const QUERY_COLORS: Color[] = [
+  colors.PURPLE_500,
+  colors.ROSE_500,
+  colors.ORANGE_500,
+];
 
 /** world units of slack around the circles for the box a region is taken within */
 const BOUNDS_PADDING = 40;

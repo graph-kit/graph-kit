@@ -225,6 +225,10 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
         selects: 'C',
         sections: [['C'], ['A', 'C'], ['B', 'C'], ['A', 'B', 'C']],
       },
+      {
+        selects: 'A',
+        sections: [['A'], ['A', 'C'], ['A', 'B'], ['A', 'B', 'C']],
+      },
     ],
   },
 };

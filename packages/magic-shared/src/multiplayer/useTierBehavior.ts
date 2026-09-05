@@ -7,7 +7,7 @@ import { RoomState } from './types.ts';
 
 type TierBehaviorOptions = {
   room: ComputedRef<RoomState>;
-  /** what the host decided each tier means for it, see {@link MultiplayerControls.tiers} */
+  /** what the product decided each tier means for it, see {@link MultiplayerControls.tiers} */
   tiers: Record<Tier, TierBehavior>;
 };
 

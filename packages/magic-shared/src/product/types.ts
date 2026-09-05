@@ -43,7 +43,7 @@ export type TransitCompression = {
 export type TransitField = {
   encode: () => any;
   decode: (payload: any) => void;
-  /** absent when the host has nothing better than JSON to offer, see {@link TransitCompression} */
+  /** absent when the product has nothing better than JSON to offer, see {@link TransitCompression} */
   compression?: TransitCompression;
 };
 
@@ -64,7 +64,7 @@ export type HistoryField = {
 };
 
 /**
- * what the shell hands consumers: the host's history plus a way to hold undo and redo
+ * what the shell hands consumers: the product's history plus a way to hold undo and redo
  * off while the product's state isn't ready to handle it
  */
 export type ShellHistory = HistoryField & {
@@ -217,7 +217,7 @@ export type Shell = {
   lensChips?: LensChipDefinition[];
   simulationButtons?: SimulationButtonDefinition[];
   localStorage: LocalStorageControls;
-  /** absent when the host named no content, see {@link ProductControls.isContent} */
+  /** absent when the product named no content, see {@link ProductControls.isContent} */
   jumpToContent?: JumpToContentControls;
   /** absent when the product flagged onboarding off or contributed no items */
   onboarding?: OnboardingControls;

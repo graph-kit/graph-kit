@@ -218,7 +218,7 @@ export const createMultiplayer = ({
    * is handed the document it is meant to take on rather than an empty one.
    */
   const openProduct = (
-    { productId, host }: ProductBinding,
+    { productId, controls }: ProductBinding,
     mode: DocBindMode,
     roomDoc?: DocUpdate | null,
   ) => {
@@ -232,7 +232,7 @@ export const createMultiplayer = ({
 
     if (roomDoc) Y.applyUpdate(doc, toDocUpdate(roomDoc), REMOTE_ORIGIN);
 
-    const binding = host.bind(doc, mode);
+    const binding = controls.bind(doc, mode);
     mountedProduct.value = { productId, doc, unbind: binding?.unbind };
     return doc;
   };
@@ -491,7 +491,7 @@ export const createMultiplayer = ({
    * A room that has never reached this product has no copy, and an empty one is still
    * the room's answer: the product opens blank rather than donating what was on screen.
    */
-  const adoptRoomProduct = async ({ productId, host }: ProductBinding) => {
+  const adoptRoomProduct = async ({ productId, controls }: ProductBinding) => {
     events.emit('onPendingStarted');
     try {
       const state = await requestFromServer<ProductEntryState>((respond) =>
@@ -500,7 +500,7 @@ export const createMultiplayer = ({
           .emit('enterProduct', { productId }, respond),
       );
 
-      openProduct({ productId, host }, 'adopt', state.doc);
+      openProduct({ productId, controls }, 'adopt', state.doc);
 
       // what everyone on the product is already doing, so a peer sitting perfectly still
       // is on screen from the first frame rather than once they happen to move
@@ -512,9 +512,9 @@ export const createMultiplayer = ({
   };
 
   const roomActions: RoomActions = {
-    start: async ({ productId, host }) => {
+    start: async ({ productId, controls }) => {
       const activeSocket = ensureSocket();
-      const doc = seedFromProduct({ productId, host });
+      const doc = seedFromProduct({ productId, controls });
       const result = await requestFromServer<StartResult>((respond) =>
         activeSocket
           .timeout(ACK_TIMEOUT_MS)

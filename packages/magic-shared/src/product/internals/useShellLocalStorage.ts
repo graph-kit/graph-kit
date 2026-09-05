@@ -87,10 +87,10 @@ const INERT: LocalStorageControls = {
 
 export const useShellLocalStorage = (
   productId: string,
-  host: Pick<ProductControls, 'transit'>,
+  product: Pick<ProductControls, 'transit'>,
   flags: ShellFlags,
 ): LocalStorageControls => {
   // flags already force localStorage off without transit, this proves it to the checker
-  if (!flags.localStorage || !host.transit) return INERT;
-  return useLocalStorageSync(productId, host.transit);
+  if (!flags.localStorage || !product.transit) return INERT;
+  return useLocalStorageSync(productId, product.transit);
 };

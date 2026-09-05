@@ -35,20 +35,20 @@ import { manifests } from './manifests/index.ts';
 import { ProductControls, Shell, ShellOptions } from './types.ts';
 
 export const useShell = (
-  host: ProductControls,
+  product: ProductControls,
   options: ShellOptions,
 ): Shell => {
   const componentSlots = useComponentSlotsState();
   const lens = useLensState(componentSlots);
   const simulation = useSimulationState(componentSlots, lens);
 
-  const appearance = useShellAppearance(host.onAppearanceChanged);
+  const appearance = useShellAppearance(product.onAppearanceChanged);
 
-  const annotations = host.annotations
-    ? useAnnotationsUI(host.annotations, componentSlots)
+  const annotations = product.annotations
+    ? useAnnotationsUI(product.annotations, componentSlots)
     : undefined;
 
-  const flags = resolveShellFlags(options.flags, host);
+  const flags = resolveShellFlags(options.flags, product);
 
   useShellUI(componentSlots);
   const debug = useDebugState(componentSlots);
@@ -59,18 +59,23 @@ export const useShell = (
   const telemetry = useTelemetry(manifest.id);
   useProductVisit(telemetry);
 
-  const localStorage = useShellLocalStorage(manifest.id, host, flags);
-  const jumpToContent = useJumpToContent(host, flags);
-  const onboarding = useOnboarding(host, flags, appearance, options.onboarding);
+  const localStorage = useShellLocalStorage(manifest.id, product, flags);
+  const jumpToContent = useJumpToContent(product, flags);
+  const onboarding = useOnboarding(
+    product,
+    flags,
+    appearance,
+    options.onboarding,
+  );
 
   const { product: multiplayer, roomHistory } = useMultiplayer({
-    host,
+    product,
     productId: options.productId,
     componentSlots,
   });
 
   const history = useShellHistory({
-    local: host.history,
+    local: product.history,
     roomHistory,
     inRoom: () => multiplayer?.room.state.value.connected === true,
   });
@@ -91,8 +96,8 @@ export const useShell = (
     userAgent: useUserAgent(),
     annotations,
     simulationButtons: options.simulationButtons,
-    surface: host.surface,
-    transit: host.transit,
+    surface: product.surface,
+    transit: product.transit,
     history,
     localStorage,
     multiplayer,
@@ -115,13 +120,13 @@ export const useShell = (
     telemetry.track('simulation.ended', { simulationId }),
   );
 
-  host.annotations?.events.subscribe('onStrokeBegan', () =>
+  product.annotations?.events.subscribe('onStrokeBegan', () =>
     onboarding?.close(),
   );
 
   const savedAnimationSpeed = readAnimationSpeed();
   if (savedAnimationSpeed) {
-    host.surface.renderer.autoAnimate.setAnimationDuration(
+    product.surface.renderer.autoAnimate.setAnimationDuration(
       ANIMATION_SPEED_DURATION_MS[savedAnimationSpeed],
     );
   }

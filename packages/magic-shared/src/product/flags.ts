@@ -61,22 +61,22 @@ const TRANSIT_BACKED = [
 /** what the product asked for, narrowed to what its controls can actually support */
 export const resolveShellFlags = (
   flags: ShellFlagOptions = {},
-  host: Pick<ProductControls, 'transit' | 'isContent'>,
+  product: Pick<ProductControls, 'transit' | 'isContent'>,
 ): ShellFlags => {
   // an explicit undefined means no opinion, same as omitting the flag
   const set = Object.entries(flags).filter(([, value]) => value !== undefined);
   const resolved: ShellFlags = { ...DEFAULTS, ...Object.fromEntries(set) };
 
-  const withoutHostSupport = (flag: keyof ShellFlags, missing: string) => {
+  const withoutProductSupport = (flag: keyof ShellFlags, missing: string) => {
     if (flags[flag] && import.meta.env.DEV)
-      console.warn(`[shell] ${flag} needs host ${missing}, ignoring`);
+      console.warn(`[shell] ${flag} needs product ${missing}, ignoring`);
     resolved[flag] = false;
   };
 
-  if (!host.transit)
-    for (const flag of TRANSIT_BACKED) withoutHostSupport(flag, 'transit');
+  if (!product.transit)
+    for (const flag of TRANSIT_BACKED) withoutProductSupport(flag, 'transit');
 
-  if (!host.isContent) withoutHostSupport('jumpToContent', 'isContent');
+  if (!product.isContent) withoutProductSupport('jumpToContent', 'isContent');
 
   return resolved;
 };

@@ -16,20 +16,20 @@ const MAX_PAYLOAD_CHARS = 2_600;
 
 const PROBLEM_TOAST_MS = 6_000;
 
-/** host provided a compressed encoding */
-const HOST_SCHEME = 'c';
+/** the product provided a compressed encoding */
+const PRODUCT_SCHEME = 'c';
 /** the shell encoded the url via the json fallback */
 const JSON_SCHEME = 'j';
 
 const transitOf = (shell: Shell) =>
-  nullThrows(shell.transit, 'link sharing requires host transit');
+  nullThrows(shell.transit, 'link sharing requires product transit');
 
 const getLinkPayload = (shell: Shell) => {
   const { encode, compression } = transitOf(shell);
   const encoding = encode();
 
   const text = compression
-    ? HOST_SCHEME + compression.compress(encoding)
+    ? PRODUCT_SCHEME + compression.compress(encoding)
     : JSON_SCHEME + JSON.stringify(encoding);
 
   return compressToEncodedURIComponent(text);
@@ -58,12 +58,12 @@ const readPayload = (shell: Shell, text: string) => {
   const { compression } = transitOf(shell);
   const scheme = text.slice(0, 1);
 
-  if (scheme === HOST_SCHEME) {
-    const host = nullThrows(
+  if (scheme === PRODUCT_SCHEME) {
+    const codec = nullThrows(
       compression,
-      'link sharing: the link is compressed but the host cannot read it',
+      'link sharing: the link is compressed but the product cannot read it',
     );
-    return host.decompress(text.slice(1));
+    return codec.decompress(text.slice(1));
   }
 
   return JSON.parse(scheme === JSON_SCHEME ? text.slice(1) : text);

@@ -79,7 +79,7 @@ describe(useTierBehavior, () => {
     expect(calls).toEqual(['enter:read']);
   });
 
-  it('leaves a tier the host said nothing about alone', async () => {
+  it('leaves a tier the product said nothing about alone', async () => {
     const state = ref(connectedAt('read'));
     const enter = vi.fn();
 

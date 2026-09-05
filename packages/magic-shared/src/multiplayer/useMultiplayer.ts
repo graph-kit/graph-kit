@@ -14,7 +14,7 @@ import { usePresenceBroadcast } from './usePresenceBroadcast.ts';
 import { useSuspendedContent } from './useSuspendedContent.ts';
 
 type MultiplayerOptions = {
-  host: ProductControls;
+  product: ProductControls;
   productId: ProductId;
   componentSlots: ComponentSlotControls;
 };
@@ -27,43 +27,46 @@ export type MultiplayerSetup = {
 
 /** everything a mounting product needs from the room, wired in one call */
 export const useMultiplayer = ({
-  host,
+  product,
   productId,
   componentSlots,
 }: MultiplayerOptions): MultiplayerSetup => {
-  const { binding, multiplayer } = useDocBinding(host);
+  const { binding, controls } = useDocBinding(product);
 
-  const product = useMultiplayerProduct({
+  const multiplayer = useMultiplayerProduct({
     productId,
-    host: multiplayer,
+    controls,
     componentSlots,
   });
 
-  usePeerDrags({ binding, multiplayer: product, surface: host.surface });
+  usePeerDrags({ binding, multiplayer, surface: product.surface });
 
-  if (product) {
+  if (multiplayer) {
     usePresenceBroadcast({
-      surface: host.surface,
-      multiplayer: product,
-      host: host.multiplayer,
-      annotations: host.annotations,
+      surface: product.surface,
+      multiplayer,
+      controls: product.multiplayer,
+      annotations: product.annotations,
     });
 
-    useSuspendedContent({ surface: host.surface, events: product.events });
+    useSuspendedContent({
+      surface: product.surface,
+      events: multiplayer.events,
+    });
 
-    useJumpToUser({ surface: host.surface, multiplayer: product });
+    useJumpToUser({ surface: product.surface, multiplayer });
 
-    usePeerNameTags({ surface: host.surface, multiplayer: product });
+    usePeerNameTags({ surface: product.surface, multiplayer });
 
     usePeerStrokes({
-      surface: host.surface,
-      multiplayer: product,
-      annotations: host.annotations,
+      surface: product.surface,
+      multiplayer,
+      annotations: product.annotations,
     });
   }
 
   return {
-    product,
+    product: multiplayer,
     roomHistory: computed(() => binding.value?.history),
   };
 };

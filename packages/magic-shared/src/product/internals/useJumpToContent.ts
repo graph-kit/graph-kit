@@ -24,10 +24,10 @@ const distanceBetween = (from: Coordinate, to: Coordinate) =>
   Math.hypot(to.x - from.x, to.y - from.y);
 
 export const useJumpToContent = (
-  host: Pick<ProductControls, 'surface' | 'isContent'>,
+  product: Pick<ProductControls, 'surface' | 'isContent'>,
   flags: ShellFlags,
 ): JumpToContentControls | undefined => {
-  const { surface, isContent } = host;
+  const { surface, isContent } = product;
   if (!flags.jumpToContent || !isContent) return;
 
   const contentOffscreen = ref(false);

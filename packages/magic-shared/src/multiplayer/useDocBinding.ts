@@ -8,7 +8,7 @@ import {
 
 export type BoundProductControls = {
   /** the controls to register with, wrapping bind so what it makes is kept */
-  multiplayer: MultiplayerControls;
+  controls: MultiplayerControls;
   binding: ReturnType<typeof shallowRef<DocBinding>>;
 };
 
@@ -17,15 +17,17 @@ export type BoundProductControls = {
  * than one part of the shell needs what it hands back. Wrapping bind is how the
  * shell gets hold of it without owning when it happens.
  */
-export const useDocBinding = (host: ProductControls): BoundProductControls => {
+export const useDocBinding = (
+  product: ProductControls,
+): BoundProductControls => {
   const binding = shallowRef<DocBinding>();
 
   return {
     binding,
-    multiplayer: {
-      ...host.multiplayer,
+    controls: {
+      ...product.multiplayer,
       bind: (doc, mode) => {
-        const made = host.multiplayer.bind(doc, mode);
+        const made = product.multiplayer.bind(doc, mode);
         binding.value = made;
         return made;
       },

@@ -33,7 +33,7 @@ export const useGraphShell = (
   if (!flags.history) graph.history.lifecycle.disable();
   if (!flags.annotations) graph.annotations.lifecycle.disable();
 
-  const host: ProductControls = {
+  const product: ProductControls = {
     surface: graph.surface,
     transit: { ...graph.transit, compression: graphTransitCompression },
     annotations: flags.annotations ? graph.annotations : undefined,
@@ -57,7 +57,7 @@ export const useGraphShell = (
     },
   };
 
-  const shell = useShell(host, {
+  const shell = useShell(product, {
     productId: options.productId,
     flags: options.flags,
     helpMenu: graphShellHelpMenu(graph, options.helpMenu),

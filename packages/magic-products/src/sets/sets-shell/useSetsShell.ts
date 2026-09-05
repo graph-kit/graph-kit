@@ -5,6 +5,7 @@ import { ProductControls, Shell, useShell } from '@magic/shared/product';
 import QueryPanel from '../components/QueryPanel.vue';
 import { useSections } from '../composables/useSections.ts';
 import { useSetFocus } from '../composables/useSetFocus.ts';
+import { useSetsAnnotations } from '../composables/useSetsAnnotations.ts';
 import { createQueries } from '../queries.ts';
 import { useQueryAnalysis } from '../queryAnalysis.ts';
 import { createSetDefinitions } from '../setDefinitions.ts';
@@ -27,6 +28,8 @@ export const useSetsShell = (): {
       canvasCursorOverride(theme._resolveToken('canvas.cursor')),
   });
 
+  const annotations = useSetsAnnotations({ surface, theme });
+
   const sets = createSetDefinitions();
   const queries = createQueries();
   const sections = useSections(sets.definitions);
@@ -37,6 +40,7 @@ export const useSetsShell = (): {
   // along with the local storage and link sharing that transit gates.
   const host: ProductControls = {
     surface,
+    annotations,
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {
       bind: () => {},
@@ -52,7 +56,6 @@ export const useSetsShell = (): {
 
   const shell = useShell(host, {
     productId: 'sets',
-    // MainView subscribes this to onDblClick
     helpMenu: [
       {
         id: 'sets/create-set',

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import { nullThrows } from '@core/utils/assert';
+  import type { ElementMouseEvent } from '@canvas/surface/events/index';
   import Shell from '@magic/shared/Shell';
   import { toast } from '@magic/shared/toast';
 
   import { useCircleDrag } from './composables/useCircleDrag.ts';
   import { useCircleResize } from './composables/useCircleResize.ts';
   import { useSetsRendering } from './composables/useSetsRendering.ts';
-  import { MAX_SETS } from './constants.ts';
+  import { INPUT_HANDLER_ID, MAX_SETS } from './constants.ts';
   import { useSetsShell } from './sets-shell/useSetsShell.ts';
 
   const {
@@ -51,12 +51,8 @@
     });
   };
 
-  const createSetDefinition = () => {
-    const cursorAt = nullThrows(
-      shell.surface.cursorCoordinates.value,
-      'no cursor coordinates',
-    );
-    const definition = sets.addDefinition(cursorAt);
+  const createSetDefinition = ({ coords }: ElementMouseEvent) => {
+    const definition = sets.addDefinition(coords);
 
     if (!definition) {
       sayCanvasIsFull();
@@ -64,6 +60,7 @@
     }
 
     focus.set(definition.id);
+    shell.onboarding?.close();
   };
 
   const deleteFocusedSetDefinitions = () => {
@@ -73,7 +70,11 @@
     for (const setId of focusedSetIds) sets.removeDefinition(setId);
   };
 
-  shell.surface.events.canvas.subscribe('onDblClick', createSetDefinition);
+  shell.surface.events.elements.handle(
+    'onDblClick',
+    createSetDefinition,
+    INPUT_HANDLER_ID.createSet,
+  );
 
   shell.shortcuts.add({
     id: 'delete-set',

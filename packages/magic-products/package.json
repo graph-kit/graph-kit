@@ -22,6 +22,7 @@
   "dependencies": {
     "@canvas/primitives": "workspace:*",
     "@canvas/surface": "workspace:*",
+    "@core/annotations": "workspace:*",
     "@core/components": "workspace:*",
     "@core/themes": "workspace:*",
     "@core/utils": "workspace:*",

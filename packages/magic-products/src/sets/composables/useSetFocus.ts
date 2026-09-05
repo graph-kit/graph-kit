@@ -3,6 +3,7 @@ import type { CanvasSurface } from '@canvas/surface/types';
 
 import { onBeforeUnmount, ref } from 'vue';
 
+import { INPUT_HANDLER_ID } from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';
 import type { SetDefinitionId } from '../types.ts';
 
@@ -36,10 +37,14 @@ export const useSetFocus = ({ surface }: SetFocusProps): SetFocusControls => {
     setFocus(identity.setId);
   };
 
-  surface.events.elements.subscribe('onMouseDown', focusSetUnderCursor);
+  surface.events.elements.handle(
+    'onMouseDown',
+    focusSetUnderCursor,
+    INPUT_HANDLER_ID.focus,
+  );
 
   onBeforeUnmount(() =>
-    surface.events.elements.unsubscribe('onMouseDown', focusSetUnderCursor),
+    surface.events.elements.unhandle('onMouseDown', focusSetUnderCursor),
   );
 
   return {

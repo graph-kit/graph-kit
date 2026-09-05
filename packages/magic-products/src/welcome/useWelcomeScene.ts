@@ -1,3 +1,4 @@
+import { nullThrows } from '@core/utils/assert';
 import { Color } from '@core/utils/colors';
 import { createPhantomAwareEdgeRenderFunction } from '@graph/plugins/phantom/createPhantomAwareEdgeRenderFunction';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
@@ -5,7 +6,7 @@ import { Graph } from '@magic/shared/graph';
 import Fraction from 'fraction.js';
 import tinycolor from 'tinycolor2';
 
-import { Ref, onMounted, ref, watch } from 'vue';
+import { Ref, inject, onMounted, provide, ref, watch } from 'vue';
 
 import {
   DEFAULT_EXAMPLE,
@@ -14,7 +15,6 @@ import {
   GraphExample,
   ProductExample,
   SetsExample,
-  isExampleProductId,
   productExamples,
 } from './examples.ts';
 import {
@@ -22,24 +22,17 @@ import {
   PlacementPoint,
   edgeIdOf,
   nodeIdOf,
-  resolveColors,
   resolvePositions,
+  wipeColorsByNode,
 } from './scene.ts';
 import { createSetsRenderer } from './setsRenderer.ts';
 
-/** how far back an edge the product's answer passed over is pushed */
 const GHOSTED_OPACITY = 0.35;
 
 export type WelcomeScene = {
-  /** the product whose example the canvas is showing */
-  active: Readonly<Ref<ExampleProductId>>;
-  /** the card the pointer is on, whether or not that product has an example */
-  hovered: Readonly<Ref<string | undefined>>;
-  /**
-   * shows a product's example, or clears the lit card when given nothing. the canvas holds
-   * whatever it last drew either way, so a product with no example changes nothing
-   */
-  hover: (productId: string | undefined) => void;
+  /** the product whose example is on the canvas */
+  showing: Readonly<Ref<ExampleProductId>>;
+  show: (productId: ExampleProductId) => void;
   /** screen pixels the rail takes off the left, so the scene centers in what is left */
   reservedLeftPx: Ref<number>;
 };
@@ -47,28 +40,22 @@ export type WelcomeScene = {
 const weightOf = ({ weight }: ExampleEdge) => new Fraction(weight ?? 1);
 
 export const useWelcomeScene = (graph: Graph): WelcomeScene => {
-  const active = ref<ExampleProductId>(DEFAULT_EXAMPLE);
-  const hovered = ref<string>();
+  const showing = ref<ExampleProductId>(DEFAULT_EXAMPLE);
   const reservedLeftPx = ref(0);
 
-  const paintByNodeId = new Map<string, Color>();
+  const nodeColors = new Map<string, Color>();
+  const ghostedEdges = new Set<string>();
 
-  const paint = ({ id }: CoreNode) => paintByNodeId.get(id) ?? 'transparent';
+  const paint = ({ id }: CoreNode) => nodeColors.get(id) ?? 'transparent';
 
   const litPaint = (node: CoreNode) =>
     tinycolor(paint(node)).lighten(8).toHexString();
 
-  /** edges the example marked ghosted, by id, rebuilt on every handover */
-  const ghostedEdgeIds = new Set<string>();
-
-  // faded against whatever the preset would have painted, so it reads the same in either
-  // theme and follows the edge color rather than pinning a gray of its own
-  const fade = (edge: CoreEdge, resolveUnderneath: () => Color) => {
-    if (!ghostedEdgeIds.has(edge.id)) return;
-    return tinycolor(resolveUnderneath())
-      .setAlpha(GHOSTED_OPACITY)
-      .toHex8String();
-  };
+  // faded against what the preset would have painted, so it follows the theme
+  const fade = (edge: CoreEdge, resolveUnderneath: () => Color) =>
+    ghostedEdges.has(edge.id)
+      ? tinycolor(resolveUnderneath()).setAlpha(GHOSTED_OPACITY).toHex8String()
+      : undefined;
 
   graph.theme
     .createThemer({
@@ -85,12 +72,9 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
     })
     .activate();
 
-  /**
-   * the canvas graph is directed and weighted no matter which example is up, since
-   * directedness is fixed when a graph is built. arrowheads and weight labels are the
-   * renderer's call instead, so each example can look like the product it stands for
-   */
-  const applyEdgeRendering = ({ directed, weighted }: GraphExample) => {
+  // directedness is fixed when a graph is built, so which examples show arrowheads and
+  // weights is the renderer's call rather than the graph's
+  const applyEdgeRendering = ({ directed, weighted }: GraphExample) =>
     graph.setRenderFunction(
       'edge',
       createPhantomAwareEdgeRenderFunction(
@@ -104,7 +88,6 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
         { labelled: weighted },
       ),
     );
-  };
 
   const place = (points: readonly PlacementPoint[]) =>
     resolvePositions(points, graph.surface.visibleWorldRect.value, {
@@ -118,35 +101,20 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
   const setPoints = ({ sets }: SetsExample): PlacementPoint[] =>
     sets.map(({ at, radius }) => ({ at, reach: radius }));
 
-  const setsRenderer = createSetsRenderer(graph);
+  const sets = createSetsRenderer(graph);
 
-  /** which handover the elements on the canvas belong to */
   let generation = 0;
 
-  let drawn: ProductExample | undefined;
-
-  /** empties the canvas of whatever the example before it left behind */
-  const clearCanvas = () => {
-    setsRenderer.clear();
-    graph.actions.removeElements({
-      nodes: graph.nodes.value.map(({ id }) => ({ id })),
-      edges: graph.edges.value.map(({ id }) => ({ id })),
-    });
-  };
-
   const drawGraph = (example: GraphExample) => {
-    paintByNodeId.clear();
-    for (const { index, color } of resolveColors(example.nodes)) {
-      paintByNodeId.set(nodeIdOf(generation, index), color);
-    }
+    wipeColorsByNode(example.nodes).forEach((color, index) =>
+      nodeColors.set(nodeIdOf(generation, index), color),
+    );
 
-    ghostedEdgeIds.clear();
     for (const edge of example.edges) {
-      if (edge.ghosted) ghostedEdgeIds.add(edgeIdOf(generation, edge));
+      if (edge.ghosted) ghostedEdges.add(edgeIdOf(generation, edge));
     }
 
     applyEdgeRendering(example);
-    clearCanvas();
 
     graph.actions.addElements({
       nodes: place(nodePoints(example)).map((position, index) => ({
@@ -163,52 +131,41 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
     });
   };
 
-  const drawSets = (example: SetsExample) => {
-    clearCanvas();
-    setsRenderer.show({ example, centers: place(setPoints(example)) });
-  };
-
-  /** clears the canvas and stands the example up in its place */
   const draw = (example: ProductExample) => {
     generation += 1;
-    if (example.kind === 'sets') drawSets(example);
-    else drawGraph(example);
-    drawn = example;
-  };
+    nodeColors.clear();
+    ghostedEdges.clear();
+    sets.clear();
+    graph.actions.removeElements({
+      nodes: graph.nodes.value.map(({ id }) => ({ id })),
+      edges: graph.edges.value.map(({ id }) => ({ id })),
+    });
 
-  const show = (productId: ExampleProductId) => {
-    const next = productExamples[productId];
-    if (next !== drawn) draw(next);
-  };
-
-  const hover: WelcomeScene['hover'] = (productId) => {
-    hovered.value = productId;
-    if (productId !== undefined && isExampleProductId(productId)) {
-      active.value = productId;
+    if (example.kind === 'sets') {
+      sets.show({ example, centers: place(setPoints(example)) });
+    } else {
+      drawGraph(example);
     }
   };
 
-  watch(active, show);
+  const redraw = () => draw(productExamples[showing.value]);
 
-  // the rail comes and goes with the window width, and the scene is centered on the canvas
-  // it leaves uncovered, so a change in what it takes re-places whatever is drawn
-  watch(reservedLeftPx, () => {
-    if (!drawn) return;
+  watch([showing, reservedLeftPx], redraw);
+  onMounted(redraw);
 
-    if (drawn.kind === 'sets') {
-      setsRenderer.show({ example: drawn, centers: place(setPoints(drawn)) });
-      return;
-    }
-
-    graph.positions.setMany(
-      place(nodePoints(drawn)).map((position, index) => ({
-        nodeId: nodeIdOf(generation, index),
-        update: position,
-      })),
-    );
-  });
-
-  onMounted(() => show(active.value));
-
-  return { active, hovered, hover, reservedLeftPx };
+  return {
+    showing,
+    show: (productId) => {
+      showing.value = productId;
+    },
+    reservedLeftPx,
+  };
 };
+
+const SCENE_KEY = 'welcome-scene';
+
+export const provideWelcomeScene = (scene: WelcomeScene) =>
+  provide(SCENE_KEY, scene);
+
+export const useProvidedWelcomeScene = () =>
+  nullThrows(inject<WelcomeScene>(SCENE_KEY), 'welcome scene not provided');

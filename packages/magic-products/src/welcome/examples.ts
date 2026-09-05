@@ -1,40 +1,29 @@
 import { nullThrows } from '@core/utils/assert';
 import { Coordinate } from '@core/utils/canvas/index';
-import { ProductId, products } from '@magic/shared/product';
+import { ProductCard, ProductId, products } from '@magic/shared/product';
 
-/** every product the canvas can stand up an example of, which is all of them */
 export type ExampleProductId = Exclude<ProductId, 'dev' | 'welcome'>;
 
 export type ExampleNode = {
-  /** what the node reads as, so an AVL example can hold values and a chain can hold states */
   label: string;
-  /**
-   * placement relative to the other nodes, in world units. the origin these are written
-   * against is arbitrary, only the distances between them matter
-   */
+  /** relative to the other nodes; only the distances between them matter */
   at: Coordinate;
 };
 
 export type ExampleEdge = {
-  /** index into {@link ProductExample.nodes} */
+  /** index into {@link GraphExample.nodes} */
   from: number;
-  /** index into {@link ProductExample.nodes} */
+  /** index into {@link GraphExample.nodes} */
   to: number;
   /** anything `Fraction` takes, so a chain can carry `'1/2'` and a path can carry `7` */
   weight?: string | number;
-  /**
-   * drawn faded, for an edge the product's own answer leaves out. an MST example ghosts
-   * everything outside the tree so the tree itself is what reads
-   */
+  /** faded, for an edge the product's own answer leaves out */
   ghosted?: boolean;
 };
 
 export type GraphExample = {
   kind: 'graph';
-  /**
-   * whether edges are drawn with arrowheads. the canvas graph itself is directed no matter
-   * what, since directedness is fixed at construction, so this is the rendering alone
-   */
+  /** whether edges are drawn with arrowheads, which is rendering rather than structure */
   directed: boolean;
   /** whether edges show their weight */
   weighted: boolean;
@@ -42,29 +31,19 @@ export type GraphExample = {
   edges: ExampleEdge[];
 };
 
-/** one circle of a set diagram, placed the way an example node is */
 export type ExampleSet = {
   label: string;
   at: Coordinate;
   radius: number;
 };
 
-/**
- * one query and the atomic regions it lights. queries are colored in order from the same
- * palette the product assigns from, and a region two of them both select is painted in
- * both, which is what the hatch is for
- */
 export type ExampleQuery = {
-  /** the query this stands for, for whoever is reading the example */
   selects: string;
   /** each entry names the sets a region falls inside; every set it omits it falls outside */
   sections: string[][];
 };
 
-/**
- * sets is the one product that draws no graph, so its example is circles and the regions a
- * query lights up rather than nodes and edges
- */
+/** sets draws no graph, so its example is circles and the regions its queries light up */
 export type SetsExample = {
   kind: 'sets';
   sets: ExampleSet[];
@@ -233,19 +212,20 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
   },
 };
 
-/** narrows a product id off a manifest, which is only ever typed as a string */
-export const isExampleProductId = (
-  productId: string,
-): productId is ExampleProductId => productId in productExamples;
+const isExampleProductId = (id: string): id is ExampleProductId =>
+  id in productExamples;
 
-/**
- * what the canvas stands up before anyone has pointed at a card: whichever card the rail
- * lists first. read off the manifests rather than named here, so reordering the products
- * moves the default with them instead of leaving it pointing into the middle of the list
- */
-export const DEFAULT_EXAMPLE: ExampleProductId = nullThrows(
-  products.flatMap(({ id, navigation }) =>
-    navigation.card && isExampleProductId(id) ? [id] : [],
-  )[0],
-  'no product offers both a navigation card and an example',
+export type ExampleCard = { id: ExampleProductId; card: ProductCard };
+
+/** what the rail lists, in manifest order */
+export const exampleCards: ExampleCard[] = products.flatMap(
+  ({ id, navigation }) =>
+    navigation.card && isExampleProductId(id)
+      ? [{ id, card: navigation.card }]
+      : [],
 );
+
+export const DEFAULT_EXAMPLE = nullThrows(
+  exampleCards[0],
+  'no product offers both a navigation card and an example',
+).id;

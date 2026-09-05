@@ -1,25 +1,19 @@
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import colors, { Color } from '@core/utils/colors';
-import { getRandomElement } from '@core/utils/random';
-import { ProductId, products } from '@magic/shared/product';
 
-import {
-  WelcomeArrangement,
-  WelcomeProductId,
-  welcomeArrangements,
-} from './arrangements.ts';
+import { ExampleNode } from './examples.ts';
 
-export const pickArrangement = (except?: WelcomeArrangement) => {
-  const options = welcomeArrangements.filter(
-    (candidate) => candidate !== except,
-  );
-  return getRandomElement(options.length > 0 ? options : welcomeArrangements);
-};
+export const NODE_RADIUS = 40;
 
-const entriesOf = ({ nodes }: WelcomeArrangement) =>
-  Object.entries(nodes) as [WelcomeProductId, Coordinate][];
+/** ids carry the handover they belong to, so nothing keyed by id outlives its example */
+export const nodeIdOf = (generation: number, index: number) =>
+  `welcome/${generation}/node/${index}`;
 
-/** handed out left to right, looping once the arrangement outruns it */
+export const edgeIdOf = (
+  generation: number,
+  { from, to }: { from: number; to: number },
+) => `welcome/${generation}/edge/${from}-${to}`;
+
 const WIPE: Color[] = [
   colors.PURPLE_500,
   colors.FUCHSIA_500,
@@ -29,64 +23,73 @@ const WIPE: Color[] = [
   colors.ORANGE_400,
 ];
 
-/**
- * spends the wipe across the arrangement, so a node's color falls out of where it
- * sits horizontally rather than being written down per layout
- */
-export const resolveColors = (arrangement: WelcomeArrangement) =>
-  entriesOf(arrangement)
+/** a node's color falls out of where it sits, spending the wipe left to right */
+export const wipeColorsByNode = (nodes: readonly ExampleNode[]) => {
+  const leftToRight = nodes
+    .map((_, index) => index)
     .sort(
-      ([, previous], [, next]) => previous.x - next.x || previous.y - next.y,
-    )
-    .map(([productId], index) => ({
-      productId,
-      color: WIPE[index % WIPE.length],
-    }));
+      (a, b) => nodes[a].at.x - nodes[b].at.x || nodes[a].at.y - nodes[b].at.y,
+    );
 
-const midpointOf = (values: number[]) =>
-  (Math.min(...values) + Math.max(...values)) / 2;
+  const byNode: Color[] = [];
+  leftToRight.forEach(
+    (node, rank) => (byNode[node] = WIPE[rank % WIPE.length]),
+  );
+  return byNode;
+};
 
-/** world units the scene sits below the viewport center, clearing the banner above it */
+/** a point and how far what sits on it reaches, so unequal circles still center on what shows */
+export type PlacementPoint = {
+  at: Coordinate;
+  reach: number;
+};
+
+export const boundingBoxOf = (
+  points: readonly PlacementPoint[],
+): BoundingBox => {
+  const span = (axis: 'x' | 'y') => ({
+    min: Math.min(...points.map(({ at, reach }) => at[axis] - reach)),
+    max: Math.max(...points.map(({ at, reach }) => at[axis] + reach)),
+  });
+
+  const x = span('x');
+  const y = span('y');
+  return {
+    at: { x: x.min, y: y.min },
+    width: x.max - x.min,
+    height: y.max - y.min,
+  };
+};
+
+/** world units the scene sits below center, clearing the banner above it */
 const VERTICAL_BIAS = 30;
 
-/**
- * lands the arrangement's bounding box on the center of whatever the canvas is
- * showing, so the graph arrives centered at any window size
- */
+/** centers the points on the canvas the rail leaves uncovered, answering in the order given */
 export const resolvePositions = (
-  arrangement: WelcomeArrangement,
+  points: readonly PlacementPoint[],
   viewport: BoundingBox,
-) => {
-  const entries = entriesOf(arrangement);
-  const offsets = entries.map(([, offset]) => offset);
+  { reservedLeftPx, zoom }: { reservedLeftPx: number; zoom: number },
+): Coordinate[] => {
+  // a window too narrow to hold both would otherwise shove the scene off the right edge
+  const reserved = Math.min(
+    zoom > 0 ? reservedLeftPx / zoom : 0,
+    viewport.width / 2,
+  );
+
+  const box = boundingBoxOf(points);
 
   const origin: Coordinate = {
     x:
       viewport.at.x +
-      viewport.width / 2 -
-      midpointOf(offsets.map(({ x }) => x)),
+      reserved +
+      (viewport.width - reserved) / 2 -
+      (box.at.x + box.width / 2),
     y:
       viewport.at.y +
       viewport.height / 2 +
       VERTICAL_BIAS -
-      midpointOf(offsets.map(({ y }) => y)),
+      (box.at.y + box.height / 2),
   };
 
-  return entries.map(([productId, offset]) => ({
-    productId,
-    position: { x: origin.x + offset.x, y: origin.y + offset.y },
-  }));
+  return points.map(({ at }) => ({ x: origin.x + at.x, y: origin.y + at.y }));
 };
-
-export const NODE_RADIUS = 45;
-
-const NODE_ID_PREFIX = 'welcome/node/';
-
-export const nodeIdOf = (productId: ProductId) =>
-  `${NODE_ID_PREFIX}${productId}`;
-
-export const productOf = (nodeId: string) =>
-  products.find(({ id }) => `${NODE_ID_PREFIX}${id}` === nodeId);
-
-export const edgeIdOf = (arrangement: WelcomeArrangement, index: number) =>
-  `welcome/edge/${arrangement.name}/${index}`;

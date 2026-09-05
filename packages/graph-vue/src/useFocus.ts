@@ -3,7 +3,9 @@ import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
 import { ref } from 'vue';
 
-export const useFocus = (focus: FocusControls) => {
+// generic over the controls handed in, so everything the plugin exposes beyond
+// FocusControls — its lifecycle above all — survives the wrapping
+export const useFocus = <Controls extends FocusControls>(focus: Controls) => {
   const focusedNodes = ref<CoreNode[]>([...focus.focusedNodes()]);
   const focusedEdges = ref<CoreEdge[]>([...focus.focusedEdges()]);
   focus.events.subscribe('onFocusChange', () => {

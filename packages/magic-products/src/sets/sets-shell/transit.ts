@@ -23,14 +23,15 @@ export type SetsSharedState = {
   annotations: Annotation[];
 };
 
-/**
- * Everything sets serializes. The shared half plus the two things that stay on this
- * device: the queries, which the mathfield owns and replaying would fight, and the
- * camera, which is where this user happens to be looking.
- */
+/** what sets serializes. shared and what stays on device */
 export type SetsTransitPayload = SetsSharedState & {
   queries: EncodedQuery[];
   camera: { panX: number; panY: number; zoom: number };
+};
+
+export type SetsTransit = TransitField & {
+  encodeSets: () => EncodedSet[];
+  applySets: (encoded: EncodedSet[]) => void;
 };
 
 export type SetsTransitParts = {
@@ -48,10 +49,6 @@ const encodeSets = (sets: SetDefinitions): EncodedSet[] =>
     radius: display.radius,
   }));
 
-/*
-  ids are minted here rather than carried: nothing that outlives a session names a set by
-  id, since a query names it by label. a room is the exception and has its own mapping
-*/
 const decodeSets = (sets: SetDefinitions, encoded: EncodedSet[]) =>
   sets.setAll(
     encoded.map(({ label, x, y, radius }) => ({
@@ -73,7 +70,10 @@ export const createSetsTransit = ({
   queries,
   annotations,
   surface,
-}: SetsTransitParts): TransitField => ({
+}: SetsTransitParts): SetsTransit => ({
+  encodeSets: () => encodeSets(sets),
+  applySets: (encoded) => decodeSets(sets, encoded),
+
   encode: (): SetsTransitPayload => {
     const { panX, panY, zoom } = surface.camera.state;
     return {

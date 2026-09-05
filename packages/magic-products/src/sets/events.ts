@@ -22,6 +22,19 @@ export const createSetDefinitionsEventRegistry =
     onDisplayChanged: new Set(),
   });
 
+export type SetGestureEventMap = {
+  /** the user took hold of a set, to move or to resize it */
+  onGestureStarted: (setId: SetDefinitionId) => void;
+  /** the user let go, whether or not anything moved. */
+  onGestureEnded: (setId: SetDefinitionId) => void;
+};
+
+export const createSetGestureEventRegistry =
+  (): EventMapToEventRegistry<SetGestureEventMap> => ({
+    onGestureStarted: new Set(),
+    onGestureEnded: new Set(),
+  });
+
 export type QueriesEventMap = {
   /** a query arrived, left, or had its latex or visibility rewritten */
   onQueriesChanged: () => void;

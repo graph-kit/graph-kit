@@ -6,6 +6,7 @@ import { onBeforeUnmount } from 'vue';
 import { INPUT_HANDLER_ID } from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';
 import type { SetDefinitions } from '../setDefinitions.ts';
+import type { SetGestures } from '../setGestures.ts';
 import type { SetsTheme } from '../theme/useSetsTheme.ts';
 import type { SetDefinitionId } from '../types.ts';
 import { useDrag } from './useDrag.ts';
@@ -15,10 +16,16 @@ const DRAG_THEME_LAYER_ID = 'sets/useCircleDrag';
 type CircleDragProps = {
   surface: CanvasSurface;
   sets: SetDefinitions;
+  gestures: SetGestures;
   theme: SetsTheme;
 };
 
-export const useCircleDrag = ({ surface, sets, theme }: CircleDragProps) => {
+export const useCircleDrag = ({
+  surface,
+  sets,
+  gestures,
+  theme,
+}: CircleDragProps) => {
   const drag = useDrag<SetDefinitionId>({
     surface,
     handlerId: INPUT_HANDLER_ID.circleDrag,
@@ -27,10 +34,13 @@ export const useCircleDrag = ({ surface, sets, theme }: CircleDragProps) => {
       const identity = setElementIdentity(topElement);
       if (identity?.part !== 'body') return;
       if (!sets.hasDefinition(identity.setId)) return;
+
+      gestures.report.held(identity.setId);
       return identity.setId;
     },
 
     onMove: (setId, { diff }) => sets.moveDefinition(setId, diff),
+    onDrop: (setId) => gestures.report.released(setId),
   });
 
   const cursorLayer = theme.createLayer(DRAG_THEME_LAYER_ID);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { getCenterPoint } from '@canvas/primitives/helpers';
+  import { nullThrows } from '@core/utils/assert';
   import Shell from '@magic/shared/Shell';
   import { toast } from '@magic/shared/toast';
 
@@ -7,12 +7,12 @@
   import { useCircleResize } from './composables/useCircleResize.ts';
   import { useSetsRendering } from './composables/useSetsRendering.ts';
   import { MAX_SETS } from './constants.ts';
-  import { useSetsProduct } from './useSetsProduct.ts';
+  import { useSetsShell } from './sets-shell/useSetsShell.ts';
 
   const {
     shell,
-    setsProductState: { sets, sections, queryAnalysis, theme, queries, focus },
-  } = useSetsProduct();
+    setsState: { sets, sections, queryAnalysis, theme, queries, focus },
+  } = useSetsShell();
 
   useCircleResize({ surface: shell.surface, definitions: sets.definitions });
 
@@ -51,14 +51,12 @@
     });
   };
 
-  const newSetAt = () => {
-    const cursorAt = shell.surface.cursorCoordinates.value;
-    if (cursorAt) return cursorAt;
-    return getCenterPoint(shell.surface.visibleWorldRect.value);
-  };
-
   const createSetDefinition = () => {
-    const definition = sets.addDefinition(newSetAt());
+    const cursorAt = nullThrows(
+      shell.surface.cursorCoordinates.value,
+      'no cursor coordinates',
+    );
+    const definition = sets.addDefinition(cursorAt);
 
     if (!definition) {
       sayCanvasIsFull();
@@ -66,8 +64,6 @@
     }
 
     focus.set(definition.id);
-    // the prompt was to make one of these
-    shell.onboarding?.close();
   };
 
   const deleteFocusedSetDefinitions = () => {

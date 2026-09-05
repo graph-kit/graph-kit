@@ -11,7 +11,7 @@
   import { computed } from 'vue';
 
   import { Query } from '../queries.ts';
-  import { useProvidedSetsProductState } from '../useSetsProduct.ts';
+  import { useProvidedSetsState } from '../sets-shell/context.ts';
 
   const props = defineProps<{
     query: Query;
@@ -19,7 +19,7 @@
 
   const previewValue = defineModel<string>();
 
-  const { queryAnalysis } = useProvidedSetsProductState();
+  const { queryAnalysis } = useProvidedSetsState();
 
   const simplified = computed(
     () => queryAnalysis.simplifiedQueries.value[props.query.id],

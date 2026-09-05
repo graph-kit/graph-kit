@@ -11,7 +11,7 @@ export const simulationButtons: GraphSimulationButtonOption = (graph) => {
 
   const disabled = () => {
     if (graph.nodes.value.length === 0) return { reason: 'Add a node first' };
-    if (!node.value) return { reason: 'Click a node' };
+    if (!node.value) return { reason: 'Click a node to start from' };
     return false;
   };
 

@@ -9,8 +9,8 @@
   import { computed, ref } from 'vue';
 
   import { useQueryEditor } from '../composables/useQueryEditor.ts';
+  import { useProvidedSetsState } from '../sets-shell/context.ts';
   import { QueryId } from '../types.ts';
-  import { useProvidedSetsProductState } from '../useSetsProduct.ts';
   import QueryInputModifiers from './QueryInputModifiers.vue';
   import QueryToggleHidden from './QueryToggleHidden.vue';
 
@@ -18,7 +18,7 @@
     queryId: QueryId;
   }>();
 
-  const { queries, queryAnalysis } = useProvidedSetsProductState();
+  const { queries, queryAnalysis } = useProvidedSetsState();
 
   const query = queries.getQuery(props.queryId);
 

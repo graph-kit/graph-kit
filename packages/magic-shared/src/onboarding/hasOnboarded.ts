@@ -1,9 +1,11 @@
 import { readLocalStorage, writeLocalStorage } from '@core/utils/localStorage';
 
-const HAS_ONBOARDED_LOCAL_KEY = 'has-onboarded';
+import { OnboardingId } from './types.ts';
 
-export const hasOnboarded = () =>
-  readLocalStorage(HAS_ONBOARDED_LOCAL_KEY) === 'true';
+const localKey = (id: OnboardingId) => `has-onboarded-${id}`;
 
-export const markOnboarded = () =>
-  writeLocalStorage(HAS_ONBOARDED_LOCAL_KEY, 'true');
+export const hasOnboarded = (id: OnboardingId) =>
+  readLocalStorage(localKey(id)) === 'true';
+
+export const markOnboarded = (id: OnboardingId) =>
+  writeLocalStorage(localKey(id), 'true');

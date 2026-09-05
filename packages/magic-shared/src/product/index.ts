@@ -5,6 +5,7 @@ export type {
   Shell,
   ProductControls,
   ShellOptions,
+  TransitCompression,
   TransitField,
 } from './types.ts';
 

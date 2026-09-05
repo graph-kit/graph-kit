@@ -15,6 +15,8 @@ import { useCanvasAppearance } from '../theme/useCanvasAppearance.ts';
 import { useSetsTheme } from '../theme/useSetsTheme.ts';
 import { provideSetsState } from './context.ts';
 import { SETS_ONBOARDING } from './onboarding.ts';
+import { setsTransitCompression } from './transit-compression.ts';
+import { createSetsTransit } from './transit.ts';
 import { SetsState } from './types.ts';
 
 /** adapts sets to the shell's controls interface, see {@link useShell} */
@@ -40,10 +42,16 @@ export const useSetsShell = (): {
   useCircleResize({ surface, sets });
   useCircleDrag({ surface, sets, theme });
 
-  // no transit, so no: multiplayer, local storage and link sharing
   const product: ProductControls = {
     surface,
     annotations,
+    transit: {
+      ...createSetsTransit({ sets, queries, annotations, surface }),
+      compression: setsTransitCompression,
+    },
+    // the circles themselves. a resize band is not somewhere to jump back to, and an
+    // annotation is drawn over content rather than being any
+    isContent: ({ id }) => sets.hasDefinition(id),
     onAppearanceChanged: (color) => theme.setActivePreset(color),
     multiplayer: {
       bind: () => {},
@@ -67,7 +75,25 @@ export const useSetsShell = (): {
       },
     ],
     onboarding: SETS_ONBOARDING,
+    // restored state is an answered prompt, the same as a set drawn by hand
+    onSetupCompleted: () => {
+      if (sets.definitions.value.length > 0) shell.onboarding?.close();
+    },
   });
+
+  sets.events.subscribe('onDefinitionsChanged', shell.localStorage.invalidate);
+  sets.events.subscribe('onDisplayChanged', shell.localStorage.invalidate);
+  queries.events.subscribe('onQueriesChanged', shell.localStorage.invalidate);
+  annotations.events.subscribe(
+    'onAnnotationsChanged',
+    shell.localStorage.invalidate,
+  );
+
+  // the first set is the prompt answered. a restore lands before onboarding opens, which
+  // is what onSetupCompleted above is for
+  sets.events.subscribe('onDefinitionsChanged', () =>
+    shell.onboarding?.close(),
+  );
 
   const setsState: SetsState = {
     queries,

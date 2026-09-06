@@ -1,26 +1,19 @@
 <script setup lang="ts">
-  import HStack from '@magic/shared/HStack';
-  import IconVue from '@magic/shared/Icon';
-  import ThemerButton from '@magic/shared/ThemerButton';
   import {
     Explainer,
     ExplainerHighlight,
     ExplainerText,
   } from '@magic/shared/explainer';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
-  import { mdiAutoFix } from '@mdi/js';
 
   import { computed } from 'vue';
 
   import { definitions } from '../definitions.ts';
   import { useMarkovChain } from '../useMarkovChain.ts';
   import { negativeTransitionsLens, validityLens } from './lens.ts';
-  import { useChainAutoFix } from './useChainAutoFix.ts';
 
   const graph = useProvidedGraph();
   const chain = useMarkovChain(graph);
-
-  const autoFix = useChainAutoFix(graph, chain);
 
   const validity = validityLens(graph, chain);
   const negativeTransitions = negativeTransitionsLens(graph, chain);
@@ -70,17 +63,8 @@
 </script>
 
 <template>
-  <HStack v-if="!chain.isValid.value">
-    <ExplainerText :explainer="explainer" />
-    <ThemerButton
-      @click="autoFix.apply"
-      :themer="autoFix.themer"
-      class="text-2xl px-2 py-0 leading-8 whitespace-nowrap"
-    >
-      <template #start>
-        <IconVue :path="mdiAutoFix" />
-      </template>
-      Auto Fix
-    </ThemerButton>
-  </HStack>
+  <ExplainerText
+    v-if="!chain.isValid.value"
+    :explainer="explainer"
+  />
 </template>

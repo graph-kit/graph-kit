@@ -4,6 +4,7 @@
 
   import TransitionSimulationButton from './TransitionSimulationButton.vue';
   import { lensChips } from './lensChips.ts';
+  import ChainAutoFix from './validity/ChainAutoFix.vue';
   import ValidityExplainer from './validity/ValidityExplainer.vue';
   import { VALIDITY_EXPLAINER_SLOT_ID } from './validity/lens.ts';
 
@@ -15,11 +16,18 @@
     },
   });
 
-  shell.componentSlots.add({
-    id: VALIDITY_EXPLAINER_SLOT_ID,
-    component: ValidityExplainer,
-    position: 'bottom-middle',
-  });
+  shell.componentSlots.addMany([
+    {
+      id: VALIDITY_EXPLAINER_SLOT_ID,
+      component: ValidityExplainer,
+      position: 'bottom-middle',
+    },
+    {
+      id: 'auto-fix',
+      component: ChainAutoFix,
+      position: 'bottom-middle',
+    },
+  ]);
 </script>
 
 <template>

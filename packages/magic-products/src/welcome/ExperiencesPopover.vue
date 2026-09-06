@@ -4,6 +4,7 @@
   import Icon from '@magic/shared/Icon';
   import Popover from '@magic/shared/Popover';
   import VStack from '@magic/shared/VStack';
+  import Well from '@magic/shared/Well';
   import {
     type ProductCategory,
     productCategories,
@@ -108,18 +109,13 @@
     :side-offset="14"
   >
     <template #trigger>
-      <Button
-        class="group gap-3 rounded-xl px-8 py-4 text-2xl shadow-lg hover:bg-gray-200 dark:hover:bg-gray-900"
-      >
-        Go To Experiences
-        <template #end>
-          <Icon
-            class="transition-transform duration-200 group-hover:translate-x-1 group-aria-expanded:-rotate-90 group-aria-expanded:translate-x-0"
-            :path="mdiArrowRight"
-            :size="26"
-          />
-        </template>
-      </Button>
+      <Well class="p-0 w-fit">
+        <Button
+          class="px-6 py-3 text-3xl bg-transparent dark:bg-transparent hover:bg-transparent active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent"
+        >
+          View Experiences
+        </Button>
+      </Well>
     </template>
 
     <VStack

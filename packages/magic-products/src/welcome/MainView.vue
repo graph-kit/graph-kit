@@ -26,11 +26,11 @@
   useWelcomeScene(graph, shell);
 
   shell.componentSlots.addMany([
-    // {
-    //   id: 'welcome-banner',
-    //   component: WelcomeBanner,
-    //   position: 'top-middle',
-    // },
+    {
+      id: 'welcome-banner',
+      component: WelcomeBanner,
+      position: 'top-middle',
+    },
     {
       id: 'action-bar',
       component: ActionBar,

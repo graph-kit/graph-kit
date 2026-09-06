@@ -24,6 +24,7 @@ describe('resolveShellFlags', () => {
       adjustAnimationSpeed: false,
       jumpToContent: true,
       onboarding: true,
+      navigation: true,
     });
   });
 

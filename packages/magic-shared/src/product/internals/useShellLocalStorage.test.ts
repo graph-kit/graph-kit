@@ -15,6 +15,7 @@ const FLAGS: ShellFlags = {
   adjustAnimationSpeed: false,
   jumpToContent: true,
   onboarding: true,
+  navigation: true,
 };
 
 /** stands in for a graph whose state moves while a simulation plays */

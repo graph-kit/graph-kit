@@ -14,6 +14,7 @@
       annotations: false,
       linkSharing: false,
       onboarding: false,
+      navigation: false,
     },
     core: {
       weighted: false,

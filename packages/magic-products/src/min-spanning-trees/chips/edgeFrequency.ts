@@ -58,6 +58,12 @@ export const edgeFrequencyChip = (graph: Graph): LensChipDefinition => {
 
   return {
     label: 'Edge Frequency',
+    disabled: () => {
+      if (graph.minimumSpanningTrees.all.value.skipped) {
+        return { reason: 'Too many nodes' };
+      }
+      return false;
+    },
     tooltipLabel:
       'How often each edge shows up across every possible minimum spanning tree',
     lens: {

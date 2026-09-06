@@ -1,4 +1,5 @@
 import { ThemePreset } from '../../graph/types.ts';
+import { ProductCategory } from './categories.ts';
 
 /** one image per theme, since artwork legible on light is rarely legible on dark */
 export type Thumbnail = Record<ThemePreset, string>;
@@ -7,6 +8,8 @@ export type Thumbnail = Record<ThemePreset, string>;
 export type ProductCard = {
   name: string;
   description: string;
+  /** the group this product is listed under in the experiences menu */
+  category: ProductCategory;
 };
 
 /** everything the navigation menu needs to list a product and route to it */

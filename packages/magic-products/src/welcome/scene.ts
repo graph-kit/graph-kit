@@ -47,7 +47,7 @@ const midpointOf = (values: number[]) =>
   (Math.min(...values) + Math.max(...values)) / 2;
 
 /** world units the scene sits below the viewport center, clearing the banner above it */
-const VERTICAL_BIAS = 30;
+const VERTICAL_BIAS = 0;
 
 /**
  * lands the arrangement's bounding box on the center of whatever the canvas is

@@ -28,7 +28,9 @@ export { provideShell, useProvidedShell } from './context.ts';
 
 export { manifests, products } from './manifests/index.ts';
 export { productThumbnail } from './manifests/thumbnail.ts';
+export { productCategories } from './manifests/categories.ts';
 export type { ProductId } from './manifests/index.ts';
+export type { ProductCategory } from './manifests/categories.ts';
 export type {
   ProductCard,
   ProductManifest,

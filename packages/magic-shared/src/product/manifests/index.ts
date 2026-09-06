@@ -13,6 +13,7 @@ export const manifests = {
         name: 'Set Theory',
         description:
           'Create sets and write queries that light up the regions they select.',
+        category: 'discrete-math',
       },
     },
     meta: {
@@ -33,6 +34,7 @@ export const manifests = {
         name: 'Markov Chains',
         description:
           'Wire up states, set transition probabilities and read off the classes, periodicity and stationary distribution.',
+        category: 'discrete-math',
       },
     },
     meta: {
@@ -52,7 +54,8 @@ export const manifests = {
       card: {
         name: 'AVL Trees',
         description:
-          'Insert and remove values, then step through each rotation the tree makes to rebalance.',
+          'Insert and remove values, stepping through each rotation the tree makes to rebalance.',
+        category: 'data-structures',
       },
     },
     meta: {
@@ -72,7 +75,8 @@ export const manifests = {
       card: {
         name: 'Traversals',
         description:
-          'Step through BFS and DFS one visit at a time, tracking the queue, the stack and the visited set.',
+          'Run Breadth-First and Depth-First Search, tracking the queue, the stack and the visited set.',
+        category: 'graph-algorithms',
       },
     },
     meta: {
@@ -93,6 +97,7 @@ export const manifests = {
         name: 'Path Finding',
         description:
           "Run Dijkstra's, Bellman-Ford and Floyd-Warshall to surface every shortest path.",
+        category: 'graph-algorithms',
       },
     },
     meta: {
@@ -112,7 +117,8 @@ export const manifests = {
       card: {
         name: 'Minimum Spanning Trees',
         description:
-          "Run Kruskal's and Prim's to pick the cheapest edges that connect everything.",
+          "Run Kruskal's and Prim's to pick the cheapest edges that connect the graph.",
+        category: 'graph-algorithms',
       },
     },
     meta: {
@@ -140,7 +146,7 @@ export const manifests = {
   welcome: {
     id: 'welcome',
     multiplayer: false,
-    name: 'Go To Experiences',
+    name: 'Magic Graphs',
     abbreviatedName: 'HOME',
     navigation: {
       slug: 'welcome',

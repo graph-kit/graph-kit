@@ -39,7 +39,7 @@ export type WelcomeScene = {
 
 const weightOf = ({ weight }: ExampleEdge) => new Fraction(weight ?? 1);
 
-export const useWelcomeScene = (graph: Graph): WelcomeScene => {
+const createWelcomeScene = (graph: Graph): WelcomeScene => {
   const showing = ref<ExampleProductId>(DEFAULT_EXAMPLE);
   const reservedLeftPx = ref(0);
 
@@ -164,8 +164,8 @@ export const useWelcomeScene = (graph: Graph): WelcomeScene => {
 
 const SCENE_KEY = 'welcome-scene';
 
-export const provideWelcomeScene = (scene: WelcomeScene) =>
-  provide(SCENE_KEY, scene);
+export const provideWelcomeScene = (graph: Graph) =>
+  provide(SCENE_KEY, createWelcomeScene(graph));
 
 export const useProvidedWelcomeScene = () =>
   nullThrows(inject<WelcomeScene>(SCENE_KEY), 'welcome scene not provided');

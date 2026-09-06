@@ -6,7 +6,6 @@
   import RailExplainer from './RailExplainer.vue';
   import WelcomeBanner from './WelcomeBanner.vue';
   import { provideWelcomeScene } from './useWelcomeScene.ts';
-  import { useWelcomeScene } from './useWelcomeScene.ts';
 
   const { graph, shell } = useGraphShell({
     productId: 'welcome',
@@ -27,7 +26,7 @@
   graph.marquee.lifecycle.disable();
   graph.focus.lifecycle.disable();
 
-  provideWelcomeScene(useWelcomeScene(graph));
+  provideWelcomeScene(graph);
 
   // the rail is the navigation here, so the menu would only be a second copy of it
   shell.componentSlots.remove('shell/navigation-menu');

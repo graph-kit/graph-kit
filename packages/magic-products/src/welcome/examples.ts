@@ -6,26 +6,20 @@ export type ExampleProductId = Exclude<ProductId, 'dev' | 'welcome'>;
 
 export type ExampleNode = {
   label: string;
-  /** relative to the other nodes; only the distances between them matter */
+  // relative distance, not absolute position
   at: Coordinate;
 };
 
 export type ExampleEdge = {
-  /** index into {@link GraphExample.nodes} */
   from: number;
-  /** index into {@link GraphExample.nodes} */
   to: number;
-  /** anything `Fraction` takes, so a chain can carry `'1/2'` and a path can carry `7` */
   weight?: string | number;
-  /** faded, for an edge the product's own answer leaves out */
   ghosted?: boolean;
 };
 
 export type GraphExample = {
   kind: 'graph';
-  /** whether edges are drawn with arrowheads, which is rendering rather than structure */
   directed: boolean;
-  /** whether edges show their weight */
   weighted: boolean;
   nodes: ExampleNode[];
   edges: ExampleEdge[];
@@ -39,11 +33,9 @@ export type ExampleSet = {
 
 export type ExampleQuery = {
   selects: string;
-  /** each entry names the sets a region falls inside; every set it omits it falls outside */
   sections: string[][];
 };
 
-/** sets draws no graph, so its example is circles and the regions its queries light up */
 export type SetsExample = {
   kind: 'sets';
   sets: ExampleSet[];
@@ -52,16 +44,11 @@ export type SetsExample = {
 
 export type ProductExample = GraphExample | SetsExample;
 
-/** the graph each product greets you with, laid out the way that product would */
 export const productExamples: Record<ExampleProductId, ProductExample> = {
   traversals: {
     kind: 'graph',
     directed: true,
     weighted: false,
-    // laid out in layers running left to right, which is the order a breadth first sweep
-    // reaches them in, and every edge points to the next layer so none of them cross.
-    // E and G are reachable two and three ways over, so the visited set does real work,
-    // and E back to B is the one cycle
     nodes: [
       { label: 'A', at: { x: -340, y: 0 } },
       { label: 'B', at: { x: -110, y: -170 } },
@@ -121,8 +108,6 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
       { label: 'E', at: { x: -30, y: 50 } },
       { label: 'F', at: { x: 300, y: 180 } },
     ],
-    // every weight is distinct, so there is exactly one minimum spanning tree to show:
-    // A-B, D-E, C-E, B-E and C-F, costing 21. the three it passes over are ghosted
     edges: [
       { from: 0, to: 1, weight: 4 },
       { from: 0, to: 3, weight: 6, ghosted: true },
@@ -162,7 +147,6 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
     kind: 'graph',
     directed: true,
     weighted: true,
-    // every state's outbound weights sum to one, the way a valid chain reads in the product
     nodes: [
       { label: 'A', at: { x: -280, y: -170 } },
       { label: 'B', at: { x: 280, y: -170 } },
@@ -182,16 +166,11 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
 
   sets: {
     kind: 'sets',
-    // every pair overlaps and all three share a middle, so the diagram shows off the
-    // regions a query has to choose between. C is the odd one out on size, since sets in
-    // the product are drawn at whatever radius they were dragged to
     sets: [
       { label: 'A', at: { x: -110, y: -80 }, radius: 170 },
       { label: 'B', at: { x: 110, y: -80 }, radius: 170 },
       { label: 'C', at: { x: 0, y: 110 }, radius: 130 },
     ],
-    // two queries whose results overlap on the middle region, which is the one that ends
-    // up striped in both their colors
     queries: [
       {
         selects: 'A ∩ B',
@@ -212,16 +191,12 @@ export const productExamples: Record<ExampleProductId, ProductExample> = {
   },
 };
 
-const isExampleProductId = (id: string): id is ExampleProductId =>
-  id in productExamples;
-
 export type ExampleCard = { id: ExampleProductId; card: ProductCard };
 
-/** what the rail lists, in manifest order */
 export const exampleCards: ExampleCard[] = products.flatMap(
   ({ id, navigation }) =>
-    navigation.card && isExampleProductId(id)
-      ? [{ id, card: navigation.card }]
+    navigation.card && id in productExamples
+      ? [{ id: id as ExampleProductId, card: navigation.card }]
       : [],
 );
 

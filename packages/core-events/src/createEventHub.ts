@@ -68,7 +68,11 @@ export const createEventHub = <EventMap extends GenericEventMap>(
       eventName: EventName,
       ...callbackArgs: Parameters<EventMap[EventName]>
     ) => {
-      for (const callback of eventRegistry[eventName]) {
+      // the copy stops a subscriber that resubscribes itself from being reached twice,
+      // the membership check keeps one that unsubscribes mid emit from being called
+      const subscribers = eventRegistry[eventName];
+      for (const callback of [...subscribers]) {
+        if (!subscribers.has(callback)) continue;
         callback(...callbackArgs);
       }
       fireHandlers(eventName, ...callbackArgs);

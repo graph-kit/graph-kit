@@ -136,30 +136,38 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
     },
   });
 
-  const themer = {
+  const preview = {
     activate: () => {
       edgeTextColor.activate();
       previewSelLoops.activate();
       colorPhantom.activate();
-      graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
     },
     deactivate: () => {
       edgeTextColor.deactivate();
       previewSelLoops.deactivate();
       colorPhantom.deactivate();
-      graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
     },
   };
 
   const handleStructureChange = () => {
-    themer.deactivate();
-    themer.activate();
+    preview.deactivate();
+    preview.activate();
+  };
+
+  const themer = {
+    activate: () => {
+      preview.activate();
+      graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
+    },
+    deactivate: () => {
+      preview.deactivate();
+      graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
+    },
   };
 
   return {
     themer,
     apply: () => {
-      themer.deactivate();
       graph.weights.setMany(
         Array.from(weightAdjustments.value).map(([edgeId, weight]) => ({
           edgeId,
@@ -176,6 +184,8 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
         edges: previewAddedEdges(),
         nodes: [],
       });
+
+      graph.history.captureSnapshot();
     },
   };
 };

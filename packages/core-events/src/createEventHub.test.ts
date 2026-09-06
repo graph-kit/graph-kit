@@ -62,6 +62,30 @@ describe(createEventHub, () => {
     expect(() => hub.emit('onNodesAdded', [{ id: '1' }])).not.toThrow();
   });
 
+  it('invokes a subscriber once when it resubscribes itself mid-emit', () => {
+    let calls = 0;
+    const RUNAWAY = 50;
+    const subscriber = () => {
+      calls++;
+      if (calls > RUNAWAY) throw new Error('subscriber re-entered itself');
+      hub.unsubscribe('onStructureChange', subscriber);
+      hub.subscribe('onStructureChange', subscriber);
+    };
+    hub.subscribe('onStructureChange', subscriber);
+    hub.emit('onStructureChange');
+    expect(calls).toBe(1);
+  });
+
+  it('does not invoke a subscriber another subscriber unsubscribed mid-emit', () => {
+    const second = vi.fn();
+    hub.subscribe('onStructureChange', () =>
+      hub.unsubscribe('onStructureChange', second),
+    );
+    hub.subscribe('onStructureChange', second);
+    hub.emit('onStructureChange');
+    expect(second).not.toHaveBeenCalled();
+  });
+
   it('invokes a handler once when the same callback is handled twice', () => {
     const handler = vi.fn();
     hub.handle('onStructureChange', handler, 'hub');

@@ -17,8 +17,7 @@
 
   const shell = useProvidedShell();
 
-  /** the product whose artwork stands in for an experience that has none yet */
-  const PLACEHOLDER_THUMBNAIL_PRODUCT_ID = 'min-spanning-trees';
+  const PLACEHOLDER_THUMBNAIL_ID = 'placeholder';
 
   type UpcomingExperience = {
     name: string;
@@ -26,7 +25,6 @@
     category: ProductCategory;
   };
 
-  // experiences that are on the way, listed after the ones that ship
   const upcoming: UpcomingExperience[] = [
     {
       name: 'Network Flow',
@@ -88,7 +86,7 @@
                   key: experience.name,
                   name: experience.name,
                   description: experience.description,
-                  thumbnailProductId: PLACEHOLDER_THUMBNAIL_PRODUCT_ID,
+                  thumbnailProductId: PLACEHOLDER_THUMBNAIL_ID,
                 },
               ]
             : [],

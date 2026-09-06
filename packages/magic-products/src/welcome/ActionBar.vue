@@ -12,7 +12,7 @@
 
   import { computed } from 'vue';
 
-  import ExperiencesDialog from './ExperiencesDialog.vue';
+  import ExperiencesPopover from './ExperiencesPopover.vue';
   import { productOf } from './scene.ts';
 
   const graph = useProvidedGraph();
@@ -54,6 +54,6 @@
     v-else
     class="pb-8"
   >
-    <ExperiencesDialog />
+    <ExperiencesPopover />
   </div>
 </template>

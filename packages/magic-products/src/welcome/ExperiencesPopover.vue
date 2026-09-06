@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import Button from '@magic/shared/Button';
-  import Dialog from '@magic/shared/Dialog';
   import Icon from '@magic/shared/Icon';
+  import Popover from '@magic/shared/Popover';
   import ProductCard from '@magic/shared/ProductCard';
   import VStack from '@magic/shared/VStack';
   import { products } from '@magic/shared/product';
@@ -14,10 +14,10 @@
 </script>
 
 <template>
-  <Dialog
-    class="h-[75vh] max-h-none w-[65vw] max-w-none p-6 shadow-2xl"
-    title="Experiences"
-    :show-header="false"
+  <Popover
+    class="w-[min(60rem,90vw)] max-h-[90vh] overflow-y-auto p-6 shadow-2xl"
+    side="top"
+    align="center"
   >
     <template #trigger>
       <Button
@@ -36,7 +36,7 @@
 
     <VStack>
       <h2
-        class="text-center text-3xl font-black tracking-tight select-none mb-7"
+        class="text-center text-3xl font-bold tracking-widest select-none mb-5"
       >
         Experiences
       </h2>
@@ -56,5 +56,5 @@
         </Button>
       </div>
     </VStack>
-  </Dialog>
+  </Popover>
 </template>

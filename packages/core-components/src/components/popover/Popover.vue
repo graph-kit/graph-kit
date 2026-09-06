@@ -39,8 +39,9 @@
 
   const classes = computed(() => cn(panel, attrClass.value));
 
-  // closing hands focus back to the trigger, which a pointer user reads as a stray
-  // tooltip and focus ring; only a keyboard has nowhere else to land
+  // moving focus reads as a stray tooltip and focus ring to a pointer user, both on
+  // open, where it lands on the first item in the panel, and on close, where it goes
+  // back to the trigger; only a keyboard has nowhere else to land
   const usingPointer = ref(false);
 
   const keepFocusPut = (event: Event) => {
@@ -57,7 +58,11 @@
   <!-- non-modal, so the panel behaves like canvas chrome: the click that dismisses it
        still reaches whatever sits underneath -->
   <PopoverRoot v-model:open="open">
-    <PopoverTrigger as-child>
+    <PopoverTrigger
+      as-child
+      @pointerdown="usingPointer = true"
+      @keydown="usingPointer = false"
+    >
       <slot name="trigger" />
     </PopoverTrigger>
     <PopoverPortal>
@@ -70,7 +75,7 @@
         @pointerdown="usingPointer = true"
         @keydown="usingPointer = false"
         @pointer-down-outside="usingPointer = true"
-        @open-auto-focus="usingPointer = false"
+        @open-auto-focus="keepFocusPut"
         @close-auto-focus="keepFocusPut"
       >
         <slot />

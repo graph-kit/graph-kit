@@ -5,8 +5,7 @@ import { ContentPredicate, ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
 import { graphShellHelpMenu } from './help.ts';
-import { bindGraphToDoc } from './multiplayer/bindGraphToDoc.ts';
-import { trackDraggedNodes } from './multiplayer/trackDraggedNodes.ts';
+import { multiplayerControls } from './multiplayer/graphMultiplayerControls.ts';
 import { GRAPH_ONBOARDING } from './onboarding.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
 import { graphTransitCompression } from './transit-compression.ts';
@@ -19,8 +18,6 @@ export const useGraphShell = (
   const graph = useGraph(options);
 
   const simulationButtons = options.simulationButtons?.(graph);
-
-  const draggedNodes = trackDraggedNodes(graph);
 
   const isContent: ContentPredicate = ({ id }) =>
     graph.isNode(id) || graph.isEdge(id);
@@ -41,20 +38,7 @@ export const useGraphShell = (
     isContent,
     onAppearanceChanged: (color) =>
       (graph.theme.activePresetName.value = color),
-    multiplayer: {
-      bind: (doc, mode) =>
-        bindGraphToDoc(graph, doc, mode, draggedNodes.isDragging),
-      drag: draggedNodes.events,
-      tiers: {
-        host: {},
-        admin: {},
-        write: {},
-        read: {
-          enter: graph.readonly.enter,
-          exit: graph.readonly.exit,
-        },
-      },
-    },
+    multiplayer: multiplayerControls(graph),
   };
 
   const shell = useShell(product, {
@@ -69,7 +53,6 @@ export const useGraphShell = (
     },
   });
 
-  // the first node is the prompt answered
   graph.events.subscribe('onStructureChange', () => shell.onboarding?.close());
 
   graph.events.subscribe('onStructureChange', shell.simulation.invalidate);

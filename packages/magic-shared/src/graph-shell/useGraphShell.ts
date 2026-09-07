@@ -5,7 +5,7 @@ import { ContentPredicate, ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
 import { graphShellHelpMenu } from './help.ts';
-import { multiplayerControls } from './multiplayer/graphMultiplayerControls.ts';
+import { multiplayerControls } from './multiplayer/index.ts';
 import { GRAPH_ONBOARDING } from './onboarding.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
 import { graphTransitCompression } from './transit-compression.ts';

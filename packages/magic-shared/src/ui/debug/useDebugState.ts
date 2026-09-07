@@ -14,12 +14,10 @@ import UserAgent from './UserAgent.vue';
 const DEBUG_SLOT_PRIORITY = -Infinity;
 
 const DEBUG_SLOTS: ComponentSlot[] = [
-  // first in its corner, so the way to report a bug sits above what it reports
   {
     id: 'shell/debug/bug-report',
     component: BugReport,
-    position: 'bottom-right',
-    priority: DEBUG_SLOT_PRIORITY,
+    position: 'top-middle',
   },
   {
     id: 'shell/debug/user-agent',

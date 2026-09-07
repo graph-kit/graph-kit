@@ -140,6 +140,7 @@ export const manifests = {
       description:
         'Internal playground for exercising graph features outside of a product experience.',
       ogImage: productThumbnail('dev', 'dark'),
+      robots: 'noindex, nofollow',
     },
   },
   welcome: {
@@ -148,7 +149,7 @@ export const manifests = {
     name: 'Magic Graphs',
     abbreviatedName: 'HOME',
     navigation: {
-      slug: 'welcome',
+      slug: '',
     },
     meta: {
       title: 'Magic Graphs',

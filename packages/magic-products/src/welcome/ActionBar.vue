@@ -30,7 +30,7 @@
   >
     <Button
       :href="productHref(activeProduct.id)"
-      class="w-full justify-between gap-4 bg-transparent p-3 hover:bg-gray-100 dark:bg-transparent dark:hover:bg-gray-900"
+      class="w-full justify-between gap-4 active:scale-100 bg-transparent p-3 hover:bg-gray-100 dark:bg-transparent dark:hover:bg-gray-900 dark:active:bg-gray-900"
     >
       <ProductCard
         :product-id="activeProduct.id"

@@ -1,4 +1,4 @@
-import { ThemePreset } from '../../graph/types.ts';
+import type { ThemePreset } from '../../graph/types.ts';
 import { ProductCategory } from './categories.ts';
 
 /** one image per theme, since artwork legible on light is rarely legible on dark */
@@ -14,7 +14,7 @@ export type ProductCard = {
 
 /** everything the navigation menu needs to list a product and route to it */
 export type ProductNavigation = {
-  /** path this product is served from, without the leading slash */
+  /** path this product is served from, without leading slash */
   slug: string;
   /** if missing, product card wont show up in the navigation menu */
   card?: ProductCard;
@@ -26,6 +26,8 @@ type ProductMeta = {
   description: string;
   /** link preview artwork, absent for products that ship no thumbnail */
   ogImage?: string;
+  /** passed straight to `useSeoMeta`, for a page search engines should not list */
+  robots?: string;
 };
 
 /**

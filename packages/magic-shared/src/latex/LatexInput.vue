@@ -4,7 +4,7 @@
 
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
-  import type { MathfieldElement } from './types.ts';
+  import type { MathfieldElement, MathliveModule } from './types.ts';
 
   // the wrapper owns the sizing, so attrs stay on the math-field where consumers expect them
   defineOptions({ inheritAttrs: false });
@@ -103,7 +103,12 @@
 
   onMounted(async () => {
     // importing mathlive registers <math-field> against window, so it can only run in the browser
-    await import('mathlive');
+    const mathlive = (await import('mathlive')) as unknown as MathliveModule;
+
+    // disable all virtual keyboard sfx
+    // https://mathlive.io/mathfield/guides/customizing/#sounds-and-haptic-feedback
+    mathlive.MathfieldElement.soundsDirectory = null;
+
     mathfieldRegistered.value = true;
     await nextTick();
 

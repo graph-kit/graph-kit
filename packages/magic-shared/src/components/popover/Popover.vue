@@ -8,6 +8,8 @@
     align?: 'start' | 'center' | 'end';
     /** the gap the panel keeps from its trigger */
     sideOffset?: number;
+    /** renders the panel up front rather than on first open, hidden until it is opened */
+    forceMount?: boolean;
   }>();
 
   defineSlots<{
@@ -22,6 +24,7 @@
     :side="side"
     :align="align"
     :side-offset="sideOffset"
+    :force-mount="forceMount"
   >
     <template #trigger><slot name="trigger" /></template>
     <slot />

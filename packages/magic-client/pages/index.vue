@@ -1,3 +1,9 @@
 <script setup lang="ts">
-  definePageMeta({ redirect: '/welcome' });
+  import MainView from '@magic/products/welcome/MainView.vue';
+
+  useProductSeo('welcome');
 </script>
+
+<template>
+  <div><MainView /></div>
+</template>

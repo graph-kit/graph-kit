@@ -10,12 +10,21 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       crawlLinks: true,
-      routes: ['/'],
+      routes: ['/', '/sitemap.xml', '/robots.txt'],
+    },
+    routeRules: {
+      '/sitemap.xml': {
+        headers: { 'content-type': 'application/xml; charset=utf-8' },
+      },
+      '/robots.txt': {
+        headers: { 'content-type': 'text/plain; charset=utf-8' },
+      },
     },
   },
 
   app: {
     head: {
+      htmlAttrs: { lang: 'en' },
       link: [
         {
           rel: 'icon',
@@ -33,11 +42,11 @@ export default defineNuxtConfig({
       multiplayerServerUrl:
         process.env.MULTIPLAYER_SERVER_URL ??
         (process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : ''),
-      // read at runtime, so multiplayer can be switched off without a build. point it at
-      // any host to get a switch that does not wait on a deploy either
+      // so multiplayer can be switched off without building/redeploying
       multiplayerConfigUrl:
         process.env.MULTIPLAYER_CONFIG_URL ?? '/multiplayer-config.json',
       posthogKey: process.env.POSTHOG_KEY ?? '',
+      siteUrl: process.env.SITE_URL ?? 'https://magicgraphs.app',
     },
   },
 

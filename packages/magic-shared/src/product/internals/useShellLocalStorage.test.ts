@@ -4,7 +4,7 @@ import { ShellFlags } from '../flags.ts';
 import { TransitField } from '../types.ts';
 import { useShellLocalStorage } from './useShellLocalStorage.ts';
 
-const KEY = 'product-data-avl-trees';
+const KEY = 'product-data-binary-search-trees';
 const DEBOUNCE_MS = 500;
 
 const FLAGS: ShellFlags = {
@@ -34,7 +34,7 @@ const movingTransit = () => {
 const saved = () => localStorage.getItem(KEY);
 
 const controls = (transit: TransitField) =>
-  useShellLocalStorage('avl-trees', { transit }, FLAGS);
+  useShellLocalStorage('binary-search-trees', { transit }, FLAGS);
 
 beforeEach(() => vi.useFakeTimers());
 
@@ -121,7 +121,7 @@ describe('without persistence', () => {
   it('hands back a release that does nothing', () => {
     const { transit } = movingTransit();
     const inert = useShellLocalStorage(
-      'avl-trees',
+      'binary-search-trees',
       { transit },
       { ...FLAGS, localStorage: false },
     );

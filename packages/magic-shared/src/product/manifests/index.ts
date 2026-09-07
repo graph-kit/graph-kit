@@ -44,25 +44,25 @@ export const manifests = {
       ogImage: productThumbnail('markov-chains', 'dark'),
     },
   },
-  'avl-trees': {
-    id: 'avl-trees',
+  'binary-search-trees': {
+    id: 'binary-search-trees',
     multiplayer: false,
-    name: 'AVL Trees',
-    abbreviatedName: 'AVL',
+    name: 'Binary Search Trees',
+    abbreviatedName: 'BST',
     navigation: {
-      slug: 'trees',
+      slug: 'binary-search-trees',
       card: {
-        name: 'AVL Trees',
+        name: 'Binary Search Trees',
         description:
           'Insert and remove values, stepping through each rotation the tree makes to rebalance.',
         category: 'data-structures',
       },
     },
     meta: {
-      title: 'AVL Trees | Magic Graphs',
+      title: 'Binary Search Trees | Magic Graphs',
       description:
-        'Insert and remove values in an AVL tree and step through every rotation the tree performs to keep itself balanced.',
-      ogImage: productThumbnail('avl-trees', 'dark'),
+        'Insert and remove values in a binary search tree and step through every rotation the tree performs to keep itself balanced.',
+      ogImage: productThumbnail('binary-search-trees', 'dark'),
     },
   },
   traversals: {
@@ -154,7 +154,7 @@ export const manifests = {
     meta: {
       title: 'Magic Graphs',
       description:
-        'Interactive computer science theory: traversals, shortest paths, spanning trees, AVL trees, Markov chains and set theory.',
+        'Interactive computer science theory: traversals, shortest paths, spanning trees, binary search trees, Markov chains and set theory.',
     },
   },
 } as const satisfies Record<string, ProductManifest>;

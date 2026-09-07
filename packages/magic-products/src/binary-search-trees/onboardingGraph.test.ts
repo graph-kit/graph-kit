@@ -1,7 +1,6 @@
 import { useVisibleWorldRect } from '@canvas/surface/coordinates/visibleWorldRect';
 import { CanvasSurface } from '@canvas/surface/types';
 import { placeOnboardingGraph } from '@magic/shared/graph-shell/onboarding-graph/layout';
-
 import { describe, expect, it } from 'vitest';
 
 import { ref } from 'vue';
@@ -25,7 +24,7 @@ const asGraph = (): any => ({
   getNode: (id: string) => onboardingGraph.nodes.find((node) => node.id === id),
 });
 
-describe('the avl onboarding graph', () => {
+describe('the binary search tree onboarding graph', () => {
   it('reads back as the tree it was authored from', () => {
     const root = graphToTree(asGraph());
 

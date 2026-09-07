@@ -20,10 +20,10 @@ const startingTree = () => {
 /** offset so a tree that leans this far left still lands on screen */
 const ROOT_OFFSET = { x: 120, y: -300 };
 
-export const onboardingGraph: OnboardingGraph = treeToGraph(
-  startingTree(),
-  ROOT_OFFSET,
-);
+export const onboardingGraph: OnboardingGraph = {
+  options: { buildButtonText: 'Build Me A Tree' },
+  ...treeToGraph(startingTree(), ROOT_OFFSET),
+};
 
 export const centerCameraOnStartingTree = (surface: CanvasSurface) =>
   centerCameraOnTree(surface, ROOT_OFFSET);

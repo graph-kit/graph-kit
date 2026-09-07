@@ -7,14 +7,14 @@
   import Well from '../../components/layout/Well.vue';
   import { useProvidedOnboardingGraph } from './context.ts';
 
-  const { build, hide } = useProvidedOnboardingGraph();
+  const { build, hide, options } = useProvidedOnboardingGraph();
 </script>
 
 <template>
   <Well class="pl-4">
     <HStack>
       <h2 class="text-lg font-bold">Need Inspiration?</h2>
-      <Button @click="build">Build Me A Graph</Button>
+      <Button @click="build">{{ options.buildButtonText }}</Button>
       <IconButton
         @click="hide"
         :path="mdiClose"

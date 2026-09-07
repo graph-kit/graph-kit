@@ -3,16 +3,16 @@ import { nullThrows } from '@core/utils/assert';
 import { BoundingBox } from '@core/utils/canvas/index';
 
 import { AddGNodeOptions } from '../../graph/types.ts';
-import { OnboardingGraph } from './types.ts';
+import { OnboardingGraphElements } from './types.ts';
 
 const idOf = (node: AddGNodeOptions) =>
   nullThrows(node.id, 'onboarding graph node was given no id');
 
 /** the graph with its offsets resolved against whatever the canvas is showing */
 export const placeOnboardingGraph = (
-  { nodes, edges }: OnboardingGraph,
+  { nodes, edges }: OnboardingGraphElements,
   visibleWorldRect: BoundingBox,
-): OnboardingGraph => {
+): OnboardingGraphElements => {
   const center = getCenterPoint(visibleWorldRect);
 
   return {
@@ -36,9 +36,9 @@ export const placeOnboardingGraph = (
 
 /** the graph given the ids it replaces, so existing nodes move instead of recreate */
 export const adoptExistingNodes = (
-  { nodes, edges }: OnboardingGraph,
+  { nodes, edges }: OnboardingGraphElements,
   existingNodeIds: string[],
-): OnboardingGraph => {
+): OnboardingGraphElements => {
   const adopted = new Map<string, string>();
   for (const [index, node] of nodes.entries()) {
     const existing = existingNodeIds[index];

@@ -53,15 +53,14 @@ export const manifests = {
       slug: 'binary-search-trees',
       card: {
         name: 'Binary Search Trees',
-        description:
-          'Insert and remove values, stepping through each rotation the tree makes to rebalance.',
+        description: 'Insert and remove values and run rebalancing strategies.',
         category: 'data-structures',
       },
     },
     meta: {
       title: 'Binary Search Trees | Magic Graphs',
       description:
-        'Insert and remove values in a binary search tree and step through every rotation the tree performs to keep itself balanced.',
+        'Insert and remove values in a binary search tree and run rebalancing strategies over it.',
       ogImage: productThumbnail('binary-search-trees', 'dark'),
     },
   },

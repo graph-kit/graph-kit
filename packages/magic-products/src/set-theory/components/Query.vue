@@ -77,7 +77,7 @@
 
     <TooltipVue
       v-if="showRemoveButton"
-      label="Remove"
+      label="Remove region"
       side="right"
     >
       <template #trigger>

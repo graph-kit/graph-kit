@@ -23,7 +23,7 @@
 
 <template>
   <Tooltip
-    :label="hidden ? 'Show highlight' : 'Hide highlight'"
+    :label="hidden ? 'Show region' : 'Hide region'"
     side="left"
   >
     <template #trigger>

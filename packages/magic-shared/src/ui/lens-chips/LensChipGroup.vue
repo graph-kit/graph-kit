@@ -14,7 +14,7 @@
 
   // the chips keep their shape on the menu, which only needs the light half lifted off
   // the panel it shares a colour with. dark already separates them
-  const menuChipClasses = 'bg-gray-200 dark:bg-gray-900';
+  const menuChipClasses = 'bg-gray-300 dark:bg-gray-900';
 
   const shell = useProvidedShell();
 

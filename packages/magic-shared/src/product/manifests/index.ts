@@ -2,25 +2,40 @@ import { productThumbnail } from './thumbnail.ts';
 import { ProductManifest } from './types.ts';
 
 export const manifests = {
-  'set-theory': {
-    id: 'set-theory',
-    multiplayer: true,
-    name: 'Set Theory',
-    abbreviatedName: 'SET',
+  'binary-search-trees': {
+    id: 'binary-search-trees',
+    multiplayer: false,
+    name: 'Binary Search Trees',
+    abbreviatedName: 'BST',
     navigation: {
-      slug: 'set-theory',
+      slug: 'binary-search-trees',
       card: {
-        name: 'Set Theory',
-        description:
-          'Create sets and write queries that light up the regions they select.',
-        category: 'discrete-math',
+        name: 'Binary Search Trees',
+        description: 'Insert and remove values and run rebalancing strategies.',
+        category: 'data-structures',
       },
     },
     meta: {
-      title: 'Set Theory | Magic Graphs',
+      title: 'Binary Search Trees | Magic Graphs',
       description:
-        'Draw sets on an infinite canvas and write queries like A union B that highlight the regions they select as you type.',
-      ogImage: productThumbnail('set-theory', 'dark'),
+        'Insert and remove values in a binary search tree and run rebalancing strategies over it.',
+      ogImage: productThumbnail('binary-search-trees', 'dark'),
+    },
+  },
+  dev: {
+    id: 'dev',
+    multiplayer: false,
+    name: 'Dev Playground',
+    abbreviatedName: 'DEV',
+    navigation: {
+      slug: 'dev',
+    },
+    meta: {
+      title: 'Dev Playground | Magic Graphs',
+      description:
+        'Internal playground for exercising graph features outside of a product experience.',
+      ogImage: productThumbnail('dev', 'dark'),
+      robots: 'noindex, nofollow',
     },
   },
   'markov-chains': {
@@ -44,45 +59,25 @@ export const manifests = {
       ogImage: productThumbnail('markov-chains', 'dark'),
     },
   },
-  'binary-search-trees': {
-    id: 'binary-search-trees',
-    multiplayer: false,
-    name: 'Binary Search Trees',
-    abbreviatedName: 'BST',
-    navigation: {
-      slug: 'binary-search-trees',
-      card: {
-        name: 'Binary Search Trees',
-        description: 'Insert and remove values and run rebalancing strategies.',
-        category: 'data-structures',
-      },
-    },
-    meta: {
-      title: 'Binary Search Trees | Magic Graphs',
-      description:
-        'Insert and remove values in a binary search tree and run rebalancing strategies over it.',
-      ogImage: productThumbnail('binary-search-trees', 'dark'),
-    },
-  },
-  traversals: {
-    id: 'traversals',
+  'minimum-spanning-trees': {
+    id: 'minimum-spanning-trees',
     multiplayer: true,
-    name: 'Traversals',
-    abbreviatedName: 'TRV',
+    name: 'Minimum Spanning Trees',
+    abbreviatedName: 'MST',
     navigation: {
-      slug: 'traversals',
+      slug: 'minimum-spanning-trees',
       card: {
-        name: 'Traversals',
+        name: 'Minimum Spanning Trees',
         description:
-          'Run Breadth-First and Depth-First Search, tracking the queue, the stack and the visited set.',
+          "Run Kruskal's and Prim's to pick the cheapest edges that connect the graph.",
         category: 'graph-algorithms',
       },
     },
     meta: {
-      title: 'Traversals | Magic Graphs',
+      title: 'Minimum Spanning Trees | Magic Graphs',
       description:
-        'Run breadth first and depth first search on your own graph and track the queue, the stack and the visited set at every step.',
-      ogImage: productThumbnail('traversals', 'dark'),
+        "Run Kruskal's and Prim's on a weighted graph you build and trace each one as it grows a minimum spanning tree edge by edge.",
+      ogImage: productThumbnail('minimum-spanning-trees', 'dark'),
     },
   },
   'path-finding': {
@@ -106,41 +101,46 @@ export const manifests = {
       ogImage: productThumbnail('path-finding', 'dark'),
     },
   },
-  'minimum-spanning-trees': {
-    id: 'minimum-spanning-trees',
+  'set-theory': {
+    id: 'set-theory',
     multiplayer: true,
-    name: 'Minimum Spanning Trees',
-    abbreviatedName: 'MST',
+    name: 'Set Theory',
+    abbreviatedName: 'SET',
     navigation: {
-      slug: 'minimum-spanning-trees',
+      slug: 'set-theory',
       card: {
-        name: 'Minimum Spanning Trees',
+        name: 'Set Theory',
         description:
-          "Run Kruskal's and Prim's to pick the cheapest edges that connect the graph.",
+          'Create sets and write queries that light up the regions they select.',
+        category: 'discrete-math',
+      },
+    },
+    meta: {
+      title: 'Set Theory | Magic Graphs',
+      description:
+        'Draw sets on an infinite canvas and write queries like A union B that highlight the regions they select as you type.',
+      ogImage: productThumbnail('set-theory', 'dark'),
+    },
+  },
+  traversals: {
+    id: 'traversals',
+    multiplayer: true,
+    name: 'Traversals',
+    abbreviatedName: 'TRV',
+    navigation: {
+      slug: 'traversals',
+      card: {
+        name: 'Traversals',
+        description:
+          'Run Breadth-First and Depth-First Search, tracking the queue, the stack and the visited set.',
         category: 'graph-algorithms',
       },
     },
     meta: {
-      title: 'Minimum Spanning Trees | Magic Graphs',
+      title: 'Traversals | Magic Graphs',
       description:
-        "Run Kruskal's and Prim's on a weighted graph you build and trace each one as it grows a minimum spanning tree edge by edge.",
-      ogImage: productThumbnail('minimum-spanning-trees', 'dark'),
-    },
-  },
-  dev: {
-    id: 'dev',
-    multiplayer: false,
-    name: 'Dev Playground',
-    abbreviatedName: 'DEV',
-    navigation: {
-      slug: 'dev',
-    },
-    meta: {
-      title: 'Dev Playground | Magic Graphs',
-      description:
-        'Internal playground for exercising graph features outside of a product experience.',
-      ogImage: productThumbnail('dev', 'dark'),
-      robots: 'noindex, nofollow',
+        'Run breadth first and depth first search on your own graph and track the queue, the stack and the visited set at every step.',
+      ogImage: productThumbnail('traversals', 'dark'),
     },
   },
   welcome: {

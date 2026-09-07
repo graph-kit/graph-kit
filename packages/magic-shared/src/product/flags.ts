@@ -37,6 +37,11 @@ export type ShellFlags = {
    * @default true
    */
   onboarding: boolean;
+  /**
+   * puts the menu for moving between products in the top left corner
+   * @default true
+   */
+  navigation: boolean;
 };
 
 const DEFAULTS: ShellFlags = {
@@ -47,6 +52,7 @@ const DEFAULTS: ShellFlags = {
   adjustAnimationSpeed: false,
   jumpToContent: true,
   onboarding: true,
+  navigation: true,
 };
 
 /** what a product author writes: only what differs from {@link ShellFlags} defaults */

@@ -50,7 +50,7 @@ export const useShell = (
 
   const flags = resolveShellFlags(options.flags, product);
 
-  useShellUI(componentSlots);
+  useShellUI(componentSlots, flags);
   const debug = useDebugState(componentSlots);
   const shortcuts = useShortcuts();
 

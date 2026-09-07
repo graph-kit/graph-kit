@@ -4,6 +4,8 @@
   // declared rather than left to fall through so a call site gets it type checked. no
   // defaults here: undefined lands on the core component's own, so they live once
   defineProps<{
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    align?: 'start' | 'center' | 'end';
     /** the gap the panel keeps from its trigger */
     sideOffset?: number;
   }>();
@@ -17,6 +19,8 @@
 <template>
   <Popover
     class="bg-gray-300 border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+    :side="side"
+    :align="align"
     :side-offset="sideOffset"
   >
     <template #trigger><slot name="trigger" /></template>

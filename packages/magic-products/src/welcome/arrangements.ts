@@ -282,4 +282,26 @@ export const welcomeArrangements: WelcomeArrangement[] = [
       ['traversals', 'min-spanning-trees'],
     ],
   },
+  {
+    name: 'benzene ring',
+    nodes: {
+      sets: { x: -460, y: 0 },
+      'min-spanning-trees': { x: -230, y: -210 },
+      'path-finding': { x: 230, y: -210 },
+      'avl-trees': { x: 460, y: 0 },
+      traversals: { x: 230, y: 210 },
+      'markov-chains': { x: -230, y: 210 },
+    },
+    edges: [
+      ['sets', 'min-spanning-trees'],
+      ['min-spanning-trees', 'sets'],
+      ['min-spanning-trees', 'path-finding'],
+      ['path-finding', 'avl-trees'],
+      ['avl-trees', 'path-finding'],
+      ['avl-trees', 'traversals'],
+      ['traversals', 'markov-chains'],
+      ['markov-chains', 'traversals'],
+      ['markov-chains', 'sets'],
+    ],
+  },
 ];

@@ -1,6 +1,6 @@
 # Welcome To Graph Kit 👋
 
-The Progressive, TypeScript Native, Framework Agnostic Graph SDK.
+The TypeScript Native, Framework Agnostic Graph SDK.
 
 > [!NOTE]
 > Graph Kit is not on npm yet; we plan to start publishing in November 2026.

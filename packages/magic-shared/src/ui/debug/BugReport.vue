@@ -13,7 +13,6 @@
   import { PANEL, TITLE } from './shared/classes.ts';
   import { useRepaintSample } from './shared/useRepaintSample.ts';
 
-  /** how long the button stands as its own confirmation before offering the copy again */
   const COPIED_FEEDBACK_MS = 3_000;
 
   const PROBLEM_TOAST_MS = 6_000;
@@ -22,7 +21,6 @@
 
   const shell = useProvidedShell();
 
-  // the one reading the shell does not hold: frame timing is only knowable by watching
   const { fps, frameMs } = useRepaintSample(shell.surface);
 
   const copied = ref(false);
@@ -31,7 +29,6 @@
 
   onBeforeUnmount(() => clearTimeout(copiedResetTimer));
 
-  // awaited, because a clipboard the browser turns down rejects rather than throwing
   const copyReport = async () => {
     clearTimeout(copiedResetTimer);
 
@@ -66,7 +63,6 @@
 </script>
 
 <template>
-  <!-- a panel by its cover, since it stands in the same column as the readouts it copies -->
   <button
     type="button"
     class="w-full cursor-pointer"

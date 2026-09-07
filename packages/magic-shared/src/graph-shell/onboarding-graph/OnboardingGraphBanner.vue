@@ -19,6 +19,8 @@
   const dismiss = () => shell.componentSlots.remove(ONBOARDING_GRAPH_SLOT_ID);
 
   const build = () => {
+    events.emit('onBeforeOnboardingGraphBuilt');
+
     const onCanvas = {
       nodes: graph.nodes.value.map(({ id }) => ({ id })),
       edges: graph.edges.value.map(({ id }) => ({ id })),

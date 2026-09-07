@@ -1,7 +1,17 @@
+import { useVisibleWorldRect } from '@canvas/surface/coordinates/visibleWorldRect';
+import { CanvasSurface } from '@canvas/surface/types';
+import { placeOnboardingGraph } from '@magic/shared/graph-shell/onboarding-graph/layout';
+
 import { describe, expect, it } from 'vitest';
 
+import { ref } from 'vue';
+
 import { graphToTree } from './graph-conversion/graphToTree.ts';
-import { onboardingGraph } from './onboardingGraph.ts';
+import { ROOT_POSITION } from './graph-conversion/treeToGraph.ts';
+import {
+  centerCameraOnStartingTree,
+  onboardingGraph,
+} from './onboardingGraph.ts';
 import { getBalanceFactor } from './tree/getBalanceFactor.ts';
 
 /*
@@ -36,5 +46,38 @@ describe('the avl onboarding graph', () => {
     for (const node of onboardingGraph.nodes) {
       expect(node.position).toBeDefined();
     }
+  });
+
+  /*
+    the offsets are read against whatever is on screen, but every tree this product
+    draws is laid out from ROOT_POSITION. so the camera move and the offsets have to
+    cancel out exactly, or the first insert would snap the whole tree somewhere else
+  */
+  it('lands its root on ROOT_POSITION once the camera has been centered', () => {
+    const state = { panX: ref(0), panY: ref(0), zoom: ref(1) };
+    const canvasSize = { width: ref(1000), height: ref(800) };
+
+    const surface = {
+      camera: {
+        state,
+        actions: {
+          moveTo: ({ panX, panY, zoom }: Record<string, number>) => {
+            state.panX.value = panX;
+            state.panY.value = panY;
+            state.zoom.value = zoom;
+          },
+        },
+      },
+      visibleWorldRect: useVisibleWorldRect(state, canvasSize),
+    } as unknown as CanvasSurface;
+
+    centerCameraOnStartingTree(surface);
+
+    const { nodes } = placeOnboardingGraph(
+      onboardingGraph,
+      surface.visibleWorldRect.value,
+    );
+
+    expect(nodes[0].position).toEqual(ROOT_POSITION);
   });
 });

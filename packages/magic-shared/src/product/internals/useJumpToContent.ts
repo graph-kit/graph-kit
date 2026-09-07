@@ -1,3 +1,4 @@
+import { centerCameraOn } from '@canvas/surface/camera/centerCameraOn';
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import { throttle } from '@core/utils/throttle';
 
@@ -62,21 +63,10 @@ export const useJumpToContent = (
   };
 
   const jump = () => {
-    const viewport = surface.visibleWorldRect.value;
-    const target = nearestContent(centerOf(viewport));
+    const target = nearestContent(centerOf(surface.visibleWorldRect.value));
     if (!target) return;
 
-    const { zoom } = surface.camera.state;
-    // the viewport is the canvas divided by zoom, so multiplying back gives the css
-    // size the pan is measured in
-    const canvasWidth = viewport.width * zoom.value;
-    const canvasHeight = viewport.height * zoom.value;
-
-    surface.camera.actions.moveTo({
-      panX: canvasWidth / 2 - target.x * zoom.value,
-      panY: canvasHeight / 2 - target.y * zoom.value,
-      zoom: zoom.value,
-    });
+    centerCameraOn(surface, target);
   };
 
   return {

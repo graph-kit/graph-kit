@@ -3,6 +3,7 @@ import { OnboardingGraphControls } from '@magic/shared/graph-shell';
 import { Shell } from '@magic/shared/product';
 
 import { graphToTree } from './graph-conversion/graphToTree.ts';
+import { centerCameraOnStartingTree } from './onboardingGraph.ts';
 import { AVLTree } from './tree/AVLTree.ts';
 
 const SUPPRESSION_MESSAGE = 'Undo/redo is disabled during simulation';
@@ -19,6 +20,10 @@ export const useTreePersistence = (
   };
 
   graph.events.transit.subscribe('onDecoded', adoptGraph);
+
+  onboardingGraph?.events.subscribe('onBeforeOnboardingGraphBuilt', () =>
+    centerCameraOnStartingTree(graph.surface),
+  );
   onboardingGraph?.events.subscribe('onOnboardingGraphBuilt', adoptGraph);
 
   let releaseStorage: (() => void) | undefined;

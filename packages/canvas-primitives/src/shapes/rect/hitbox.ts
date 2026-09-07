@@ -1,3 +1,5 @@
+import { clamp } from '@core/utils/math';
+
 import {
   areBoundingBoxesOverlapping,
   normalizeBoundingBox,
@@ -66,7 +68,7 @@ export const rectHitbox =
 
     const maxRadius = Math.min(normalizedWidth / 2, normalizedHeight / 2);
     const [topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius] =
-      radii.map((r) => Math.min(Math.max(r, 0), maxRadius));
+      radii.map((r) => clamp(r, 0, maxRadius));
 
     const rectangles: HitboxRect[] = [
       {

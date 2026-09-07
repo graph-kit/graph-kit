@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   average,
+  clamp,
   displayNumber,
   fractionIsInteger,
   fractionToDecimal,
@@ -18,6 +19,31 @@ describe('roundToNearestN', () => {
     const roundToNearest5 = roundToNearestN(5);
     expect(roundToNearest5(13)).toBe(15);
     expect(roundToNearest5(12)).toBe(10);
+  });
+});
+
+describe('clamp', () => {
+  test('leaves a number already inside the range alone', () => {
+    expect(clamp(5, 0, 10)).toBe(5);
+  });
+
+  test('pulls a number back to the bound it ran past', () => {
+    expect(clamp(-3, 0, 10)).toBe(0);
+    expect(clamp(42, 0, 10)).toBe(10);
+  });
+
+  test('keeps the bounds themselves', () => {
+    expect(clamp(0, 0, 10)).toBe(0);
+    expect(clamp(10, 0, 10)).toBe(10);
+  });
+
+  test('reads a range that is a single value', () => {
+    expect(clamp(5, 3, 3)).toBe(3);
+  });
+
+  test('edge case: bounds handed over the wrong way round', () => {
+    // max wins, since it is applied last
+    expect(clamp(5, 10, 0)).toBe(0);
   });
 });
 

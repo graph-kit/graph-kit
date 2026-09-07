@@ -75,6 +75,21 @@ export const gcd = (a: number, b: number): number => {
 };
 
 /**
+ * hold a number inside a range
+ *
+ * @param n the number to clamp
+ * @param min the lowest value it may take
+ * @param max the highest value it may take
+ * @returns n, or whichever bound it ran past
+ * @example clamp(5, 0, 10) // 5
+ * clamp(-3, 0, 10) // 0
+ * clamp(42, 0, 10) // 10
+ */
+export const clamp = (n: number, min: number, max: number) => {
+  return Math.min(max, Math.max(min, n));
+};
+
+/**
  * check if two numbers are within a certain tolerance of each other
  */
 export const within = (tolerance: number) => (a: number, b: number) => {

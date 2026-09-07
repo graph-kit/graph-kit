@@ -1,5 +1,6 @@
 import type { ReadonlyEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
+import { clamp } from '@core/utils/math';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 
 import { type Ref, ref } from 'vue';
@@ -43,12 +44,9 @@ export const usePanAndZoom = (
     const cy = ev.clientY - rect.top;
 
     // clamp deltaY to a max range to prevent mice with large deltaY notches from feeling too sensitive
-    const normalizedDelta = Math.max(-100, Math.min(100, ev.deltaY));
+    const normalizedDelta = clamp(ev.deltaY, -100, 100);
     const zoomFactor = Math.exp(-normalizedDelta * ZOOM_SENSITIVITY);
-    const clampedZoom = Math.min(
-      MAX_ZOOM,
-      Math.max(MIN_ZOOM, zoom.value * zoomFactor),
-    );
+    const clampedZoom = clamp(zoom.value * zoomFactor, MIN_ZOOM, MAX_ZOOM);
 
     const scale = clampedZoom / zoom.value;
 
@@ -117,15 +115,11 @@ export const usePanAndZoom = (
         setZoom({ deltaY: -increment, ...getCanvasCenter() }),
       zoomOut: (decrement = 12.5) =>
         setZoom({ deltaY: decrement, ...getCanvasCenter() }),
-      /**
-       * The whole camera at once, for taking on a viewport that was arrived at elsewhere
-       * rather than steered toward here. Zoom is clamped because the range is this
-       * camera's to enforce no matter where the numbers came from.
-       */
+      /** sets where the camera is */
       moveTo: (state: CameraState) => {
         panX.value = state.panX;
         panY.value = state.panY;
-        zoom.value = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, state.zoom));
+        zoom.value = clamp(state.zoom, MIN_ZOOM, MAX_ZOOM);
       },
     },
     state: {

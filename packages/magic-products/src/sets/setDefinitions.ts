@@ -2,6 +2,7 @@ import { createEventHub } from '@core/events/createEventHub';
 import type { ReadonlyEventHub } from '@core/events/createEventHub';
 import type { Coordinate } from '@core/utils/canvas/index';
 import { generateId } from '@core/utils/id';
+import { clamp } from '@core/utils/math';
 
 import { type ComputedRef, type Ref, computed, ref } from 'vue';
 
@@ -54,7 +55,7 @@ const RESERVED = new Set<SetLabel>(RESERVED_LABELS);
 
 const clampRadius = (radius: number) =>
   Number.isFinite(radius)
-    ? Math.min(Math.max(radius, MIN_CIRCLE_RADIUS), MAX_CIRCLE_RADIUS)
+    ? clamp(radius, MIN_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS)
     : DEFAULT_CIRCLE_RADIUS;
 
 const finite = (value: number) => (Number.isFinite(value) ? value : 0);

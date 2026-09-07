@@ -2,7 +2,7 @@
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
   import { useConnectedMultiplayer } from '../../multiplayer/useConnectedMultiplayer.ts';
-  import CloseButton from './CloseButton.vue';
+  import CloseButton from '../CloseButton.vue';
 
   const { room, multiplayer } = useConnectedMultiplayer();
 </script>

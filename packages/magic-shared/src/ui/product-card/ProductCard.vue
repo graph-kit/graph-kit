@@ -18,7 +18,6 @@
 
 <template>
   <HStack class="w-100 items-start gap-4">
-    <!-- shrink-0 or the box collapses until load, since a flex item's minimum size follows its intrinsic width -->
     <img
       :src="thumbnail"
       :alt="card.name"

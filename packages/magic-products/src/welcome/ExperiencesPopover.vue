@@ -65,7 +65,6 @@
     href?: string;
   };
 
-  // categories drive the order, so a group only shows up once a product claims it
   const sections = Object.entries(productCategories)
     .map(([category, name]) => ({
       category,
@@ -108,10 +107,10 @@
 <template>
   <!-- force-mount required for search engine crawlers -->
   <Popover
-    class="w-[min(75rem,92vw)] max-h-[75vh] overflow-y-auto rounded-2xl bg-gray-100 p-0 shadow-2xl dark:bg-gray-800"
+    class="w-[min(75rem,92vw)] max-h-[82vh] overflow-y-auto rounded-2xl bg-gray-100 p-0 shadow-2xl dark:bg-gray-800"
     side="top"
     align="center"
-    :side-offset="14"
+    :side-offset="6"
     force-mount
   >
     <template #trigger>

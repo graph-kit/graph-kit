@@ -62,7 +62,7 @@
             <Button
               @click="addAndFocusQuery"
               :path="mdiPlus"
-              class="w-full h-full select-none text-md bg-transparent dark:bg-transparent"
+              class="w-full h-full select-none rounded-b-none active:scale-100 text-md bg-transparent dark:bg-transparent"
             >
               +
             </Button>

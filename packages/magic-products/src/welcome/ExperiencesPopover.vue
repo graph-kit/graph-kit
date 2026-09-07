@@ -23,6 +23,7 @@
     name: string;
     description: string;
     category: ProductCategory;
+    thumbnailId?: string;
   };
 
   const upcoming: UpcomingExperience[] = [
@@ -31,24 +32,28 @@
       description:
         'Run Ford-Fulkerson and Edmonds-Karp to push the maximum flow through a network and surface its minimum cut.',
       category: 'graph-algorithms',
+      thumbnailId: 'network-flow',
     },
     {
       name: 'Hash Tables',
       description:
         'Insert and look up keys, watching collisions resolve and the table grow as it fills.',
       category: 'data-structures',
+      thumbnailId: 'hash-tables',
     },
     {
       name: 'State Machines: DFAs + NFAs',
       description:
         'Build automata, feed them strings and step through every state the input drives them into.',
       category: 'discrete-math',
+      thumbnailId: 'state-machines',
     },
     {
       name: 'Bayesian Networks',
       description:
         'Wire up random variables, set their conditional tables and propagate evidence through the network.',
       category: 'discrete-math',
+      thumbnailId: 'bayes-networks',
     },
   ];
 
@@ -86,7 +91,8 @@
                   key: experience.name,
                   name: experience.name,
                   description: experience.description,
-                  thumbnailProductId: PLACEHOLDER_THUMBNAIL_ID,
+                  thumbnailProductId:
+                    experience.thumbnailId ?? PLACEHOLDER_THUMBNAIL_ID,
                 },
               ]
             : [],

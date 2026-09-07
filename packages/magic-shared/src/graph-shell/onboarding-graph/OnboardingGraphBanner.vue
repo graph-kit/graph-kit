@@ -1,9 +1,12 @@
 <script setup lang="ts">
+  import { mdiClose } from '@mdi/js';
+
   import Button from '../../components/button/Button.vue';
-  import VStack from '../../components/layout/VStack.vue';
+  import IconButton from '../../components/icon-button/IconButton.vue';
+  import Icon from '../../components/icon/Icon.vue';
+  import HStack from '../../components/layout/HStack.vue';
   import Well from '../../components/layout/Well.vue';
   import { useProvidedShell } from '../../product/context.ts';
-  import CloseButton from '../../ui/CloseButton.vue';
   import { useProvidedGraph } from '../context.ts';
   import { BUILD_DURATION_MS, ONBOARDING_GRAPH_SLOT_ID } from './constants.ts';
   import { useProvidedOnboardingGraph } from './context.ts';
@@ -32,11 +35,17 @@
 </script>
 
 <template>
-  <Well class="py-4 px-12 text-center">
-    <CloseButton @closed="dismiss" />
-    <VStack class="gap-3 items-center">
-      <h2 class="text-xl font-bold">Start With A Graph?</h2>
-      <Button @click="build">Build One For Me</Button>
-    </VStack>
+  <Well class="pl-4">
+    <HStack>
+      <h2 class="text-lg font-bold">Need Inspiration?</h2>
+      <Button @click="build">Build Me A Graph</Button>
+      <IconButton
+        @click="dismiss"
+        :path="mdiClose"
+        label="Close"
+        :size="24"
+        class="bg-transparent dark:bg-transparent p-1 hover:text-red-500"
+      />
+    </HStack>
   </Well>
 </template>

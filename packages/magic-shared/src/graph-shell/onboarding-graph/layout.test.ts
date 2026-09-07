@@ -1,5 +1,4 @@
 import { BoundingBox } from '@core/utils/canvas/index';
-
 import { describe, expect, it } from 'vitest';
 
 import { placeOnboardingGraph } from './layout.ts';
@@ -57,8 +56,8 @@ describe('placeOnboardingGraph', () => {
   });
 
   it('throws on a node it was given no position for', () => {
-    expect(() => placeOnboardingGraph(graphOf([{ id: 'a' }]), VIEWPORT)).toThrow(
-      'onboarding graph node was given no position',
-    );
+    expect(() =>
+      placeOnboardingGraph(graphOf([{ id: 'a' }]), VIEWPORT),
+    ).toThrow('onboarding graph node was given no position');
   });
 });

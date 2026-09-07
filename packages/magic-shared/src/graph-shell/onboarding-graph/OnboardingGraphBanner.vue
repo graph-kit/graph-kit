@@ -10,7 +10,7 @@
   import { useProvidedGraph } from '../context.ts';
   import { BUILD_DURATION_MS, ONBOARDING_GRAPH_SLOT_ID } from './constants.ts';
   import { useProvidedOnboardingGraph } from './context.ts';
-  import { placeOnboardingGraph } from './layout.ts';
+  import { adoptExistingNodes, placeOnboardingGraph } from './layout.ts';
 
   const graph = useProvidedGraph();
   const shell = useProvidedShell();
@@ -19,17 +19,28 @@
   const dismiss = () => shell.componentSlots.remove(ONBOARDING_GRAPH_SLOT_ID);
 
   const build = () => {
+    const onCanvas = {
+      nodes: graph.nodes.value.map(({ id }) => ({ id })),
+      edges: graph.edges.value.map(({ id }) => ({ id })),
+    };
+
+    const starting = adoptExistingNodes(
+      placeOnboardingGraph(
+        onboardingGraph,
+        graph.surface.visibleWorldRect.value,
+      ),
+      onCanvas.nodes.map(({ id }) => id),
+    );
+
     graph.animation.capture(
-      () =>
-        graph.actions.addElements(
-          placeOnboardingGraph(
-            onboardingGraph,
-            graph.surface.visibleWorldRect.value,
-          ),
-        ),
+      () => {
+        graph.actions.removeElements(onCanvas);
+        graph.actions.addElements(starting);
+      },
       { durationMs: BUILD_DURATION_MS },
     );
 
+    graph.history.captureSnapshot();
     dismiss();
   };
 </script>

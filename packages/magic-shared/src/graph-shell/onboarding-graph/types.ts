@@ -1,4 +1,7 @@
-import { Graph } from '../../graph/types.ts';
+import { AddGEdgeOptions, AddGNodeOptions } from '../../graph/types.ts';
 
 /** a starting graph a product offers to build, positioned in offsets from screen center */
-export type OnboardingGraph = Parameters<Graph['actions']['addElements']>[0];
+export type OnboardingGraph = {
+  nodes: AddGNodeOptions[];
+  edges: AddGEdgeOptions[];
+};

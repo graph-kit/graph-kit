@@ -1,7 +1,7 @@
 import { BoundingBox } from '@core/utils/canvas/index';
 import { describe, expect, it } from 'vitest';
 
-import { placeOnboardingGraph } from './layout.ts';
+import { adoptExistingNodes, placeOnboardingGraph } from './layout.ts';
 import { OnboardingGraph } from './types.ts';
 
 /** centered on (500, 300), so an offset of zero lands there */
@@ -59,5 +59,53 @@ describe('placeOnboardingGraph', () => {
     expect(() =>
       placeOnboardingGraph(graphOf([{ id: 'a' }]), VIEWPORT),
     ).toThrow('onboarding graph node was given no position');
+  });
+});
+
+describe('adoptExistingNodes', () => {
+  const STARTING: OnboardingGraph = {
+    nodes: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+    edges: [
+      { source: 'a', target: 'b' },
+      { source: 'b', target: 'c' },
+    ],
+  };
+
+  it('hands each node the id of the one it replaces', () => {
+    const { nodes } = adoptExistingNodes(STARTING, ['x1', 'x2', 'x3']);
+
+    expect(nodes.map(({ id }) => id)).toEqual(['x1', 'x2', 'x3']);
+  });
+
+  it('follows those ids through the edges', () => {
+    const { edges } = adoptExistingNodes(STARTING, ['x1', 'x2', 'x3']);
+
+    expect(edges).toEqual([
+      { source: 'x1', target: 'x2' },
+      { source: 'x2', target: 'x3' },
+    ]);
+  });
+
+  it('leaves the nodes it has nothing to replace on their own ids', () => {
+    const { nodes, edges } = adoptExistingNodes(STARTING, ['x1']);
+
+    expect(nodes.map(({ id }) => id)).toEqual(['x1', 'b', 'c']);
+    expect(edges[0]).toEqual({ source: 'x1', target: 'b' });
+  });
+
+  it('ignores existing nodes the starting graph has no room for', () => {
+    const { nodes } = adoptExistingNodes(STARTING, ['x1', 'x2', 'x3', 'x4']);
+
+    expect(nodes.map(({ id }) => id)).toEqual(['x1', 'x2', 'x3']);
+  });
+
+  it('leaves an empty canvas alone', () => {
+    expect(adoptExistingNodes(STARTING, [])).toEqual(STARTING);
+  });
+
+  it('throws on a node it was given no id for', () => {
+    expect(() => adoptExistingNodes(graphOf([{}]), ['x1'])).toThrow(
+      'onboarding graph node was given no id',
+    );
   });
 });

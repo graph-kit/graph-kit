@@ -10,14 +10,14 @@
   import { useProvidedShell } from '../../product/context.ts';
   import { toast } from '../toast/index.ts';
   import { buildBugReport } from './bugReport.ts';
-  import { PANEL, TITLE } from './shared/classes.ts';
+  import { PANEL_TYPE } from './shared/classes.ts';
   import { useRepaintSample } from './shared/useRepaintSample.ts';
 
   const COPIED_FEEDBACK_MS = 3_000;
 
   const PROBLEM_TOAST_MS = 6_000;
 
-  const ICON_PX = 14;
+  const ICON_PX = 20;
 
   const shell = useProvidedShell();
 
@@ -65,12 +65,17 @@
 <template>
   <button
     type="button"
-    class="w-full cursor-pointer"
+    class="cursor-pointer"
     @click="copyReport"
   >
-    <Well :class="[PANEL, 'hover:bg-gray-300 dark:hover:bg-gray-700']">
-      <HStack class="justify-between">
-        <span :class="TITLE">{{ display.text }}</span>
+    <Well
+      :class="[
+        PANEL_TYPE,
+        'px-4 py-3 hover:bg-gray-300 dark:hover:bg-gray-700',
+      ]"
+    >
+      <HStack :gap="3">
+        <span class="text-sm font-bold tracking-wide">{{ display.text }}</span>
         <Icon
           :path="display.icon"
           :size="ICON_PX"

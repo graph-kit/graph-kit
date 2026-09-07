@@ -8,10 +8,6 @@
   /** the inset the slot layer holds every panel to, matched so the menu clears it too */
   const SLOT_INSET_PX = 24;
 
-  /** a panel taller than the room reka measured scrolls rather than running off screen */
-  const AVAILABLE_HEIGHT =
-    'panel-scroll max-h-[var(--reka-dropdown-menu-content-available-height)] overflow-y-auto';
-
   defineOptions({ inheritAttrs: false });
 
   defineProps<{ title: string }>();
@@ -46,7 +42,7 @@
     <!-- the menu is the panel's own surface, so there is no second Well here -->
     <VStack
       gap="3"
-      :class="[PANEL, AVAILABLE_HEIGHT]"
+      :class="PANEL"
     >
       <DebugHeading :title="title">
         <template #badge><slot name="badge" /></template>
@@ -55,13 +51,3 @@
     </VStack>
   </Dropdown>
 </template>
-
-<style scoped>
-  .panel-scroll {
-    scrollbar-width: none;
-  }
-
-  .panel-scroll::-webkit-scrollbar {
-    display: none;
-  }
-</style>

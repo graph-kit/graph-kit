@@ -4,17 +4,6 @@ import { Shell } from '../../product/types.ts';
 import { UNKNOWN } from '../../user-agent/parseUserAgent.ts';
 import { getLink } from '../link-sharing/linkPayload.ts';
 
-/*
-  the run, written down: everything a reader who was not there would otherwise have to
-  ask the reporter for. the debug panels answer the same questions, but only to whoever
-  is sitting in front of them, and only as much of a value as the column had room for
-
-  one reading per row, `section,key,value`, so a report pasted into an issue reads as
-  plain text and still parses back into fields later. sections are the panels' own
-  groupings, so a row here can be found on screen
-*/
-
-/** what a reading can be before it is written down */
 type ReportValue = string | number | boolean | undefined;
 
 type ReportRow = [section: string, key: string, value: string];
@@ -86,7 +75,6 @@ const shellSection = (shell: Shell): ReportRow[] => {
     onboarding: onboarding(),
     appearance: shell.appearance.state.value,
     'appearance setting': shell.appearance.value,
-    // chrome hidden explains a report whose screenshot shows none of the shell
     'chrome hidden': shell.componentSlots.visibility.isHidden.value,
   });
 };
@@ -106,7 +94,6 @@ const simulationSection = (shell: Shell): ReportRow[] => {
     state: 'running',
     id: running.definition.id,
     frame: running.playhead.position + 1,
-    // frameAt simulations generate on demand and so never declare an end
     frames: running.frameCount,
     guard: running.violation?.id ?? 'passing',
   });
@@ -142,7 +129,6 @@ const roomSection = (shell: Shell): ReportRow[] => {
   });
 };
 
-/** the aggregator is a plain array behind a getter, so its counts are taken in one pass */
 const countElements = (surface: CanvasSurface) => {
   const aggregator = surface.aggregator.aggregator();
   const countByShape = new Map<string, number>();
@@ -190,7 +176,6 @@ const surfaceSection = (shell: Shell, sample: BugReportSample): ReportRow[] => {
     content: surface.draw.contentSuspended.value ? 'suspended' : 'drawn',
   });
 
-  // uncapped, unlike the panel's four rows: a report has the room the column does not
   const shapes: ReportRow[] = [...countByShape]
     .sort(([, previous], [, next]) => next - previous)
     .map(([name, count]) => ['shapes', name, format(count)]);
@@ -231,11 +216,6 @@ const userAgentSection = (shell: Shell): ReportRow[] => {
   });
 };
 
-/**
- * what the product is holding, as a link that reopens it. the one reading worth more
- * than every other one put together, since it is the difference between a report that
- * describes a bug and one that reproduces it
- */
 const stateSection = (shell: Shell): ReportRow[] => {
   const { transit } = shell;
   if (!transit) return section('state', { transit: 'none' });
@@ -265,7 +245,6 @@ export type BugReportSample = {
   frameMs: number;
 };
 
-/** every reading the shell can take right now, as csv. see the notes at the top of this file */
 export const buildBugReport = (shell: Shell, sample: BugReportSample): string =>
   toCsv([
     ...sessionSection(shell),

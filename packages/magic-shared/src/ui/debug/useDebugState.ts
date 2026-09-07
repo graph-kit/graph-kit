@@ -56,7 +56,6 @@ export type DebugControls = {
   toggle: () => void;
 };
 
-/** the dev mode debugging components, reachable in every product with the "d" key */
 export const useDebugState = (
   componentSlots: ComponentSlotControls,
 ): DebugControls => {

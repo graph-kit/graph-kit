@@ -8,5 +8,7 @@ export type {
 
 export { provideGraph, useProvidedGraph } from './context.ts';
 
-export type { OnboardingGraph } from './onboarding-graph/types.ts';
-export type { OnboardingGraphControls } from './onboarding-graph/useOnboardingGraph.ts';
+export type {
+  OnboardingGraph,
+  OnboardingGraphControls,
+} from './onboarding-graph/types.ts';

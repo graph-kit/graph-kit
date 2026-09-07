@@ -11,6 +11,9 @@
 
   import { computed, onUnmounted, ref } from 'vue';
 
+  import { centerCameraOnTree } from './centerCameraOnTree.ts';
+  import { COMPANION_X_OFFSET } from './graph-conversion/compareCompanion.ts';
+  import { ROOT_POSITION } from './graph-conversion/treeToGraph.ts';
   import { useProvidedTreeSimulation } from './useProvidedTree.ts';
 
   const graph = useProvidedGraph();
@@ -36,11 +39,17 @@
 
   const insert = () => {
     if (!inputValid.value) return;
+
+    const isRootNode = graph.nodes.value.length === 0;
+    if (isRootNode) centerCameraOnTree(shell.surface);
+
     mode.value = 'insert';
     const node = nullThrows(
       graph.actions.addNode({
         label: String(input.value),
-        position: { x: 800, y: 250 },
+        position: isRootNode
+          ? ROOT_POSITION
+          : { ...ROOT_POSITION, x: ROOT_POSITION.x + COMPANION_X_OFFSET },
       }),
       'node transaction failed',
     );

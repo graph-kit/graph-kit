@@ -102,11 +102,7 @@ export const usePanAndZoom = (
   canvasEvents.subscribe('onMouseDown', onMousedown);
   canvasEvents.subscribe('onMouseMove', onMousemove);
 
-  /*
-    the release that ends a pan is the one the canvas never sees: dragging past
-    the edge of the window and letting go there, which is why it comes off the
-    document hub rather than the canvas one
-  */
+  // not on canvas since mouseup could occur off the canvas
   domEvents.subscribe('onMouseUp', onMouseup);
 
   return {

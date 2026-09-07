@@ -12,6 +12,11 @@ export type MathfieldElement = HTMLElement & {
   executeCommand: (command: [string, string]) => void;
 };
 
+/** the mathlive module statics this component sets, declared here for the same reason */
+export type MathliveModule = {
+  MathfieldElement: { soundsDirectory: string | null };
+};
+
 /** what a template ref to a LatexInput holds, including its exposed commands */
 export type LatexInputInstance = InstanceType<typeof LatexInput>;
 

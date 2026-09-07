@@ -6,13 +6,21 @@ import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
 import { graphShellHelpMenu } from './help.ts';
 import { multiplayerControls } from './multiplayer/index.ts';
-import { useOnboardingGraph } from './onboarding-graph/useOnboardingGraph.ts';
+import {
+  OnboardingGraphControls,
+  useOnboardingGraph,
+} from './onboarding-graph/useOnboardingGraph.ts';
 import { GRAPH_ONBOARDING } from './onboarding.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
 import { graphTransitCompression } from './transit-compression.ts';
 import { GraphShellOptions } from './types.ts';
 
-type GraphShell = { shell: Shell; graph: Graph };
+type GraphShell = {
+  shell: Shell;
+  graph: Graph;
+  /** undefined if {@link GraphShellOptions.onboardingGraph} is undefined */
+  onboardingGraph?: OnboardingGraphControls;
+};
 
 /** adapts a graph to the shell's controls interface, see {@link useShell} */
 export const useGraphShell = (options: GraphShellOptions): GraphShell => {
@@ -42,7 +50,7 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
     multiplayer: multiplayerControls(graph),
   };
 
-  const offerOnboardingGraph = useOnboardingGraph(options.onboardingGraph);
+  const onboardingGraph = useOnboardingGraph(options.onboardingGraph);
 
   const shell = useShell(product, {
     productId: options.productId,
@@ -53,7 +61,7 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
     onboarding: flags.onboarding ? GRAPH_ONBOARDING : undefined,
     onSetupCompleted: (shell) => {
       if (graph.nodes.value.length > 0) shell.onboarding?.close();
-      offerOnboardingGraph?.(shell);
+      onboardingGraph?.offer(shell);
     },
   });
 
@@ -81,5 +89,6 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
   return {
     graph,
     shell,
+    onboardingGraph,
   };
 };

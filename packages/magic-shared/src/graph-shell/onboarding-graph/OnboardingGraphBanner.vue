@@ -14,7 +14,7 @@
 
   const graph = useProvidedGraph();
   const shell = useProvidedShell();
-  const onboardingGraph = useProvidedOnboardingGraph();
+  const { onboardingGraph, events } = useProvidedOnboardingGraph();
 
   const dismiss = () => shell.componentSlots.remove(ONBOARDING_GRAPH_SLOT_ID);
 
@@ -41,6 +41,7 @@
     );
 
     graph.history.captureSnapshot();
+    events.emit('onOnboardingGraphBuilt');
     dismiss();
   };
 </script>

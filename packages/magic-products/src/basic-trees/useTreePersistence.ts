@@ -1,4 +1,5 @@
 import { Graph } from '@magic/shared/graph';
+import { OnboardingGraphControls } from '@magic/shared/graph-shell';
 import { Shell } from '@magic/shared/product';
 
 import { graphToTree } from './graph-conversion/graphToTree.ts';
@@ -10,10 +11,15 @@ export const useTreePersistence = (
   tree: AVLTree,
   graph: Graph,
   shell: Shell,
+  onboardingGraph?: OnboardingGraphControls,
 ) => {
-  graph.events.transit.subscribe('onDecoded', () => {
+  // the graph is the only record of the tree whenever something else rebuilds it
+  const adoptGraph = () => {
     tree.root = graphToTree(graph);
-  });
+  };
+
+  graph.events.transit.subscribe('onDecoded', adoptGraph);
+  onboardingGraph?.events.subscribe('onOnboardingGraphBuilt', adoptGraph);
 
   let releaseStorage: (() => void) | undefined;
   let releaseHistory: (() => void) | undefined;

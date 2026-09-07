@@ -3,6 +3,7 @@
   import { useGraphShell } from '@magic/shared/graph-shell';
 
   import { lensChips } from './lensChips.ts';
+  import { onboardingGraph } from './onboardingGraph.ts';
   import { simulationButtons } from './simulationButtons.ts';
 
   useGraphShell({
@@ -15,6 +16,7 @@
     },
     lensChips,
     simulationButtons,
+    onboardingGraph,
   });
 </script>
 

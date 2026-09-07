@@ -5,6 +5,7 @@ import { ComputedRef, computed, ref } from 'vue';
 import { ComponentSlot } from '../../component-slot/types.ts';
 import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
 import { toast } from '../toast/useToastState.ts';
+import BugReport from './BugReport.vue';
 import ShellDashboard from './ShellDashboard.vue';
 import ShellFlags from './ShellFlags.vue';
 import SurfaceDashboard from './SurfaceDashboard.vue';
@@ -13,6 +14,13 @@ import UserAgent from './UserAgent.vue';
 const DEBUG_SLOT_PRIORITY = -Infinity;
 
 const DEBUG_SLOTS: ComponentSlot[] = [
+  // first in its corner, so the way to report a bug sits above what it reports
+  {
+    id: 'shell/debug/bug-report',
+    component: BugReport,
+    position: 'bottom-right',
+    priority: DEBUG_SLOT_PRIORITY,
+  },
   {
     id: 'shell/debug/user-agent',
     component: UserAgent,
@@ -48,7 +56,6 @@ export type DebugControls = {
   toggle: () => void;
 };
 
-/** the dev mode debugging components, reachable in every product with the "d" key */
 export const useDebugState = (
   componentSlots: ComponentSlotControls,
 ): DebugControls => {

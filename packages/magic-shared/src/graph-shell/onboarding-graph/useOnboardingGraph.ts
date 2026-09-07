@@ -1,41 +1,62 @@
-import { ReadonlyEventHub, createEventHub } from '@core/events/createEventHub';
+import { createEventHub } from '@core/events/createEventHub';
 
-import { Shell } from '../../product/types.ts';
+import { useComponent } from '../../component-slot/useComponent.ts';
+import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
+import { Graph } from '../../graph/types.ts';
 import OnboardingGraphBanner from './OnboardingGraphBanner.vue';
-import { ONBOARDING_GRAPH_SLOT_ID } from './constants.ts';
+import { BUILD_DURATION_MS, ONBOARDING_GRAPH_SLOT_ID } from './constants.ts';
 import { provideOnboardingGraph } from './context.ts';
-import {
-  OnboardingGraphEventMap,
-  createOnboardingGraphEventRegistry,
-} from './events.ts';
-import { OnboardingGraph } from './types.ts';
+import { createOnboardingGraphEventRegistry } from './events.ts';
+import { adoptExistingNodes, placeOnboardingGraph } from './layout.ts';
+import { OnboardingGraph, OnboardingGraphControls } from './types.ts';
 
-export type OnboardingGraphControls = {
-  /** puts the banner up */
-  offer: (shell: Shell) => void;
-  events: ReadonlyEventHub<OnboardingGraphEventMap>;
-};
-
-/** offers to build the product's starting graph, for someone who opened it on nothing */
+/** the banner offering to build the product's starting graph */
 export const useOnboardingGraph = (
+  componentSlots: ComponentSlotControls,
+  graph: Graph,
   onboardingGraph?: OnboardingGraph,
 ): OnboardingGraphControls | undefined => {
   if (!onboardingGraph) return;
 
   const events = createEventHub(createOnboardingGraphEventRegistry());
 
-  provideOnboardingGraph({ onboardingGraph, events });
+  const banner = useComponent(componentSlots, {
+    id: ONBOARDING_GRAPH_SLOT_ID,
+    component: OnboardingGraphBanner,
+    position: 'top-middle',
+  });
 
-  return {
-    offer: (shell) => {
-      if (!shell.onboarding?.isActive.value) return;
+  const build = () => {
+    events.emit('onBeforeOnboardingGraphBuilt');
 
-      shell.componentSlots.add({
-        id: ONBOARDING_GRAPH_SLOT_ID,
-        component: OnboardingGraphBanner,
-        position: 'top-middle',
-      });
-    },
-    events,
+    const onCanvas = {
+      nodes: graph.nodes.value.map(({ id }) => ({ id })),
+      edges: graph.edges.value.map(({ id }) => ({ id })),
+    };
+
+    const starting = adoptExistingNodes(
+      placeOnboardingGraph(
+        onboardingGraph,
+        graph.surface.visibleWorldRect.value,
+      ),
+      onCanvas.nodes.map(({ id }) => id),
+    );
+
+    graph.animation.capture(
+      () => {
+        graph.actions.removeElements(onCanvas);
+        graph.actions.addElements(starting);
+      },
+      { durationMs: BUILD_DURATION_MS },
+    );
+
+    graph.history.captureSnapshot();
+    events.emit('onOnboardingGraphBuilt');
+    banner.hide();
   };
+
+  const controls: OnboardingGraphControls = { ...banner, events, build };
+  provideOnboardingGraph(controls);
+
+  return controls;
 };

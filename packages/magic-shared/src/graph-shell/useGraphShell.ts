@@ -6,10 +6,8 @@ import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
 import { graphShellHelpMenu } from './help.ts';
 import { multiplayerControls } from './multiplayer/index.ts';
-import {
-  OnboardingGraphControls,
-  useOnboardingGraph,
-} from './onboarding-graph/useOnboardingGraph.ts';
+import { OnboardingGraphControls } from './onboarding-graph/types.ts';
+import { useOnboardingGraph } from './onboarding-graph/useOnboardingGraph.ts';
 import { GRAPH_ONBOARDING } from './onboarding.ts';
 import { useGraphShellShortcuts } from './shortcuts.ts';
 import { graphTransitCompression } from './transit-compression.ts';
@@ -50,8 +48,6 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
     multiplayer: multiplayerControls(graph),
   };
 
-  const onboardingGraph = useOnboardingGraph(options.onboardingGraph);
-
   const shell = useShell(product, {
     productId: options.productId,
     flags: options.flags,
@@ -61,9 +57,15 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
     onboarding: flags.onboarding ? GRAPH_ONBOARDING : undefined,
     onSetupCompleted: (shell) => {
       if (graph.nodes.value.length > 0) shell.onboarding?.close();
-      onboardingGraph?.offer(shell);
+      if (shell.onboarding?.isActive.value) onboardingGraph?.show();
     },
   });
+
+  const onboardingGraph = useOnboardingGraph(
+    shell.componentSlots,
+    graph,
+    options.onboardingGraph,
+  );
 
   graph.events.subscribe('onStructureChange', () => shell.onboarding?.close());
 
@@ -81,6 +83,12 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
   );
 
   shell.simulation.events.subscribe('onSimulationStarted', graph.focus.clear);
+
+  if (onboardingGraph)
+    shell.simulation.events.subscribe(
+      'onSimulationStarted',
+      onboardingGraph.hide,
+    );
 
   useGraphShellShortcuts(shell, graph);
 

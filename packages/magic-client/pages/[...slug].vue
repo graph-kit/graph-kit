@@ -1,3 +1,3 @@
 <script setup lang="ts">
-  definePageMeta({ redirect: '/welcome' });
+  definePageMeta({ redirect: '/' });
 </script>

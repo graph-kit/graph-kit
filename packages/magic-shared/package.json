@@ -164,6 +164,14 @@
       "types": "./dist/types/product/index.d.ts",
       "default": "./src/product/index.ts"
     },
+    "./product/manifests": {
+      "types": "./dist/types/product/manifests/index.d.ts",
+      "default": "./src/product/manifests/index.ts"
+    },
+    "./product/manifests/paths": {
+      "types": "./dist/types/product/manifests/paths.d.ts",
+      "default": "./src/product/manifests/paths.ts"
+    },
     "./multiplayer": {
       "types": "./dist/types/multiplayer/index.d.ts",
       "default": "./src/multiplayer/index.ts"

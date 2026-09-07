@@ -19,12 +19,19 @@
     align?: PopoverContentProps['align'];
     /** the gap the panel keeps from its trigger */
     sideOffset?: PopoverContentProps['sideOffset'];
+    /**
+     * renders the panel into the document up front rather than on first open, so its
+     * markup is there for anything that reads the page without driving it, a crawler
+     * above all. costs a hidden subtree for the life of the page, so it is opt in
+     */
+    forceMount?: boolean;
   }
 
-  withDefaults(defineProps<Props>(), {
+  const props = withDefaults(defineProps<Props>(), {
     side: 'bottom',
     align: 'start',
     sideOffset: 6,
+    forceMount: false,
   });
 
   /** left unbound the panel opens and closes itself, driven by the trigger slot */
@@ -37,7 +44,13 @@
 
   const attrClass = useAttrClass();
 
-  const classes = computed(() => cn(panel, attrClass.value));
+  // a force mounted panel is present while closed, which is only ever markup: hiding
+  // it is what keeps it out of the way of the pointer, the tab order and the eye
+  const whenClosed = 'data-[state=closed]:hidden';
+
+  const classes = computed(() =>
+    cn(panel, props.forceMount && whenClosed, attrClass.value),
+  );
 
   // moving focus reads as a stray tooltip and focus ring to a pointer user, both on
   // open, where it lands on the first item in the panel, and on close, where it goes
@@ -65,8 +78,12 @@
     >
       <slot name="trigger" />
     </PopoverTrigger>
-    <PopoverPortal>
+    <PopoverPortal
+      :force-mount="forceMount"
+      :to="forceMount ? '#teleports' : undefined"
+    >
       <PopoverContent
+        :force-mount="forceMount"
         :side="side"
         :align="align"
         :side-offset="sideOffset"

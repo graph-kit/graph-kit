@@ -106,11 +106,13 @@
 </script>
 
 <template>
+  <!-- force-mount required for search engine crawlers -->
   <Popover
     class="w-[min(75rem,92vw)] max-h-[75vh] overflow-y-auto rounded-2xl bg-gray-100 p-0 shadow-2xl dark:bg-gray-800"
     side="top"
     align="center"
     :side-offset="14"
+    force-mount
   >
     <template #trigger>
       <Well class="p-0 w-fit">

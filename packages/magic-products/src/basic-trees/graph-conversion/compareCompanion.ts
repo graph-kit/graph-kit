@@ -3,7 +3,7 @@ import { nullThrows } from '@core/utils/assert';
 import { CompareFrame } from '../simulations/frames.ts';
 import { GraphState } from './treeToGraph.ts';
 
-const COMPANION_X_OFFSET = -100;
+export const COMPANION_X_OFFSET = -100;
 
 export const compareCompanion = (frame: CompareFrame, state: GraphState) => {
   const nodeWeAreAdding = frame.targetNode;

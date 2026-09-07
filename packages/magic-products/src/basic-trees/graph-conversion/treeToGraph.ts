@@ -7,7 +7,7 @@ import { Coordinate, getTreeNodePositions } from './getTreeNodePositions.ts';
 const X_OFFSET = 160;
 const Y_OFFSET = 200;
 
-export const ROOT_POSITION: Coordinate = { x: 800, y: 400 };
+export const ROOT_POSITION: Coordinate = { x: 0, y: 0 };
 
 const newEdge = (source: string, target: string): AddGEdgeOptions => ({
   source,

@@ -107,7 +107,7 @@ const historySection = (shell: Shell): ReportRow[] => {
     state: 'on',
     'can undo': history.canUndo.value,
     'can redo': history.canRedo.value,
-    blocked: history.suppression.value ?? 'no',
+    blocked: history.disabled.value ?? 'no',
   });
 };
 

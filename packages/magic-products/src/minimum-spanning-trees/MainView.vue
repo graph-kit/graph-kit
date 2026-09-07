@@ -7,7 +7,7 @@
   import { simulationButtons } from './simulationButtons.ts';
 
   useGraphShell({
-    productId: 'min-spanning-trees',
+    productId: 'minimum-spanning-trees',
     core: {
       directed: false,
     },

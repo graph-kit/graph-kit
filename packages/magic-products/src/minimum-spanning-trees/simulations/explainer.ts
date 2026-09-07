@@ -6,13 +6,13 @@ import Fraction from 'fraction.js';
 import { KruskalsFrame, PrimsFrame } from './frame.ts';
 
 export const primsSlotIds = {
-  considering: 'min-spanning-trees/prims/considering',
-  excluded: 'min-spanning-trees/prims/excluded',
+  considering: 'minimum-spanning-trees/prims/considering',
+  excluded: 'minimum-spanning-trees/prims/excluded',
 } as const;
 
 export const kruskalsSlotIds = {
-  considering: 'min-spanning-trees/kruskals/considering',
-  excluded: 'min-spanning-trees/kruskals/excluded',
+  considering: 'minimum-spanning-trees/kruskals/considering',
+  excluded: 'minimum-spanning-trees/kruskals/excluded',
 } as const;
 
 const listEdges = (graph: Graph, edgeIds: readonly string[]) => {

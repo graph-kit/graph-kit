@@ -20,7 +20,7 @@ const mountVisit = () => {
   const app = createApp(
     defineComponent({
       setup: () => {
-        useProductVisit(useTelemetry('sets'));
+        useProductVisit(useTelemetry('set-theory'));
         return () => h('div');
       },
     }),
@@ -53,7 +53,7 @@ describe('useProductVisit', () => {
     mountVisit();
 
     expect(reported).toEqual([
-      { name: 'product.opened', productId: 'sets', payload: undefined },
+      { name: 'product.opened', productId: 'set-theory', payload: undefined },
     ]);
   });
 

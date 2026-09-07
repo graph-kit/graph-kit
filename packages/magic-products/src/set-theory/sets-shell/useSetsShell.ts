@@ -82,10 +82,10 @@ export const useSetsShell = (): {
   };
 
   const shell = useShell(product, {
-    productId: 'sets',
+    productId: 'set-theory',
     helpMenu: [
       {
-        id: 'sets/create-set',
+        id: 'set-theory/create-set',
         category: 'Sets',
         name: 'Create Set',
         gesture: 'dblclick',
@@ -124,7 +124,7 @@ export const useSetsShell = (): {
   provideSetsState(setsState);
 
   shell.componentSlots.add({
-    id: 'sets/query-panel',
+    id: 'set-theory/query-panel',
     component: QueryPanel,
     position: 'bottom-middle',
   });

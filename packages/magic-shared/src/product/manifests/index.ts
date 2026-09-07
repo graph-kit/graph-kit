@@ -2,13 +2,13 @@ import { productThumbnail } from './thumbnail.ts';
 import { ProductManifest } from './types.ts';
 
 export const manifests = {
-  sets: {
-    id: 'sets',
+  'set-theory': {
+    id: 'set-theory',
     multiplayer: true,
     name: 'Set Theory',
     abbreviatedName: 'SET',
     navigation: {
-      slug: 'sets',
+      slug: 'set-theory',
       card: {
         name: 'Set Theory',
         description:
@@ -20,7 +20,7 @@ export const manifests = {
       title: 'Set Theory | Magic Graphs',
       description:
         'Draw sets on an infinite canvas and write queries like A union B that highlight the regions they select as you type.',
-      ogImage: productThumbnail('sets', 'dark'),
+      ogImage: productThumbnail('set-theory', 'dark'),
     },
   },
   'markov-chains': {
@@ -91,7 +91,7 @@ export const manifests = {
     name: 'Path Finding',
     abbreviatedName: 'PTH',
     navigation: {
-      slug: 'path',
+      slug: 'path-finding',
       card: {
         name: 'Path Finding',
         description:
@@ -106,13 +106,13 @@ export const manifests = {
       ogImage: productThumbnail('path-finding', 'dark'),
     },
   },
-  'min-spanning-trees': {
-    id: 'min-spanning-trees',
+  'minimum-spanning-trees': {
+    id: 'minimum-spanning-trees',
     multiplayer: true,
     name: 'Minimum Spanning Trees',
     abbreviatedName: 'MST',
     navigation: {
-      slug: 'mst',
+      slug: 'minimum-spanning-trees',
       card: {
         name: 'Minimum Spanning Trees',
         description:
@@ -124,7 +124,7 @@ export const manifests = {
       title: 'Minimum Spanning Trees | Magic Graphs',
       description:
         "Run Kruskal's and Prim's on a weighted graph you build and trace each one as it grows a minimum spanning tree edge by edge.",
-      ogImage: productThumbnail('min-spanning-trees', 'dark'),
+      ogImage: productThumbnail('minimum-spanning-trees', 'dark'),
     },
   },
   dev: {

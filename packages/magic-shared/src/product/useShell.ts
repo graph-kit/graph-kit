@@ -61,12 +61,13 @@ export const useShell = (
 
   const localStorage = useShellLocalStorage(manifest.id, product, flags);
   const jumpToContent = useJumpToContent(product, flags);
-  const onboarding = useOnboarding(
+  const onboarding = useOnboarding({
     product,
     flags,
     appearance,
-    options.onboarding,
-  );
+    productId: manifest.id,
+    items: options.onboarding,
+  });
 
   const { product: multiplayer, roomHistory } = useMultiplayer({
     product,

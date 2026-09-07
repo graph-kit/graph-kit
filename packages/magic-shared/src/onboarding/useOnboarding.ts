@@ -2,17 +2,19 @@ import {
   AggregatorTransformer,
   CanvasElement,
 } from '@canvas/primitives/aggregator/types';
+import { devAssert } from '@core/utils/debugging';
 
 import { ComputedRef, computed, ref } from 'vue';
 
 import { ShellFlags } from '../product/flags.ts';
+import { ProductId } from '../product/manifests/index.ts';
 import { ProductControls } from '../product/types.ts';
 import { AppearanceControls } from '../ui/appearance/useShellAppearance.ts';
 import { onboardingElements } from './elements.ts';
 import { hasOnboarded, markOnboarded } from './hasOnboarded.ts';
 import { onboardingLayout } from './layout.ts';
 import { onboardingPalette } from './palette.ts';
-import { Onboarding } from './types.ts';
+import { OnboardingItem } from './types.ts';
 
 export type OnboardingControls = {
   /** puts the card on what the canvas is showing, unless this browser already onboarded */
@@ -26,6 +28,16 @@ export type OnboardingControls = {
   isActive: ComputedRef<boolean>;
 };
 
+export type OnboardingOptions = {
+  product: Pick<ProductControls, 'surface'>;
+  flags: ShellFlags;
+  appearance: AppearanceControls;
+  /** what the completion is remembered under, so onboarding is per product */
+  productId: ProductId;
+  /** what this product suggests trying first */
+  items?: OnboardingItem[];
+};
+
 /**
  * The card a product opens on, listing what to try first. The shell puts it up and never
  * takes it down: only the product knows when its prompt stops being worth reading, see
@@ -33,16 +45,21 @@ export type OnboardingControls = {
  *
  * Absent when the product flagged it off or contributed no items
  */
-export const useOnboarding = (
-  product: Pick<ProductControls, 'surface'>,
-  flags: ShellFlags,
-  appearance: AppearanceControls,
-  onboarding?: Onboarding,
-): OnboardingControls | undefined => {
+export const useOnboarding = ({
+  product,
+  flags,
+  appearance,
+  productId,
+  items,
+}: OnboardingOptions): OnboardingControls | undefined => {
   const { surface } = product;
-  if (!flags.onboarding || !onboarding || onboarding.items.length === 0) return;
+  if (!flags.onboarding || !items) return;
 
-  const { id, items } = onboarding;
+  devAssert(
+    items.length > 0,
+    `[shell] ${productId} named an onboarding with no items in it`,
+  );
+  if (items.length === 0) return;
 
   // nothing to paint until `open` builds the card
   let elements: () => CanvasElement[] = () => [];
@@ -60,12 +77,12 @@ export const useOnboarding = (
   };
 
   const close = () => {
-    markOnboarded(id);
+    markOnboarded(productId);
     takeDown();
   };
 
   const open = () => {
-    if (hasOnboarded(id)) return;
+    if (hasOnboarded(productId)) return;
 
     takeDown();
     active.value = true;

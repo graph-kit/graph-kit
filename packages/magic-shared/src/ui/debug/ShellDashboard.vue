@@ -142,11 +142,11 @@
           :is-on="shell.history.canRedo.value"
         />
         <DebugRow
-          v-if="shell.history.suppression.value"
+          v-if="shell.history.disabled.value"
           label="blocked"
-          :title="shell.history.suppression.value"
+          :title="shell.history.disabled.value"
         >
-          {{ shell.history.suppression.value }}
+          {{ shell.history.disabled.value }}
         </DebugRow>
       </template>
       <DebugRow

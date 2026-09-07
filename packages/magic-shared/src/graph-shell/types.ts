@@ -8,6 +8,7 @@ import { Shell } from '../product/types.ts';
 import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { HelpMenuItem } from '../ui/help-menu/types.ts';
 import { LensChipDefinition } from '../ui/lens-chips/types.ts';
+import { OnboardingGraph } from './onboarding-graph/types.ts';
 
 export type GraphLensChipOption = (
   graph: Graph,
@@ -19,7 +20,7 @@ export type GraphSimulationButtonOption = (
 ) => SimulationButtonDefinition[] | undefined;
 
 export type GraphShellOptions = UseGraphOptions & {
-  /** selects the manifest describing this product */
+  /** the manifest describing this product */
   productId: ProductId;
   /** conditionally disable/enable shell features */
   flags?: ShellFlagOptions;
@@ -29,4 +30,6 @@ export type GraphShellOptions = UseGraphOptions & {
   lensChips?: GraphLensChipOption;
   /** builds the simulation buttons shown below the canvas, if the product offers any */
   simulationButtons?: GraphSimulationButtonOption;
+  /** the starting graph this product offers to build */
+  onboardingGraph?: OnboardingGraph;
 };

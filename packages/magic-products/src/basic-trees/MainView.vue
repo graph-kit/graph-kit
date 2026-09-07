@@ -13,6 +13,7 @@
   import { createBalanceFactorThemer } from './createBalanceFactorThemer.ts';
   import { createTreeHeightThemer } from './createTreeHeightThemer.ts';
   import { definitions } from './definitions.ts';
+  import { onboardingGraph } from './onboardingGraph.ts';
   import { AVLFrame } from './simulations/frames.ts';
   import { useTreeSimulation } from './simulations/useTreeSimulation.ts';
   import { AVLTree } from './tree/AVLTree.ts';
@@ -27,8 +28,13 @@
 
   const tree = shallowReactive(new AVLTree());
 
-  const { graph, shell } = useGraphShell({
+  const {
+    graph,
+    shell,
+    onboardingGraph: onboardingGraphControls,
+  } = useGraphShell({
     productId: 'avl-trees',
+    onboardingGraph,
     flags: {
       adjustAnimationSpeed: true,
     },
@@ -116,7 +122,7 @@
   provideTreeActions(treeActions);
   useTreeShortcuts(graph, shell, treeActions);
 
-  useTreePersistence(tree, graph, shell);
+  useTreePersistence(tree, graph, shell, onboardingGraphControls);
 
   graph.anchors.lifecycle.disable();
   graph.nodeDrag.lifecycle.disable();

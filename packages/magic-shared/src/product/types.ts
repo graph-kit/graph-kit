@@ -14,7 +14,7 @@ import { ComputedRef } from 'vue';
 import { ComponentSlotControls } from '../component-slot/useComponentSlotsState.ts';
 import { LensControls } from '../lens/useLensState.ts';
 import { ProductMultiplayer } from '../multiplayer/types.ts';
-import { Onboarding, OnboardingControls } from '../onboarding/index.ts';
+import { OnboardingControls, OnboardingItem } from '../onboarding/index.ts';
 import { ShortcutControls } from '../shortcuts/useShortcuts.ts';
 import { SimulationButtonDefinition } from '../simulation/start-buttons/types.ts';
 import { SimulationControls } from '../simulation/useSimulationState.ts';
@@ -74,7 +74,7 @@ export type ShellHistory = HistoryField & {
    */
   suppress: (message: string) => () => void;
   /** why undo and redo are blocked, `undefined` when they are not */
-  suppression: ComputedRef<string | undefined>;
+  disabled: ComputedRef<string | undefined>;
 };
 
 export type DocBinding = {
@@ -187,7 +187,7 @@ export type ShellOptions = {
   lensChips?: (shell: Shell) => LensChipDefinition[] | undefined;
   simulationButtons?: SimulationButtonDefinition[];
   /** what the product suggests trying first, shown only if it opens on nothing */
-  onboarding?: Onboarding;
+  onboarding?: OnboardingItem[];
   /** triggered once the shell has finished standing the product up */
   onSetupCompleted?: (shell: Shell) => void;
 };

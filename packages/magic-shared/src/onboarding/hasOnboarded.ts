@@ -1,11 +1,11 @@
 import { readLocalStorage, writeLocalStorage } from '@core/utils/localStorage';
 
-import { OnboardingId } from './types.ts';
+import { ProductId } from '../product/manifests/index.ts';
 
-const localKey = (id: OnboardingId) => `has-onboarded-${id}`;
+const localKey = (id: ProductId) => `has-onboarded-${id}`;
 
-export const hasOnboarded = (id: OnboardingId) =>
+export const hasOnboarded = (id: ProductId) =>
   readLocalStorage(localKey(id)) === 'true';
 
-export const markOnboarded = (id: OnboardingId) =>
+export const markOnboarded = (id: ProductId) =>
   writeLocalStorage(localKey(id), 'true');

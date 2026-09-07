@@ -17,12 +17,24 @@
     core: {
       directed: true,
     },
+    onboardingGraph: {
+      nodes: [
+        { id: 'a', label: 'A', position: { x: -160, y: -80 } },
+        { id: 'b', label: 'B', position: { x: 160, y: -80 } },
+        { id: 'c', label: 'C', position: { x: 0, y: 120 } },
+      ],
+      edges: [
+        { source: 'a', target: 'b' },
+        { source: 'b', target: 'c' },
+      ],
+    },
   });
 
   shell.componentSlots.add({
     id: 'animation/point-to-point',
     component: PointToPoint,
     position: 'bottom-middle',
+    priority: Infinity,
   });
 </script>
 

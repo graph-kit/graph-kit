@@ -1,9 +1,9 @@
 <script setup lang="ts">
   import { mdiClose } from '@mdi/js';
 
-  import Button from '../../components/button/Button.vue';
-  import Icon from '../../components/icon/Icon.vue';
-  import Tooltip from '../../components/tooltip/Tooltip.vue';
+  import Button from '../components/button/Button.vue';
+  import Icon from '../components/icon/Icon.vue';
+  import Tooltip from '../components/tooltip/Tooltip.vue';
 
   const emit = defineEmits<{
     closed: [];

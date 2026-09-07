@@ -6,31 +6,31 @@ afterEach(() => localStorage.clear());
 
 describe('hasOnboarded', () => {
   it('reads false for a browser that has never been here', () => {
-    expect(hasOnboarded('graph')).toBe(false);
+    expect(hasOnboarded('traversals')).toBe(false);
   });
 
   it('reads true once marked', () => {
-    markOnboarded('graph');
+    markOnboarded('traversals');
 
-    expect(hasOnboarded('graph')).toBe(true);
+    expect(hasOnboarded('traversals')).toBe(true);
   });
 
-  it('leaves every other card alone', () => {
-    markOnboarded('graph');
+  it('leaves every other product alone', () => {
+    markOnboarded('traversals');
 
-    expect(hasOnboarded('sets')).toBe(false);
+    expect(hasOnboarded('path-finding')).toBe(false);
   });
 
   it('reads false for anything else stored under the key', () => {
-    localStorage.setItem('has-onboarded-graph', 'yes');
+    localStorage.setItem('has-onboarded-traversals', 'yes');
 
-    expect(hasOnboarded('graph')).toBe(false);
+    expect(hasOnboarded('traversals')).toBe(false);
   });
 
   it('survives being marked more than once', () => {
-    markOnboarded('graph');
-    markOnboarded('graph');
+    markOnboarded('traversals');
+    markOnboarded('traversals');
 
-    expect(localStorage.getItem('has-onboarded-graph')).toBe('true');
+    expect(localStorage.getItem('has-onboarded-traversals')).toBe('true');
   });
 });

@@ -53,6 +53,6 @@
     @click="copyLinkToClipboard"
     :icon="mdiLink"
   >
-    Copy Link
+    Copy Share Link
   </MenuItem>
 </template>

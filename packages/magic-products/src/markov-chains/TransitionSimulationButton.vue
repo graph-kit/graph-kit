@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { sum } from '@core/utils/math';
   import Button from '@magic/shared/Button';
   import DisabledLensButton from '@magic/shared/DisabledLensButton';
   import Dropdown from '@magic/shared/Dropdown';
@@ -29,6 +30,7 @@
 
   const startingDistribution = shallowRef<Fraction[]>([]);
   const simplify = ref(true);
+
   const definition = distributionSimulationDefinition(
     graph,
     startingDistribution,
@@ -78,11 +80,7 @@
     const distribution = parsedInput.value;
     if (!distribution) return 'Some states have an invalid probability';
 
-    const total = distribution.reduce(
-      (sum, probability) => sum.add(probability),
-      new Fraction(0),
-    );
-    if (!total.equals(1)) {
+    if (!sum(distribution).equals(1)) {
       return 'Probabilities must sum to 1';
     }
 
@@ -104,7 +102,7 @@
         <template #start>
           <Icon :path="mdiPlay" />
         </template>
-        Step The Distribution
+        Simulate Transitions
       </DisabledLensButton>
     </template>
     <Well>

@@ -74,7 +74,7 @@ export type ShellHistory = HistoryField & {
    */
   suppress: (message: string) => () => void;
   /** why undo and redo are blocked, `undefined` when they are not */
-  suppression: ComputedRef<string | undefined>;
+  disabled: ComputedRef<string | undefined>;
 };
 
 export type DocBinding = {

@@ -1,6 +1,7 @@
 import { MaybeGetter } from '@core/utils/maybeGetter/index';
+import Fraction from 'fraction.js';
 
-import { Graph } from '../graph/types.ts';
+import { GNode, Graph } from '../graph/types.ts';
 import { UseGraphOptions } from '../graph/useGraph.ts';
 import { ShellFlagOptions } from '../product/flags.ts';
 import { ProductId } from '../product/manifests/index.ts';
@@ -18,8 +19,25 @@ export type GraphSimulationButtonOption = (
   graph: Graph,
 ) => SimulationButtonDefinition[] | undefined;
 
+type OnboardingNode = {
+  id: string;
+  label: string;
+  position: { x: number; y: number };
+};
+
+type OnboardingEdge = {
+  source: string;
+  target: string;
+  weight?: Fraction;
+};
+
+type OnboardingGraph = {
+  nodes: OnboardingNode[];
+  edges: OnboardingEdge[];
+};
+
 export type GraphShellOptions = UseGraphOptions & {
-  /** selects the manifest describing this product */
+  /** the manifest describing this product */
   productId: ProductId;
   /** conditionally disable/enable shell features */
   flags?: ShellFlagOptions;
@@ -29,4 +47,5 @@ export type GraphShellOptions = UseGraphOptions & {
   lensChips?: GraphLensChipOption;
   /** builds the simulation buttons shown below the canvas, if the product offers any */
   simulationButtons?: GraphSimulationButtonOption;
+  onboardingGraph?: OnboardingGraph;
 };

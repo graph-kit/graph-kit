@@ -11,10 +11,10 @@ import { useGraphShellShortcuts } from './shortcuts.ts';
 import { graphTransitCompression } from './transit-compression.ts';
 import { GraphShellOptions } from './types.ts';
 
+type GraphShell = { shell: Shell; graph: Graph };
+
 /** adapts a graph to the shell's controls interface, see {@link useShell} */
-export const useGraphShell = (
-  options: GraphShellOptions,
-): { shell: Shell; graph: Graph } => {
+export const useGraphShell = (options: GraphShellOptions): GraphShell => {
   const graph = useGraph(options);
 
   const simulationButtons = options.simulationButtons?.(graph);

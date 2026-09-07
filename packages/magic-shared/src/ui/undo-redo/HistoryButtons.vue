@@ -11,7 +11,7 @@
   const shell = useProvidedShell();
 
   const reason = (canRun: boolean | undefined, whenEmpty: string) =>
-    shell.history?.suppression.value ?? (canRun ? undefined : whenEmpty);
+    shell.history?.disabled.value ?? (canRun ? undefined : whenEmpty);
 
   const undoDisabled = computed(() =>
     reason(shell.history?.canUndo.value, 'Nothing to undo'),

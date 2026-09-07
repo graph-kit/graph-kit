@@ -2,13 +2,13 @@ import { productThumbnail } from './thumbnail.ts';
 import { ProductManifest } from './types.ts';
 
 export const manifests = {
-  sets: {
-    id: 'sets',
+  'set-theory': {
+    id: 'set-theory',
     multiplayer: true,
     name: 'Set Theory',
     abbreviatedName: 'SET',
     navigation: {
-      slug: 'sets',
+      slug: 'set-theory',
       card: {
         name: 'Set Theory',
         description:
@@ -20,7 +20,7 @@ export const manifests = {
       title: 'Set Theory | Magic Graphs',
       description:
         'Draw sets on an infinite canvas and write queries like A union B that highlight the regions they select as you type.',
-      ogImage: productThumbnail('sets', 'dark'),
+      ogImage: productThumbnail('set-theory', 'dark'),
     },
   },
   'markov-chains': {
@@ -44,25 +44,24 @@ export const manifests = {
       ogImage: productThumbnail('markov-chains', 'dark'),
     },
   },
-  'avl-trees': {
-    id: 'avl-trees',
+  'binary-search-trees': {
+    id: 'binary-search-trees',
     multiplayer: false,
-    name: 'AVL Trees',
-    abbreviatedName: 'AVL',
+    name: 'Binary Search Trees',
+    abbreviatedName: 'BST',
     navigation: {
-      slug: 'trees',
+      slug: 'binary-search-trees',
       card: {
-        name: 'AVL Trees',
-        description:
-          'Insert and remove values, stepping through each rotation the tree makes to rebalance.',
+        name: 'Binary Search Trees',
+        description: 'Insert and remove values and run rebalancing strategies.',
         category: 'data-structures',
       },
     },
     meta: {
-      title: 'AVL Trees | Magic Graphs',
+      title: 'Binary Search Trees | Magic Graphs',
       description:
-        'Insert and remove values in an AVL tree and step through every rotation the tree performs to keep itself balanced.',
-      ogImage: productThumbnail('avl-trees', 'dark'),
+        'Insert and remove values in a binary search tree and run rebalancing strategies over it.',
+      ogImage: productThumbnail('binary-search-trees', 'dark'),
     },
   },
   traversals: {
@@ -92,7 +91,7 @@ export const manifests = {
     name: 'Path Finding',
     abbreviatedName: 'PTH',
     navigation: {
-      slug: 'path',
+      slug: 'path-finding',
       card: {
         name: 'Path Finding',
         description:
@@ -107,13 +106,13 @@ export const manifests = {
       ogImage: productThumbnail('path-finding', 'dark'),
     },
   },
-  'min-spanning-trees': {
-    id: 'min-spanning-trees',
+  'minimum-spanning-trees': {
+    id: 'minimum-spanning-trees',
     multiplayer: true,
     name: 'Minimum Spanning Trees',
     abbreviatedName: 'MST',
     navigation: {
-      slug: 'mst',
+      slug: 'minimum-spanning-trees',
       card: {
         name: 'Minimum Spanning Trees',
         description:
@@ -125,7 +124,7 @@ export const manifests = {
       title: 'Minimum Spanning Trees | Magic Graphs',
       description:
         "Run Kruskal's and Prim's on a weighted graph you build and trace each one as it grows a minimum spanning tree edge by edge.",
-      ogImage: productThumbnail('min-spanning-trees', 'dark'),
+      ogImage: productThumbnail('minimum-spanning-trees', 'dark'),
     },
   },
   dev: {
@@ -154,7 +153,7 @@ export const manifests = {
     meta: {
       title: 'Magic Graphs',
       description:
-        'Interactive computer science theory: traversals, shortest paths, spanning trees, AVL trees, Markov chains and set theory.',
+        'Interactive computer science theory: traversals, shortest paths, spanning trees, binary search trees, Markov chains and set theory.',
     },
   },
 } as const satisfies Record<string, ProductManifest>;

@@ -144,7 +144,7 @@ const primsEffects = (
   };
 
   const lens: Lens = {
-    id: 'min-spanning-trees/prims',
+    id: 'minimum-spanning-trees/prims',
     components: [
       {
         component: Excluded,
@@ -266,7 +266,7 @@ const kruskalsEffects = (
   };
 
   const lens: Lens = {
-    id: 'min-spanning-trees/kruskals',
+    id: 'minimum-spanning-trees/kruskals',
     components: [
       {
         component: Excluded,

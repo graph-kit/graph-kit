@@ -32,7 +32,7 @@ export const useTreeSimulation = (
   const explainer = treeExplainer(graph);
 
   const definition: SimulationDefinition<AVLFrame> = {
-    id: 'avl-rebalance',
+    id: 'binary-search-trees/rebalance',
     collectFrames: (collector) => {
       tree.attachFrameCollector(collector);
 

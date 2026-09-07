@@ -53,7 +53,7 @@ export const useTreeShortcuts = (
   };
 
   shell.shortcuts.add({
-    id: 'avl/delete-selection',
+    id: 'binary-search-trees/delete-selection',
     helpMenu: { category: GRAPH_HELP_CATEGORY, name: 'Remove Node' },
     key: 'backspace',
     callback: onBackspace,

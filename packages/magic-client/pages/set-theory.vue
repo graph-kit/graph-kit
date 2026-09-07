@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import MainView from '@magic/products/sets/MainView.vue';
+  import MainView from '@magic/products/set-theory/MainView.vue';
   import { manifests } from '@magic/shared/product';
 
-  useSeoMeta(manifests['sets'].meta);
+  useSeoMeta(manifests['set-theory'].meta);
 </script>
 
 <template>

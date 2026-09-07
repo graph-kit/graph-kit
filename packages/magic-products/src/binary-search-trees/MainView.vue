@@ -33,7 +33,7 @@
     shell,
     onboardingGraph: onboardingGraphControls,
   } = useGraphShell({
-    productId: 'avl-trees',
+    productId: 'binary-search-trees',
     onboardingGraph,
     flags: {
       adjustAnimationSpeed: true,

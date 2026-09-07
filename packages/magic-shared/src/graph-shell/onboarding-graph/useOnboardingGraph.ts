@@ -4,7 +4,11 @@ import { useComponent } from '../../component-slot/useComponent.ts';
 import { ComponentSlotControls } from '../../component-slot/useComponentSlotsState.ts';
 import { Graph } from '../../graph/types.ts';
 import OnboardingGraphBanner from './OnboardingGraphBanner.vue';
-import { BUILD_DURATION_MS, ONBOARDING_GRAPH_SLOT_ID } from './constants.ts';
+import {
+  BUILD_DURATION_MS,
+  DEFAULT_ONBOARDING_GRAPH_OPTIONS,
+  ONBOARDING_GRAPH_SLOT_ID,
+} from './constants.ts';
 import { provideOnboardingGraph } from './context.ts';
 import { createOnboardingGraphEventRegistry } from './events.ts';
 import { adoptExistingNodes, placeOnboardingGraph } from './layout.ts';
@@ -19,6 +23,11 @@ export const useOnboardingGraph = (
   if (!onboardingGraph) return;
 
   const events = createEventHub(createOnboardingGraphEventRegistry());
+
+  const options = {
+    ...DEFAULT_ONBOARDING_GRAPH_OPTIONS,
+    ...onboardingGraph.options,
+  };
 
   const banner = useComponent(componentSlots, {
     id: ONBOARDING_GRAPH_SLOT_ID,
@@ -55,7 +64,12 @@ export const useOnboardingGraph = (
     banner.hide();
   };
 
-  const controls: OnboardingGraphControls = { ...banner, events, build };
+  const controls: OnboardingGraphControls = {
+    ...banner,
+    events,
+    build,
+    options,
+  };
   provideOnboardingGraph(controls);
 
   return controls;

@@ -44,12 +44,11 @@
 
 <template>
   <VStack v-if="mounted">
-    <!-- the ops extend the field they act on, so pressing them must never pull focus out of it -->
     <Well
       v-if="focusedQueryId"
-      class="p-2"
-      :data-query-focus="focusedQueryId"
       @mousedown.prevent
+      :data-query-focus="focusedQueryId"
+      class="p-2"
     >
       <InsertSetOpButtons :queryId="focusedQueryId" />
     </Well>
@@ -58,7 +57,7 @@
         v-if="canAddQuery"
         class="p-0 w-14 h-6 rounded-b-none rounded-t-xl overflow-hidden"
       >
-        <Tooltip label="Add highlight region">
+        <Tooltip label="Add region">
           <template #trigger>
             <Button
               @click="addAndFocusQuery"

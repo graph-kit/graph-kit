@@ -47,7 +47,10 @@ const DEBUG_SLOTS: ComponentSlot[] = [
   },
 ];
 
-const TOGGLE_TOAST_MS = 5000;
+const TOAST_MS = {
+  on: 5000,
+  off: 2000,
+} as const;
 
 export type DebugControls = {
   isActive: ComputedRef<boolean>;
@@ -81,7 +84,7 @@ export const useDebugState = (
       title: isActive.value ? 'Debug On' : 'Debug Off',
       description: 'Toggle with ' + (isMac() ? '⌘ Command + D' : 'Ctrl + D'),
       severity: 'info',
-      duration: TOGGLE_TOAST_MS,
+      duration: isActive.value ? TOAST_MS.on : TOAST_MS.off,
     });
   };
 

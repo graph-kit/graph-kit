@@ -13,6 +13,8 @@
   import { centerCameraOnTree } from './centerCameraOnTree.ts';
   import { useProvidedTreeActions } from './useProvidedTree.ts';
 
+  const MAX_MAGNITUDE = 999;
+
   const graph = useProvidedGraph();
   const shell = useProvidedShell();
   const { insertNode } = useProvidedTreeActions();
@@ -25,15 +27,22 @@
     return Number(trimmed);
   });
 
-  const inputValid = computed(() => Number.isInteger(input.value));
+  /** why what was typed cannot be inserted, if it cannot */
+  const invalidReason = computed(() => {
+    const value = input.value;
+    if (value === undefined || !Number.isInteger(value)) {
+      return 'Enter an integer';
+    }
+    if (Math.abs(value) > MAX_MAGNITUDE) return 'Woah there!';
+  });
 
   const showError = computed(
-    () => input.value !== undefined && !inputValid.value,
+    () => input.value !== undefined && invalidReason.value !== undefined,
   );
 
   const insert = () => {
     const value = input.value;
-    if (value === undefined || !inputValid.value) return;
+    if (value === undefined || invalidReason.value) return;
 
     const isRootNode = graph.nodes.value.length === 0;
     if (isRootNode) centerCameraOnTree(shell.surface);
@@ -74,7 +83,7 @@
       />
       <Button
         @click="insert"
-        :disabled="inputValid ? false : 'Enter an integer'"
+        :disabled="invalidReason ?? false"
         class="w-full mt-2"
       >
         <template #start>

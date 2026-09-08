@@ -1,40 +1,16 @@
-import { NodePayload, TreeNode } from '../tree/TreeNode.ts';
+import { TreeNode } from '../tree/TreeNode.ts';
 
 export type BalanceMethod =
   'left-left' | 'right-right' | 'left-right' | 'right-left';
 
 export type RotationSide = 'left' | 'right';
 
-export type CompareFrame = {
-  action: 'compare';
-  comparedNode: TreeNode;
-  targetNode: NodePayload;
-};
-
-/** where the node taking a removed node's place comes from */
-export type ReplacementMethod =
-  'leaf' | 'only-left-child' | 'only-right-child' | 'successor';
-
-type FindReplacementFrame =
-  | {
-      action: 'find-replacement';
-      method: 'leaf';
-      removedNode: TreeNode;
-    }
-  | {
-      action: 'find-replacement';
-      method: Exclude<ReplacementMethod, 'leaf'>;
-      removedNode: TreeNode;
-      replacementNode: TreeNode;
-    };
-
 type BalanceCheckFrame = {
   action: 'balance-check';
 };
 
-type CompareDuplicateFound = {
-  action: 'compare-duplicate-found';
-  preexistingNode: TreeNode;
+type BalanceCompleteFrame = {
+  action: 'balance-complete';
 };
 
 type BalanceFrame = {
@@ -53,40 +29,10 @@ type RotationFrame = {
   promotedNode: TreeNode;
 };
 
-type InsertFrame = {
-  action: 'insert';
-  targetNode: NodePayload;
-};
-
-type RemoveFrame = {
-  action: 'remove';
-  // keyed by value rather than id, since the node is gone by the time this frame is read
-  targetNodeValue: NodePayload['value'] | undefined;
-};
-
-type BalanceCompleteFrame = {
-  action: 'balance-complete';
-};
-
-type RemoveCompleteFrame = {
-  action: 'remove-complete';
-};
-
-type InsertCompleteFrame = {
-  action: 'insert-complete';
-};
-
 export type AVLFrameNoRoot =
-  | CompareFrame
-  | CompareDuplicateFound
-  | FindReplacementFrame
   | BalanceCheckFrame
   | BalanceCompleteFrame
   | BalanceFrame
-  | RotationFrame
-  | InsertFrame
-  | RemoveFrame
-  | RemoveCompleteFrame
-  | InsertCompleteFrame;
+  | RotationFrame;
 
 export type AVLFrame = AVLFrameNoRoot & { root: TreeNode | undefined };

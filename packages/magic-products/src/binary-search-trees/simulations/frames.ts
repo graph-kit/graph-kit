@@ -30,9 +30,6 @@ type RotationFrame = {
 };
 
 export type AVLFrameNoRoot =
-  | BalanceCheckFrame
-  | BalanceCompleteFrame
-  | BalanceFrame
-  | RotationFrame;
+  BalanceCheckFrame | BalanceCompleteFrame | BalanceFrame | RotationFrame;
 
 export type AVLFrame = AVLFrameNoRoot & { root: TreeNode | undefined };

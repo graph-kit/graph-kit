@@ -51,7 +51,7 @@
       const cannotRemove = () => {
         const empty = emptyTree();
         if (empty) return empty;
-        if (!node.value) return { reason: 'Click a node to remove from tree' };
+        if (!node.value) return { reason: 'Click a node to remove' };
         return false;
       };
 

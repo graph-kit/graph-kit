@@ -8,6 +8,9 @@
 
   const GITHUB_URL = 'https://github.com/graph-kit/graph-kit';
   // const DEVPOST_URL = 'https://devpost.com/software/magic-w453qf';
+
+  const YONA_URL = 'https://www.linkedin.com/in/yona-voss-andreae-8b92a6173/';
+  const THOMAS_URL = 'https://www.linkedin.com/in/thomas-eykamp/';
 </script>
 
 <template>
@@ -16,11 +19,23 @@
     class="border-t border-gray-300 pt-6 dark:border-gray-700"
   >
     <VStack gap="1">
-      <h3 class="font-bold tracking-wide opacity-80">Graph Kit</h3>
+      <h3 class="font-bold tracking-wide">Graph Kit</h3>
       <p class="text-sm opacity-80">
-        Magic Graphs is powered by Graph Kit, a typescript-native,
-        framework-agnostic Graph SDK actively being developed by Yona
-        Voss-Andreae and Thomas Eykamp.
+        Magic Graphs is powered by Graph Kit, a TypeScript-native,
+        framework-agnostic Graph SDK actively under development by
+        <a
+          :href="YONA_URL"
+          target="_blank"
+          class="text-amber-500 hover:underline"
+          >Yona Voss-Andreae</a
+        >
+        and
+        <a
+          :href="THOMAS_URL"
+          target="_blank"
+          class="text-amber-500 hover:underline"
+          >Thomas Eykamp</a
+        >.
       </p>
     </VStack>
 
@@ -35,10 +50,7 @@
         rel="noreferrer"
       >
         <template #start>
-          <Icon
-            :path="mdiGithub"
-            :size="18"
-          />
+          <Icon :path="mdiGithub" />
         </template>
         GitHub
       </Button>

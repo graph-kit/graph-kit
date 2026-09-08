@@ -13,7 +13,7 @@
 <template>
   <Well class="p-0 rounded-full overflow-hidden">
     <Dialog
-      class="max-w-md"
+      class="max-w-lg"
       title="Help"
       :show-header="false"
       :open="helpMenu.isOpen.value"

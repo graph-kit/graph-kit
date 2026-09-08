@@ -8,11 +8,11 @@ import { mdiBackspace, mdiGestureDoubleTap } from '@mdi/js';
 export const SETS_ONBOARDING: OnboardingItem[] = [
   {
     icon: mdiGestureDoubleTap,
-    display: 'Double click to create a set',
+    display: 'Double click to create set',
   },
   {
     icon: mdiBackspace,
-    display: 'Backspace to remove a set',
+    display: 'Backspace to remove set',
   },
   ...SHARED_ONBOARDING_ITEMS,
 ];

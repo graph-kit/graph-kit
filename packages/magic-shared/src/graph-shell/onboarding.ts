@@ -1,4 +1,4 @@
-import { mdiGestureDoubleTap } from '@mdi/js';
+import { mdiBackspace, mdiGestureDoubleTap } from '@mdi/js';
 
 import {
   OnboardingItem,
@@ -9,7 +9,11 @@ import {
 export const GRAPH_ONBOARDING: OnboardingItem[] = [
   {
     icon: mdiGestureDoubleTap,
-    display: 'Double click to add a node',
+    display: 'Double click to add node',
+  },
+  {
+    icon: mdiBackspace,
+    display: 'Backspace to remove node/edge',
   },
   ...SHARED_ONBOARDING_ITEMS,
 ];

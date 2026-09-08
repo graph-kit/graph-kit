@@ -107,7 +107,7 @@ export const light = {
     'anchors.edge.preview.parentFocused.width':
       shared.anchors.edgePreview.width,
 
-    'anchors.parentFocused.color': colors.BLUE_900,
+    'anchors.parentFocused.color': colors.BLUE_600,
     'anchors.parentFocused.cursor': shared.anchors.cursor,
     'anchors.parentFocused.radius': shared.anchors.radius,
   },

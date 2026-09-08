@@ -17,7 +17,7 @@
   const EMAIL = 'hello@magicgraphs.app';
   const DISCORD_URL = 'https://discord.gg/rRu8Xs9C5';
   const BUG_REPORT_FORM_URL = 'https://forms.gle/AsbbRvvcQm4Lvub36';
-  const FEEDBACK_FORM_URL = 'https://forms.gle/P57D2iweFbUdrcXA8';
+  const FEEDBACK_FORM_URL = 'https://forms.gle/KZXyYARd3T94iSoKA';
 
   const buttons = [
     {

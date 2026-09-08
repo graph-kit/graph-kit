@@ -18,11 +18,17 @@ import { getBalanceFactor } from './tree/getBalanceFactor.ts';
   product ends up holding is whatever graphToTree reads back out of these nodes and
   edges, not the tree they were authored from
 */
-const asGraph = (): any => ({
-  nodes: { value: onboardingGraph.nodes },
-  edges: { value: onboardingGraph.edges },
-  getNode: (id: string) => onboardingGraph.nodes.find((node) => node.id === id),
-});
+const asGraph = (): any => {
+  const findNode = (id: string) =>
+    onboardingGraph.nodes.find((node) => node.id === id);
+
+  return {
+    nodes: { value: onboardingGraph.nodes },
+    edges: { value: onboardingGraph.edges },
+    getNode: findNode,
+    positions: { get: (id: string) => findNode(id)?.position },
+  };
+};
 
 describe('the binary search tree onboarding graph', () => {
   it('reads back as the tree it was authored from', () => {

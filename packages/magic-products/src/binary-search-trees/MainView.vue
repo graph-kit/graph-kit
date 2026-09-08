@@ -7,22 +7,22 @@
 
   import { shallowReactive } from 'vue';
 
+  import BalanceTree from './BalanceTree.vue';
   import InsertNode from './InsertNode.vue';
   import RemoveNode from './RemoveNode.vue';
   import ResetTree from './ResetTree.vue';
   import { createBalanceFactorThemer } from './createBalanceFactorThemer.ts';
   import { createTreeHeightThemer } from './createTreeHeightThemer.ts';
   import { definitions } from './definitions.ts';
+  import { graphToTree } from './graph-conversion/graphToTree.ts';
   import { onboardingGraph } from './onboardingGraph.ts';
+  import { createBalanceSimulation } from './simulations/createBalanceSimulation.ts';
   import { AVLFrame } from './simulations/frames.ts';
-  import { useTreeSimulation } from './simulations/useTreeSimulation.ts';
   import { AVLTree } from './tree/AVLTree.ts';
   import { getBalanceFactor } from './tree/getBalanceFactor.ts';
   import { getTreeHeight } from './tree/getTreeHeight.ts';
-  import {
-    provideTreeActions,
-    provideTreeSimulation,
-  } from './useProvidedTree.ts';
+  import { isBalanced } from './tree/isBalanced.ts';
+  import { provideTree, provideTreeActions } from './useProvidedTree.ts';
   import { useTreeActions, useTreeShortcuts } from './useTreeActions.ts';
   import { useTreePersistence } from './useTreePersistence.ts';
 
@@ -55,19 +55,31 @@
         return false;
       };
 
+      const cannotBalance = () => {
+        const empty = emptyTree();
+        if (empty) return empty;
+        if (isBalanced(graphToTree(graph))) {
+          return { reason: 'Tree is balanced' };
+        }
+        return false;
+      };
+
       return [
-        { disabled: cannotRemove, render: RemoveNode },
         { render: InsertNode },
+        { disabled: cannotRemove, render: RemoveNode },
+        { disabled: cannotBalance, render: BalanceTree },
         { disabled: emptyTree, render: ResetTree },
       ];
     },
     lensChips: (graph, shell) => {
+      // off simulation the graph is read rather than the tree, since an edit
+      // that leaves the root in place would never announce itself
       const root = () => {
         const sim = shell.simulation.current.value;
         const frame: AVLFrame | undefined = sim?.getFrame(
           sim.playhead.position,
         );
-        return frame?.root ?? tree.root;
+        return frame?.root ?? graphToTree(graph);
       };
 
       const balanceFactorTheme = createBalanceFactorThemer(graph, root);
@@ -115,10 +127,11 @@
     },
   });
 
-  const treeSim = useTreeSimulation(tree, graph);
-  provideTreeSimulation(treeSim);
+  const balanceSimulation = createBalanceSimulation(tree, graph);
 
-  const treeActions = useTreeActions(tree, graph, shell, treeSim);
+  provideTree(tree);
+
+  const treeActions = useTreeActions(tree, graph, shell, balanceSimulation);
   provideTreeActions(treeActions);
   useTreeShortcuts(graph, shell, treeActions);
 

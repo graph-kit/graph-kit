@@ -51,13 +51,11 @@ export class AVLTree {
     const removeHelper = (node: TreeNode | undefined): TreeNode | undefined => {
       if (!node) return undefined;
 
-      if (value < node.value) {
-        node.left = removeHelper(node.left);
-        return node;
-      }
-
-      if (value > node.value) {
-        node.right = removeHelper(node.right);
+      if (node.id !== id) {
+        // a rotation can seat an equal value on either side, so a tie in value
+        // has to look down both
+        if (value <= node.value) node.left = removeHelper(node.left);
+        if (value >= node.value) node.right = removeHelper(node.right);
         return node;
       }
 
@@ -138,6 +136,8 @@ export class AVLTree {
   }
 
   balance() {
+    this.addFrame({ action: 'balance-check' });
+
     const balanceNode = (
       parent: TreeNode | undefined,
       node: TreeNode | undefined,
@@ -152,6 +152,8 @@ export class AVLTree {
     };
 
     this.root = balanceNode(undefined, this.root, false);
+
+    this.addFrame({ action: 'balance-complete' });
   }
 
   private attach(

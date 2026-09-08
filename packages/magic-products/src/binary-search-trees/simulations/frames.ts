@@ -64,6 +64,10 @@ type RemoveFrame = {
   targetNodeValue: NodePayload['value'] | undefined;
 };
 
+type BalanceCompleteFrame = {
+  action: 'balance-complete';
+};
+
 type RemoveCompleteFrame = {
   action: 'remove-complete';
 };
@@ -77,6 +81,7 @@ export type AVLFrameNoRoot =
   | CompareDuplicateFound
   | FindReplacementFrame
   | BalanceCheckFrame
+  | BalanceCompleteFrame
   | BalanceFrame
   | RotationFrame
   | InsertFrame
@@ -85,5 +90,3 @@ export type AVLFrameNoRoot =
   | InsertCompleteFrame;
 
 export type AVLFrame = AVLFrameNoRoot & { root: TreeNode | undefined };
-
-export type AVLMode = 'insert' | 'remove';

@@ -20,10 +20,13 @@ export const graphToTree = (graph: Graph): TreeNode | undefined => {
 
   const build = (id: string): TreeNode => {
     const node = new TreeNode({ id, value: Number(graph.getNode(id).label) });
+    const { x } = graph.positions.get(id);
 
     for (const childId of childIds.get(id) ?? []) {
       const child = build(childId);
-      if (child.value < node.value) node.left = child;
+      // which side a child sits on is read off the layout rather than compared
+      // by value, since duplicate values say nothing about where they came from
+      if (graph.positions.get(childId).x < x) node.left = child;
       else node.right = child;
     }
 

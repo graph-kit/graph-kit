@@ -195,6 +195,21 @@ export const treeExplainer = (graph: Graph) => {
         ],
       };
     }
+    if (frame.action === 'balance-complete') {
+      return {
+        content: 'Balancing Complete, Every Node Is [Balanced]',
+        highlights: [
+          {
+            tooltipLabel: definitions.treeBalance,
+            activate: () => {
+              explainedRoot = frame.root;
+              balanceFactorThemer.activate();
+            },
+            deactivate: () => balanceFactorThemer.deactivate(),
+          },
+        ],
+      };
+    }
     if (frame.action === 'remove-complete') {
       return {
         content: 'Removal Complete, Every Node Is [Balanced]',
@@ -212,7 +227,7 @@ export const treeExplainer = (graph: Graph) => {
     }
     if (frame.action === 'balance-check') {
       return {
-        content: 'After Removing, Find All Nodes That Are [Unbalanced]',
+        content: 'Find All Nodes That Are [Unbalanced]',
         highlights: [
           {
             tooltipLabel: definitions.treeBalance,

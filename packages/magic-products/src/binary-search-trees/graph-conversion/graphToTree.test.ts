@@ -2,18 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import { graphToTree } from './graphToTree.ts';
 
-/** node id, value */
-type NodeSpec = [string, number];
+/** node id, value, x position */
+type NodeSpec = [string, number, number];
 /** parent id, child id */
 type EdgeSpec = [string, string];
 
 /*
-  graphToTree reads three things off a graph and nothing else: the node list, the
-  edge list, and each node's label. building those by hand keeps a tree parsing
-  test from needing a canvas to run on
+  graphToTree reads four things off a graph and nothing else: the node list, the
+  edge list, each node's label, and where each node sits. building those by hand
+  keeps a tree parsing test from needing a canvas to run on
 */
 const makeGraph = (nodes: NodeSpec[], edges: EdgeSpec[]): any => {
   const nodeList = nodes.map(([id, value]) => ({ id, label: String(value) }));
+  const positions = new Map(nodes.map(([id, , x]) => [id, { x, y: 0 }]));
 
   return {
     nodes: { value: nodeList },
@@ -21,6 +22,7 @@ const makeGraph = (nodes: NodeSpec[], edges: EdgeSpec[]): any => {
       value: edges.map(([source, target]) => ({ source, target })),
     },
     getNode: (id: string) => nodeList.find((node) => node.id === id),
+    positions: { get: (id: string) => positions.get(id) },
   };
 };
 
@@ -30,19 +32,19 @@ describe('graphToTree', () => {
   });
 
   it('reads a lone node as the root', () => {
-    const root = graphToTree(makeGraph([['a', 5]], []));
+    const root = graphToTree(makeGraph([['a', 5, 0]], []));
 
     expect(root).toMatchObject({ id: 'a', value: 5 });
     expect(root?.left).toBeUndefined();
     expect(root?.right).toBeUndefined();
   });
 
-  it('puts a smaller child on the left', () => {
+  it('puts a child drawn left of its parent on the left', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 5],
-          ['b', 3],
+          ['a', 5, 0],
+          ['b', 3, -10],
         ],
         [['a', 'b']],
       ),
@@ -52,12 +54,12 @@ describe('graphToTree', () => {
     expect(root?.right).toBeUndefined();
   });
 
-  it('puts a larger child on the right', () => {
+  it('puts a child drawn right of its parent on the right', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 5],
-          ['b', 8],
+          ['a', 5, 0],
+          ['b', 8, 10],
         ],
         [['a', 'b']],
       ),
@@ -67,44 +69,48 @@ describe('graphToTree', () => {
     expect(root?.left).toBeUndefined();
   });
 
-  it('puts a child equal to its parent on the right', () => {
+  it('keeps both children of a node whose value they both share', () => {
+    // a rotation can seat an equal value on either side, so comparing values
+    // would send both of these to the right and drop one of them
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 5],
-          ['b', 5],
+          ['a', 5, 0],
+          ['b', 5, -10],
+          ['c', 5, 10],
         ],
-        [['a', 'b']],
+        [
+          ['a', 'b'],
+          ['a', 'c'],
+        ],
       ),
     );
 
-    expect(root?.right).toMatchObject({ id: 'b' });
-    expect(root?.left).toBeUndefined();
+    expect(root?.left).toMatchObject({ id: 'b', value: 5 });
+    expect(root?.right).toMatchObject({ id: 'c', value: 5 });
   });
 
-  it('compares labels as numbers rather than as strings', () => {
-    // '10' sorts before '9' lexically, so a string comparison would go left here
+  it('reads labels as numbers rather than as strings', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 9],
-          ['b', 10],
+          ['a', 9, 0],
+          ['b', 10, 10],
         ],
         [['a', 'b']],
       ),
     );
 
-    expect(root?.right).toMatchObject({ id: 'b', value: 10 });
-    expect(root?.left).toBeUndefined();
+    expect(root?.right?.value).toBe(10);
   });
 
   it('assigns both children of a full node', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 5],
-          ['b', 3],
-          ['c', 8],
+          ['a', 5, 0],
+          ['b', 3, -10],
+          ['c', 8, 10],
         ],
         [
           ['a', 'b'],
@@ -121,9 +127,9 @@ describe('graphToTree', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 5],
-          ['b', 3],
-          ['c', 8],
+          ['a', 5, 0],
+          ['b', 3, -10],
+          ['c', 8, 10],
         ],
         [
           ['a', 'c'],
@@ -140,11 +146,11 @@ describe('graphToTree', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 10],
-          ['b', 5],
-          ['c', 15],
-          ['d', 2],
-          ['e', 7],
+          ['a', 10, 0],
+          ['b', 5, -20],
+          ['c', 15, 20],
+          ['d', 2, -30],
+          ['e', 7, -10],
         ],
         [
           ['a', 'b'],
@@ -166,9 +172,9 @@ describe('graphToTree', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['a', 10],
-          ['b', 8],
-          ['c', 6],
+          ['a', 10, 0],
+          ['b', 8, -20],
+          ['c', 6, -30],
         ],
         [
           ['a', 'b'],
@@ -188,9 +194,9 @@ describe('graphToTree', () => {
     const root = graphToTree(
       makeGraph(
         [
-          ['b', 3],
-          ['c', 8],
-          ['a', 5],
+          ['b', 3, -10],
+          ['c', 8, 10],
+          ['a', 5, 0],
         ],
         [
           ['a', 'b'],

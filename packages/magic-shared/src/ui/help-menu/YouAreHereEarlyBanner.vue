@@ -1,5 +1,12 @@
 <script setup lang="ts">
-  import { mdiEmailOutline, mdiGithub, mdiMessageTextOutline } from '@mdi/js';
+  import {
+    mdiBugOutline,
+    mdiClipboardTextOutline,
+    mdiCommentQuoteOutline,
+    mdiEmailOutline,
+    mdiForumOutline,
+    mdiMessageTextOutline,
+  } from '@mdi/js';
 
   import Button from '../../components/button/Button.vue';
   import Icon from '../../components/icon/Icon.vue';
@@ -7,14 +14,43 @@
   import VStack from '../../components/layout/VStack.vue';
   import Popover from '../../components/popover/Popover.vue';
 
-  const GITHUB_URL = 'https://github.com/graph-kit/graph-kit';
   const EMAIL = 'hello@magicgraphs.app';
+  const DISCORD_URL = 'https://discord.gg/rRu8Xs9C5';
+  const BUG_REPORT_FORM_URL = 'https://forms.gle/AsbbRvvcQm4Lvub36';
+  const FEEDBACK_FORM_URL = 'https://forms.gle/P57D2iweFbUdrcXA8';
 
-  const contacts = [
+  const menus = [
     {
-      icon: mdiEmailOutline,
-      handle: EMAIL,
-      href: `mailto:${EMAIL}`,
+      label: 'Contact Us',
+      icon: mdiMessageTextOutline,
+      links: [
+        {
+          icon: mdiEmailOutline,
+          label: EMAIL,
+          href: `mailto:${EMAIL}`,
+        },
+        {
+          icon: mdiForumOutline,
+          label: 'Join our Discord',
+          href: DISCORD_URL,
+        },
+      ],
+    },
+    {
+      label: 'Feedback',
+      icon: mdiClipboardTextOutline,
+      links: [
+        {
+          icon: mdiBugOutline,
+          label: 'Bug report form',
+          href: BUG_REPORT_FORM_URL,
+        },
+        {
+          icon: mdiCommentQuoteOutline,
+          label: 'Feedback form',
+          href: FEEDBACK_FORM_URL,
+        },
+      ],
     },
   ];
 </script>
@@ -33,31 +69,23 @@
       </p>
     </VStack>
 
-    <HStack gap="2">
-      <Button
-        :href="GITHUB_URL"
-        target="_blank"
-        rel="noreferrer"
+    <HStack
+      gap="2"
+      class="flex-wrap"
+    >
+      <Popover
+        v-for="menu of menus"
+        :key="menu.label"
       >
-        <template #start>
-          <Icon
-            :path="mdiGithub"
-            :size="18"
-          />
-        </template>
-        GitHub
-      </Button>
-
-      <Popover>
         <template #trigger>
-          <Button class="active:scale-100">
+          <Button class="shrink-0 whitespace-nowrap active:scale-100">
             <template #start>
               <Icon
-                :path="mdiMessageTextOutline"
+                :path="menu.icon"
                 :size="18"
               />
             </template>
-            Contact Us
+            {{ menu.label }}
           </Button>
         </template>
 
@@ -66,19 +94,19 @@
           class="w-60"
         >
           <a
-            v-for="contact of contacts"
-            :key="contact.href"
-            :href="contact.href"
+            v-for="link of menu.links"
+            :key="link.href"
+            :href="link.href"
             target="_blank"
             rel="noreferrer"
             class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-900"
           >
             <Icon
-              :path="contact.icon"
+              :path="link.icon"
               :size="18"
             />
             <span class="flex flex-col">
-              <span class="text-sm opacity-90">{{ contact.handle }}</span>
+              <span class="text-sm opacity-90">{{ link.label }}</span>
             </span>
           </a>
         </VStack>

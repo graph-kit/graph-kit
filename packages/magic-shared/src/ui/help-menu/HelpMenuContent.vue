@@ -6,6 +6,7 @@
   import Icon from '../../components/icon/Icon.vue';
   import VStack from '../../components/layout/VStack.vue';
   import { useProvidedShell } from '../../product/context.ts';
+  import MeetTheTeamSection from './MeetTheTeamSection.vue';
   import YouAreHereEarlyBanner from './YouAreHereEarlyBanner.vue';
   import { HELP_MENU_KEY } from './useHelpMenuState.ts';
 
@@ -58,5 +59,7 @@
         </div>
       </div>
     </VStack>
+
+    <MeetTheTeamSection />
   </VStack>
 </template>

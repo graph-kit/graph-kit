@@ -5,7 +5,6 @@
     mdiCommentQuoteOutline,
     mdiEmailOutline,
     mdiForumOutline,
-    mdiGithub,
     mdiMessageTextOutline,
   } from '@mdi/js';
 
@@ -15,7 +14,6 @@
   import VStack from '../../components/layout/VStack.vue';
   import Popover from '../../components/popover/Popover.vue';
 
-  const GITHUB_URL = 'https://github.com/graph-kit/graph-kit';
   const EMAIL = 'hello@magicgraphs.app';
   const DISCORD_URL = 'https://discord.gg/rRu8Xs9C5';
   const BUG_REPORT_FORM_URL = 'https://forms.gle/AsbbRvvcQm4Lvub36';
@@ -75,21 +73,6 @@
       gap="2"
       class="flex-wrap"
     >
-      <Button
-        class="shrink-0 whitespace-nowrap"
-        :href="GITHUB_URL"
-        target="_blank"
-        rel="noreferrer"
-      >
-        <template #start>
-          <Icon
-            :path="mdiGithub"
-            :size="18"
-          />
-        </template>
-        GitHub
-      </Button>
-
       <Popover
         v-for="menu of menus"
         :key="menu.label"

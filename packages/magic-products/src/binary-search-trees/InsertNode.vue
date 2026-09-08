@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { nullThrows } from '@core/utils/assert';
   import Button from '@magic/shared/Button';
   import Dropdown from '@magic/shared/Dropdown';
   import Icon from '@magic/shared/Icon';
@@ -7,21 +6,18 @@
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useProvidedShell } from '@magic/shared/product';
-  import { mdiPlay, mdiPlus } from '@mdi/js';
+  import { mdiPlus } from '@mdi/js';
 
   import { computed, onUnmounted, ref } from 'vue';
 
   import { centerCameraOnTree } from './centerCameraOnTree.ts';
-  import { COMPANION_X_OFFSET } from './graph-conversion/compareCompanion.ts';
-  import { ROOT_POSITION } from './graph-conversion/treeToGraph.ts';
-  import { useProvidedTreeSimulation } from './useProvidedTree.ts';
+  import { useProvidedTreeActions } from './useProvidedTree.ts';
+
+  const MAX_MAGNITUDE = 999;
 
   const graph = useProvidedGraph();
   const shell = useProvidedShell();
-  const {
-    controls: { mode, target },
-    definition,
-  } = useProvidedTreeSimulation();
+  const { insertNode } = useProvidedTreeActions();
 
   const rawInput = ref('');
 
@@ -31,30 +27,28 @@
     return Number(trimmed);
   });
 
-  const inputValid = computed(() => Number.isInteger(input.value));
+  /** why what was typed cannot be inserted, if it cannot */
+  const invalidReason = computed(() => {
+    const value = input.value;
+    if (value === undefined || !Number.isInteger(value)) {
+      return 'Enter an integer';
+    }
+    if (Math.abs(value) > MAX_MAGNITUDE) return 'Woah there!';
+  });
 
   const showError = computed(
-    () => input.value !== undefined && !inputValid.value,
+    () => input.value !== undefined && invalidReason.value !== undefined,
   );
 
   const insert = () => {
-    if (!inputValid.value) return;
+    const value = input.value;
+    if (value === undefined || invalidReason.value) return;
 
     const isRootNode = graph.nodes.value.length === 0;
     if (isRootNode) centerCameraOnTree(shell.surface);
 
-    mode.value = 'insert';
-    const node = nullThrows(
-      graph.actions.addNode({
-        label: String(input.value),
-        position: isRootNode
-          ? ROOT_POSITION
-          : { ...ROOT_POSITION, x: ROOT_POSITION.x + COMPANION_X_OFFSET },
-      }),
-      'node transaction failed',
-    );
-    target.value = node.id;
-    shell.simulation.start(definition);
+    insertNode(value);
+    rawInput.value = '';
   };
 
   const open = ref(false);
@@ -73,7 +67,7 @@
     <template #trigger>
       <Button>
         <template #start>
-          <Icon :path="mdiPlay" />
+          <Icon :path="mdiPlus" />
         </template>
         Insert Node
       </Button>
@@ -89,7 +83,7 @@
       />
       <Button
         @click="insert"
-        :disabled="inputValid ? false : 'Enter an integer'"
+        :disabled="invalidReason ?? false"
         class="w-full mt-2"
       >
         <template #start>

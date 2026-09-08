@@ -53,7 +53,6 @@
         :key="product.id"
         :href="productHref(product.id)"
         :disabled="disabledReason(product)"
-        class="p-2 dark:hover:bg-gray-900 dark:active:bg-gray-900 active:bg-transparent"
       >
         <ProductCard
           :product-id="product.id"

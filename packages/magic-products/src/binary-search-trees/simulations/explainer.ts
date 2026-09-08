@@ -4,37 +4,23 @@ import { Graph } from '@magic/shared/graph';
 import { capitalize } from 'vue';
 
 import { createBalanceFactorThemer } from '../createBalanceFactorThemer.ts';
-import { createChildrenThemer } from '../createChildrenThemer.ts';
 import {
   RotatingNodes,
   createRotationThemer,
 } from '../createRotationThemer.ts';
-import { createSubtreeThemer } from '../createSubtreeThemer.ts';
 import {
   UnbalancedNodes,
   createUnbalanceThemer,
 } from '../createUnbalanceThemer.ts';
 import { definitions } from '../definitions.ts';
 import { TreeNode } from '../tree/TreeNode.ts';
-import { getNodeById } from '../tree/getNodeById.ts';
-import { AVLFrame, BalanceMethod, ReplacementMethod } from './frames.ts';
-
-type PromotableMethod = Exclude<ReplacementMethod, 'leaf'>;
-
-const REPLACEMENT_METHOD_TO_DEFINITION: Record<
-  PromotableMethod,
-  (removed: TreeNode, replacement: TreeNode) => string
-> = {
-  'only-left-child': definitions.replacement.onlyLeftChild,
-  'only-right-child': definitions.replacement.onlyRightChild,
-  successor: definitions.replacement.bothChildren,
-};
+import { AVLFrame, BalanceMethod } from './frames.ts';
 
 const BALANCE_METHOD_TO_STRING: Record<BalanceMethod, string> = {
   'left-left': 'Left Left',
+  'right-right': 'Right Right',
   'left-right': 'Left Right',
   'right-left': 'Right Left',
-  'right-right': 'Right Right',
 };
 
 const BALANCE_METHOD_TO_DEFINITION: Record<
@@ -60,23 +46,17 @@ export const treeExplainer = (graph: Graph) => {
   let unbalancedNodes: UnbalancedNodes | undefined;
   const unbalanceThemer = createUnbalanceThemer(graph, () => unbalancedNodes);
 
-  let childrenParent: TreeNode | undefined;
-  const childrenThemer = createChildrenThemer(graph, () => childrenParent);
-
-  let subtreeRoot: TreeNode | undefined;
-  const subtreeThemer = createSubtreeThemer(graph, () => subtreeRoot);
+  /** the tree as the frame left it, under the balance factor of every node */
+  const balanceFactorHighlight = (frame: AVLFrame) => ({
+    tooltipLabel: definitions.treeBalance,
+    activate: () => {
+      explainedRoot = frame.root;
+      balanceFactorThemer.activate();
+    },
+    deactivate: () => balanceFactorThemer.deactivate(),
+  });
 
   return (frame: AVLFrame): Explainer | undefined => {
-    if (frame.action === 'compare') {
-      return {
-        content: `Comparing {${frame.targetNode.id}} to {${frame.comparedNode.id}}`,
-      };
-    }
-    if (frame.action === 'compare-duplicate-found') {
-      return {
-        content: `{${frame.preexistingNode.id}} Already Exists!`,
-      };
-    }
     if (frame.action === 'balance') {
       return {
         content: `{${frame.unbalancedNode.id}} Is [${BALANCE_METHOD_TO_STRING[frame.method]}] [Unbalanced]`,
@@ -93,14 +73,7 @@ export const treeExplainer = (graph: Graph) => {
             },
             deactivate: () => unbalanceThemer.deactivate(),
           },
-          {
-            tooltipLabel: definitions.treeBalance,
-            activate: () => {
-              explainedRoot = frame.root;
-              balanceFactorThemer.activate();
-            },
-            deactivate: () => balanceFactorThemer.deactivate(),
-          },
+          balanceFactorHighlight(frame),
         ],
       };
     }
@@ -122,107 +95,16 @@ export const treeExplainer = (graph: Graph) => {
         ],
       };
     }
-    if (frame.action === 'insert') {
-      return {
-        content: `Inserting {${frame.targetNode.id}}`,
-      };
-    }
-    if (frame.action === 'remove') {
-      return {
-        content: `Removing [${frame.targetNodeValue}]`,
-        highlights: [{}],
-      };
-    }
-    if (frame.action === 'find-replacement') {
-      if (frame.method === 'leaf') {
-        return {
-          content: `{${frame.removedNode.id}} Has [No Children], So Nothing Takes Its Place`,
-          highlights: [
-            {
-              tooltipLabel: definitions.replacement.noChildren(
-                frame.removedNode,
-              ),
-            },
-          ],
-        };
-      }
-      const removedNode = getNodeById(frame.root, frame.removedNode.id);
-      const childrenHighlight = {
-        tooltipLabel: REPLACEMENT_METHOD_TO_DEFINITION[frame.method](
-          frame.removedNode,
-          frame.replacementNode,
-        ),
-        activate: () => {
-          childrenParent = removedNode;
-          childrenThemer.activate();
-        },
-        deactivate: () => childrenThemer.deactivate(),
-      };
-
-      if (frame.method === 'successor') {
-        return {
-          content: `{${frame.removedNode.id}} Has [Two Children], So The Smallest Value In Its [Right Subtree], {${frame.replacementNode.id}}, Takes Its Place`,
-          highlights: [
-            childrenHighlight,
-            {
-              activate: () => {
-                subtreeRoot = removedNode?.right;
-                subtreeThemer.activate();
-              },
-              deactivate: () => subtreeThemer.deactivate(),
-            },
-          ],
-        };
-      }
-
-      return {
-        content: `{${frame.removedNode.id}} Has [One Child], So {${frame.replacementNode.id}} Takes Its Place`,
-        highlights: [childrenHighlight],
-      };
-    }
-    if (frame.action === 'insert-complete') {
-      return {
-        content: 'Insertion Complete, Every Node Is [Balanced]',
-        highlights: [
-          {
-            tooltipLabel: definitions.treeBalance,
-            activate: () => {
-              explainedRoot = frame.root;
-              balanceFactorThemer.activate();
-            },
-            deactivate: () => balanceFactorThemer.deactivate(),
-          },
-        ],
-      };
-    }
-    if (frame.action === 'remove-complete') {
-      return {
-        content: 'Removal Complete, Every Node Is [Balanced]',
-        highlights: [
-          {
-            tooltipLabel: definitions.treeBalance,
-            activate: () => {
-              explainedRoot = frame.root;
-              balanceFactorThemer.activate();
-            },
-            deactivate: () => balanceFactorThemer.deactivate(),
-          },
-        ],
-      };
-    }
     if (frame.action === 'balance-check') {
       return {
-        content: 'After Removing, Find All Nodes That Are [Unbalanced]',
-        highlights: [
-          {
-            tooltipLabel: definitions.treeBalance,
-            activate: () => {
-              explainedRoot = frame.root;
-              balanceFactorThemer.activate();
-            },
-            deactivate: () => balanceFactorThemer.deactivate(),
-          },
-        ],
+        content: 'Find All Nodes That Are [Unbalanced]',
+        highlights: [balanceFactorHighlight(frame)],
+      };
+    }
+    if (frame.action === 'balance-complete') {
+      return {
+        content: 'Balancing Complete, Every Node Is [Balanced]',
+        highlights: [balanceFactorHighlight(frame)],
       };
     }
   };

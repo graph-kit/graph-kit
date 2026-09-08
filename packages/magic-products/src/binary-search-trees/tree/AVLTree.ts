@@ -48,92 +48,30 @@ export class AVLTree {
       `cant remove ${id}, no node with that id is in the tree`,
     );
 
-    const removeHelper = (
-      parent: TreeNode | undefined,
-      node: TreeNode | undefined,
-      isLeft: boolean,
-    ): TreeNode | undefined => {
-      if (!node) {
-        return undefined;
-      }
+    const removeHelper = (node: TreeNode | undefined): TreeNode | undefined => {
+      if (!node) return undefined;
 
-      if (value < node.value) {
-        node.left = removeHelper(node, node.left, true);
+      if (node.id !== id) {
+        // a rotation can seat an equal value on either side, so a tie in value
+        // has to look down both
+        if (value <= node.value) node.left = removeHelper(node.left);
+        if (value >= node.value) node.right = removeHelper(node.right);
         return node;
       }
 
-      if (value > node.value) {
-        node.right = removeHelper(node, node.right, false);
-        return node;
-      }
+      if (!node.left) return node.right;
+      if (!node.right) return node.left;
 
-      let replacementNode: TreeNode | undefined;
+      const successor = this.findMin(node.right);
 
-      // every branch reports its replacement before touching the tree, so the
-      // frame snapshots the node still in place next to the node taking over
-      if (node.left && node.right) {
-        const successor = this.findMin(node.right);
-
-        this.addFrame({
-          action: 'find-replacement',
-          method: 'successor',
-          removedNode: node,
-          replacementNode: successor,
-        });
-
-        replacementNode = new TreeNode(successor);
-        replacementNode.left = node.left;
-        replacementNode.right = this.removeMin(node.right);
-      } else if (node.left) {
-        this.addFrame({
-          action: 'find-replacement',
-          method: 'only-left-child',
-          removedNode: node,
-          replacementNode: node.left,
-        });
-
-        replacementNode = node.left;
-      } else if (node.right) {
-        this.addFrame({
-          action: 'find-replacement',
-          method: 'only-right-child',
-          removedNode: node,
-          replacementNode: node.right,
-        });
-
-        replacementNode = node.right;
-      } else {
-        this.addFrame({
-          action: 'find-replacement',
-          method: 'leaf',
-          removedNode: node,
-        });
-
-        replacementNode = undefined;
-      }
-
-      this.attach(parent, replacementNode, isLeft);
-
-      this.addFrame({
-        action: 'remove',
-        targetNodeValue: value,
-      });
+      const replacementNode = new TreeNode(successor);
+      replacementNode.left = node.left;
+      replacementNode.right = this.removeMin(node.right);
 
       return replacementNode;
     };
 
-    this.root = removeHelper(undefined, this.root, false);
-
-    if (!this.root) return;
-
-    this.addFrame({ action: 'balance-check' });
-
-    // removal can unbalance the whole path it touched, including the subtree
-    // removeMin rewrote, so the repair runs as its own pass over the result
-    this.balance();
-
-    this.addFrame({ action: 'remove-complete' });
-
+    this.root = removeHelper(this.root);
     return this.root;
   }
 
@@ -198,6 +136,8 @@ export class AVLTree {
   }
 
   balance() {
+    this.addFrame({ action: 'balance-check' });
+
     const balanceNode = (
       parent: TreeNode | undefined,
       node: TreeNode | undefined,
@@ -212,6 +152,8 @@ export class AVLTree {
     };
 
     this.root = balanceNode(undefined, this.root, false);
+
+    this.addFrame({ action: 'balance-complete' });
   }
 
   private attach(
@@ -275,72 +217,20 @@ export class AVLTree {
     return newRoot;
   }
 
-  insert(payload: NodePayload, rebalance = true) {
-    if (!this.root) {
-      this.root = new TreeNode(payload);
-      this.addFrame({
-        action: 'insert',
-        targetNode: this.root,
-      });
-      this.addFrame({ action: 'insert-complete' });
-      return this.root;
-    }
-
-    let justInserted = false;
-    let duplicateFound = false;
-
-    const insertHelper = (
-      parent: TreeNode | undefined,
-      node: TreeNode | undefined,
-      payload: NodePayload,
-      isLeft: boolean,
-    ): TreeNode => {
-      if (!node) {
-        const newNode = new TreeNode(payload);
-        justInserted = true;
-        return newNode;
-      }
-
-      this.addFrame({
-        action: 'compare',
-        comparedNode: node,
-        targetNode: payload,
-      });
+  insert(payload: NodePayload) {
+    const insertHelper = (node: TreeNode | undefined): TreeNode => {
+      if (!node) return new TreeNode(payload);
 
       if (payload.value < node.value) {
-        node.left = insertHelper(node, node.left, payload, true);
-        if (justInserted) {
-          this.addFrame({
-            action: 'insert',
-            targetNode: payload,
-          });
-          justInserted = false;
-        }
-      } else if (payload.value > node.value) {
-        node.right = insertHelper(node, node.right, payload, false);
-        if (justInserted) {
-          this.addFrame({
-            action: 'insert',
-            targetNode: payload,
-          });
-          justInserted = false;
-        }
+        node.left = insertHelper(node.left);
       } else {
-        this.addFrame({
-          action: 'compare-duplicate-found',
-          preexistingNode: node,
-        });
-        duplicateFound = true;
-        return node;
+        node.right = insertHelper(node.right);
       }
 
-      return rebalance ? this.rebalance(parent, node, isLeft) : node;
+      return node;
     };
 
-    this.root = insertHelper(undefined, this.root, payload, false);
-
-    if (!duplicateFound) this.addFrame({ action: 'insert-complete' });
-
+    this.root = insertHelper(this.root);
     return this.root;
   }
 }

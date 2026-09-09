@@ -13,6 +13,7 @@
     mdiKeyboardOutline,
   } from '@mdi/js';
   import { StartRefusal } from '@multiplayer/protocol/events';
+  import { RoomId } from '@multiplayer/protocol/room';
 
   import { computed, ref } from 'vue';
 
@@ -23,14 +24,21 @@
   import Icon from '../../components/icon/Icon.vue';
   import VStack from '../../components/layout/VStack.vue';
   import TextInput from '../../components/text-input/TextInput.vue';
+  import { useProvidedMultiplayer } from '../../multiplayer/context.ts';
+  import { joinAndFollowHost } from '../../multiplayer/joinAndFollowHost.ts';
   import { useProvidedShell } from '../../product/context.ts';
   import { toast } from '../toast/index.ts';
 
   const shell = useProvidedShell();
 
-  const multiplayer = computed(() =>
-    nullThrows(shell.multiplayer, 'multiplayer undefined'),
+  /** the room itself, which a product that cannot host still gets to join and leave */
+  const connection = nullThrows(
+    useProvidedMultiplayer(),
+    'multiplayer connection not provided',
   );
+
+  /** absent on a product that opted out of multiplayer, which is what rules out hosting */
+  const product = computed(() => shell.multiplayer);
 
   const enteredRoomCode = ref('');
 
@@ -64,13 +72,18 @@
   /** long enough to read a code off and pass it on */
   const SESSION_STARTED_TOAST_MS = 10_000;
 
+  const joinRoom = (roomId: RoomId) => {
+    const productRoom = product.value?.room;
+    if (productRoom) return productRoom.join({ roomId });
+    // nothing here for the room to open on, so the host's product is the destination
+    return joinAndFollowHost({ actions: connection.actions, roomId });
+  };
+
   const joinSession = async () => {
     if (!roomCodeValid.value) return;
     joiningSession.value = true;
     try {
-      const result = await multiplayer.value.room.join({
-        roomId: roomCodeInput.value,
-      });
+      const result = await joinRoom(roomCodeInput.value);
 
       // the server's one refusal, which makes the code wrong rather than the trip
       if (!result.joined) {
@@ -96,9 +109,11 @@
   };
 
   const startSession = async () => {
+    const productRoom = product.value?.room;
+    if (!productRoom) return;
     startingSession.value = true;
     try {
-      const result = await multiplayer.value.room.start();
+      const result = await productRoom.start();
 
       if (!result.started) {
         toast.show({
@@ -145,31 +160,34 @@
     return joiningSession.value ? 'Joining a session' : undefined;
   });
 
-  const room = computed(() => multiplayer.value.room.state.value);
+  const room = computed(() => connection.room.value);
 
-  const ui = computed(() => multiplayer.value.ui);
+  /** the room's own chrome, which only a product the room can open on carries */
+  const ui = computed(() => product.value?.ui);
 
   const rosterToggle = computed(() =>
-    ui.value.rosterPanel.isShown.value
+    ui.value?.rosterPanel.isShown.value
       ? { text: 'Hide Collaborators', icon: mdiClose }
       : { text: 'Show Collaborators', icon: mdiAccountMultiple },
   );
 
   const joinBannerToggle = computed(() =>
-    ui.value.joinBanner.isShown.value
+    ui.value?.joinBanner.isShown.value
       ? { text: 'Hide Join Banner', icon: mdiClose }
       : { text: 'Show Join Banner', icon: mdiBillboard },
   );
 
   const toggleRoster = () => {
-    const panel = ui.value.rosterPanel;
+    const panel = ui.value?.rosterPanel;
+    if (!panel) return;
     panel.setHighlight(false);
     if (panel.isShown.value) return panel.hide();
     panel.show();
   };
 
   const toggleJoinBanner = () => {
-    const panel = ui.value.joinBanner;
+    const panel = ui.value?.joinBanner;
+    if (!panel) return;
     panel.setHighlight(false);
     if (panel.isShown.value) return panel.hide();
     panel.show();
@@ -204,6 +222,7 @@
       gap="0"
     >
       <MenuItem
+        v-if="ui"
         @click="toggleRoster"
         @mouseenter="ui.rosterPanel.setHighlight(true)"
         @mouseleave="ui.rosterPanel.setHighlight(false)"
@@ -212,6 +231,7 @@
         {{ rosterToggle.text }}
       </MenuItem>
       <MenuItem
+        v-if="ui"
         @click="toggleJoinBanner"
         @mouseenter="ui.joinBanner.setHighlight(true)"
         @mouseleave="ui.joinBanner.setHighlight(false)"
@@ -220,7 +240,7 @@
         {{ joinBannerToggle.text }}
       </MenuItem>
       <MenuItem
-        @click="multiplayer.room.leave"
+        @click="connection.actions.room.leave"
         :icon="departure.icon"
         class="hover:bg-red-500 dark:hover:bg-red-500 active:bg-red-600 hover:text-white"
       >
@@ -255,6 +275,7 @@
         </VStack>
       </DropdownSubmenu>
       <MenuItem
+        v-if="product"
         @click="startSession"
         :icon="mdiAccountMultiplePlus"
         :disabled="startBlockedBy"

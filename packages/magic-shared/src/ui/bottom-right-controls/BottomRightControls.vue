@@ -6,6 +6,7 @@
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
   import Well from '../../components/layout/Well.vue';
+  import { useProvidedMultiplayer } from '../../multiplayer/context.ts';
   import { useProvidedShell } from '../../product/context.ts';
   import AnimationSpeedMenu from '../animation-speed/AnimationSpeedMenu.vue';
   import AnnotationToggle from '../annotations/AnnotationToggle.vue';
@@ -16,6 +17,9 @@
   import MultiplayerButton from '../multiplayer/MultiplayerButton.vue';
 
   const shell = useProvidedShell();
+
+  /** the connection, not the product's seat in it, since joining is open to every product */
+  const multiplayer = useProvidedMultiplayer();
 </script>
 
 <template>
@@ -38,7 +42,7 @@
           />
         </template>
         <VStack gap="0">
-          <MultiplayerButton v-if="shell.multiplayer" />
+          <MultiplayerButton v-if="multiplayer" />
           <LinkSharingButton v-if="shell.flags.linkSharing" />
           <FullscreenButton />
           <AnimationSpeedMenu v-if="shell.flags.adjustAnimationSpeed" />

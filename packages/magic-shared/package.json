@@ -176,6 +176,10 @@
       "types": "./dist/types/multiplayer/index.d.ts",
       "default": "./src/multiplayer/index.ts"
     },
+    "./shortcuts": {
+      "types": "./dist/types/shortcuts/index.d.ts",
+      "default": "./src/shortcuts/index.ts"
+    },
     "./ui": {
       "types": "./dist/types/ui/index.d.ts",
       "default": "./src/ui/index.ts"

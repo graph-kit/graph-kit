@@ -28,6 +28,12 @@ globalThis.ResizeObserver = class {
   disconnect() {}
 } as unknown as typeof ResizeObserver;
 
+// jsdom has no matchMedia, and the surface watches the device pixel ratio on mount
+window.matchMedia = vi.fn(() => ({
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+})) as unknown as typeof window.matchMedia;
+
 const mounted: (() => void)[] = [];
 
 // the surface keeps a requestAnimationFrame repaint loop alive until it unmounts

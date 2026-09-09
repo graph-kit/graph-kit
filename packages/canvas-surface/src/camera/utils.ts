@@ -1,7 +1,3 @@
-import { getDevicePixelRatio } from '@core/utils/canvas/index';
-
-import { onMounted, ref } from 'vue';
-
 export type TransformProps = {
   /** corresponds to `a` in {@link CanvasRenderingContext2D.setTransform} */
   scaleX: number;
@@ -18,12 +14,6 @@ export type TransformProps = {
 };
 
 export type TransformOptions = Partial<TransformProps>;
-
-export const useDevicePixelRatio = () => {
-  const dpr = ref(1);
-  onMounted(() => (dpr.value = getDevicePixelRatio()));
-  return dpr;
-};
 
 export const addTransform = (
   ctx: CanvasRenderingContext2D,

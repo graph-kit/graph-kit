@@ -2,10 +2,10 @@ import { createAggregator } from '@canvas/primitives/aggregator/index';
 import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
-import { getCtx, getDevicePixelRatio } from '@core/utils/canvas/index';
+import { getCtx } from '@core/utils/canvas/index';
 import type { Cursor } from '@core/utils/cursor';
 
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { type DrawPattern, useBackgroundPattern } from './backgroundPattern.ts';
 import { useCamera } from './camera/index.ts';
@@ -13,6 +13,7 @@ import { CANVAS_MISSING } from './constants.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
 import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
 import { setupCursor } from './cursor.ts';
+import { useDevicePixelRatio } from './devicePixelRatio.ts';
 import {
   createCanvasBoundEvents,
   createCanvasLifecycleEventRegistry,
@@ -33,14 +34,13 @@ const REPAINT_FPS = 60;
 const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
 
 /**
- * sizes the canvas's backing store to its layout box at the current device
- * pixel ratio, handing back that box in css pixels and whether the backing
- * store actually moved
+ * sizes the canvas's backing store to its layout box at the given device pixel
+ * ratio, handing back that box in css pixels and whether the backing store
+ * actually moved
  */
-const sizeCanvas = (canvasRef: HTMLCanvasElement | undefined) => {
+const sizeCanvas = (canvasRef: HTMLCanvasElement | undefined, dpr: number) => {
   const canvas = nullThrows(canvasRef, CANVAS_MISSING);
 
-  const dpr = getDevicePixelRatio();
   const rect = canvas.getBoundingClientRect();
   const width = Math.round(rect.width * dpr);
   const height = Math.round(rect.height * dpr);
@@ -69,6 +69,13 @@ export const useCanvasSurface = (
 
   /** the layout box as of the last resize, in css pixels */
   const canvasCssSize = { width: ref(0), height: ref(0) };
+
+  /*
+    one ratio for the whole surface. sizing the backing store and scaling the
+    context are the same decision, and a browser zoom that moved one but not the
+    other left every hit test off by the difference
+  */
+  const dpr = useDevicePixelRatio();
 
   const { shapes, ...renderer } = createAnimatedShapes();
   const aggregator = createAggregator(renderer);
@@ -109,11 +116,22 @@ export const useCanvasSurface = (
   };
 
   const resizeCanvas = () => {
-    const { rect, resized } = sizeCanvas(canvas.value);
+    const { rect, resized } = sizeCanvas(canvas.value, dpr.value);
     canvasCssSize.width.value = rect.width;
     canvasCssSize.height.value = rect.height;
     return resized;
   };
+
+  const resizeAndRepaint = () => {
+    if (!resizeCanvas()) return;
+    repaintCanvas(performance.now());
+  };
+
+  /*
+    a density change does not always move the layout box, so dragging the window
+    to another display can leave the observer with nothing to report
+  */
+  watch(dpr, resizeAndRepaint);
 
   onMounted(() => {
     ctx = getCtx(canvas);
@@ -121,10 +139,7 @@ export const useCanvasSurface = (
     scheduleRepaint();
     lifecycleEvents.emit('onMounted');
 
-    resizeObserver = new ResizeObserver(() => {
-      if (!resizeCanvas()) return;
-      repaintCanvas(performance.now());
-    });
+    resizeObserver = new ResizeObserver(resizeAndRepaint);
     resizeObserver.observe(nullThrows(canvas.value, CANVAS_MISSING));
   });
 
@@ -139,7 +154,7 @@ export const useCanvasSurface = (
   const canvasEvents = createCanvasBoundEvents(canvas, lifecycleEvents);
   const domEvents = createDocumentBoundEvents(lifecycleEvents);
 
-  const camera = useCamera(canvas, canvasEvents, domEvents);
+  const camera = useCamera(canvas, canvasEvents, domEvents, dpr);
   const { worldCoordinates: cursorCoordinates, toWorldCoordinates } =
     useWorldCoordinates(camera.state, canvasEvents);
   const visibleWorldRect = useVisibleWorldRect(camera.state, canvasCssSize);

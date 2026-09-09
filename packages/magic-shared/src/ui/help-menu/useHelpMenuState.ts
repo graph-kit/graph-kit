@@ -2,8 +2,8 @@ import { MaybeGetter, getValue } from '@core/utils/maybeGetter/index';
 
 import { ComputedRef, computed, ref } from 'vue';
 
+import { formatShortcutKey } from '../../shortcuts/formatShortcutKey.ts';
 import { ShortcutControls } from '../../shortcuts/useShortcuts.ts';
-import { formatShortcutKey } from './formatShortcutKey.ts';
 import { GESTURE_DISPLAY } from './gestures.ts';
 import { HelpMenuItem, HelpMenuRow, HelpMenuSection } from './types.ts';
 

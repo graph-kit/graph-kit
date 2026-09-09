@@ -1,4 +1,5 @@
 import colors, { type Color } from '@core/utils/colors';
+import type { ShortcutKey } from '@magic/shared/shortcuts';
 
 import type { Section } from './types.ts';
 
@@ -70,23 +71,32 @@ export const MIN_CIRCLE_RADIUS = 35;
 
 export const MAX_CIRCLE_RADIUS = 10_000;
 
-// every set operator, keyed by the character that inserts it
-export const SET_OP_TO_LATEX = {
-  I: '\\cap',
-  U: '\\cup',
-  D: '\\triangle',
-  O: '\\Omega',
-  S: OUTSIDE_ALL_SETS.label,
-  N: '\\neg',
-  '\\': '\\setminus',
-  C: '^\\complement',
-} as const;
+type SetOp = {
+  /** what typing it inserts into a query */
+  latex: string;
+  /** what it is called, for the tooltip its button shows */
+  name: string;
+  /** the binding that types it, which that same tooltip is rendered from */
+  key: ShortcutKey;
+};
 
-// a letter names a set until shift asks it for its operator, while these name no set and expand as they are typed
+/** every set operator, keyed by the character it is written with */
+export const SET_OPS = {
+  I: { latex: '\\cap', name: 'Intersection', key: 'mod+i' },
+  U: { latex: '\\cup', name: 'Union', key: 'mod+u' },
+  D: { latex: '\\triangle', name: 'Symmetric difference', key: 'mod+d' },
+  O: { latex: '\\Omega', name: 'Universal set', key: 'mod+o' },
+  S: { latex: OUTSIDE_ALL_SETS.label, name: 'Outside all sets', key: 'mod+s' },
+  N: { latex: '\\neg', name: 'Negation', key: 'mod+n' },
+  C: { latex: '^\\complement', name: 'Complement', key: 'mod+c' },
+  '\\': { latex: '\\setminus', name: 'Difference', key: '\\' },
+} as const satisfies Record<string, SetOp>;
+
+export type SetOpKey = keyof typeof SET_OPS;
+
+// a letter names a set until mod asks it for its operator, while this names no set and expands as it is typed
 export const SYMBOL_KEY_TO_LATEX = {
-  '\\': SET_OP_TO_LATEX['\\'],
-  '-': SET_OP_TO_LATEX['\\'],
-  '+': SET_OP_TO_LATEX.U,
+  '\\': SET_OPS['\\'].latex,
 } as const;
 
 export const LATEX_SET_SYMBOLS = {

@@ -84,11 +84,13 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
 
   shell.simulation.events.subscribe('onSimulationStarted', graph.focus.clear);
 
-  if (onboardingGraph)
+  if (onboardingGraph) {
     shell.simulation.events.subscribe(
       'onSimulationStarted',
       onboardingGraph.hide,
     );
+    shell.multiplayer?.events.subscribe('onRoomJoined', onboardingGraph.hide);
+  }
 
   useGraphShellShortcuts(shell, graph);
 

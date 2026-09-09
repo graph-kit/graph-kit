@@ -16,7 +16,8 @@ const STRANDED_TOAST_MS = 12_000;
 
 type JoinAndFollowHostOptions = {
   actions: ConnectionControls['actions'];
-  binding: ProductBinding;
+  /** absent on a product that opted out of multiplayer, so the room can never open here */
+  binding?: ProductBinding;
   roomId: RoomId;
 };
 
@@ -36,7 +37,7 @@ export const joinAndFollowHost = async ({
 
   const hostProduct = hostProductIn(joinRoomResult);
   const hostProductToFollow =
-    hostProduct === binding.productId ? null : hostProduct;
+    hostProduct === binding?.productId ? null : hostProduct;
   const joinedAsHost = joinRoomResult.data.hostId === joinRoomResult.userId;
 
   if (hostProductToFollow && !joinedAsHost) {
@@ -61,7 +62,7 @@ export const joinAndFollowHost = async ({
     });
   }
 
-  await actions.product.enter(binding);
+  if (binding) await actions.product.enter(binding);
 
   return joinRoomResult;
 };

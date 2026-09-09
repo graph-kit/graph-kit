@@ -58,7 +58,8 @@ export const getDevicePixelRatio = () => window.devicePixelRatio ?? 1;
 
 export const getCanvasTransform = (ctx: CanvasRenderingContext2D) => {
   const { a, e, f } = ctx.getTransform();
-  // TODO investigate why dpr isn't already factored into ctx. Camera should add it with the PZ transform!
+  // the camera scales by the density before it pans and zooms, so dividing that
+  // back out leaves pan and zoom in the css pixels dom overlays are placed in
   const dpr = getDevicePixelRatio();
   const zoom = a / dpr;
   const panX = e / dpr;

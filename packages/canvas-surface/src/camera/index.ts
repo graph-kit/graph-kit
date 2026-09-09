@@ -7,7 +7,7 @@ import type {
   DocumentBoundEvents,
 } from '../events/index.ts';
 import { usePanAndZoom } from './panZoom.ts';
-import { addTransform, useDevicePixelRatio } from './utils.ts';
+import { addTransform } from './utils.ts';
 
 export type { CameraEvents, CameraState } from './events.ts';
 
@@ -15,13 +15,17 @@ export const useCamera = (
   canvas: Ref<HTMLCanvasElement | undefined>,
   canvasEvents: Pick<ReadonlyEventHub<CanvasBoundEvents>, 'subscribe'>,
   domEvents: Pick<ReadonlyEventHub<DocumentBoundEvents>, 'subscribe'>,
+  /**
+   * the same ratio the backing store was sized at, so the transform and the
+   * store it paints into never disagree about how big a css pixel is
+   */
+  dpr: Readonly<Ref<number>>,
 ) => {
   const { getTransform: getPanZoomTransform, ...rest } = usePanAndZoom(
     canvas,
     canvasEvents,
     domEvents,
   );
-  const dpr = useDevicePixelRatio();
 
   return {
     ...rest,

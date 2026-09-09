@@ -1,5 +1,6 @@
 import { onMounted, watch } from 'vue';
 
+import { useComponent } from '../component-slot/useComponent.ts';
 import { useComponentSlotsState } from '../component-slot/useComponentSlotsState.ts';
 import { useLensState } from '../lens/useLensState.ts';
 import { useMultiplayer } from '../multiplayer/useMultiplayer.ts';
@@ -143,12 +144,16 @@ export const useShell = (
   }
 
   if (shell.lensChips) {
-    shell.componentSlots.add({
+    const lensChips = useComponent(shell.componentSlots, {
       id: 'shell/lens-chips',
       component: LensChipGroup,
       position: 'top-middle',
       priority: -Infinity,
     });
+    lensChips.show();
+
+    simulation.events.subscribe('onSimulationStarted', lensChips.hide);
+    simulation.events.subscribe('onSimulationEnded', lensChips.show);
   }
 
   if (shell.jumpToContent) {

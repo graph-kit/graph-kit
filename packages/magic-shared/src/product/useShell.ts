@@ -31,7 +31,6 @@ import { resolveShellFlags } from './flags.ts';
 import { useJumpToContent } from './internals/useJumpToContent.ts';
 import { useShellHistory } from './internals/useShellHistory.ts';
 import { useShellLocalStorage } from './internals/useShellLocalStorage.ts';
-import { useTouchScreenWarning } from './internals/useTouchScreenWarning.ts';
 import { manifests } from './manifests/index.ts';
 import { ProductControls, Shell, ShellOptions } from './types.ts';
 
@@ -186,8 +185,6 @@ export const useShell = (
 
     options.onSetupCompleted?.(shell);
   });
-
-  useTouchScreenWarning(shell.userAgent);
 
   useShellShortcuts(shell);
   provideShell(shell);

@@ -40,6 +40,10 @@
       "types": "./dist/types/components/magic/AdjacencyMatrix.vue.d.ts",
       "default": "./src/components/magic/AdjacencyMatrix.vue"
     },
+    "./TouchDeviceView": {
+      "types": "./dist/types/ui/touch-device/TouchDeviceView.vue.d.ts",
+      "default": "./src/ui/touch-device/TouchDeviceView.vue"
+    },
     "./ProductCard": {
       "types": "./dist/types/ui/product-card/ProductCard.vue.d.ts",
       "default": "./src/ui/product-card/ProductCard.vue"

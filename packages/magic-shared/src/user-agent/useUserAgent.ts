@@ -10,6 +10,12 @@ import { ComputedRef, computed } from 'vue';
 
 import { ParsedUserAgent, UNKNOWN, parseUserAgent } from './parseUserAgent.ts';
 
+// vueuse holds a media query at false until mount, and the view that stands in for a
+// touch device has to decide before the page it replaces has rendered once
+const matchesFinePointer = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(any-pointer: fine)').matches;
+
 export type UserAgentControls = {
   /** what the string owns up to, best effort, see {@link parseUserAgent} */
   parsed: ParsedUserAgent;
@@ -55,7 +61,9 @@ export const useUserAgent = (): UserAgentControls => {
     language: client?.language || UNKNOWN,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || UNKNOWN,
     touchPoints,
-    isTouchOnly: computed(() => touchPoints > 0 && !hasFinePointer.value),
+    isTouchOnly: computed(
+      () => touchPoints > 0 && !hasFinePointer.value && !matchesFinePointer(),
+    ),
     cores: client?.hardwareConcurrency,
     deviceMemoryGb: (client as { deviceMemory?: number } | undefined)
       ?.deviceMemory,

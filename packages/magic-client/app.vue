@@ -1,11 +1,15 @@
 <script setup lang="ts">
   import MagicToaster from '@magic/shared/Toaster';
+  import TouchDeviceView from '@magic/shared/TouchDeviceView';
+  import { useUserAgent } from '@magic/shared/user-agent';
+
+  const { isTouchOnly } = useUserAgent();
 </script>
 
 <template>
   <div class="h-screen">
-    <NuxtPage />
-    <!-- one viewport for the whole app, so a toast outlives the page that raised it -->
+    <TouchDeviceView v-if="isTouchOnly" />
+    <NuxtPage v-else />
     <ClientOnly><MagicToaster /></ClientOnly>
   </div>
 </template>

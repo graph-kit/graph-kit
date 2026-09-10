@@ -5,8 +5,8 @@
   import Icon from '../../components/icon/Icon.vue';
   import HStack from '../../components/layout/HStack.vue';
   import VStack from '../../components/layout/VStack.vue';
+  import { GITHUB_URL } from '../external-links.ts';
 
-  const GITHUB_URL = 'https://github.com/graph-kit/graph-kit';
   // const DEVPOST_URL = 'https://devpost.com/software/magic-w453qf';
 
   const YONA_URL = 'https://www.linkedin.com/in/yona-voss-andreae-8b92a6173/';

@@ -4,7 +4,7 @@
 
   import PointToPoint from './animation/PointToPoint.vue';
 
-  const { shell, graph } = useGraphShell({
+  const { shell } = useGraphShell({
     productId: 'dev',
     flags: {
       /*

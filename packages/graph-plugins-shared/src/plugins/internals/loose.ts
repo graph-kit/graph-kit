@@ -9,7 +9,6 @@ import {
 } from '@graph/primitives/actions/types';
 import { BaseGetters, GraphGetters } from '@graph/primitives/getters/types';
 import { LooseGraphTransit } from '@graph/primitives/transit/types';
-import { RenderFunctions } from '@graph/render-functions/types';
 
 import { GetterRenderFunctions } from './plugin.ts';
 

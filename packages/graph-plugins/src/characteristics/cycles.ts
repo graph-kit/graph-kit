@@ -3,7 +3,6 @@ import { DeepReadonly } from 'ts-essentials';
 
 import { AdjacencyList } from '../adjacency-lists/types.ts';
 import { Controls } from './index.ts';
-import type { StronglyConnectedComponentsData } from './scc.ts';
 
 type GetCycles = (adjList: DeepReadonly<AdjacencyList>) => CoreNode['id'][][];
 

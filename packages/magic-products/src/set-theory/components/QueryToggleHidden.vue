@@ -17,6 +17,9 @@
   );
 
   const toggleHidden = () => {
+    // query is a handle into the query store rather than component state, and
+    // the parent reads the flag back off it
+    // eslint-disable-next-line vue/no-mutating-props
     props.query.hidden = !hidden.value;
   };
 </script>

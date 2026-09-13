@@ -128,7 +128,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     transit: {
       encode: () => engine.annotations(),
       decode: (data) => engine.setAll(data),
-      validate: (data) => true,
+      validate: (_data) => true,
     },
     controls: {
       ...engine,

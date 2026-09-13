@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { mdiArrowRight, mdiGithub, mdiMouseOff } from '@mdi/js';
+  import { mdiArrowRight, mdiGithub } from '@mdi/js';
   import { useRoute } from 'nuxt/app';
 
   import { computed } from 'vue';

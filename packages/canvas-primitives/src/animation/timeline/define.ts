@@ -3,6 +3,8 @@ import type { DeepReadonly, DeepRequired } from 'ts-essentials';
 
 import type { SchemaWithDefaults } from '../../defaults/shapes.ts';
 import { TextArea } from '../../text/types.ts';
+// WithId is referenced only by a {@link} below, which no-unused-vars does not see
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ShapeNameToSchema, WithId } from '../../types/index.ts';
 import type { EasingOption } from '../easing.ts';
 import { type CompiledTimeline, compileTimeline } from './compile.ts';

@@ -8,11 +8,11 @@ export const useHistory = (history: HistoryControls) => {
   return {
     ...history,
     canUndo: computed(() => {
-      refresh.value;
+      void refresh.value;
       return history.canUndo();
     }),
     canRedo: computed(() => {
-      refresh.value;
+      void refresh.value;
       return history.canRedo();
     }),
   };

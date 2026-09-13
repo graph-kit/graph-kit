@@ -31,7 +31,7 @@ const section = (
 
 const round = (value: number) => Math.round(value);
 
-const sessionSection = (shell: Shell): ReportRow[] =>
+const sessionSection = (_shell: Shell): ReportRow[] =>
   section('session', {
     'reported at': new Date().toISOString(),
     'open for ms': round(performance.now()),

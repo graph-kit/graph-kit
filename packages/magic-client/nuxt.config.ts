@@ -10,13 +10,16 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/sitemap.xml', '/robots.txt'],
+      routes: ['/', '/sitemap.xml', '/robots.txt', '/llms.txt'],
     },
     routeRules: {
       '/sitemap.xml': {
         headers: { 'content-type': 'application/xml; charset=utf-8' },
       },
       '/robots.txt': {
+        headers: { 'content-type': 'text/plain; charset=utf-8' },
+      },
+      '/llms.txt': {
         headers: { 'content-type': 'text/plain; charset=utf-8' },
       },
     },

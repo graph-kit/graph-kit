@@ -1,6 +1,6 @@
 type Serializable<T> = T extends { toJSON(): infer R }
   ? R
-  : T extends RegExp | Date | Function
+  : T extends RegExp | Date | ((...args: never[]) => unknown)
     ? never // These break or change form during native stringify
     : T extends object
       ? { [K in keyof T]: Serializable<T[K]> }

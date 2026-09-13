@@ -2,7 +2,6 @@
 import { createServer } from 'node:http';
 import { AddressInfo } from 'node:net';
 
-import { DocUpdate } from '@multiplayer/protocol/doc';
 import {
   ClientToServerEvents,
   JoinResult,

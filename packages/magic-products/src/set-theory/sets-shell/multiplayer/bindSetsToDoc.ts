@@ -3,7 +3,6 @@ import type {
   AnnotationsControls,
 } from '@core/annotations/index';
 import {
-  type DocAnnotation,
   annotationFromDoc,
   annotationToDoc,
   readAnnotationsMap,

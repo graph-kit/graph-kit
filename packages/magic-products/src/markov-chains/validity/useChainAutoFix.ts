@@ -50,7 +50,7 @@ export const getWeightAdjustments = (
 
 const ADD_REMOVE_PREVIEW_OPACITY = 0.35;
 
-export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
+export const useChainAutoFix = (graph: Graph, _chain: MarkovChain) => {
   const weightAdjustments = computed(() => {
     return getWeightAdjustments(graph.nodes.value, graph.edges.value);
   });

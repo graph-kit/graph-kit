@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { cn } from '@core/components/cn';
   import { nullThrows } from '@core/utils/assert';
   import Button from '@magic/shared/Button';
   import Dropdown from '@magic/shared/Dropdown';

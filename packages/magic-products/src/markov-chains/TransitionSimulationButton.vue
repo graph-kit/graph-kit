@@ -53,7 +53,10 @@
       const probability = new Fraction(trimmed);
       const outOfRange = probability.lt(0) || probability.gt(1);
       return outOfRange ? undefined : probability;
-    } catch {}
+    } catch {
+      // an unparseable probability is an invalid one, which the undefined
+      // return already says
+    }
   };
 
   const invalidInputMessage = (rawInput: string) => {

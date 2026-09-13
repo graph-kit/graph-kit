@@ -1,5 +1,3 @@
-// @typescript-eslint/no-unused-vars reports unused even if referenced in jsdoc
-// eslint-disable-next-line
 import type { UnionToIntersection } from 'ts-essentials';
 
 import type { ShapeFactoryWrapper } from '../shapeWrapper.ts';

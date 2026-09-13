@@ -1,5 +1,3 @@
-import type { AxeResults } from 'axe-core';
-
 /** the appearances audited, since a rule like color-contrast answers differently in each */
 export type Appearance = 'light' | 'dark';
 
@@ -34,5 +32,3 @@ export type AuditReport = {
   tags: string[];
   pages: PageAudit[];
 };
-
-export type RawResults = Pick<AxeResults, 'violations' | 'incomplete'>;

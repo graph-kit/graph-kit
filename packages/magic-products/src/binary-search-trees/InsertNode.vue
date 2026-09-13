@@ -34,6 +34,7 @@
       return 'Enter an integer';
     }
     if (Math.abs(value) > MAX_MAGNITUDE) return 'Woah there!';
+    return undefined;
   });
 
   const showError = computed(

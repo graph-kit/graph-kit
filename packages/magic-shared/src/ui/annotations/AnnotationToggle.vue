@@ -15,6 +15,7 @@
     if (shell.multiplayer?.room.isReadonly.value) {
       return 'Annotations unavailable in Read';
     }
+    return undefined;
   });
 
   const content = computed(() => {

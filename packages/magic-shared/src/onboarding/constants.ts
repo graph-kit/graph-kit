@@ -15,7 +15,6 @@ export const THUMBNAIL_GAP = 18;
 /** inset between the tile and the image it frames */
 export const THUMBNAIL_PADDING = 10;
 
-export const ROW_HEIGHT = THUMBNAIL_SIZE;
 export const ROW_GAP = 14;
 
 export const LABEL_FONT: OnboardingFont = {

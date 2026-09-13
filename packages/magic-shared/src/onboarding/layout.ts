@@ -5,12 +5,14 @@ import {
   CARD_PADDING,
   LABEL_FONT,
   ROW_GAP,
-  ROW_HEIGHT,
   THUMBNAIL_GAP,
   THUMBNAIL_PADDING,
   THUMBNAIL_SIZE,
 } from './constants.ts';
 import { OnboardingItem } from './types.ts';
+
+/** a row is exactly as tall as the thumbnail it holds */
+const ROW_HEIGHT = THUMBNAIL_SIZE;
 
 export type OnboardingRowLayout = {
   /** the tile an item's image is framed by */

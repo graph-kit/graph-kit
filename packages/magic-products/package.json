@@ -31,7 +31,6 @@
     "@graph/algorithms": "workspace:*",
     "@graph/plugins": "workspace:*",
     "@graph/primitives": "workspace:*",
-    "@graph/theme-presets": "workspace:*",
     "@magic/shared": "workspace:*",
     "@multiplayer/protocol": "workspace:*",
     "@mdi/js": "^7.4.47",

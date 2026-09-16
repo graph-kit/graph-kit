@@ -62,14 +62,14 @@ export const startPerfTools = (
     };
 
     console.table({
-      'fps (from median interval)': result.timing.fps.toFixed(1),
-      'interval p50 (ms)': result.timing.interval.p50.toFixed(2),
-      'interval p95 (ms)': result.timing.interval.p95.toFixed(2),
-      'draw p50 (ms)': result.timing.draw.p50.toFixed(2),
-      'draw p95 (ms)': result.timing.draw.p95.toFixed(2),
-      'draw max (ms)': result.timing.draw.max.toFixed(2),
-      'dropped frames': result.timing.dropped,
-      frames: result.timing.frames,
+      'fps (from median interval)': result.timing.medianFps.toFixed(1),
+      'interval p50 (ms)': result.timing.frameIntervalMs.p50.toFixed(2),
+      'interval p95 (ms)': result.timing.frameIntervalMs.p95.toFixed(2),
+      'draw p50 (ms)': result.timing.drawDurationMs.p50.toFixed(2),
+      'draw p95 (ms)': result.timing.drawDurationMs.p95.toFixed(2),
+      'draw max (ms)': result.timing.drawDurationMs.max.toFixed(2),
+      'dropped frames': result.timing.droppedFrameCount,
+      frames: result.timing.frameCount,
     });
 
     if (result.calls) console.table(result.calls.perFrame);

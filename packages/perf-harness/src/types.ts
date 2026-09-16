@@ -1,22 +1,15 @@
-/**
- * The slice of `window.__graphPerf` this harness drives, plus the shape it
- * writes to disk.
- *
- * Declared here rather than imported from `@graph/dev-tools` on purpose: the
- * harness runs against a server it did not build, which during a base
- * comparison is a checkout of a different commit. Sharing types across that
- * boundary would be pretending to a guarantee that does not exist.
- */
-
+/** canvas context method name (e.g. `fillRect`) to how many times it was called */
 type PerfCounts = Record<string, number>;
+
+type TimingSummary = { p50: number; p95: number; max: number };
 
 export type PerfReport = {
   timing: {
-    frames: number;
-    interval: { p50: number; p95: number; max: number };
-    draw: { p50: number; p95: number; max: number };
-    dropped: number;
-    fps: number;
+    frameCount: number;
+    frameIntervalMs: TimingSummary;
+    drawDurationMs: TimingSummary;
+    droppedFrameCount: number;
+    medianFps: number;
   };
   calls?: {
     frames: number;

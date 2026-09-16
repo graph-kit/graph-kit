@@ -7,7 +7,7 @@ export type Scenario = {
   sweepCursor?: boolean;
 };
 
-/** ~180 frames at 60fps, enough for per frame averages to stop moving */
+/** 3 seconds @ 60fps = 180 frames captured */
 export const MEASURE_MS = 3000;
 
 export const scenarios: Scenario[] = [

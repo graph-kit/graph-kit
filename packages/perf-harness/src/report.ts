@@ -1,15 +1,3 @@
-/**
- * Renders two runs into the markdown the bot posts.
- *
- * The counts lead and the timings are tucked away, which is the opposite of
- * how a perf report usually reads. It is deliberate: these runs happen on a
- * shared runner against an unminified dev build, so the timings are good for
- * catching something ten times slower and nothing finer, while the counts are
- * exact and mean the same thing on any machine.
- *
- * @example
- * node src/report.ts --head head.json --base base.json
- */
 import { readFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
 
@@ -18,11 +6,7 @@ import type { RunResult, ScenarioResult } from './types.ts';
 /** lets the workflow find its own comment again instead of posting a new one */
 export const COMMENT_MARKER = '<!-- magic-graphs-perf-bot -->';
 
-/*
-  the counters worth a table row. the rest are still in the json, but a wall of
-  forty rows is a wall nobody reads, and these are the ones that answer "is a
-  frame doing more work than it was"
-*/
+// most important stuff to highlight
 const HEADLINE_COUNTERS = [
   'canvasElementsCreated',
   'drawImage',
@@ -145,12 +129,12 @@ const timingSection = (head: RunResult, base?: RunResult) => {
     );
 
     const draw = (result?: ScenarioResult) =>
-      result ? `${round(result.timing.draw.p50)}ms` : 'n/a';
+      result ? `${round(result.timing.drawDurationMs.p50)}ms` : 'n/a';
 
     // dropped frames get a base column of their own. one bare number in a
     // comparison table reads as a delta, and this one never was
     const dropped = (result?: ScenarioResult) =>
-      result ? String(result.timing.dropped) : 'n/a';
+      result ? String(result.timing.droppedFrameCount) : 'n/a';
 
     return base
       ? `| ${scenario.scenario} | ${draw(baseScenario)} | ${draw(scenario)} | ${dropped(baseScenario)} | ${dropped(scenario)} |`

@@ -34,7 +34,7 @@ pnpm install --frozen-lockfile
 echo "::endgroup::"
 
 echo "::group::serving $REF"
-pnpm dev > "$LOG" 2>&1 &
+pnpm --filter client dev > "$LOG" 2>&1 &
 if ! "$WORKSPACE/.github/scripts/wait-for-server.sh" "$PERF_URL"; then
   echo "server never came up. last of its output:" >&2
   tail -40 "$LOG" >&2

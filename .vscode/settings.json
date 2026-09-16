@@ -88,6 +88,8 @@
     "usetoast",
     "Warshall",
     "Woah",
+    "worktree",
+    "worktrees",
     "xsmall"
   ],
   "editor.formatOnSave": true,

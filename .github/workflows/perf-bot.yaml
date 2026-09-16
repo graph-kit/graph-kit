@@ -1,10 +1,5 @@
 name: perf bot
 
-# comment `/perf` on a pull request and this measures the canvas render loop on
-# both the pull request and its merge base, then replies with what changed.
-#
-# reporting only: nothing here fails a build.
-
 on:
   issue_comment:
     types: [created]
@@ -20,10 +15,6 @@ permissions:
 
 jobs:
   measure:
-    # the association check is not decoration. this job checks out the pull
-    # request's code and runs pnpm install, whose postinstall runs nuxt
-    # prepare, so /perf from a stranger would be arbitrary code execution
-    # holding a token that can comment on the repo
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request != null &&
@@ -36,10 +27,6 @@ jobs:
     env:
       PR_NUMBER: ${{ github.event.issue.number || inputs.pr }}
       GH_TOKEN: ${{ github.token }}
-      # the harness measures whatever is on this port, which is a different
-      # checkout for each half of the comparison. pinned rather than left to
-      # nuxt, which quietly moves to the next free port when this one is busy
-      # and would leave the harness measuring nothing at all
       PORT: 3000
       PERF_URL: http://localhost:3000
       # the second server starts where the first one just stopped, and nuxt
@@ -59,10 +46,6 @@ jobs:
               content: 'eyes',
             });
 
-      # stays on the default branch for the whole job. the commits under test
-      # are served out of worktrees instead, so the harness measuring them is
-      # always this branch's, never one that may not exist on the pull request
-      # or that the pull request has edited
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -84,11 +67,8 @@ jobs:
 
       - run: pnpm --filter @graph/perf-harness exec playwright install --with-deps chromium
 
-      # what the pull request would do to the base once merged, rather than the
-      # branch on its own. github maintains that merge for us, and it is both
-      # the more honest thing to measure and the only one that works: a branch
-      # opened before the perf tooling landed carries no way to be measured,
-      # while merging it into the base brings the tooling along
+      # measure the pull request merged into its base, so branches predating
+      # window.__graphPerf still pick it up
       - name: resolve what to measure
         run: |
           BASE_REF="$(gh pr view "$PR_NUMBER" --json baseRefName --jq .baseRefName)"
@@ -167,8 +147,6 @@ jobs:
               });
             }
 
-      # a job that dies quietly leaves someone watching an eyes reaction for
-      # twenty minutes waiting for a comment that is never coming. say so
       - name: report the failure
         if: failure() && github.event_name == 'issue_comment'
         uses: actions/github-script@v7

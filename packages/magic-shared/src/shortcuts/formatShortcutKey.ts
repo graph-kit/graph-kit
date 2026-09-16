@@ -41,6 +41,7 @@ const KEY_DISPLAYS: Record<string, SegmentDisplay> = {
   plus: symbolOnly('+'),
   backspace: named('⌫', 'Backspace'),
   delete: symbolOnly('Del'),
+  remove: named('⌫', 'Backspace'),
   enter: named('↵', 'Enter'),
   tab: symbolOnly('Tab'),
 };

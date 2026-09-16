@@ -1,4 +1,4 @@
-import { Key } from 'ctrl-keys';
+import { ShortcutKey } from '../../shortcuts/useShortcuts.ts';
 
 /** what the help menu shows for one thing a user can do */
 export type HelpMenuEntry = {
@@ -26,7 +26,7 @@ export type HelpMenuGesture = HelpMenuEntry & {
  */
 export type HelpMenuBinding = HelpMenuEntry & {
   id: string;
-  key: Key;
+  key: ShortcutKey;
 };
 
 /** one row the menu can list on behalf of a plugin or a product */

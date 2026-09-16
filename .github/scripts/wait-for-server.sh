@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# Blocks until a URL answers, or gives up.
-#
-# A loop rather than a `wait-on` dependency: one fewer package to fetch on a
-# job whose whole point is to be quick to reach for.
 
 set -euo pipefail
 

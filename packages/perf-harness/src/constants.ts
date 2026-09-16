@@ -1,0 +1,14 @@
+/** the dev playground, so numbers move with the graph and not with a product */
+export const ROUTE = '/dev';
+
+/** browser viewport size for every scenario */
+export const VIEWPORT = { width: 1440, height: 900 };
+
+/** how long to wait for the page to register its perf tools */
+export const TOOLS_TIMEOUT_MS = 30_000;
+
+/** how long a scenario gets to build its scene */
+export const SCENE_TIMEOUT_MS = 60_000;
+
+/** how long a built scene gets to paint before measuring starts */
+export const PAINT_TIMEOUT_MS = 5_000;

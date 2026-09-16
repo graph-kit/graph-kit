@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# Serves one commit and measures it.
-#
-# The commit under test goes in a worktree rather than into the checkout, so
-# the harness driving the browser is always the one from the default branch.
-# That distinction is the whole point: a pull request opened before this
-# tooling existed does not carry a copy of it, and a pull request is free to
-# change the harness in ways that would quietly change what the numbers mean.
-# Tooling from main, code under test in a worktree.
 
 set -euo pipefail
 
@@ -18,7 +10,6 @@ WORKTREE="$(mktemp -d)/under-test"
 LOG="$(mktemp)"
 
 cleanup() {
-  # nuxt's own process, not the pnpm wrapper that spawned it
   pkill -f "nuxt.mjs dev" || true
   # the dev lock outlives the process by a moment and the next server is
   # already on its way in
@@ -34,7 +25,7 @@ pnpm install --frozen-lockfile
 echo "::endgroup::"
 
 echo "::group::serving $REF"
-pnpm dev > "$LOG" 2>&1 &
+pnpm --filter client dev > "$LOG" 2>&1 &
 if ! "$WORKSPACE/.github/scripts/wait-for-server.sh" "$PERF_URL"; then
   echo "server never came up. last of its output:" >&2
   tail -40 "$LOG" >&2

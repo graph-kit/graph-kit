@@ -20,12 +20,8 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
-      # from the root, so every workspace package is installed rather than the
-      # client alone. magic-client's postinstall runs nuxt prepare, which the
-      # typecheck below needs for the generated .nuxt types
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # vue-tsc -b over the root tsconfig, which references all 18 projects
       - name: Typecheck
         run: pnpm build:types

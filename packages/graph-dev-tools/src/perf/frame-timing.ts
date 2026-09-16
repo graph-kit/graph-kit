@@ -25,18 +25,18 @@ export type TimingSummary = {
 
 export type FrameTimingStats = {
   /** repaints recorded since the last reset */
-  frames: number;
+  frameCount: number;
   /** ms between the start of consecutive repaints */
-  interval: TimingSummary;
+  frameIntervalMs: TimingSummary;
   /** ms spent inside the repaint */
-  draw: TimingSummary;
+  drawDurationMs: TimingSummary;
   /**
    * repaints whose interval ran past 1.5x the target. a handful during startup
    * is normal, a steady stream is the symptom being chased
    */
-  dropped: number;
+  droppedFrameCount: number;
   /** frames per second implied by the median interval */
-  fps: number;
+  medianFps: number;
 };
 
 const SAMPLE_CAPACITY = 300;
@@ -114,13 +114,13 @@ export const startFrameTimingRecorder = (
   events.subscribe('onAfterRepaint', onAfterRepaint);
 
   const stats = (): FrameTimingStats => {
-    const interval = summarize(intervals);
+    const frameIntervalMs = summarize(intervals);
     return {
-      frames,
-      interval,
-      draw: summarize(draws),
-      dropped,
-      fps: interval.p50 === 0 ? 0 : 1000 / interval.p50,
+      frameCount: frames,
+      frameIntervalMs,
+      drawDurationMs: summarize(draws),
+      droppedFrameCount: dropped,
+      medianFps: frameIntervalMs.p50 === 0 ? 0 : 1000 / frameIntervalMs.p50,
     };
   };
 

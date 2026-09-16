@@ -1,11 +1,5 @@
 /**
- * Drives a running instance of the app through the perf scenarios and writes
- * the numbers to JSON.
- *
- * Chromium only. What comes back is a count of the canvas calls our own code
- * makes, which is the same number on every engine, so a second browser would
- * cost minutes and tell us nothing new. It is also why these numbers survive a
- * shared CI runner where wall clock timings would not.
+ * Runs the perf scenarios against a running app and writes the results as JSON.
  *
  * @example
  * node src/run.ts --url http://localhost:3000 --out head.json
@@ -16,9 +10,14 @@ import { parseArgs } from 'node:util';
 import { type Page, chromium } from 'playwright';
 
 import {
+  PAINT_TIMEOUT_MS,
+  ROUTE,
+  SCENE_TIMEOUT_MS,
+  TOOLS_TIMEOUT_MS,
+  VIEWPORT,
+} from './constants.ts';
+import {
   MEASURE_MS,
-  SCENE_SEED,
-  SETTLE_MS,
   type Scenario,
   scenarios,
 } from './scenarios.ts';
@@ -28,57 +27,13 @@ import type {
   RunResult,
   ScenarioResult,
 } from './types.ts';
+import { log, withTimeout } from './utils.ts';
 
 declare global {
   interface Window {
     __graphPerf?: PerfTools;
   }
 }
-
-/** big enough that a 50 node graph is not scrolled off screen */
-const VIEWPORT = { width: 1440, height: 900 };
-
-const TOOLS_TIMEOUT_MS = 30_000;
-
-/*
-  page.evaluate has no timeout of its own, so a scene that never returns hangs
-  the run until the job is killed, with nothing in the log to say where. long
-  enough that a slow runner building fifty nodes is not cut off
-*/
-const SCENE_TIMEOUT_MS = 60_000;
-
-const RUN_STARTED_AT = Date.now();
-
-/*
-  stderr because stdout carries the report itself when --out is not given.
-
-  every line is stamped with how far into the run it happened and names the
-  stage it is entering rather than the one it finished, so a run that dies or
-  hangs points at what it was doing instead of leaving the last completed step
-  as the only clue
-*/
-const log = (message: string) => {
-  const elapsed = ((Date.now() - RUN_STARTED_AT) / 1000).toFixed(1);
-  process.stderr.write(`[${elapsed.padStart(6)}s] ${message}\n`);
-};
-
-/** turns a hang into a failure that says which scenario and how long it waited */
-const withTimeout = async <T>(work: Promise<T>, ms: number, what: string) => {
-  let timer: NodeJS.Timeout | undefined;
-
-  const expiry = new Promise<never>((_, reject) => {
-    timer = setTimeout(
-      () => reject(new Error(`${what} after ${ms / 1000}s.`)),
-      ms,
-    );
-  });
-
-  try {
-    return await Promise.race([work, expiry]);
-  } finally {
-    clearTimeout(timer);
-  }
-};
 
 const waitForPerfTools = async (page: Page, url: string) => {
   try {
@@ -96,12 +51,7 @@ const waitForPerfTools = async (page: Page, url: string) => {
   }
 };
 
-/*
-  a cursor parked in one spot tells us nothing about hit testing, and a single
-  jump tells us about one frame. this keeps it moving across the canvas for the
-  whole measuring window, which is what a user dragging their mouse around
-  actually costs
-*/
+/** moves the cursor for the whole window so hit testing runs on every frame */
 const sweepCursor = async (page: Page, durationMs: number) => {
   const steps = 60;
   const stepDelay = durationMs / steps;
@@ -121,18 +71,13 @@ const measureScenario = async (
   baseUrl: string,
   scenario: Scenario,
 ): Promise<ScenarioResult> => {
-  const url = new URL(scenario.route, baseUrl).toString();
+  const url = new URL(ROUTE, baseUrl).toString();
   const stage = (message: string) => log(`  ${scenario.name}: ${message}`);
 
-  /*
-    the page's own failures are invisible from here otherwise. a scene that
-    throws surfaces as a stalled evaluate or an empty report, and this is what
-    says which it was
-  */
   page.on('pageerror', (error) => stage(`page error: ${error.message}`));
-  page.on('console', (message) => {
-    if (message.type() === 'error') stage(`console error: ${message.text()}`);
-  });
+  page.on('console', (message) =>
+    stage(`console ${message.type()}: ${message.text()}`),
+  );
 
   stage(`navigating to ${url}`);
   await page.goto(url, { waitUntil: 'load' });
@@ -140,19 +85,27 @@ const measureScenario = async (
   stage('waiting for the perf tools to register');
   await waitForPerfTools(page, url);
 
-  stage(`building a ${scenario.nodes} node scene at seed ${SCENE_SEED}`);
-  await withTimeout(
-    page.evaluate(
-      ([nodes, seed]) => window.__graphPerf?.scene({ nodes, seed }),
-      [scenario.nodes, SCENE_SEED],
+  stage(`building a ${scenario.nodes} node scene`);
+  await withTimeout({
+    task: page.evaluate(
+      (nodes) => window.__graphPerf?.scene({ nodes }),
+      scenario.nodes,
     ),
-    SCENE_TIMEOUT_MS,
-    `${scenario.name} never finished building its scene`,
-  );
+    timeoutMs: SCENE_TIMEOUT_MS,
+    failureMessage: `${scenario.name} never finished building its scene`,
+  });
 
-  // a graph still animating its nodes in draws differently from a settled one
-  stage(`settling for ${SETTLE_MS}ms`);
-  await page.waitForTimeout(SETTLE_MS);
+  stage('waiting for the scene to paint');
+  await withTimeout({
+    task: page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    ),
+    timeoutMs: PAINT_TIMEOUT_MS,
+    failureMessage: `${scenario.name} never painted its scene`,
+  });
 
   stage('starting the call counter');
   await page.evaluate(() => {
@@ -187,8 +140,8 @@ const measureScenario = async (
   }
 
   stage(
-    `done, ${frames} frames at ${report.timing.fps.toFixed(1)}fps, ` +
-      `draw p50 ${report.timing.draw.p50.toFixed(2)}ms`,
+    `done, ${frames} frames at ${report.timing.medianFps.toFixed(1)}fps, ` +
+      `draw p50 ${report.timing.drawDurationMs.p50.toFixed(2)}ms`,
   );
 
   return {

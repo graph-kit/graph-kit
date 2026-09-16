@@ -11,8 +11,7 @@ import { useCtrlKeys } from './useCtrlKeys.ts';
 const MOD = 'mod+';
 
 /**
- * `mod` stands in for the platform's primary shortcut modifier, meta for mac, ctrl for windows.
- * `remove` stands in for both backspace and delete.
+ * `mod` = ⌘ on mac or ctrl on windows; `remove` = both backspace & delete
  */
 export type ShortcutKey = Key | `mod+${Key}` | 'remove';
 

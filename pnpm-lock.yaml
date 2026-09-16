@@ -415,6 +415,9 @@ importers:
       '@core/events':
         specifier: workspace:*
         version: link:../core-events
+      '@core/utils':
+        specifier: workspace:*
+        version: link:../core-utils
       '@graph/core':
         specifier: workspace:*
         version: link:../graph-core

@@ -10,12 +10,11 @@ import {
 export { reactiveMap, reactiveSet } from './collections.ts';
 export type { ReactiveMap, ReactiveSet } from './collections.ts';
 
-/**
- * a readable and writable reactive value. call it with no arguments to read,
- * with one argument to write.
- */
+/** a readable and writable reactive value */
 export type Signal<T> = {
+  /** read value */
   (): T;
+  /** write value */
   (value: T): void;
 };
 
@@ -27,9 +26,7 @@ export { computed, signal };
 /**
  * runs `fn` now and again whenever something it read changes. returns a stop function.
  *
- * whatever `fn` returns is taken as a cleanup and called before the next run, so
- * `effect(() => save())` throws `cleanup is not a function` the second time it runs.
- * use a block body unless the return really is a cleanup.
+ * whatever `fn` returns is taken as a cleanup and called before the next run.
  */
 export const effect = alienEffect;
 

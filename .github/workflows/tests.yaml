@@ -20,13 +20,8 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
-      # from the root, so every workspace package is installed rather than the
-      # client alone
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # --run because the test script is bare `vitest`, which is watch mode.
-      # actions sets CI and vitest would pick up on that, but a watch mode
-      # process that ignores it sits here until the job times out
       - name: Test
         run: pnpm test --run

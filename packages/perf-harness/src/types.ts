@@ -26,7 +26,7 @@ export type PerfReport = {
 };
 
 export type PerfTools = {
-  scene: (options: { nodes: number; seed?: number }) => void;
+  scene: (options: { nodes: number }) => void;
   countCalls: () => void;
   report: () => PerfReport;
   reset: () => void;

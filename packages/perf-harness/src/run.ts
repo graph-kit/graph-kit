@@ -11,13 +11,13 @@ import { type Page, chromium } from 'playwright';
 
 import {
   PAINT_TIMEOUT_MS,
+  ROUTE,
   SCENE_TIMEOUT_MS,
   TOOLS_TIMEOUT_MS,
   VIEWPORT,
 } from './constants.ts';
 import {
   MEASURE_MS,
-  SCENE_SEED,
   type Scenario,
   scenarios,
 } from './scenarios.ts';
@@ -71,7 +71,7 @@ const measureScenario = async (
   baseUrl: string,
   scenario: Scenario,
 ): Promise<ScenarioResult> => {
-  const url = new URL(scenario.route, baseUrl).toString();
+  const url = new URL(ROUTE, baseUrl).toString();
   const stage = (message: string) => log(`  ${scenario.name}: ${message}`);
 
   page.on('pageerror', (error) => stage(`page error: ${error.message}`));
@@ -85,11 +85,11 @@ const measureScenario = async (
   stage('waiting for the perf tools to register');
   await waitForPerfTools(page, url);
 
-  stage(`building a ${scenario.nodes} node scene at seed ${SCENE_SEED}`);
+  stage(`building a ${scenario.nodes} node scene`);
   await withTimeout({
     task: page.evaluate(
-      ([nodes, seed]) => window.__graphPerf?.scene({ nodes, seed }),
-      [scenario.nodes, SCENE_SEED],
+      (nodes) => window.__graphPerf?.scene({ nodes }),
+      scenario.nodes,
     ),
     timeoutMs: SCENE_TIMEOUT_MS,
     failureMessage: `${scenario.name} never finished building its scene`,

@@ -1,3 +1,6 @@
+/** the dev playground, so numbers move with the graph and not with a product */
+export const ROUTE = '/dev';
+
 /** browser viewport size for every scenario */
 export const VIEWPORT = { width: 1440, height: 900 };
 

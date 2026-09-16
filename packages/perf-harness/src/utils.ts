@@ -1,9 +1,11 @@
 const RUN_STARTED_AT = Date.now();
 
+const toSecondString = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+
 export const log = (message: string) => {
-  const elapsed = ((Date.now() - RUN_STARTED_AT) / 1000).toFixed(1);
+  const elapsed = toSecondString(Date.now() - RUN_STARTED_AT);
   // stderr because stdout carries the report itself when --out is not given
-  process.stderr.write(`[${elapsed.padStart(6)}s] ${message}\n`);
+  process.stderr.write(`[${elapsed.padStart(6)}] ${message}\n`);
 };
 
 type WithTimeoutOptions<Result> = {
@@ -23,7 +25,10 @@ export const withTimeout = async <Result>({
 
   const expiry = new Promise<never>((_, reject) => {
     timer = setTimeout(
-      () => reject(new Error(`${failureMessage} after ${timeoutMs / 1000}s.`)),
+      () =>
+        reject(
+          new Error(`${failureMessage} after ${toSecondString(timeoutMs)}.`),
+        ),
       timeoutMs,
     );
   });

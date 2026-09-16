@@ -29,4 +29,4 @@ export const isMac = () =>
   typeof navigator !== 'undefined' && /mac/i.test(navigator.userAgent);
 
 export const isRemoveKey = (event: KeyboardEvent) =>
-  event.key === 'Backspace' || (!isMac() && event.key === 'Delete');
+  event.key === 'Backspace' || event.key === 'Delete';

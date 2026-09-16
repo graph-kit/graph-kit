@@ -20,7 +20,7 @@ const INTERACTIVE_HELP: HelpMenuItem[] = [
     id: 'graph/remove-node',
     category: GRAPH_HELP_CATEGORY,
     name: 'Remove Node',
-    key: 'backspace',
+    key: 'remove',
   },
 ];
 

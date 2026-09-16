@@ -49,16 +49,9 @@ const SCENE_TIMEOUT_MS = 60_000;
 
 const RUN_STARTED_AT = Date.now();
 
-/*
-  stderr because stdout carries the report itself when --out is not given.
-
-  every line is stamped with how far into the run it happened and names the
-  stage it is entering rather than the one it finished, so a run that dies or
-  hangs points at what it was doing instead of leaving the last completed step
-  as the only clue
-*/
 const log = (message: string) => {
   const elapsed = ((Date.now() - RUN_STARTED_AT) / 1000).toFixed(1);
+  // stdout carries the report itself when --out is not given
   process.stderr.write(`[${elapsed.padStart(6)}s] ${message}\n`);
 };
 

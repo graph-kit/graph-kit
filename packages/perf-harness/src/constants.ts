@@ -6,3 +6,6 @@ export const TOOLS_TIMEOUT_MS = 30_000;
 
 /** how long a scenario gets to build its scene */
 export const SCENE_TIMEOUT_MS = 60_000;
+
+/** how long a built scene gets to paint before measuring starts */
+export const PAINT_TIMEOUT_MS = 5_000;

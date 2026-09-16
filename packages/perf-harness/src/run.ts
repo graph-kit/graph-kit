@@ -9,11 +9,15 @@ import { parseArgs } from 'node:util';
 
 import { type Page, chromium } from 'playwright';
 
-import { SCENE_TIMEOUT_MS, TOOLS_TIMEOUT_MS, VIEWPORT } from './constants.ts';
+import {
+  PAINT_TIMEOUT_MS,
+  SCENE_TIMEOUT_MS,
+  TOOLS_TIMEOUT_MS,
+  VIEWPORT,
+} from './constants.ts';
 import {
   MEASURE_MS,
   SCENE_SEED,
-  SETTLE_MS,
   type Scenario,
   scenarios,
 } from './scenarios.ts';
@@ -91,9 +95,17 @@ const measureScenario = async (
     failureMessage: `${scenario.name} never finished building its scene`,
   });
 
-  // a graph still animating its nodes in draws differently from a settled one
-  stage(`settling for ${SETTLE_MS}ms`);
-  await page.waitForTimeout(SETTLE_MS);
+  stage('waiting for the scene to paint');
+  await withTimeout({
+    task: page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    ),
+    timeoutMs: PAINT_TIMEOUT_MS,
+    failureMessage: `${scenario.name} never painted its scene`,
+  });
 
   stage('starting the call counter');
   await page.evaluate(() => {

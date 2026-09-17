@@ -7,19 +7,14 @@
 import {
   type CtxCounter,
   type CtxCounterSnapshot,
+  type RepaintEvents,
   startCtxCounter,
 } from './ctx-counter.ts';
-import {
-  type FrameTimingStats,
-  type RepaintEvents,
-  startFrameTimingRecorder,
-} from './frame-timing.ts';
 import { type SceneGraph, type SceneOptions, buildScene } from './scene.ts';
 
 export const PERF_TOOLS_GLOBAL = '__graphPerf';
 
 export type PerfReport = {
-  timing: FrameTimingStats;
   calls?: CtxCounterSnapshot;
 };
 
@@ -37,39 +32,44 @@ export type PerfTools = {
   stop: () => void;
 };
 
+const globalSlot = <T>(key: string) => {
+  const scope = globalThis as Record<string, unknown>;
+  return {
+    set: (value: T) => {
+      scope[key] = value;
+    },
+    clear: () => {
+      delete scope[key];
+    },
+  };
+};
+
+const perfToolsGlobal = globalSlot<PerfTools>(PERF_TOOLS_GLOBAL);
+
 export const startPerfTools = (
   graph: SceneGraph,
   repaintEvents: RepaintEvents,
 ): PerfTools => {
-  const timing = startFrameTimingRecorder(repaintEvents);
   let counter: CtxCounter | undefined;
 
   const tools: PerfTools = {
     scene: (options) => {
       buildScene(graph, options);
-      timing.reset();
       counter?.reset();
     },
     countCalls: () => {
       if (counter) return;
       counter = startCtxCounter(repaintEvents);
     },
-    report: () => ({
-      timing: timing.stats(),
-      calls: counter?.snapshot(),
-    }),
-    reset: () => {
-      timing.reset();
-      counter?.reset();
-    },
+    report: () => ({ calls: counter?.snapshot() }),
+    reset: () => counter?.reset(),
     stop: () => {
-      timing.stop();
       counter?.stop();
-      delete (globalThis as Record<string, unknown>)[PERF_TOOLS_GLOBAL];
+      perfToolsGlobal.clear();
     },
   };
 
-  (globalThis as Record<string, unknown>)[PERF_TOOLS_GLOBAL] = tools;
+  perfToolsGlobal.set(tools);
 
   return tools;
 };

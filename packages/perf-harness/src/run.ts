@@ -139,17 +139,13 @@ const measureScenario = async (
     );
   }
 
-  stage(
-    `done, ${frames} frames at ${report.timing.medianFps.toFixed(1)}fps, ` +
-      `draw p50 ${report.timing.drawDurationMs.p50.toFixed(2)}ms`,
-  );
+  stage(`done, ${frames} frames`);
 
   return {
     scenario: scenario.name,
     nodes: scenario.nodes,
     frames,
     perFrame: report.calls?.perFrame ?? {},
-    timing: report.timing,
   };
 };
 

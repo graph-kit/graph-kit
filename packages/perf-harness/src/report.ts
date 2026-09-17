@@ -124,42 +124,6 @@ const alsoMoved = (head: ScenarioResult, base?: ScenarioResult) => {
   return [`Also moved: ${described.join(', ')}.`, ''];
 };
 
-const timingSection = (head: RunResult, base?: RunResult) => {
-  const rows = head.scenarios.map((scenario) => {
-    const baseScenario = base?.scenarios.find(
-      (candidate) => candidate.scenario === scenario.scenario,
-    );
-
-    const draw = (result?: ScenarioResult) =>
-      result ? `${round(result.timing.drawDurationMs.p50)}ms` : 'n/a';
-
-    // dropped frames get a base column of their own. one bare number in a
-    // comparison table reads as a delta, and this one never was
-    const dropped = (result?: ScenarioResult) =>
-      result ? String(result.timing.droppedFrameCount) : 'n/a';
-
-    return base
-      ? `| ${scenario.scenario} | ${draw(baseScenario)} | ${draw(scenario)} | ${dropped(baseScenario)} | ${dropped(scenario)} |`
-      : `| ${scenario.scenario} | ${draw(scenario)} | ${dropped(scenario)} |`;
-  });
-
-  const header = base
-    ? '| scenario | base draw p50 | head draw p50 | base dropped | head dropped |\n| --- | ---: | ---: | ---: | ---: |'
-    : '| scenario | draw p50 | dropped |\n| --- | ---: | ---: |';
-
-  return [
-    '<details>',
-    '<summary>frame timings (indicative only)</summary>',
-    '',
-    'Measured on a shared runner against an unminified dev build. Good for',
-    'spotting something an order of magnitude slower, not for anything finer.',
-    '',
-    header,
-    ...rows,
-    '</details>',
-  ].join('\n');
-};
-
 const render = (head: RunResult, base?: RunResult) => {
   const tables = head.scenarios.map((scenario) =>
     scenarioTable(
@@ -184,9 +148,6 @@ const render = (head: RunResult, base?: RunResult) => {
     'any machine, so a change here is a real change in what a frame does.',
     '',
     ...tables,
-    '',
-    timingSection(head, base),
-    '',
   ].join('\n');
 };
 

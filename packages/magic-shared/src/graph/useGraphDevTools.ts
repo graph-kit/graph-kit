@@ -1,4 +1,4 @@
-import { RepaintEvents } from '@graph/dev-tools/perf/frame-timing';
+import { RepaintEvents } from '@graph/dev-tools/perf/ctx-counter';
 import { startPerfTools } from '@graph/dev-tools/perf/index';
 import { SceneGraph } from '@graph/dev-tools/perf/scene';
 

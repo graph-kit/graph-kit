@@ -105,6 +105,8 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
       }),
     );
 
+    let pairsShown = 0;
+
     for (const from of nodeIds) {
       const intoPivot = matrix[from][pivot];
       if (intoPivot === undefined || from === pivot) continue;
@@ -137,6 +139,8 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
           activeNodeId: pivot,
           candidateNodeIds: [from, to],
         };
+
+        pairsShown++;
 
         frameCollector.add(
           frame({
@@ -186,6 +190,27 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
           return;
         }
       }
+    }
+
+    /*
+      a phase that shows nothing would otherwise read as one question followed
+      by the next, so say why this node earned no pairs. nothing improved, so
+      the matrix still holds what it did when the phase opened
+    */
+    if (pairsShown === 0) {
+      frameCollector.add(
+        frame({
+          type: 'pivot-unused',
+          node: pivot,
+          entering: nodeIds.some(
+            (from) => from !== pivot && matrix[from][pivot] !== undefined,
+          ),
+          leaving: nodeIds.some(
+            (to) => to !== pivot && matrix[pivot][to] !== undefined,
+          ),
+          activeNodeId: pivot,
+        }),
+      );
     }
   }
 

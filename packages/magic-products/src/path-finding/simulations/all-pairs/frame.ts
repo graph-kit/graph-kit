@@ -24,6 +24,15 @@ type ChoosePivotFrame = {
   totalPivots: number;
 };
 
+type PivotUnusedFrame = {
+  type: 'pivot-unused';
+  node: GNode['id'];
+  // whether any route reaches the pivot, and whether any route leaves it. a
+  // stopover needs both, so either one missing is why the phase found nothing
+  entering: boolean;
+  leaving: boolean;
+};
+
 type ConsiderPairFrame = {
   type: 'consider-pair';
   from: GNode['id'];
@@ -76,6 +85,7 @@ export type AllPairsStep =
   | StartFrame
   | EndFrame
   | ChoosePivotFrame
+  | PivotUnusedFrame
   | ConsiderPairFrame
   | KeepPairFrame
   | ImprovePairFrame

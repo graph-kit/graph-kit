@@ -32,7 +32,7 @@ export const allPairsExplainer =
     switch (frame.type) {
       case 'start':
         return {
-          content: 'Seeding The [Table] With The Edges In The Graph',
+          content: 'Filling Out The [Table] With The Edges In The Graph',
           highlights: [highlights.table],
         };
 
@@ -56,9 +56,31 @@ export const allPairsExplainer =
 
       case 'choose-pivot':
         return {
-          content: `Phase ${frame.pivotNumber} Of ${frame.totalPivots}: Can Routing Via {${frame.node}} Reduce The Current [Table] Value?`,
+          content: `Node ${frame.pivotNumber} Of ${frame.totalPivots}: Can Routing Via {${frame.node}} Reduce The Current [Table] Value?`,
           highlights: [highlights.table],
         };
+
+      case 'pivot-unused': {
+        const stranded = !frame.entering
+          ? !frame.leaving
+            ? `No Edge Enters Or Leaves {${frame.node}}`
+            : `No Edge Enters {${frame.node}}`
+          : !frame.leaving
+            ? `No Edge Leaves {${frame.node}}`
+            : undefined;
+
+        if (stranded === undefined) {
+          return {
+            content: `No Detour Through {${frame.node}} Improves The [Table], So Nothing Changes`,
+            highlights: [highlights.table],
+          };
+        }
+
+        return {
+          content: `${stranded}, So No Path Via {${frame.node}} Can Improve The [Table]`,
+          highlights: [highlights.table],
+        };
+      }
 
       case 'consider-pair': {
         const detourCost = cost(graph, frame.detourDistance, frame.detourRoute);
@@ -78,13 +100,21 @@ export const allPairsExplainer =
         const keptCost = cost(graph, frame.currentDistance, frame.currentRoute);
         const detourCost = cost(graph, frame.detourDistance, frame.detourRoute);
 
+        // a pair held against itself is the negative cycle test, not a trip
+        if (frame.from === frame.to) {
+          return {
+            content: `Returning To {${frame.from}} Via {${frame.pivot}} Costs ${detourCost.text}, Not Less Than ${keptCost.text}, So No [Negative Cycle] Through {${frame.from}}`,
+            highlights: [
+              ...detourCost.highlights,
+              ...keptCost.highlights,
+              negativeCycle(graph, frame.detourRoute),
+            ],
+          };
+        }
+
         return {
-          content: `The New Route Via {${frame.pivot}} Costs ${detourCost.text} Which Is Not Less Than The Current Route {${frame.from}} To {${frame.to}} Costing ${keptCost.text} So The Current Cost [Remains]`,
-          highlights: [
-            ...keptCost.highlights,
-            ...detourCost.highlights,
-            highlights.keep,
-          ],
+          content: `The Detour Is Not Cheaper, So The Cost For {${frame.from}} To {${frame.to}} [Remains] At ${keptCost.text}`,
+          highlights: [highlights.keep, ...keptCost.highlights],
         };
       }
 
@@ -122,7 +152,7 @@ export const allPairsExplainer =
 
       case 'negative-cycle': {
         // the same finding either way, so tracing the loop only adds what a lap costs
-        const found = `{${frame.node}} Can Return To Itself For Less Than 0, So A [Negative Cycle] Runs Through It And No Shortest Path Exists`;
+        const found = `{${frame.node}} Can Return To Itself For Less Than 0, So A [Negative Cycle] Exists`;
 
         if (!frame.loop) {
           return {
@@ -134,7 +164,7 @@ export const allPairsExplainer =
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${found}. Each Lap Costs ${lap.text}`,
+          content: `${found}. The Cycle Costs ${lap.text}`,
           highlights: [
             negativeCycle(graph, frame.loop.edges),
             ...lap.highlights,

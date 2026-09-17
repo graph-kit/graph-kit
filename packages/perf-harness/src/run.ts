@@ -41,8 +41,7 @@ const withProbePage = async <Result>({
   logger,
   task,
 }: WithProbePageOptions<Result>) => {
-  // a fresh context every time, so nothing the app persists to local storage
-  // carries over from one scene into the next
+  // new context so stuff like local storage doesn't carry over
   const context = await browser.newContext({ viewport: VIEWPORT });
 
   try {

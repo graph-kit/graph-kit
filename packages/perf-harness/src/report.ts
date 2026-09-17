@@ -7,11 +7,11 @@ import type { FrameCalls, RunResult, SceneResult } from './types.ts';
 
 /**
  * lets the workflow find its own comment again instead of posting a new one.
- * must match the `marker` in `.github/workflows/perf-bot.yaml`
+ * must match the `marker` in `.github/workflows/canvas-call-counter.yaml`
  */
-export const COMMENT_MARKER = '<!-- graph-kit-canvas-performance-report -->';
+export const COMMENT_MARKER = '<!-- graph-kit-canvas-call-report -->';
 
-// most important stuff to highlight
+// most important stuff for the top of the report
 const HEADLINE_COUNTERS = [
   'canvasElementsCreated',
   'drawImage',
@@ -79,20 +79,17 @@ const sceneTable = (head: SceneResult, base: SceneResult) => {
     '| average per frame | base | head | |',
     '| --- | ---: | ---: | --- |',
     ...rows,
-    // a table that runs straight into the next heading stops being a table
     '',
-    ...alsoMoved(headAverages, baseAverages),
+    ...nonHeadlineChanges(headAverages, baseAverages),
   ].join('\n');
 };
 
 /** names every counter outside the headline list that changed */
-const alsoMoved = (headAverages: FrameCalls, baseAverages: FrameCalls) => {
-  const counterNames = new Set([
-    ...Object.keys(headAverages),
-    ...Object.keys(baseAverages),
-  ]);
-
-  const moved = [...counterNames]
+const nonHeadlineChanges = (
+  headAverages: FrameCalls,
+  baseAverages: FrameCalls,
+) => {
+  const changed = Object.keys({ ...baseAverages, ...headAverages })
     .filter((counter) => !HEADLINE_COUNTERS.includes(counter as never))
     .map((counter) => ({
       counter,
@@ -101,19 +98,19 @@ const alsoMoved = (headAverages: FrameCalls, baseAverages: FrameCalls) => {
     }))
     .filter(({ baseValue, headValue }) => baseValue !== headValue)
     .sort(
-      (a, b) =>
-        Math.abs(b.headValue - b.baseValue) -
-        Math.abs(a.headValue - a.baseValue),
+      (previous, next) =>
+        Math.abs(next.headValue - next.baseValue) -
+        Math.abs(previous.headValue - previous.baseValue),
     );
 
-  if (moved.length === 0) return [];
+  if (changed.length === 0) return [];
 
-  const described = moved.map(
+  const described = changed.map(
     ({ counter, baseValue, headValue }) =>
       `\`${counter}\` ${round(baseValue)} → ${round(headValue)}`,
   );
 
-  return [`Also moved: ${described.join(', ')}.`, ''];
+  return [`Other changes: ${described.join(', ')}.`, ''];
 };
 
 const render = (head: RunResult, base: RunResult) => {
@@ -129,7 +126,7 @@ const render = (head: RunResult, base: RunResult) => {
 
   return [
     COMMENT_MARKER,
-    '### canvas perf',
+    '## 🎨 Canvas Calls Per Frame',
     '',
     `head \`${shortSha(head.commit)}\` vs base \`${shortSha(base.commit)}\``,
     '',

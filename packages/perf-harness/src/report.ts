@@ -61,16 +61,10 @@ const sceneTable = (head: SceneResult, base: SceneResult) => {
   const headAverages = averageCalls(head.frames);
   const baseAverages = averageCalls(base.frames);
 
-  const counters = HEADLINE_COUNTERS.filter(
-    (counter) =>
-      headAverages[counter] !== undefined ||
-      baseAverages[counter] !== undefined,
-  );
-
-  const rows = counters.map((counter) => {
-    const baseValue = baseAverages[counter] ?? 0;
-    const headValue = headAverages[counter] ?? 0;
-    return `| ${counter} | ${round(baseValue)} | ${round(headValue)} | ${formatDelta(baseValue, headValue)} |`;
+  const rows = HEADLINE_COUNTERS.map((counter) => {
+    const baseValue = round(baseAverages[counter] ?? 0);
+    const headValue = round(headAverages[counter] ?? 0);
+    return `| ${counter} | ${baseValue} | ${headValue} | ${formatDelta(baseValue, headValue)} |`;
   });
 
   return [
@@ -93,8 +87,8 @@ const nonHeadlineChanges = (
     .filter((counter) => !HEADLINE_COUNTERS.includes(counter as never))
     .map((counter) => ({
       counter,
-      baseValue: baseAverages[counter] ?? 0,
-      headValue: headAverages[counter] ?? 0,
+      baseValue: round(baseAverages[counter] ?? 0),
+      headValue: round(headAverages[counter] ?? 0),
     }))
     .filter(({ baseValue, headValue }) => baseValue !== headValue)
     .sort(
@@ -107,7 +101,7 @@ const nonHeadlineChanges = (
 
   const described = changed.map(
     ({ counter, baseValue, headValue }) =>
-      `\`${counter}\` ${round(baseValue)} → ${round(headValue)}`,
+      `\`${counter}\` ${baseValue} → ${headValue}`,
   );
 
   return [`Other changes: ${described.join(', ')}.`, ''];

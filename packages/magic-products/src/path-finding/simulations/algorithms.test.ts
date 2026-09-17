@@ -267,7 +267,7 @@ describe('bellmanFord', () => {
 
     const doublingBack = keeps.find((frame) => frame.edge === 'e2');
     expect(doublingBack && explain(doublingBack)?.content).toBe(
-      '{e2} Doubles Back To {b}, Adding Cost For No Progress, So Its Distance [Remains]',
+      '{e2} Doubles Back To {b}, Adding Cost For No Progress, So Its Cost [Remains]',
     );
 
     /*
@@ -276,7 +276,7 @@ describe('bellmanFord', () => {
     */
     const genuine = keeps.find((frame) => frame.edge === 'e0');
     expect(genuine && explain(genuine)?.content).toBe(
-      '{b} Already Costs [1], And The [1] On Offer Is No Cheaper, So Its Distance [Remains]',
+      '[1] Does Not Decrease The Cost Of Reaching {b} Which Currently Costs [1]. The Current Cost [Remains]',
     );
   });
 

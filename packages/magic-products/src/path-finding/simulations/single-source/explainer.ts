@@ -98,7 +98,7 @@ export const singleSourceExplainer =
         const settling = cost(graph, frame.distance, frame.path);
 
         return {
-          content: `${mustPass} The Cheapest [Frontier] Node Is {${frame.runnerUp.node}} Costing ${runnerUp.text}. No Path Can Reach {${frame.node}} For Less Than ${settling.text}`,
+          content: `${mustPass} The Cheapest non-{${frame.node}} [Frontier] Node Is {${frame.runnerUp.node}} Costing ${runnerUp.text}. No Path Can Reach {${frame.node}} For Less Than ${settling.text}`,
           // one per [Frontier] mention, then one per cost, in the order said
           highlights: [
             highlights.frontier,

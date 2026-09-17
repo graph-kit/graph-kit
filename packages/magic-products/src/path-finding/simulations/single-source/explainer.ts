@@ -215,8 +215,17 @@ export const singleSourceExplainer =
       // bellman-ford only
 
       case 'begin-pass': {
+        // why there are this many passes is worth a sentence, said on the only
+        // pass where the reader has not been told it yet
+        if (frame.pass === 1) {
+          return {
+            content: `Pass 1 Of ${frame.totalPasses}. A Cheapest Path Never Repeats A Node, So ${count(frame.nodeCount, 'Node')} Means At Most ${count(frame.totalPasses, 'Edge')} And ${count(frame.totalPasses, 'Pass', 'Passes')}. Sweeping Edges In [Order]`,
+            highlights: [highlights.sweep],
+          };
+        }
+
         return {
-          content: `Pass ${frame.pass} Of ${frame.totalPasses}. The Cheapest Path Uses At Most ${count(frame.pass, 'Edge')}. Sweeping Edges In [Order]`,
+          content: `Pass ${frame.pass} Of ${frame.totalPasses} Settles Every Cheapest Path Of ${count(frame.pass, 'Edge')}. Sweeping Edges In [Order]`,
           highlights: [highlights.sweep],
         };
       }
@@ -226,15 +235,30 @@ export const singleSourceExplainer =
           content: `{${frame.edge}} Is Swept, But {${frame.from}} Still Costs ∞, So {${frame.to}} Cannot Be Updated`,
         };
 
-      case 'pass-settled':
+      case 'pass-settled': {
+        const settled = `Pass ${frame.pass} Did Not Improve Any Costs Meaning The [Distances] Are Final`;
+        const remaining = frame.totalPasses - frame.pass;
+
+        // the pass that improves nothing can be the last one, and then there is
+        // no pass left to call unnecessary
+        if (remaining === 0) {
+          return { content: settled, highlights: [highlights.distances] };
+        }
+
+        const skipped =
+          remaining === 1
+            ? `Pass ${frame.totalPasses} Is Not Needed`
+            : `Passes ${frame.pass + 1} To ${frame.totalPasses} Are Not Needed`;
+
         return {
-          content: `Pass ${frame.pass} Did Not Improve Any Costs Meaning The [Distances] Are Final`,
+          content: `${settled}. ${skipped}`,
           highlights: [highlights.distances],
         };
+      }
 
       case 'begin-verification': {
         return {
-          content: `After ${count(frame.passesDone, 'Pass', 'Passes')} All [Distances] Are Final. A Verification Sweep Will Confirm There Are No [Negative Cycles]`,
+          content: `After ${count(frame.passesDone, 'Pass', 'Passes')} The [Distances] Should Be Final. One More Sweep Checks For A [Negative Cycle]`,
           highlights: [highlights.distances, negativeCycle(graph)],
         };
       }
@@ -259,7 +283,7 @@ export const singleSourceExplainer =
 
         if (!frame.loop) {
           return {
-            content: `${stillImproves}. The [Negative Cycle] Check Fails So The Algorithm Cannot Give A Cheapest Path`,
+            content: `${stillImproves}. The [Negative Cycle] Check Fails Because Every Pass Lowers The Cost. No Cheapest Paths Are Possible`,
             highlights: [negativeCycle(graph)],
           };
         }
@@ -267,7 +291,7 @@ export const singleSourceExplainer =
         const lap = cost(graph, frame.loop.lapCost, frame.loop.edges);
 
         return {
-          content: `${stillImproves}. The [Negative Cycle] Check Fails So The Algorithm Cannot Give A Cheapest Path. The Cycle Costs ${lap.text}`,
+          content: `${stillImproves}. The [Negative Cycle] Check Fails So Every Pass Lowers The Cost. The Cycle Costs ${lap.text}. No Cheapest Paths Are Possible`,
           highlights: [
             negativeCycle(graph, frame.loop.edges),
             ...lap.highlights,

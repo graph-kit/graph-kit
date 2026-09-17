@@ -11,6 +11,7 @@
   import { useQueryEditor } from '../composables/useQueryEditor.ts';
   import { useProvidedSetsState } from '../sets-shell/context.ts';
   import { QueryId } from '../types.ts';
+  import QueryErrorIcon from './QueryErrorIcon.vue';
   import QueryInputModifiers from './QueryInputModifiers.vue';
   import QueryToggleHidden from './QueryToggleHidden.vue';
 
@@ -53,22 +54,19 @@
     <QueryToggleHidden :query="query" />
 
     <HStack class="relative">
-      <TooltipVue :label="errorReason">
-        <template #trigger>
-          <!-- not a v-model, since the query's latex is read only and moves through replace -->
-          <LatexInputWithPreview
-            :model-value="query.latexQueryString"
-            @update:model-value="query.editor.replace"
-            :error="hasError"
-            :preview-value="previewValue"
-            placeholder="\text{e.g. } A \cup B"
-            @mounted="editor.onMounted"
-            @unmounted="editor.onUnmounted"
-            :width="latexInputWidthPx"
-            :data-query-focus="query.id"
-          />
-        </template>
-      </TooltipVue>
+      <!-- not a v-model, since the query's latex is read only and moves through replace -->
+      <LatexInputWithPreview
+        :model-value="query.latexQueryString"
+        @update:model-value="query.editor.replace"
+        :error="hasError"
+        :preview-value="previewValue"
+        placeholder="\text{e.g. } A \cup B"
+        @mounted="editor.onMounted"
+        @unmounted="editor.onUnmounted"
+        :width="latexInputWidthPx"
+        :data-query-focus="query.id"
+      />
+      <QueryErrorIcon :error-reason="errorReason" />
       <QueryInputModifiers
         v-model="previewValue"
         :query="query"

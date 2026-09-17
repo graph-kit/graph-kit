@@ -215,8 +215,6 @@ export const singleSourceExplainer =
       // bellman-ford only
 
       case 'begin-pass': {
-        // why there are this many passes is worth a sentence, said on the only
-        // pass where the reader has not been told it yet
         if (frame.pass === 1) {
           return {
             content: `Pass 1 Of ${frame.totalPasses}. A Cheapest Path Never Repeats A Node, So ${count(frame.nodeCount, 'Node')} Means At Most ${count(frame.totalPasses, 'Edge')} And ${count(frame.totalPasses, 'Pass', 'Passes')}. Sweeping Edges In [Order]`,
@@ -239,8 +237,6 @@ export const singleSourceExplainer =
         const settled = `Pass ${frame.pass} Did Not Improve Any Costs Meaning The [Distances] Are Final`;
         const remaining = frame.totalPasses - frame.pass;
 
-        // the pass that improves nothing can be the last one, and then there is
-        // no pass left to call unnecessary
         if (remaining === 0) {
           return { content: settled, highlights: [highlights.distances] };
         }

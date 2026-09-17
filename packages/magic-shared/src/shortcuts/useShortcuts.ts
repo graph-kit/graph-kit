@@ -10,13 +10,18 @@ import { useCtrlKeys } from './useCtrlKeys.ts';
 
 const MOD = 'mod+';
 
-/** `mod` stands in for the platform's primary shortcut modifier, meta for mac, ctrl for windows */
-export type ShortcutKey = Key | `mod+${Key}`;
+/**
+ * `mod` = ⌘ on mac or ctrl on windows; `remove` = both backspace & delete
+ */
+export type ShortcutKey = Key | `mod+${Key}` | 'remove';
 
-export const resolveShortcutKey = (key: ShortcutKey) =>
-  (key.startsWith(MOD)
-    ? `${isMac() ? 'meta' : 'ctrl'}+${key.slice(MOD.length)}`
-    : key) as Key;
+export const resolveShortcutKeys = (key: ShortcutKey): Key[] => {
+  if (key === 'remove') return ['backspace', 'delete'];
+  if (key.startsWith(MOD)) {
+    return [`${isMac() ? 'meta' : 'ctrl'}+${key.slice(MOD.length)}` as Key];
+  }
+  return [key as Key];
+};
 
 export type ShortcutItem = WithHelpMenuEntry & {
   id: string;
@@ -45,14 +50,18 @@ export const useShortcuts = (): ShortcutControls => {
       return;
     }
     shortcuts.value.push(shortcut);
-    ctrlKeys.add(resolveShortcutKey(shortcut.key), shortcut.callback);
+    for (const key of resolveShortcutKeys(shortcut.key)) {
+      ctrlKeys.add(key, shortcut.callback);
+    }
   };
 
   const remove: ShortcutControls['remove'] = (id) => {
     const shortcut = shortcuts.value.find((s) => s.id === id);
     if (!shortcut) return;
     shortcuts.value = shortcuts.value.filter((s) => s.id !== id);
-    ctrlKeys.remove(resolveShortcutKey(shortcut.key), shortcut.callback);
+    for (const key of resolveShortcutKeys(shortcut.key)) {
+      ctrlKeys.remove(key, shortcut.callback);
+    }
   };
 
   const useShortcut: ShortcutControls['useShortcut'] = ({

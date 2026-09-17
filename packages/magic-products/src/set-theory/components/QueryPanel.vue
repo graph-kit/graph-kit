@@ -10,6 +10,7 @@
 
   import { useProvidedSetsState } from '../sets-shell/context.ts';
   import type { QueryId } from '../types.ts';
+  import InsertSetLabelButtons from './InsertSetLabelButtons.vue';
   import InsertSetOpButtons from './InsertSetOpButtons.vue';
   import Query from './Query.vue';
 
@@ -50,7 +51,10 @@
       :data-query-focus="focusedQueryId"
       class="p-2"
     >
-      <InsertSetOpButtons :queryId="focusedQueryId" />
+      <VStack>
+        <InsertSetLabelButtons :queryId="focusedQueryId" />
+        <InsertSetOpButtons :queryId="focusedQueryId" />
+      </VStack>
     </Well>
     <div>
       <Well

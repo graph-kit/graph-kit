@@ -14,5 +14,8 @@
   },
   "scripts": {
     "build:types": "vue-tsc -b tsconfig.json"
+  },
+  "devDependencies": {
+    "@graph/perf-harness": "workspace:*"
   }
 }

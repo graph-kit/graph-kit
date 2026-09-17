@@ -1,7 +1,7 @@
 import type { ElementMouseEvent } from '@canvas/surface/events/index';
 import { nullThrows } from '@core/utils/assert';
 import { getCtx } from '@core/utils/canvas/index';
-import { isTypingTarget } from '@core/utils/keyboard';
+import { isRemoveKey, isTypingTarget } from '@core/utils/keyboard';
 import { getValue } from '@core/utils/maybeGetter/index';
 import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import Fraction from 'fraction.js';
@@ -144,7 +144,7 @@ export const interactive =
 
     const removeFocusedElements = (e: KeyboardEvent) => {
       if (isTypingTarget(e)) return;
-      if (e.key !== 'Backspace') return;
+      if (!isRemoveKey(e)) return;
       finalActions.removeElements({
         nodes: controls.focus?.focusedNodes() ?? [],
         edges: controls.focus?.focusedEdges() ?? [],

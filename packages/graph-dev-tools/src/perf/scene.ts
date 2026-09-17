@@ -4,10 +4,6 @@
  * Without this, two measurements are never comparable: a graph laid out by hand
  * differs between browsers, between commits and between attempts, and the
  * difference shows up as noise on top of whatever is being measured.
- *
- * Sweeping N and plotting draw duration against it is the point. A constant
- * factor and a quadratic look identical at a single size, and the whole
- * question here is which of the two is being paid.
  */
 
 type SceneNode = { id: string; position: { x: number; y: number } };
@@ -24,14 +20,14 @@ export type SceneGraph = {
 };
 
 export type SceneOptions = {
-  nodes: number;
-  /** defaults to 1.5 edges per node, near what a hand drawn graph tends to be */
-  edges?: number;
-  /** world space the nodes are scattered across */
-  width?: number;
-  height?: number;
-  seed?: number;
+  nodeCount: number;
 };
+
+/** world space the nodes are scattered across */
+const SCENE_WIDTH = 1200;
+const SCENE_HEIGHT = 700;
+
+const SEED = 1;
 
 /*
   mulberry32. a real PRNG rather than Math.random because a scene that differs
@@ -48,46 +44,21 @@ const createRandom = (seed: number) => {
   };
 };
 
-export const buildScene = (
-  graph: SceneGraph,
-  {
-    nodes: nodeCount,
-    edges: edgeCount = Math.round(nodeCount * 1.5),
-    width = 1200,
-    height = 700,
-    seed = 1,
-  }: SceneOptions,
-) => {
-  const random = createRandom(seed);
+export const buildScene = (graph: SceneGraph, { nodeCount }: SceneOptions) => {
+  const random = createRandom(SEED);
 
   const nodes: SceneNode[] = Array.from({ length: nodeCount }, (_, index) => ({
     id: `perf-node-${index}`,
     position: {
-      x: Math.round(random() * width),
-      y: Math.round(random() * height),
+      x: Math.round(random() * SCENE_WIDTH),
+      y: Math.round(random() * SCENE_HEIGHT),
     },
   }));
 
   const edges: SceneEdge[] = [];
 
-  /*
-    every node past the first gets one edge to an earlier node, so the graph is
-    connected and no node renders as an isolated dot. the remainder is scattered
-    at random, which is what produces the crossings and shared endpoints that
-    the edge geometry code actually pays for
-  */
-  for (let index = 1; index < nodeCount && edges.length < edgeCount; index++) {
-    edges.push({
-      source: nodes[Math.floor(random() * index)].id,
-      target: nodes[index].id,
-    });
-  }
-
-  while (edges.length < edgeCount && nodeCount > 1) {
-    const source = nodes[Math.floor(random() * nodeCount)];
-    const target = nodes[Math.floor(random() * nodeCount)];
-    if (source.id === target.id) continue;
-    edges.push({ source: source.id, target: target.id });
+  for (let i = 0; i + 1 < nodeCount; i++) {
+    edges.push({ source: nodes[i].id, target: nodes[i + 1].id });
   }
 
   graph.actions.addElements({ nodes, edges });

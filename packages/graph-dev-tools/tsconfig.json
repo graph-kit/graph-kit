@@ -4,5 +4,6 @@
     "outDir": "./dist/types",
     "rootDir": "./src"
   },
+  "references": [{ "path": "../perf-harness" }],
   "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

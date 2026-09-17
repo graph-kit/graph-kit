@@ -1,0 +1,174 @@
+name: Canvas Call Counter
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: pull request number to count canvas calls on
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  count:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request != null &&
+       startsWith(github.event.comment.body, '/canvas-calls') &&
+       contains(fromJSON('["OWNER","COLLABORATOR","MEMBER"]'), github.event.comment.author_association))
+
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+
+    env:
+      PR_NUMBER: ${{ github.event.issue.number || inputs.pr }}
+      GH_TOKEN: ${{ github.token }}
+      PORT: 3000
+      APP_URL: http://localhost:3000
+
+    steps:
+      - name: React to the /canvas-calls comment
+        if: github.event_name == 'issue_comment'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });
+
+      - name: Check out the harness
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Chromium
+        run: pnpm --filter @graph/perf-harness exec playwright install --with-deps chromium
+
+      # head is GitHub's preview of main with this pull request merged in, and base
+      # is the main commit that preview was built on
+      - name: Find the merge preview and its base
+        run: |
+          git fetch -q origin "refs/pull/$PR_NUMBER/merge"
+
+          {
+            echo "HEAD_SHA=$(git rev-parse FETCH_HEAD)"
+            echo "BASE_SHA=$(git rev-parse FETCH_HEAD^1)"
+          } >> "$GITHUB_ENV"
+
+      - name: Count calls with the pull request merged
+        run: .github/scripts/count-canvas-calls.sh "$HEAD_SHA" "$GITHUB_WORKSPACE/head.json"
+
+      - name: Count calls on the base
+        run: .github/scripts/count-canvas-calls.sh "$BASE_SHA" "$GITHUB_WORKSPACE/base.json"
+
+      - name: Build the report
+        run: |
+          pnpm --filter @graph/perf-harness run report \
+            --head "$GITHUB_WORKSPACE/head.json" \
+            --base "$GITHUB_WORKSPACE/base.json" > report.md
+
+      - name: Post the report to the pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { readFileSync } = require('node:fs');
+            const body = readFileSync('report.md', 'utf8');
+            const marker = '<!-- graph-kit-canvas-call-report -->';
+
+            const issue_number = Number(process.env.PR_NUMBER);
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number },
+            );
+
+            // one comment per pull request, edited in place, so pinging four
+            // times leaves one current answer rather than four stale ones
+            const existing = comments.find((comment) =>
+              comment.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Post the failure to the pull request
+        if: failure() && github.event_name == 'issue_comment'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- graph-kit-canvas-call-report -->';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const body = [
+              marker,
+              '## 🎨 Canvas Calls Per Frame',
+              '',
+              `The run failed. [Logs](${run}).`,
+            ].join('\n');
+
+            const issue_number = Number(process.env.PR_NUMBER);
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number },
+            );
+
+            const existing = comments.find((comment) =>
+              comment.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }

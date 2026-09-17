@@ -1,17 +1,8 @@
 /**
- * Opt in performance tooling for the canvas render loop.
+ * Performance tooling for the canvas render loop, driven by the perf harness.
  *
- * Strictly opt in, like the getters audit next door: start and stop it yourself,
- * nothing wires it in for you. Meant to be driven from the console during a
- * profiling session, or from a driver script if the numbers ever get automated.
- *
- * @example
- * // in a product's setup, behind import.meta.env.DEV
- * startPerfTools(graph, graph.surface.magicCanvas.lifecycleEvents);
- *
- * // then, in the console
- * __graphPerf.scene({ nodes: 25 })
- * __graphPerf.report()
+ * Registers itself on a global so the harness can reach it through
+ * `page.evaluate` without the app exposing anything else.
  */
 import {
   type CtxCounter,
@@ -36,12 +27,10 @@ export type PerfTools = {
   /** build a deterministic graph of a given size to measure against */
   scene: (options: SceneOptions) => void;
   /**
-   * start tallying canvas calls. left off by default: the patching it does adds
-   * overhead to every draw, so timings taken with it running are not comparable
-   * to timings taken without it. measure one at a time
+   * start tallying canvas calls. left off until asked for, since the patching
+   * it does adds overhead to every draw in every dev session
    */
   countCalls: () => void;
-  /** current numbers, also logged to the console for a profiling session */
   report: () => PerfReport;
   /** drop every sample collected so far. call after changing the scene */
   reset: () => void;
@@ -55,28 +44,6 @@ export const startPerfTools = (
   const timing = startFrameTimingRecorder(repaintEvents);
   let counter: CtxCounter | undefined;
 
-  const report = (): PerfReport => {
-    const result: PerfReport = {
-      timing: timing.stats(),
-      calls: counter?.snapshot(),
-    };
-
-    console.table({
-      'fps (from median interval)': result.timing.medianFps.toFixed(1),
-      'interval p50 (ms)': result.timing.frameIntervalMs.p50.toFixed(2),
-      'interval p95 (ms)': result.timing.frameIntervalMs.p95.toFixed(2),
-      'draw p50 (ms)': result.timing.drawDurationMs.p50.toFixed(2),
-      'draw p95 (ms)': result.timing.drawDurationMs.p95.toFixed(2),
-      'draw max (ms)': result.timing.drawDurationMs.max.toFixed(2),
-      'dropped frames': result.timing.droppedFrameCount,
-      frames: result.timing.frameCount,
-    });
-
-    if (result.calls) console.table(result.calls.perFrame);
-
-    return result;
-  };
-
   const tools: PerfTools = {
     scene: (options) => {
       buildScene(graph, options);
@@ -87,7 +54,10 @@ export const startPerfTools = (
       if (counter) return;
       counter = startCtxCounter(repaintEvents);
     },
-    report,
+    report: () => ({
+      timing: timing.stats(),
+      calls: counter?.snapshot(),
+    }),
     reset: () => {
       timing.reset();
       counter?.reset();
@@ -99,7 +69,6 @@ export const startPerfTools = (
     },
   };
 
-  // reachable from a console or a driver script without threading a ref anywhere
   (globalThis as Record<string, unknown>)[PERF_TOOLS_GLOBAL] = tools;
 
   return tools;

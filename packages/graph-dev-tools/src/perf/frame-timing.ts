@@ -42,9 +42,6 @@ export type FrameTimingStats = {
 const SAMPLE_CAPACITY = 300;
 const DROPPED_FRAME_THRESHOLD = 1.5;
 
-const MARK_START = 'magic-graph:repaint-start';
-const MEASURE_REPAINT = 'magic-graph:repaint';
-
 const summarize = (samples: number[]): TimingSummary => ({
   p50: percentile(samples, 0.5),
   p95: percentile(samples, 0.95),
@@ -91,23 +88,11 @@ export const startFrameTimingRecorder = (
     }
 
     previousRepaintStartedAt = repaintStartedAt;
-    performance.mark(MARK_START);
   };
 
   const onAfterRepaint = () => {
     record(draws, performance.now() - repaintStartedAt);
     frames++;
-
-    /*
-      the measure is what puts a labelled band on the timeline in safari's
-      timelines tab and the firefox profiler, so the same instrumentation
-      serves hand profiling and the numbers below. clearing straight after
-      keeps the entry buffer from growing without bound over a long session:
-      profilers capture the entry when it is created, so nothing is lost
-    */
-    performance.measure(MEASURE_REPAINT, MARK_START);
-    performance.clearMarks(MARK_START);
-    performance.clearMeasures(MEASURE_REPAINT);
   };
 
   events.subscribe('onBeforeRepaint', onBeforeRepaint);

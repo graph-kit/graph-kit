@@ -13,7 +13,6 @@ export type PerfReport = {
   };
   calls?: {
     frames: number;
-    total: PerfCounts;
     perFrame: PerfCounts;
   };
 };

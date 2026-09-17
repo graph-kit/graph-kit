@@ -4,10 +4,6 @@
  * Without this, two measurements are never comparable: a graph laid out by hand
  * differs between browsers, between commits and between attempts, and the
  * difference shows up as noise on top of whatever is being measured.
- *
- * Sweeping N and plotting draw duration against it is the point. A constant
- * factor and a quadratic look identical at a single size, and the whole
- * question here is which of the two is being paid.
  */
 
 type SceneNode = { id: string; position: { x: number; y: number } };
@@ -25,13 +21,16 @@ export type SceneGraph = {
 
 export type SceneOptions = {
   nodes: number;
-  /** defaults to 1.5 edges per node, near what a hand drawn graph tends to be */
-  edges?: number;
-  /** world space the nodes are scattered across */
-  width?: number;
-  height?: number;
-  seed?: number;
 };
+
+/** near what a hand drawn graph tends to be */
+const EDGES_PER_NODE = 1.5;
+
+/** world space the nodes are scattered across */
+const SCENE_WIDTH = 1200;
+const SCENE_HEIGHT = 700;
+
+const SEED = 1;
 
 /*
   mulberry32. a real PRNG rather than Math.random because a scene that differs
@@ -50,21 +49,16 @@ const createRandom = (seed: number) => {
 
 export const buildScene = (
   graph: SceneGraph,
-  {
-    nodes: nodeCount,
-    edges: edgeCount = Math.round(nodeCount * 1.5),
-    width = 1200,
-    height = 700,
-    seed = 1,
-  }: SceneOptions,
+  { nodes: nodeCount }: SceneOptions,
 ) => {
-  const random = createRandom(seed);
+  const edgeCount = Math.round(nodeCount * EDGES_PER_NODE);
+  const random = createRandom(SEED);
 
   const nodes: SceneNode[] = Array.from({ length: nodeCount }, (_, index) => ({
     id: `perf-node-${index}`,
     position: {
-      x: Math.round(random() * width),
-      y: Math.round(random() * height),
+      x: Math.round(random() * SCENE_WIDTH),
+      y: Math.round(random() * SCENE_HEIGHT),
     },
   }));
 

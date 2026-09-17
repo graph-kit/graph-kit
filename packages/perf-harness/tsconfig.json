@@ -5,5 +5,6 @@
     "rootDir": "./src",
     "types": ["node"]
   },
+  "references": [{ "path": "../core-utils" }],
   "include": ["src/**/*.ts"]
 }

@@ -1,4 +1,4 @@
-name: perf bot
+name: Canvas Call Counter
 
 on:
   issue_comment:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       pr:
-        description: pull request number to measure
+        description: pull request number to count canvas calls on
         required: true
 
 permissions:
@@ -14,11 +14,11 @@ permissions:
   pull-requests: write
 
 jobs:
-  measure:
+  count:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request != null &&
-       startsWith(github.event.comment.body, '/perf') &&
+       startsWith(github.event.comment.body, '/canvas-calls') &&
        contains(fromJSON('["OWNER","COLLABORATOR","MEMBER"]'), github.event.comment.author_association))
 
     runs-on: ubuntu-22.04
@@ -28,13 +28,10 @@ jobs:
       PR_NUMBER: ${{ github.event.issue.number || inputs.pr }}
       GH_TOKEN: ${{ github.token }}
       PORT: 3000
-      PERF_URL: http://localhost:3000
-      # the second server starts where the first one just stopped, and nuxt
-      # holds a dev lock that outlives the process by a moment
-      NUXT_IGNORE_LOCK: 1
+      APP_URL: http://localhost:3000
 
     steps:
-      - name: acknowledge the ping
+      - name: React to the /canvas-calls comment
         if: github.event_name == 'issue_comment'
         uses: actions/github-script@v7
         with:
@@ -46,76 +43,62 @@ jobs:
               content: 'eyes',
             });
 
-      - uses: actions/checkout@v4
+      - name: Check out the harness
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: cache browsers
+      - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - run: pnpm --filter @graph/perf-harness exec playwright install --with-deps chromium
+      - name: Install Chromium
+        run: pnpm --filter @graph/perf-harness exec playwright install --with-deps chromium
 
-      # measure the pull request merged into its base, so branches predating
-      # window.__graphPerf still pick it up
-      - name: resolve what to measure
+      # head is GitHub's preview of main with this pull request merged in, and base
+      # is the main commit that preview was built on
+      - name: Find the merge preview and its base
         run: |
-          BASE_REF="$(gh pr view "$PR_NUMBER" --json baseRefName --jq .baseRefName)"
-          git fetch -q origin "refs/pull/$PR_NUMBER/merge" || true
-
-          if git rev-parse -q --verify FETCH_HEAD > /dev/null; then
-            HEAD_SHA="$(git rev-parse FETCH_HEAD)"
-            echo "measuring the pull request merged into $BASE_REF"
-          else
-            # closed, conflicted, or otherwise unmergeable: fall back to the
-            # branch itself and let the harness say if it cannot be measured
-            HEAD_SHA="$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)"
-            echo "no merge ref for #$PR_NUMBER, falling back to its head"
-          fi
+          git fetch -q origin "refs/pull/$PR_NUMBER/merge"
 
           {
-            echo "HEAD_SHA=$HEAD_SHA"
-            echo "BASE_SHA=$(git rev-parse "origin/$BASE_REF")"
+            echo "HEAD_SHA=$(git rev-parse FETCH_HEAD)"
+            echo "BASE_SHA=$(git rev-parse FETCH_HEAD^1)"
           } >> "$GITHUB_ENV"
 
-      - name: measure the pull request
-        run: .github/scripts/measure-commit.sh "$HEAD_SHA" "$GITHUB_WORKSPACE/head.json"
+      - name: Count calls with the pull request merged
+        run: .github/scripts/count-canvas-calls.sh "$HEAD_SHA" "$GITHUB_WORKSPACE/head.json"
 
-      - name: measure the base
-        run: .github/scripts/measure-commit.sh "$BASE_SHA" "$GITHUB_WORKSPACE/base.json"
-        continue-on-error: true
+      - name: Count calls on the base
+        run: .github/scripts/count-canvas-calls.sh "$BASE_SHA" "$GITHUB_WORKSPACE/base.json"
 
-      - name: render the report
+      - name: Build the report
         run: |
-          if [ -f base.json ]; then
-            pnpm --filter @graph/perf-harness run report \
-              --head "$GITHUB_WORKSPACE/head.json" \
-              --base "$GITHUB_WORKSPACE/base.json" > report.md
-          else
-            pnpm --filter @graph/perf-harness run report \
-              --head "$GITHUB_WORKSPACE/head.json" > report.md
-            echo "" >> report.md
-            echo "_The base could not be measured, so there is nothing to compare against._" >> report.md
-          fi
+          pnpm --filter @graph/perf-harness run report \
+            --head "$GITHUB_WORKSPACE/head.json" \
+            --base "$GITHUB_WORKSPACE/base.json" > report.md
 
-      - name: post the report
+      - name: Post the report to the pull request
         uses: actions/github-script@v7
         with:
           script: |
             const { readFileSync } = require('node:fs');
             const body = readFileSync('report.md', 'utf8');
-            const marker = '<!-- magic-graphs-perf-bot -->';
+            const marker = '<!-- graph-kit-canvas-call-report -->';
 
             const issue_number = Number(process.env.PR_NUMBER);
             const { owner, repo } = context.repo;
@@ -147,19 +130,19 @@ jobs:
               });
             }
 
-      - name: report the failure
+      - name: Post the failure to the pull request
         if: failure() && github.event_name == 'issue_comment'
         uses: actions/github-script@v7
         with:
           script: |
-            const marker = '<!-- magic-graphs-perf-bot -->';
+            const marker = '<!-- graph-kit-canvas-call-report -->';
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
             const body = [
               marker,
-              '### canvas perf',
+              '## 🎨 Canvas Calls Per Frame',
               '',
-              `The run failed before it could measure anything. [Logs](${run}).`,
+              `The run failed. [Logs](${run}).`,
             ].join('\n');
 
             const issue_number = Number(process.env.PR_NUMBER);

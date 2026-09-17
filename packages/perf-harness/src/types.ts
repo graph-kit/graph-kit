@@ -1,43 +1,41 @@
-/** canvas context method name (e.g. `fillRect`) to how many times it was called */
-type PerfCounts = Record<string, number>;
+/** one repaint's canvas calls keyed by call name, e.g. `fillRect` or `canvasElementsCreated` */
+export type FrameCalls = Record<string, number>;
 
-type TimingSummary = { p50: number; p95: number; max: number };
-
-export type PerfReport = {
-  timing: {
-    frameCount: number;
-    frameIntervalMs: TimingSummary;
-    drawDurationMs: TimingSummary;
-    droppedFrameCount: number;
-    medianFps: number;
-  };
-  calls?: {
-    frames: number;
-    total: PerfCounts;
-    perFrame: PerfCounts;
-  };
+export type CanvasCallCounter = {
+  /** starts recording each repaint's calls */
+  start: () => void;
+  /** each repaint since {@link CanvasCallCounter.start}, oldest first */
+  get: () => FrameCalls[] | undefined;
 };
 
-export type PerfTools = {
-  scene: (options: { nodes: number }) => void;
-  countCalls: () => void;
-  report: () => PerfReport;
-  reset: () => void;
+export type CanvasScene = {
+  /** move the cursor across the canvas while measuring, defaults to `false` */
+  sweepCursor?: boolean;
+  /** adds the scene to the page */
+  build: () => void;
 };
 
-export type ScenarioResult = {
-  scenario: string;
-  nodes: number;
-  /** repaints observed during the measuring window */
-  frames: number;
-  /** canvas calls per frame, the number this whole thing exists to produce */
-  perFrame: PerfCounts;
-  timing: PerfReport['timing'];
+/** what the app registers on `window.__canvasCallProbe` for the harness to drive */
+export type CanvasCallProbe = {
+  /** the scenes this app can build, keyed by name */
+  scenes: Record<string, CanvasScene>;
+  counter: CanvasCallCounter;
+};
+
+declare global {
+  interface Window {
+    __canvasCallProbe?: CanvasCallProbe;
+  }
+}
+
+export type SceneResult = {
+  scene: string;
+  frames: FrameCalls[];
 };
 
 export type RunResult = {
   /** commit the measured server was serving */
   commit: string;
   measuredAt: string;
-  scenarios: ScenarioResult[];
+  scenes: SceneResult[];
 };

@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-REF="${1:?usage: measure-commit.sh <ref> <output.json>}"
-OUTPUT="${2:?usage: measure-commit.sh <ref> <output.json>}"
+REF="${1:?usage: count-canvas-calls.sh <ref> <output.json>}"
+OUTPUT="${2:?usage: count-canvas-calls.sh <ref> <output.json>}"
 
 WORKSPACE="${GITHUB_WORKSPACE:-$(pwd)}"
 WORKTREE="$(mktemp -d)/under-test"
@@ -11,8 +11,7 @@ LOG="$(mktemp)"
 
 cleanup() {
   pkill -f "nuxt.mjs dev" || true
-  # the dev lock outlives the process by a moment and the next server is
-  # already on its way in
+  # give the port a moment to free up before the next server takes it
   sleep 2
   git -C "$WORKSPACE" worktree remove --force "$WORKTREE" || true
 }
@@ -26,7 +25,7 @@ echo "::endgroup::"
 
 echo "::group::serving $REF"
 pnpm --filter client dev > "$LOG" 2>&1 &
-if ! "$WORKSPACE/.github/scripts/wait-for-server.sh" "$PERF_URL"; then
+if ! "$WORKSPACE/.github/scripts/wait-for-server.sh" "$APP_URL"; then
   echo "server never came up. last of its output:" >&2
   tail -40 "$LOG" >&2
   exit 1
@@ -35,6 +34,6 @@ echo "::endgroup::"
 
 cd "$WORKSPACE"
 pnpm --filter @graph/perf-harness run measure \
-  --url "$PERF_URL" \
+  --url "$APP_URL" \
   --out "$OUTPUT" \
   --commit "$(git -C "$WORKTREE" rev-parse HEAD)"

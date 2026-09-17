@@ -113,7 +113,7 @@ export const allPairsExplainer =
         }
 
         return {
-          content: `The Detour Is Not Cheaper, So The Cost For {${frame.from}} To {${frame.to}} [Remains] At ${keptCost.text}`,
+          content: `The Detour Is Not Cheaper, So The Cost From {${frame.from}} To {${frame.to}} [Remains] At ${keptCost.text}`,
           highlights: [highlights.keep, ...keptCost.highlights],
         };
       }

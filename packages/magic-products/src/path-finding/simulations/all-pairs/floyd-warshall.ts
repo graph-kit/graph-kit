@@ -192,11 +192,6 @@ export const floydWarshall: AllPairsFunction = (graph) => (frameCollector) => {
       }
     }
 
-    /*
-      a phase that shows nothing would otherwise read as one question followed
-      by the next, so say why this node earned no pairs. nothing improved, so
-      the matrix still holds what it did when the phase opened
-    */
     if (pairsShown === 0) {
       frameCollector.add(
         frame({

@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
 
+import { nullThrows } from '@core/utils/assert';
+
 import type { RunResult, ScenarioResult } from './types.ts';
 
 /** lets the workflow find its own comment again instead of posting a new one */
@@ -199,9 +201,7 @@ const main = async () => {
     },
   });
 
-  if (!values.head) throw new Error('--head is required');
-
-  const head = await readRun(values.head);
+  const head = await readRun(nullThrows(values.head, '--head is required'));
   const base = values.base ? await readRun(values.base) : undefined;
 
   process.stdout.write(render(head, base));

@@ -8,6 +8,9 @@
     "report": "tsx src/report.ts",
     "build:types": "vue-tsc -b tsconfig.json"
   },
+  "dependencies": {
+    "@core/utils": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^24.2.1",
     "playwright": "^1.56.0",

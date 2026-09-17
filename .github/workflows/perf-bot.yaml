@@ -68,7 +68,7 @@ jobs:
       - run: pnpm --filter @graph/perf-harness exec playwright install --with-deps chromium
 
       # measure the pull request merged into its base, so branches predating
-      # window.__graphPerf still pick it up
+      # window.__canvasCallProbe still pick it up
       - name: resolve what to measure
         run: |
           BASE_REF="$(gh pr view "$PR_NUMBER" --json baseRefName --jq .baseRefName)"
@@ -94,20 +94,12 @@ jobs:
 
       - name: measure the base
         run: .github/scripts/measure-commit.sh "$BASE_SHA" "$GITHUB_WORKSPACE/base.json"
-        continue-on-error: true
 
       - name: render the report
         run: |
-          if [ -f base.json ]; then
-            pnpm --filter @graph/perf-harness run report \
-              --head "$GITHUB_WORKSPACE/head.json" \
-              --base "$GITHUB_WORKSPACE/base.json" > report.md
-          else
-            pnpm --filter @graph/perf-harness run report \
-              --head "$GITHUB_WORKSPACE/head.json" > report.md
-            echo "" >> report.md
-            echo "_The base could not be measured, so there is nothing to compare against._" >> report.md
-          fi
+          pnpm --filter @graph/perf-harness run report \
+            --head "$GITHUB_WORKSPACE/head.json" \
+            --base "$GITHUB_WORKSPACE/base.json" > report.md
 
       - name: post the report
         uses: actions/github-script@v7
@@ -115,7 +107,7 @@ jobs:
           script: |
             const { readFileSync } = require('node:fs');
             const body = readFileSync('report.md', 'utf8');
-            const marker = '<!-- magic-graphs-perf-bot -->';
+            const marker = '<!-- graph-kit-canvas-performance-report -->';
 
             const issue_number = Number(process.env.PR_NUMBER);
             const { owner, repo } = context.repo;
@@ -152,14 +144,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const marker = '<!-- magic-graphs-perf-bot -->';
+            const marker = '<!-- graph-kit-canvas-performance-report -->';
             const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
             const body = [
               marker,
               '### canvas perf',
               '',
-              `The run failed before it could measure anything. [Logs](${run}).`,
+              `The run failed. [Logs](${run}).`,
             ].join('\n');
 
             const issue_number = Number(process.env.PR_NUMBER);

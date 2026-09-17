@@ -8,6 +8,7 @@
  * canvases are counted too. That matters here: offscreen allocation is the
  * suspected primary cost and it is close to invisible in a sampling profile.
  */
+import type { FrameCalls } from '@graph/perf-harness/types';
 
 export type RepaintEvents = {
   subscribe: (event: 'onBeforeRepaint', callback: () => void) => void;
@@ -17,17 +18,8 @@ export type RepaintEvents = {
 /** how many canvas elements were created, keyed alongside the ctx call names */
 export const CANVAS_ELEMENTS_CREATED = 'canvasElementsCreated';
 
-export type CtxCounts = Record<string, number>;
-
-export type CtxCounterSnapshot = {
-  frames: number;
-  /** calls since the last reset divided by frames */
-  perFrame: CtxCounts;
-};
-
 export type CtxCounter = {
-  snapshot: () => CtxCounterSnapshot;
-  reset: () => void;
+  frames: () => FrameCalls[];
   stop: () => void;
 };
 
@@ -38,11 +30,12 @@ const methodNamesOf = (prototype: object) =>
   });
 
 export const startCtxCounter = (events: RepaintEvents): CtxCounter => {
-  const total: CtxCounts = {};
-  let frames = 0;
+  const frames: FrameCalls[] = [];
 
   const count = (name: string) => {
-    total[name] = (total[name] ?? 0) + 1;
+    const frame = frames.at(-1);
+    if (!frame) return;
+    frame[name] = (frame[name] ?? 0) + 1;
   };
 
   const prototype = CanvasRenderingContext2D.prototype;
@@ -71,25 +64,11 @@ export const startCtxCounter = (events: RepaintEvents): CtxCounter => {
     return (originalCreateElement as any).call(this, tagName, ...rest);
   } as typeof document.createElement;
 
-  const onBeforeRepaint = () => frames++;
+  const onBeforeRepaint = () => frames.push({});
   events.subscribe('onBeforeRepaint', onBeforeRepaint);
 
-  const snapshot = (): CtxCounterSnapshot => {
-    const perFrame: CtxCounts = {};
-
-    for (const [name, calls] of Object.entries(total)) {
-      perFrame[name] = frames === 0 ? 0 : calls / frames;
-    }
-
-    return { frames, perFrame };
-  };
-
   return {
-    snapshot,
-    reset: () => {
-      for (const name of Object.keys(total)) delete total[name];
-      frames = 0;
-    },
+    frames: () => frames,
     stop: () => {
       for (const [name, original] of originalMethods) {
         (prototype as unknown as Record<string, any>)[name] = original;

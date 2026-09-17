@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./types": {
+      "types": "./dist/types/types.d.ts",
+      "default": "./src/types.ts"
+    }
+  },
   "scripts": {
     "measure": "tsx src/run.ts",
     "report": "tsx src/report.ts",

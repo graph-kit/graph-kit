@@ -15,7 +15,7 @@ type WithTimeoutOptions<Result> = {
   failureMessage: string;
 };
 
-/** turns a hang into a failure that says which scenario and how long it waited */
+/** turns a hang into a failure that says which scene and how long it waited */
 export const withTimeout = async <Result>({
   task,
   timeoutMs,

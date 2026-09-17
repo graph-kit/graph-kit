@@ -20,11 +20,8 @@ export type SceneGraph = {
 };
 
 export type SceneOptions = {
-  nodes: number;
+  nodeCount: number;
 };
-
-/** near what a hand drawn graph tends to be */
-const EDGES_PER_NODE = 1.5;
 
 /** world space the nodes are scattered across */
 const SCENE_WIDTH = 1200;
@@ -47,11 +44,7 @@ const createRandom = (seed: number) => {
   };
 };
 
-export const buildScene = (
-  graph: SceneGraph,
-  { nodes: nodeCount }: SceneOptions,
-) => {
-  const edgeCount = Math.round(nodeCount * EDGES_PER_NODE);
+export const buildScene = (graph: SceneGraph, { nodeCount }: SceneOptions) => {
   const random = createRandom(SEED);
 
   const nodes: SceneNode[] = Array.from({ length: nodeCount }, (_, index) => ({
@@ -64,24 +57,8 @@ export const buildScene = (
 
   const edges: SceneEdge[] = [];
 
-  /*
-    every node past the first gets one edge to an earlier node, so the graph is
-    connected and no node renders as an isolated dot. the remainder is scattered
-    at random, which is what produces the crossings and shared endpoints that
-    the edge geometry code actually pays for
-  */
-  for (let index = 1; index < nodeCount && edges.length < edgeCount; index++) {
-    edges.push({
-      source: nodes[Math.floor(random() * index)].id,
-      target: nodes[index].id,
-    });
-  }
-
-  while (edges.length < edgeCount && nodeCount > 1) {
-    const source = nodes[Math.floor(random() * nodeCount)];
-    const target = nodes[Math.floor(random() * nodeCount)];
-    if (source.id === target.id) continue;
-    edges.push({ source: source.id, target: target.id });
+  for (let i = 0; i + 1 < nodeCount; i++) {
+    edges.push({ source: nodes[i].id, target: nodes[i + 1].id });
   }
 
   graph.actions.addElements({ nodes, edges });

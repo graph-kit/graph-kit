@@ -285,7 +285,11 @@ importers:
         specifier: ^10.2.0
         version: 10.2.1(typescript@6.0.3)
 
-  packages/graph-dev-tools: {}
+  packages/graph-dev-tools:
+    devDependencies:
+      '@graph/perf-harness':
+        specifier: workspace:*
+        version: link:../perf-harness
 
   packages/graph-plugins:
     dependencies:

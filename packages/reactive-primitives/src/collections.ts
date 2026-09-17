@@ -1,24 +1,11 @@
 import { signal } from 'alien-signals';
 
-/**
- * reactive Map and Set. one version signal per collection, so any write
- * invalidates every reader of that collection.
- *
- * per key tracking would be additive, not a replacement: size and iteration
- * still need a collection wide signal, and every key signal needs a lifecycle
- * for reads that miss.
- */
-
 const createVersion = () => {
   const version = signal(0);
-  // held outside the signal so bumping never reads it, which would self
-  // subscribe if a mutation ever ran inside a derivation
   let revision = 0;
 
   return {
-    track: () => {
-      version();
-    },
+    track: () => version(),
     bump: () => version(++revision),
   };
 };

@@ -60,7 +60,7 @@ export const singleSourceExplainer =
     switch (frame.type) {
       case 'start':
         return {
-          content: `Starting At {${frame.source}}. Every Other Node Starts At A [Distance] Of ∞`,
+          content: `Starting At {${frame.source}}. Every Other [Distance] Starts At ∞`,
           highlights: [highlights.distances],
         };
 
@@ -81,12 +81,12 @@ export const singleSourceExplainer =
         };
 
       case 'safe-to-settle': {
-        const mustPass = `Every New Path To {${frame.node}} Must Leave Through The [Frontier].`;
+        const settling = cost(graph, frame.distance, frame.path);
 
         if (frame.runnerUp === undefined) {
           return {
-            content: `${mustPass} There Are No Other Paths To {${frame.node}} That Are Cheaper`,
-            highlights: [highlights.frontier],
+            content: `{${frame.node}} Is The Only Node Left On The [Frontier], So No Other Paths Can Be Cheaper Than ${settling.text}`,
+            highlights: [highlights.frontier, ...settling.highlights],
           };
         }
 
@@ -95,16 +95,14 @@ export const singleSourceExplainer =
           frame.runnerUp.distance,
           frame.runnerUp.path,
         );
-        const settling = cost(graph, frame.distance, frame.path);
 
         return {
-          content: `${mustPass} The Cheapest non-{${frame.node}} [Frontier] Node Is {${frame.runnerUp.node}} Costing ${runnerUp.text}. No Path Can Reach {${frame.node}} For Less Than ${settling.text}`,
+          content: `{${frame.node}} Is The Cheapest Node On The [Frontier] At ${settling.text}. Any Other Path To It Would Cost At Least ${runnerUp.text} Through {${frame.runnerUp.node}}`,
           // one per [Frontier] mention, then one per cost, in the order said
           highlights: [
             highlights.frontier,
-            highlights.frontier,
-            ...runnerUp.highlights,
             ...settling.highlights,
+            ...runnerUp.highlights,
           ],
         };
       }
@@ -113,45 +111,31 @@ export const singleSourceExplainer =
         const settled = cost(graph, frame.distance, frame.path);
 
         return {
-          content: `{${frame.node}} Becomes [Finalized] With A Cost Of ${settled.text}`,
+          content: `{${frame.node}} Is Now [Finalized] At ${settled.text}`,
           highlights: [highlights.finalized, ...settled.highlights],
         };
       }
 
       case 'still-tentative': {
-        const held = frame.waiting.map((entry) => ({
-          node: entry.node,
-          shown: cost(graph, entry.distance, entry.path),
-        }));
         const via = cost(graph, frame.via.distance, frame.via.path);
 
-        const waiting = [
-          listOf(held.map(({ node }) => `{${node}}`)),
-          `With Cost${held.length === 1 ? '' : 's'}`,
-          listOf(held.map(({ shown }) => shown.text)),
-          held.length === 1 ? '' : 'Respectively',
-        ]
-          .filter(Boolean)
-          .join(' ');
+        const waiting = listOf(frame.waiting.map(({ node }) => `{${node}}`));
+        const many = frame.waiting.length > 1;
 
         return {
-          content: `${waiting} Cannot Yet Be [Finalized]. {${frame.via.node}} Costs ${via.text} To Reach, Which Is Cheaper, So A Path From {${frame.via.node}} Could Be Cheaper`,
-          highlights: [
-            ...held.flatMap(({ shown }) => shown.highlights),
-            highlights.finalized,
-            ...via.highlights,
-          ],
+          content: `${waiting} ${many ? 'Cost' : 'Costs'} More Than ${via.text}, So A Path Through {${frame.via.node}} Could Still Reach ${many ? 'Them' : 'It'} For Less Than ${many ? 'Their' : 'Its'} Current Cost. ${many ? 'They Are' : 'It Is'} Not Yet [Finalized]`,
+          highlights: [...via.highlights, highlights.finalized],
         };
       }
 
       case 'explore-node': {
         if (frame.edges.length === 0) {
           return {
-            content: `{${frame.node}} Has No Outbound Edges, So Pathing Through It Cannot Improve Any Cost`,
+            content: `{${frame.node}} Has No Outbound Edges, So No Path Can Continue Through It`,
           };
         }
 
-        const follow = `{${frame.node}} Has [${frame.edges.length} Edges] To Un-Finalized Nodes`;
+        const follow = `{${frame.node}} Has [${count(frame.edges.length, 'Edge')}] Leading To Nodes That Are Not Finalized`;
 
         const followHighlights = [createEdgeSetHighlight(graph, frame.edges)];
 
@@ -163,29 +147,26 @@ export const singleSourceExplainer =
           };
         }
 
-        const edgesReached = listOf(
-          frame.edges.map((edge) => `{${graph.getEdge(edge).target}}`),
-        );
-
         const initial = cost(graph, frame.distance, frame.basePath);
 
         return {
-          content: `${follow}. Pathing Through {${frame.node}} With An Initial Cost Of ${initial.text} May Reduce The Current Cost To ${edgesReached}`,
+          content: `${follow}. Every Path Out Of {${frame.node}} Starts At An Initial Cost Of ${initial.text}`,
           highlights: [...followHighlights, ...initial.highlights],
         };
       }
 
-      case 'relax-edge':
+      case 'relax-edge': {
         return {
           content: `Pathing Through {${frame.edge}} Costs <${graph.getEdge(frame.edge).weight}>`,
         };
+      }
 
       case 'improve-distance': {
         const improved = cost(graph, frame.newDistance, frame.newPath);
 
         if (frame.oldDistance === undefined) {
           return {
-            content: `Nothing Has Reached {${frame.node}} Before, So Its Distance [Improves] From ∞ To ${improved.text}`,
+            content: `Nothing Has Reached {${frame.node}} Yet, So Its Distance [Improves] From ∞ To ${improved.text}`,
             highlights: [highlights.improve, ...improved.highlights],
           };
         }
@@ -193,7 +174,7 @@ export const singleSourceExplainer =
         const had = cost(graph, frame.oldDistance, frame.oldPath);
 
         return {
-          content: `{${frame.node}} Currently Costs ${had.text}. Going Through {${frame.via}} Is Cheaper Costing ${improved.text}, So Its Distance [Improves]`,
+          content: `{${frame.node}} Currently Costs ${had.text}. Going Through {${frame.via}} Costs ${improved.text}. Its Distance [Improves]`,
           highlights: [
             ...had.highlights,
             ...improved.highlights,
@@ -203,11 +184,9 @@ export const singleSourceExplainer =
       }
 
       case 'keep-distance': {
-        // no route behind the offer means it doubled back into the very node
-        // it was headed for, so there is no trip to put a cost against
         if (frame.offeredPath.length === 0) {
           return {
-            content: `Following {${frame.edge}} Would Visit {${frame.node}} Twice, Adding Cost For No Progress. The Current Cost [Remains]`,
+            content: `{${frame.edge}} Doubles Back To {${frame.node}}, Adding Cost For No Progress, So Its Cost [Remains]`,
             highlights: [highlights.keep],
           };
         }
@@ -216,7 +195,7 @@ export const singleSourceExplainer =
         const current = cost(graph, frame.distance, frame.currentPath);
 
         return {
-          content: `${offered.text} Does Not Decrease The Cost Of Reaching {${frame.node}} Which Currently Costs ${current.text}. Therefore The Current Cost [Remains]`,
+          content: `${offered.text} Does Not Decrease The Cost Of Reaching {${frame.node}} Which Currently Costs ${current.text}. The Current Cost [Remains]`,
           highlights: [
             ...offered.highlights,
             ...current.highlights,
@@ -226,10 +205,9 @@ export const singleSourceExplainer =
       }
 
       case 'unreachable': {
-        const nodesCount = frame.nodes.length;
-        const singular = nodesCount === 1;
+        const singular = frame.nodes.length === 1;
         return {
-          content: `${nodesCount} Node${singular ? '' : 's'} Stayed At A [Distance] Of ∞ Since No Edges Lead To ${singular ? 'It' : 'Them'}`,
+          content: `${count(frame.nodes.length, 'Node')} Kept A [Distance] Of ∞ Because No Path From {${frame.anchorNodeId}} Reaches ${singular ? 'It' : 'Them'}`,
           highlights: [highlights.distances],
         };
       }

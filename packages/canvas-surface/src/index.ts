@@ -24,26 +24,27 @@ import type { CanvasSurface } from './types.ts';
 
 const REPAINT_FPS = 60;
 
-/*
-  the slack matters. a 60hz display does not hand out frames exactly 16.667ms
-  apart, so comparing against the period on the nose rejects the frame that
-  arrives at 16.6 and waits for the next one, halving the rate to 30. a
-  millisecond of give takes every frame on a 60hz screen and still rejects the
-  8.3ms half frames a 120hz screen offers
-*/
+// rAF on a 60hz display runs ~16.67ms apart but jitters, so 1ms of slack keeps
+// every frame. on 120hz (8.33ms) it skips every other frame
 const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
 
-/**
- * sizes the canvas's backing store to its layout box at the given device pixel
- * ratio, handing back that box in css pixels and whether the backing store
- * actually moved
- */
-const sizeCanvas = (canvasRef: HTMLCanvasElement | undefined, dpr: number) => {
+type SyncBackingStoreResult = {
+  /** the canvas's layout box in css pixels */
+  rect: DOMRect;
+  /** whether the backing store dimensions changed */
+  resized: boolean;
+};
+
+/** matches the canvas's pixel buffer to its layout box scaled by `dpr` */
+const syncBackingStore = (
+  canvasRef: HTMLCanvasElement | undefined,
+  devicePixelRatio: number,
+): SyncBackingStoreResult => {
   const canvas = nullThrows(canvasRef, CANVAS_MISSING);
 
   const rect = canvas.getBoundingClientRect();
-  const width = Math.round(rect.width * dpr);
-  const height = Math.round(rect.height * dpr);
+  const width = Math.round(rect.width * devicePixelRatio);
+  const height = Math.round(rect.height * devicePixelRatio);
 
   const resized = canvas.width !== width || canvas.height !== height;
   if (resized) {
@@ -70,11 +71,6 @@ export const useCanvasSurface = (
   /** the layout box as of the last resize, in css pixels */
   const canvasCssSize = { width: ref(0), height: ref(0) };
 
-  /*
-    one ratio for the whole surface. sizing the backing store and scaling the
-    context are the same decision, and a browser zoom that moved one but not the
-    other left every hit test off by the difference
-  */
   const dpr = useDevicePixelRatio();
 
   const { shapes, ...renderer } = createAnimatedShapes();
@@ -88,11 +84,6 @@ export const useCanvasSurface = (
 
   let repaintFrame: number | undefined;
   let resizeObserver: ResizeObserver | undefined;
-  /*
-    resolved once per canvas element rather than per frame. getContext hands
-    back the same context every time, but the lookup itself was showing up 60
-    times a second for no reason
-  */
   let ctx: CanvasRenderingContext2D | undefined;
 
   /*
@@ -116,7 +107,7 @@ export const useCanvasSurface = (
   };
 
   const resizeCanvas = () => {
-    const { rect, resized } = sizeCanvas(canvas.value, dpr.value);
+    const { rect, resized } = syncBackingStore(canvas.value, dpr.value);
     canvasCssSize.width.value = rect.width;
     canvasCssSize.height.value = rect.height;
     return resized;
@@ -127,10 +118,7 @@ export const useCanvasSurface = (
     repaintCanvas(performance.now());
   };
 
-  /*
-    a density change does not always move the layout box, so dragging the window
-    to another display can leave the observer with nothing to report
-  */
+  // tracks when user drags window to another display
   watch(dpr, resizeAndRepaint);
 
   onMounted(() => {

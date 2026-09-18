@@ -16,7 +16,7 @@ const matrixHighlight = (tooltipLabel: string): ExplainerHighlight => ({
 const highlights = {
   phase: {
     tooltipLabel:
-      'A phase opens up one more node as a detour, so there is one phase per node',
+      'A phase uses each node as a detour, so there is one phase per node',
   },
   table: matrixHighlight(
     'The cheapest trip between every pair of nodes so far',
@@ -36,7 +36,7 @@ export const allPairsExplainer =
     switch (frame.type) {
       case 'start':
         return {
-          content: 'Filling Out The [Table] With The Edges In The Graph',
+          content: 'The [Table] Gets Populated With The Edges In The Graph',
           highlights: [highlights.table],
         };
 

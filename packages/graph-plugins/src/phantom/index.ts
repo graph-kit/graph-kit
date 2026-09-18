@@ -126,12 +126,11 @@ export const phantom: PhantomPlugin = ({
       edgeIds: edges.map((edge) => edge.id),
     });
 
-  const isNode = (id: string) => nodes.some((node) => node.id === id);
-
-  const isEdge = (id: string) => edges.some((edge) => edge.id === id);
+  const isPhantomNode = (id: string) => nodes.some((node) => node.id === id);
+  const isPhantomEdge = (id: string) => edges.some((edge) => edge.id === id);
 
   const canResolveNode = (nodeId: CoreNode['id']) =>
-    controls.isNode(nodeId) || isNode(nodeId);
+    controls.isNode(nodeId) || isPhantomNode(nodeId);
 
   const dropDanglingEdges = () => {
     edges = edges.filter(
@@ -155,8 +154,8 @@ export const phantom: PhantomPlugin = ({
       removeAllElements,
       nodes: () => nodes,
       edges: () => edges,
-      isNode,
-      isEdge,
+      isNode: isPhantomNode,
+      isEdge: isPhantomEdge,
       getNodePosition,
     },
   };

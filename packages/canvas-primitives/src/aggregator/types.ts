@@ -9,8 +9,7 @@ export type Aggregator = CanvasElement[];
 
 /**
  * a function that takes an `aggregator` and returns an `aggregator` with alterations to
- * the internal contents, these functions are layered on top of each other to create a pipeline
- * which will be invoked with a reducer each render cycle
+ * the internal contents; invoked each render cycle
  */
 export type AggregatorTransformer = (aggregator: Aggregator) => Aggregator;
 

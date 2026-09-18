@@ -87,6 +87,14 @@ describe(createEventHandler, () => {
       expect(cb).not.toHaveBeenCalled();
     });
 
+    it('removes a handler via the cleanup returned by handle', () => {
+      const cb = vi.fn();
+      const cleanup = handle('onClick', cb, TEST_HANDLER_ID);
+      cleanup();
+      fireHandlers('onClick', 1);
+      expect(cb).not.toHaveBeenCalled();
+    });
+
     it('only removes the specified handler', () => {
       const cb1 = vi.fn();
       const cb2 = vi.fn();

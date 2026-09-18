@@ -3,18 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventHub, createEventHub } from './createEventHub.ts';
 import { EventMapToEventRegistry } from './types.ts';
 
-type MockNode = { id: string };
+type MockItem = { id: string };
 
 type MockEventMap = {
-  onNodesAdded: (nodes: MockNode[]) => void;
-  onStructureChange: () => void;
+  onItemsAdded: (items: MockItem[]) => void;
+  onChange: () => void;
 };
 
 type MockEventRegistry = EventMapToEventRegistry<MockEventMap>;
 
 const createMockEventRegistry = (): MockEventRegistry => ({
-  onNodesAdded: new Set(),
-  onStructureChange: new Set(),
+  onItemsAdded: new Set(),
+  onChange: new Set(),
 });
 
 describe(createEventHub, () => {
@@ -28,38 +28,47 @@ describe(createEventHub, () => {
 
   it('successfully registers a callback via subscribe', () => {
     const callback = vi.fn();
-    hub.subscribe('onNodesAdded', callback);
-    expect(registry.onNodesAdded.has(callback)).toBe(true);
-    expect(registry.onNodesAdded.size).toBe(1);
+    hub.subscribe('onItemsAdded', callback);
+    expect(registry.onItemsAdded.has(callback)).toBe(true);
+    expect(registry.onItemsAdded.size).toBe(1);
   });
 
   it('safely unregisters a callback via unsubscribe', () => {
     const callback = vi.fn();
-    hub.subscribe('onNodesAdded', callback);
-    hub.unsubscribe('onNodesAdded', callback);
-    expect(registry.onNodesAdded.has(callback)).toBe(false);
-    expect(registry.onNodesAdded.size).toBe(0);
+    hub.subscribe('onItemsAdded', callback);
+    hub.unsubscribe('onItemsAdded', callback);
+    expect(registry.onItemsAdded.has(callback)).toBe(false);
+    expect(registry.onItemsAdded.size).toBe(0);
+  });
+
+  it('unregisters a callback via the cleanup returned by subscribe', () => {
+    const callback = vi.fn();
+    const cleanup = hub.subscribe('onItemsAdded', callback);
+    cleanup();
+    hub.emit('onItemsAdded', [{ id: '1' }]);
+    expect(callback).not.toHaveBeenCalled();
+    expect(registry.onItemsAdded.size).toBe(0);
   });
 
   it('broadcasts to all subscribers with exact parameters when emit is invoked', () => {
     const subscriberA = vi.fn();
     const subscriberB = vi.fn();
-    hub.subscribe('onNodesAdded', subscriberA);
-    hub.subscribe('onNodesAdded', subscriberB);
-    hub.emit('onNodesAdded', [{ id: '1' }]);
+    hub.subscribe('onItemsAdded', subscriberA);
+    hub.subscribe('onItemsAdded', subscriberB);
+    hub.emit('onItemsAdded', [{ id: '1' }]);
     expect(subscriberA).toHaveBeenCalledExactlyOnceWith([{ id: '1' }]);
     expect(subscriberB).toHaveBeenCalledExactlyOnceWith([{ id: '1' }]);
   });
 
   it('handles zero-argument event emissions cleanly', () => {
     const callback = vi.fn();
-    hub.subscribe('onStructureChange', callback);
-    hub.emit('onStructureChange');
+    hub.subscribe('onChange', callback);
+    hub.emit('onChange');
     expect(callback).toHaveBeenCalledExactlyOnceWith();
   });
 
   it('does not throw or fail when emitting an event with no subscribers', () => {
-    expect(() => hub.emit('onNodesAdded', [{ id: '1' }])).not.toThrow();
+    expect(() => hub.emit('onItemsAdded', [{ id: '1' }])).not.toThrow();
   });
 
   it('invokes a subscriber once when it resubscribes itself mid-emit', () => {
@@ -68,29 +77,29 @@ describe(createEventHub, () => {
     const subscriber = () => {
       calls++;
       if (calls > RUNAWAY) throw new Error('subscriber re-entered itself');
-      hub.unsubscribe('onStructureChange', subscriber);
-      hub.subscribe('onStructureChange', subscriber);
+      hub.unsubscribe('onChange', subscriber);
+      hub.subscribe('onChange', subscriber);
     };
-    hub.subscribe('onStructureChange', subscriber);
-    hub.emit('onStructureChange');
+    hub.subscribe('onChange', subscriber);
+    hub.emit('onChange');
     expect(calls).toBe(1);
   });
 
   it('does not invoke a subscriber another subscriber unsubscribed mid-emit', () => {
     const second = vi.fn();
-    hub.subscribe('onStructureChange', () =>
-      hub.unsubscribe('onStructureChange', second),
+    hub.subscribe('onChange', () =>
+      hub.unsubscribe('onChange', second),
     );
-    hub.subscribe('onStructureChange', second);
-    hub.emit('onStructureChange');
+    hub.subscribe('onChange', second);
+    hub.emit('onChange');
     expect(second).not.toHaveBeenCalled();
   });
 
   it('invokes a handler once when the same callback is handled twice', () => {
     const handler = vi.fn();
-    hub.handle('onStructureChange', handler, 'hub');
-    hub.handle('onStructureChange', handler, 'hub');
-    hub.emit('onStructureChange');
+    hub.handle('onChange', handler, 'hub');
+    hub.handle('onChange', handler, 'hub');
+    hub.emit('onChange');
     expect(handler).toHaveBeenCalledOnce();
   });
 });

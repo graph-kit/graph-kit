@@ -13,7 +13,6 @@ import { useCamera } from './camera/index.ts';
 import { useCanvasSize } from './canvasSize.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
 import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
-import { setupCursor } from './cursor.ts';
 import { useDevicePixelRatio } from './devicePixelRatio.ts';
 import {
   createCanvasBoundEvents,
@@ -21,6 +20,7 @@ import {
   createDocumentBoundEvents,
   createElementsUnderCursor,
 } from './events/index.ts';
+import { syncCursor } from './syncCursor.ts';
 import type { CanvasSurface } from './types.ts';
 
 const REPAINT_FPS = 60;
@@ -66,7 +66,7 @@ export const useCanvasSurface = (
     });
   };
 
-  const canvasCssSize = useCanvasSize({
+  const canvasSize = useCanvasSize({
     canvas,
     devicePixelRatio,
     onResize: () => repaintCanvas(performance.now()),
@@ -90,7 +90,7 @@ export const useCanvasSurface = (
   const camera = useCamera(canvas, canvasEvents, domEvents, devicePixelRatio);
   const { worldCoordinates: cursorCoordinates, toWorldCoordinates } =
     useWorldCoordinates(camera.state, canvasEvents);
-  const visibleWorldRect = useVisibleWorldRect(camera.state, canvasCssSize);
+  const visibleWorldRect = useVisibleWorldRect(camera.state, canvasSize);
 
   const { events: elementEvents, elementsUnderCursor } =
     createElementsUnderCursor({
@@ -101,7 +101,7 @@ export const useCanvasSurface = (
       domEvents,
     });
 
-  setupCursor({
+  syncCursor({
     subscribe: aggregator.events.subscribe,
     canvas,
     elementsUnderCursor,

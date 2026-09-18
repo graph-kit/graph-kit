@@ -133,10 +133,6 @@ export const phantom: PhantomPlugin = ({
   const canResolveNode = (nodeId: CoreNode['id']) =>
     controls.isNode(nodeId) || isNode(nodeId);
 
-  // a phantom edge may point at a real node, so a removed node leaves it dangling and
-  // getNodePosition throws on the next frame, taking the whole render pass with it.
-  // resolved against current state rather than the event payload because a transit
-  // decode reports every pre-decode node as removed, including the ones it restored
   const dropDanglingEdges = () => {
     edges = edges.filter(
       (edge) => canResolveNode(edge.source) && canResolveNode(edge.target),

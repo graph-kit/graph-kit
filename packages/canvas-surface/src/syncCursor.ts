@@ -18,19 +18,16 @@ type CursorProps = {
   cursorOverride?: () => Cursor | undefined;
 };
 
-/**
- * shapes the canvas cursor to whatever is drawn beneath it, resolved against
- * the aggregator as it was painted rather than against the data behind it
- */
-export const setupCursor = ({
+/** sets the browsers cursor to whatever is drawn beneath it */
+export const syncCursor = ({
   subscribe,
   canvas,
   elementsUnderCursor,
   cursorOverride,
 }: CursorProps) => {
-  const getCursor = (): Cursor => {
+  const cursor = (): Cursor => {
     const override = cursorOverride?.();
-    if (override !== undefined) return override;
+    if (override) return override;
 
     return elementsUnderCursor.topElement?.cursor ?? CURSOR.DEFAULT;
   };
@@ -38,7 +35,7 @@ export const setupCursor = ({
   const refreshCursor = () => {
     if (!canvas.value) return;
     const currentCursor = canvas.value.style.cursor;
-    const newCursor = getCursor();
+    const newCursor = cursor();
     if (currentCursor !== newCursor) canvas.value.style.cursor = newCursor;
   };
 

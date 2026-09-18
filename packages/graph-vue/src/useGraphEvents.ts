@@ -12,8 +12,9 @@ const withAutoUnsubscribe = <EventMap extends GenericEventMap>(
 ): ReadonlyEventHub<EventMap> => ({
   ...hub,
   subscribe: (eventName, eventCallback) => {
-    hub.subscribe(eventName, eventCallback);
-    onUnmounted(() => hub.unsubscribe(eventName, eventCallback));
+    const cleanup = hub.subscribe(eventName, eventCallback);
+    onUnmounted(cleanup);
+    return cleanup;
   },
 });
 

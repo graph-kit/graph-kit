@@ -14,6 +14,10 @@ const matrixHighlight = (tooltipLabel: string): ExplainerHighlight => ({
 });
 
 const highlights = {
+  phase: {
+    tooltipLabel:
+      'A phase opens up one more node as a detour, so there is one phase per node',
+  },
   table: matrixHighlight(
     'The cheapest trip between every pair of nodes so far',
   ),
@@ -56,31 +60,36 @@ export const allPairsExplainer =
 
       case 'choose-pivot':
         return {
-          content: `Node ${frame.pivotNumber} Of ${frame.totalPivots}: Can Routing Via {${frame.node}} Reduce The Current [Table] Value?`,
-          highlights: [highlights.table],
+          content: `[Phase] ${frame.pivotNumber} Of ${frame.totalPivots}: Can Routing Via {${frame.node}} Reduce The Current [Table] Value?`,
+          highlights: [highlights.phase, highlights.table],
         };
 
-      case 'pivot-unused': {
-        const stranded = !frame.entering
-          ? !frame.leaving
-            ? `No Edge Enters Or Leaves {${frame.node}}`
-            : `No Edge Enters {${frame.node}}`
-          : !frame.leaving
-            ? `No Edge Leaves {${frame.node}}`
-            : undefined;
-
-        if (stranded === undefined) {
+      case 'pivot-unused':
+        if (!frame.entering && !frame.leaving) {
           return {
-            content: `No Detour Through {${frame.node}} Improves The [Table], So Nothing Changes`,
+            content: `No Edge Enters Or Leaves {${frame.node}}, So No Path Via {${frame.node}} Can Improve The [Table]`,
+            highlights: [highlights.table],
+          };
+        }
+
+        if (!frame.entering) {
+          return {
+            content: `No Edge Enters {${frame.node}}, So No Path Via {${frame.node}} Can Improve The [Table]`,
+            highlights: [highlights.table],
+          };
+        }
+
+        if (!frame.leaving) {
+          return {
+            content: `No Edge Leaves {${frame.node}}, So No Path Via {${frame.node}} Can Improve The [Table]`,
             highlights: [highlights.table],
           };
         }
 
         return {
-          content: `${stranded}, So No Path Via {${frame.node}} Can Improve The [Table]`,
+          content: `No Detour Through {${frame.node}} Improves The [Table], So Nothing Changes`,
           highlights: [highlights.table],
         };
-      }
 
       case 'consider-pair': {
         const detourCost = cost(graph, frame.detourDistance, frame.detourRoute);

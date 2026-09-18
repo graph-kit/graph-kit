@@ -54,6 +54,13 @@ const highlights = {
   ),
 } as const satisfies Record<string, ExplainerHighlight>;
 
+const passHighlight = (
+  nodeCount: number,
+  totalPasses: number,
+): ExplainerHighlight => ({
+  tooltipLabel: `A pass sweeps every edge once. A cheapest path never repeats a node, so a cheapest path on a graph containing ${count(nodeCount, 'node')} uses at most ${count(totalPasses, 'edge')}. To confirm the cheapest path, we need at most ${count(totalPasses, 'pass', 'passes')}`,
+});
+
 export const singleSourceExplainer =
   (graph: Graph) =>
   (frame: SingleSourceFrame): Explainer | undefined => {
@@ -215,16 +222,18 @@ export const singleSourceExplainer =
       // bellman-ford only
 
       case 'begin-pass': {
+        const pass = passHighlight(frame.nodeCount, frame.totalPasses);
+
         if (frame.pass === 1) {
           return {
-            content: `Pass 1 Of ${frame.totalPasses}. A Cheapest Path Never Repeats A Node, So ${count(frame.nodeCount, 'Node')} Means At Most ${count(frame.totalPasses, 'Edge')} And ${count(frame.totalPasses, 'Pass', 'Passes')}. Sweeping Edges In [Order]`,
-            highlights: [highlights.sweep],
+            content: `[Pass] 1 Of ${frame.totalPasses}. Sweeping Edges In [Order]`,
+            highlights: [pass, highlights.sweep],
           };
         }
 
         return {
-          content: `Pass ${frame.pass} Of ${frame.totalPasses} Settles Every Cheapest Path Of ${count(frame.pass, 'Edge')}. Sweeping Edges In [Order]`,
-          highlights: [highlights.sweep],
+          content: `[Pass] ${frame.pass} Of ${frame.totalPasses} Settles Every Cheapest Path Of ${count(frame.pass, 'Edge')}. Sweeping Edges In [Order]`,
+          highlights: [pass, highlights.sweep],
         };
       }
 

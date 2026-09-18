@@ -1,7 +1,7 @@
 import type { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type { AnimatedShapeFactories } from '@canvas/primitives/animation/index';
 import type { RegionMember } from '@canvas/primitives/shapes/region/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/index';
 import type { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import type { Color } from '@core/utils/colors';
 import { CURSOR } from '@core/utils/cursor';

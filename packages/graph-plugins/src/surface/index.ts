@@ -1,5 +1,4 @@
-import { crossPattern } from '@canvas/surface/crossPattern';
-import { useCanvasSurface } from '@canvas/surface/index';
+import { crossPattern, useCanvasSurface } from '@canvas/surface/index';
 import {
   canvasCursorOverride,
   createThemeController,

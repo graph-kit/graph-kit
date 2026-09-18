@@ -1,4 +1,4 @@
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 import { CURSOR } from '@core/utils/cursor';
 
 import { onBeforeUnmount } from 'vue';

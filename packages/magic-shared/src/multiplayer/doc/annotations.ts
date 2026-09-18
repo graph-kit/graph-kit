@@ -1,4 +1,4 @@
-import { Coordinate } from '@canvas/surface/types';
+import { Coordinate } from '@canvas/surface/index';
 import { Annotation } from '@core/annotations/index';
 import * as Y from 'yjs';
 

@@ -1,4 +1,4 @@
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 import { OnboardingGraph } from '@magic/shared/graph-shell';
 
 import { centerCameraOnTree } from './centerCameraOnTree.ts';

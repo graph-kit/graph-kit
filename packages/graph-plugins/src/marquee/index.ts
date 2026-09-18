@@ -1,8 +1,10 @@
 import { Aggregator, CanvasElement } from '@canvas/primitives/aggregator/types';
 import { normalizeBoundingBox } from '@canvas/primitives/helpers';
 import type { BoundingBox, Coordinate } from '@canvas/primitives/types/utility';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
-import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import {
+  CANVAS_ELEMENT_CURSOR_FIELD_KEY,
+  type ElementMouseEvent,
+} from '@canvas/surface/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';

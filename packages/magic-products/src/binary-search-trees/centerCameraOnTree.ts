@@ -1,5 +1,4 @@
-import { centerCameraOn } from '@canvas/surface/camera/centerCameraOn';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface, centerCameraOn } from '@canvas/surface/index';
 
 import { Coordinate } from './graph-conversion/getTreeNodePositions.ts';
 import { ROOT_POSITION } from './graph-conversion/treeToGraph.ts';

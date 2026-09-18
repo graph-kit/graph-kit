@@ -1,5 +1,4 @@
-import { crossPattern } from '@canvas/surface/crossPattern';
-import type { CanvasSurface } from '@canvas/surface/types';
+import { type CanvasSurface, crossPattern } from '@canvas/surface/index';
 
 import type { SetsTheme } from './useSetsTheme.ts';
 

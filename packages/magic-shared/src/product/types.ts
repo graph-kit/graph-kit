@@ -1,5 +1,5 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 import { AnnotationsControls } from '@core/annotations/index';
 import { ReadonlyEventHub } from '@core/events/createEventHub';
 import { MaybeGetter } from '@core/utils/maybeGetter/index';

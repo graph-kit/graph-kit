@@ -1,5 +1,5 @@
 import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 import {
   AnnotationsControls,
   StrokeInFlight,

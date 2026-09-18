@@ -1,6 +1,6 @@
 import { createAggregator } from '@canvas/primitives/aggregator/index';
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { DraggedElement } from '@multiplayer/protocol/room';
 import { describe, expect, it } from 'vitest';

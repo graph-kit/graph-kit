@@ -1,4 +1,4 @@
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 
 import { Shell } from '../../product/types.ts';
 import { UNKNOWN } from '../../user-agent/parseUserAgent.ts';

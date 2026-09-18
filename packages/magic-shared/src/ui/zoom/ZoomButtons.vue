@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { MAX_ZOOM, MIN_ZOOM } from '@canvas/surface/camera/panZoom';
+  import { MAX_ZOOM, MIN_ZOOM } from '@canvas/surface/index';
   import { mdiMinus, mdiPlus } from '@mdi/js';
 
   import { computed } from 'vue';

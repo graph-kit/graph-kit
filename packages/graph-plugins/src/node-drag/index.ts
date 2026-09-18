@@ -1,4 +1,4 @@
-import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import type { ElementMouseEvent } from '@canvas/surface/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { devAssert, devWarning } from '@core/utils/debugging';

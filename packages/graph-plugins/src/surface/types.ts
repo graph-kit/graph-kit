@@ -1,9 +1,9 @@
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 import { GraphPlugin, WithTheme } from '@graph/plugins-shared/plugins';
 
 import { SurfaceThemes } from './themes.ts';
 
-export type { ElementsUnderCursor as GraphUnderCursor } from '@canvas/surface/events/index';
+export type { ElementsUnderCursor as GraphUnderCursor } from '@canvas/surface/index';
 
 /**
  * the whole surface, spread rather than nested: everything a plugin reaches for on it

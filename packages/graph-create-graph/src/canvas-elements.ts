@@ -1,5 +1,5 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/index';
 import { nullThrows } from '@core/utils/assert';
 import { ComputedTokenResolver } from '@graph/computed-tokens/index';
 import { CoreControls } from '@graph/core/types';

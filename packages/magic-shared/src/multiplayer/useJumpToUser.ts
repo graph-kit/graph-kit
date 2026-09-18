@@ -1,4 +1,4 @@
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 
 import { onUnmounted } from 'vue';
 

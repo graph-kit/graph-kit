@@ -1,4 +1,4 @@
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 import { AnnotationsControls } from '@core/annotations/index';
 import { CameraState, DraggedElement, Point } from '@multiplayer/protocol/room';
 

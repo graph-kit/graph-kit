@@ -1,4 +1,4 @@
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 
 import { INPUT_HANDLER_ID } from '../constants.ts';
 import { setElementIdentity } from '../draw/elementIdentity.ts';

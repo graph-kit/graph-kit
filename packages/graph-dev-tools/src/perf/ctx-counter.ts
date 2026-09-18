@@ -1,4 +1,5 @@
 import type { FrameCalls } from '@graph/perf-harness/types';
+import type { AnyFunction } from 'ts-essentials';
 
 export type RepaintEvents = {
   subscribe: (event: 'onBeforeRepaint', callback: () => void) => void;
@@ -19,6 +20,19 @@ const methodNamesOf = (prototype: object) =>
     return typeof descriptor?.value === 'function' && name !== 'constructor';
   });
 
+const patchMethod = (
+  target: object,
+  name: string,
+  wrap: (original: AnyFunction) => AnyFunction,
+) => {
+  const methods = target as Record<string, AnyFunction>;
+  const original = methods[name];
+  methods[name] = wrap(original);
+  return () => {
+    methods[name] = original;
+  };
+};
+
 export const startCtxCounter = (events: RepaintEvents): CtxCounter => {
   const frames: FrameCalls[] = [];
 
@@ -28,31 +42,30 @@ export const startCtxCounter = (events: RepaintEvents): CtxCounter => {
     frame[name] = (frame[name] ?? 0) + 1;
   };
 
+  const restorePatches: (() => void)[] = [];
+
   const prototype = CanvasRenderingContext2D.prototype;
-  const originalMethods = new Map<string, (...args: unknown[]) => unknown>();
-
   for (const name of methodNamesOf(prototype)) {
-    const original = (prototype as unknown as Record<string, any>)[name];
-    originalMethods.set(name, original);
-
-    (prototype as unknown as Record<string, any>)[name] = function (
-      this: CanvasRenderingContext2D,
-      ...args: unknown[]
-    ) {
-      count(name);
-      return original.apply(this, args);
-    };
+    restorePatches.push(
+      patchMethod(prototype, name, (original) =>
+        function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+          count(name);
+          return original.apply(this, args);
+        },
+      ),
+    );
   }
 
-  const originalCreateElement = document.createElement;
-  document.createElement = function (
-    this: Document,
-    tagName: string,
-    ...rest: unknown[]
-  ) {
-    if (tagName.toLowerCase() === 'canvas') count(CANVAS_ELEMENTS_CREATED);
-    return (originalCreateElement as any).call(this, tagName, ...rest);
-  } as typeof document.createElement;
+  restorePatches.push(
+    patchMethod(document, 'createElement', (original) =>
+      function (this: Document, ...args: unknown[]) {
+        if (String(args[0]).toLowerCase() === 'canvas') {
+          count(CANVAS_ELEMENTS_CREATED);
+        }
+        return original.apply(this, args);
+      },
+    ),
+  );
 
   const onBeforeRepaint = () => frames.push({});
   events.subscribe('onBeforeRepaint', onBeforeRepaint);
@@ -60,10 +73,7 @@ export const startCtxCounter = (events: RepaintEvents): CtxCounter => {
   return {
     frames: () => frames,
     stop: () => {
-      for (const [name, original] of originalMethods) {
-        (prototype as unknown as Record<string, any>)[name] = original;
-      }
-      document.createElement = originalCreateElement;
+      for (const restore of restorePatches) restore();
       events.unsubscribe('onBeforeRepaint', onBeforeRepaint);
     },
   };

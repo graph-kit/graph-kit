@@ -7,12 +7,12 @@ import type { FrameCalls, RunResult, SceneResult } from './types.ts';
 
 /**
  * lets the workflow find its own comment again instead of posting a new one.
- * must match the `marker` in `.github/workflows/canvas-call-counter.yaml`
+ * must match COMMENT_MARKER in `.github/workflows/canvas-call-counter.yaml`
  */
 export const COMMENT_MARKER = '<!-- graph-kit-canvas-call-report -->';
 
 // most important stuff for the top of the report
-const HEADLINE_COUNTERS = [
+const HEADLINE_COUNTERS: readonly string[] = [
   'canvasElementsCreated',
   'drawImage',
   'measureText',
@@ -20,7 +20,7 @@ const HEADLINE_COUNTERS = [
   'fill',
   'stroke',
   'save',
-] as const;
+];
 
 const round = (value: number) => Math.round(value * 10) / 10;
 
@@ -28,7 +28,7 @@ const round = (value: number) => Math.round(value * 10) / 10;
 const shortSha = (commit: string) => commit.slice(0, 7);
 
 const formatDelta = (base: number, head: number) => {
-  if (base === head) return '=';
+  if (round(base) === round(head)) return '=';
 
   const absolute = head - base;
   if (base === 0) return `+${round(absolute)} (new)`;
@@ -62,9 +62,9 @@ const sceneTable = (head: SceneResult, base: SceneResult) => {
   const baseAverages = averageCalls(base.frames);
 
   const rows = HEADLINE_COUNTERS.map((counter) => {
-    const baseValue = round(baseAverages[counter] ?? 0);
-    const headValue = round(headAverages[counter] ?? 0);
-    return `| ${counter} | ${baseValue} | ${headValue} | ${formatDelta(baseValue, headValue)} |`;
+    const baseValue = baseAverages[counter] ?? 0;
+    const headValue = headAverages[counter] ?? 0;
+    return `| ${counter} | ${round(baseValue)} | ${round(headValue)} | ${formatDelta(baseValue, headValue)} |`;
   });
 
   return [
@@ -84,7 +84,7 @@ const nonHeadlineChanges = (
   baseAverages: FrameCalls,
 ) => {
   const changed = Object.keys({ ...baseAverages, ...headAverages })
-    .filter((counter) => !HEADLINE_COUNTERS.includes(counter as never))
+    .filter((counter) => !HEADLINE_COUNTERS.includes(counter))
     .map((counter) => ({
       counter,
       baseValue: round(baseAverages[counter] ?? 0),

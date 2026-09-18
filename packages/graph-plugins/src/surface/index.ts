@@ -19,7 +19,7 @@ export const surface: SurfacePlugin = ({ controls, getters }) => {
 
   const canvasSurface = useCanvasSurface({
     // the fallback sentinel is a theme concept, spent here rather than taught to the surface
-    canvasCursor: () =>
+    cursorOverride: () =>
       canvasCursorOverride(theme._resolveToken('canvas.cursor')),
   });
   const { aggregator } = canvasSurface;

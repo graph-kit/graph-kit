@@ -12,7 +12,7 @@ import { useCamera } from './camera/index.ts';
 import { CANVAS_MISSING } from './constants.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
 import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
-import { setupCursor } from './cursor.ts';
+import { CANVAS_ELEMENT_CURSOR_FIELD_KEY, setupCursor } from './cursor.ts';
 import { useDevicePixelRatio } from './devicePixelRatio.ts';
 import {
   createCanvasBoundEvents,
@@ -31,10 +31,11 @@ const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
 
 export type CanvasSurfaceOptions = {
   /**
-   * a cursor for the whole canvas, overriding whatever the pointer is over.
-   * `undefined` defers to the element beneath it, which is the usual answer
+   * when this returns a cursor, the browser shows it anywhere on the canvas.
+   * returning `undefined` falls back to the canvas element under the pointer,
+   * which sets its cursor via {@link CANVAS_ELEMENT_CURSOR_FIELD_KEY}
    */
-  canvasCursor?: () => Cursor | undefined;
+  cursorOverride?: () => Cursor | undefined;
 };
 
 export const useCanvasSurface = (
@@ -126,7 +127,7 @@ export const useCanvasSurface = (
     subscribe: aggregator.events.subscribe,
     canvas,
     elementsUnderCursor,
-    canvasCursor: options.canvasCursor,
+    cursorOverride: options.cursorOverride,
   });
 
   const pattern = useBackgroundPattern(

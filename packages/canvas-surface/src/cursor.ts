@@ -16,10 +16,11 @@ type CursorProps = {
   canvas: Ref<HTMLCanvasElement | undefined>;
   elementsUnderCursor: Pick<ElementsUnderCursor, 'topElement'>;
   /**
-   * a cursor for the whole canvas, overriding whatever is under the pointer.
-   * `undefined` defers to the element, which is the usual answer
+   * when this returns a cursor, the browser shows it anywhere on the canvas.
+   * returning `undefined` falls back to the canvas element under the pointer,
+   * which sets its cursor via {@link CANVAS_ELEMENT_CURSOR_FIELD_KEY}
    */
-  canvasCursor?: () => Cursor | undefined;
+  cursorOverride?: () => Cursor | undefined;
 };
 
 /**
@@ -30,11 +31,11 @@ export const setupCursor = ({
   subscribe,
   canvas,
   elementsUnderCursor,
-  canvasCursor,
+  cursorOverride,
 }: CursorProps) => {
   const getCursor = (): Cursor => {
-    const wholeCanvas = canvasCursor?.();
-    if (wholeCanvas !== undefined) return wholeCanvas;
+    const override = cursorOverride?.();
+    if (override !== undefined) return override;
 
     const topElement = elementsUnderCursor.topElement;
     if (!topElement) return CURSOR.DEFAULT;

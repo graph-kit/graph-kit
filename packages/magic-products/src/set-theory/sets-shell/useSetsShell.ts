@@ -33,7 +33,7 @@ export const useSetsShell = (): {
   const theme = useSetsTheme();
 
   const surface = useCanvasSurface({
-    canvasCursor: () =>
+    cursorOverride: () =>
       canvasCursorOverride(theme._resolveToken('canvas.cursor')),
   });
 

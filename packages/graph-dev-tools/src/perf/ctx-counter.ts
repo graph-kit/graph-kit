@@ -1,13 +1,3 @@
-/**
- * Counts what a frame actually asks the canvas to do.
- *
- * Data that turns "feels slow" into "3,400 fillRect and 11 drawImage per frame at 10
- * nodes"
- *
- * It patches the prototype rather than wrapping one context, so offscreen
- * canvases are counted too. That matters here: offscreen allocation is the
- * suspected primary cost and it is close to invisible in a sampling profile.
- */
 import type { FrameCalls } from '@graph/perf-harness/types';
 
 export type RepaintEvents = {

@@ -1,11 +1,3 @@
-/**
- * Deterministic scene generation for performance runs.
- *
- * Without this, two measurements are never comparable: a graph laid out by hand
- * differs between browsers, between commits and between attempts, and the
- * difference shows up as noise on top of whatever is being measured.
- */
-
 type SceneNode = { id: string; position: { x: number; y: number } };
 type SceneEdge = { source: string; target: string };
 

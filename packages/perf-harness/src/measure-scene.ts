@@ -2,6 +2,8 @@ import { assert, nullThrows } from '@core/utils/assert';
 import type { JSHandle, Page } from 'playwright';
 
 import {
+  FRAME_TIMEOUT_MS,
+  MEASURE_FRAMES,
   MEASURE_MS,
   PAINT_TIMEOUT_MS,
   SCENE_TIMEOUT_MS,
@@ -17,18 +19,19 @@ export type PageWithProbe = {
   probe: JSHandle<CanvasCallProbe>;
 };
 
-/** moves the cursor for the whole window so hit testing runs on every frame */
-const sweepCursor = async (page: Page, durationMs: number) => {
-  const steps = 60;
-  const stepDelay = durationMs / steps;
-
-  for (let step = 0; step < steps; step++) {
-    const progress = step / steps;
+/** one cursor position per counted frame, so a slow run samples the same path as a fast one */
+const sweepCursor = async ({ page, probe }: PageWithProbe) => {
+  for (let frame = 0; frame < MEASURE_FRAMES; frame++) {
+    const progress = frame / MEASURE_FRAMES;
     await page.mouse.move(
       VIEWPORT.width * (0.15 + 0.7 * progress),
       VIEWPORT.height * (0.3 + 0.4 * Math.sin(progress * Math.PI * 2)),
     );
-    await page.waitForTimeout(stepDelay);
+    await page.waitForFunction(
+      ({ probe, drawn }) => (probe.counter.get()?.length ?? 0) > drawn,
+      { probe, drawn: frame },
+      { timeout: FRAME_TIMEOUT_MS },
+    );
   }
 };
 
@@ -74,8 +77,8 @@ export const measureScene = async ({
   );
 
   if (shouldSweepCursor) {
-    logger(`sweeping the cursor for ${MEASURE_MS}ms`);
-    await sweepCursor(page, MEASURE_MS);
+    logger(`sweeping the cursor across ${MEASURE_FRAMES} frames`);
+    await sweepCursor({ page, probe });
   } else {
     logger(`measuring idle for ${MEASURE_MS}ms`);
     await page.waitForTimeout(MEASURE_MS);

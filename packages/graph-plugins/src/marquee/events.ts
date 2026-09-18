@@ -1,5 +1,5 @@
 import { BoundingBox } from '@canvas/primitives/types/utility';
-import { Coordinate } from '@canvas/surface/types';
+import { Coordinate } from '@canvas/surface/index';
 import { EventMapToEventRegistry } from '@core/events/types';
 
 export type MarqueeEventMap = {

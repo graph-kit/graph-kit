@@ -12,9 +12,9 @@ export type MockEventHub<EventMap extends GenericEventMap> =
  * Creates an EventHub with `emit` pre-spied so tests can assert on emitted events.
  *
  * @example
- * const hub = createMockEventHub(createNodePositionStoreEventRegistry());
- * hub.emit('onNodeMoveStreamStart');
- * expect(hub.emit).toHaveBeenCalledWith('onNodeMoveStreamStart');
+ * const hub = createMockEventHub({ onChange: new Set() });
+ * hub.emit('onChange');
+ * expect(hub.emit).toHaveBeenCalledWith('onChange');
  */
 export const createMockEventHub = <EventMap extends GenericEventMap>(
   registry: EventMapToEventRegistry<EventMap>,

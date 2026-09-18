@@ -2,7 +2,7 @@ import type {
   Aggregator,
   AggregatorTransformer,
 } from '@canvas/primitives/aggregator/types';
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 import type { Color } from '@core/utils/colors';
 
 import { type ComputedRef, computed, onBeforeUnmount } from 'vue';

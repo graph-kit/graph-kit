@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ElementsUnderCursor } from '@canvas/surface/events/index';
+  import type { ElementsUnderCursor } from '@canvas/surface/index';
   import type { DeepReadonly } from 'ts-essentials';
 
   import { computed, onBeforeUnmount, ref } from 'vue';

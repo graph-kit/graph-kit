@@ -1,3 +1,5 @@
+import type { Cursor } from '@core/utils/cursor';
+
 import { Shape } from '../types/index.ts';
 
 /**
@@ -7,8 +9,7 @@ export type Aggregator = CanvasElement[];
 
 /**
  * a function that takes an `aggregator` and returns an `aggregator` with alterations to
- * the internal contents, these functions are layered on top of each other to create a pipeline
- * which will be invoked with a reducer each render cycle
+ * the internal contents; invoked each render cycle
  */
 export type AggregatorTransformer = (aggregator: Aggregator) => Aggregator;
 
@@ -38,8 +39,11 @@ export type CanvasElement = {
    */
   paintOnly?: boolean;
   /**
-   * attached metadata. a handful of keys are reserved by the code that reads them, each declared
-   * as a constant alongside it: `CANVAS_ELEMENT_CURSOR_FIELD_KEY` in `@canvas/surface/cursor`
+   * the browser cursor associated with this canvas element
+   */
+  cursor?: Cursor;
+  /**
+   * attached metadata
    */
   data?: Record<string, unknown>;
 };

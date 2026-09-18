@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ElementMouseEvent } from '@canvas/surface/events/index';
+  import type { ElementMouseEvent } from '@canvas/surface/index';
   import Shell from '@magic/shared/Shell';
   import { toast } from '@magic/shared/toast';
 

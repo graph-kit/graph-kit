@@ -1,4 +1,4 @@
-import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import type { ElementMouseEvent } from '@canvas/surface/index';
 import { nullThrows } from '@core/utils/assert';
 import { getCtx } from '@core/utils/canvas/index';
 import { isRemoveKey, isTypingTarget } from '@core/utils/keyboard';

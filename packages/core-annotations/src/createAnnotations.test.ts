@@ -1,4 +1,4 @@
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 import { describe, expect, it, vi } from 'vitest';
 
 import {

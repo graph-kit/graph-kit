@@ -1,9 +1,5 @@
-import { crossPattern } from '@canvas/surface/crossPattern';
-import { useCanvasSurface } from '@canvas/surface/index';
-import {
-  canvasCursorOverride,
-  createThemeController,
-} from '@core/themes/index';
+import { crossPattern, useCanvasSurface } from '@canvas/surface/index';
+import { createThemeController, toSurfaceCursor } from '@core/themes/index';
 import { CoreEdge } from '@graph/primitives/types';
 
 import { SURFACE_PLUGIN_ID } from './constants.ts';
@@ -20,8 +16,7 @@ export const surface: SurfacePlugin = ({ controls, getters }) => {
 
   const canvasSurface = useCanvasSurface({
     // the fallback sentinel is a theme concept, spent here rather than taught to the surface
-    canvasCursor: () =>
-      canvasCursorOverride(theme._resolveToken('canvas.cursor')),
+    cursorOverride: () => toSurfaceCursor(theme._resolveToken('canvas.cursor')),
   });
   const { aggregator } = canvasSurface;
 

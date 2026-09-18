@@ -1,7 +1,7 @@
 import type { ScribbleSchema } from '@canvas/primitives/shapes/scribble/types';
 import type { Shape } from '@canvas/primitives/types/index';
 import type { Coordinate } from '@canvas/primitives/types/utility';
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 import type { ReadonlyEventHub } from '@core/events/createEventHub';
 import type { Color } from '@core/utils/colors';
 import type { Cursor } from '@core/utils/cursor';

@@ -1,5 +1,5 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
+import { toSurfaceCursor } from '@core/themes/index';
 import { nullThrows } from '@core/utils/assert';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
@@ -41,12 +41,7 @@ export const phantom: PhantomPlugin = ({
         id: node.id,
         priority: NODE_RENDER_PRIORITY,
         shape: renderFunctions.node()(node),
-        data: {
-          [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: finalTokenResolver(
-            'node.cursor',
-            node,
-          ),
-        },
+        cursor: toSurfaceCursor(finalTokenResolver('node.cursor', node)),
       });
     }
     for (const edge of edges) {
@@ -58,12 +53,7 @@ export const phantom: PhantomPlugin = ({
           source: getNode(edge.source),
           target: getNode(edge.target),
         }),
-        data: {
-          [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: finalTokenResolver(
-            'edge.cursor',
-            edge,
-          ),
-        },
+        cursor: toSurfaceCursor(finalTokenResolver('edge.cursor', edge)),
       });
     }
     return elements;
@@ -136,17 +126,12 @@ export const phantom: PhantomPlugin = ({
       edgeIds: edges.map((edge) => edge.id),
     });
 
-  const isNode = (id: string) => nodes.some((node) => node.id === id);
-
-  const isEdge = (id: string) => edges.some((edge) => edge.id === id);
+  const isPhantomNode = (id: string) => nodes.some((node) => node.id === id);
+  const isPhantomEdge = (id: string) => edges.some((edge) => edge.id === id);
 
   const canResolveNode = (nodeId: CoreNode['id']) =>
-    controls.isNode(nodeId) || isNode(nodeId);
+    controls.isNode(nodeId) || isPhantomNode(nodeId);
 
-  // a phantom edge may point at a real node, so a removed node leaves it dangling and
-  // getNodePosition throws on the next frame, taking the whole render pass with it.
-  // resolved against current state rather than the event payload because a transit
-  // decode reports every pre-decode node as removed, including the ones it restored
   const dropDanglingEdges = () => {
     edges = edges.filter(
       (edge) => canResolveNode(edge.source) && canResolveNode(edge.target),
@@ -169,8 +154,8 @@ export const phantom: PhantomPlugin = ({
       removeAllElements,
       nodes: () => nodes,
       edges: () => edges,
-      isNode,
-      isEdge,
+      isNode: isPhantomNode,
+      isEdge: isPhantomEdge,
       getNodePosition,
     },
   };

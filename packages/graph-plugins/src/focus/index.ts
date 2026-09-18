@@ -1,4 +1,4 @@
-import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import type { ElementMouseEvent } from '@canvas/surface/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';

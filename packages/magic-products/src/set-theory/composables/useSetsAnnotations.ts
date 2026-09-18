@@ -1,9 +1,9 @@
 import type { Aggregator } from '@canvas/primitives/aggregator/types';
 import type {
+  CanvasSurface,
   ElementMouseEvent,
   ElementsUnderCursor,
-} from '@canvas/surface/events/index';
-import type { CanvasSurface } from '@canvas/surface/types';
+} from '@canvas/surface/index';
 import {
   type AnnotationsControls,
   createAnnotations,

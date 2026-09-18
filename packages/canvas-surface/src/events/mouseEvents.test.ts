@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createApp, defineComponent, h, nextTick } from 'vue';
 
-import { useCanvasSurface } from '../index.ts';
+import { useCanvasSurface } from '../useCanvasSurface.ts';
 import type { ElementEvents } from './index.ts';
 
 // jsdom has no 2d context, and the surface resolves one on mount before anything else runs

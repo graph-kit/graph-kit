@@ -1,5 +1,4 @@
-import { useVisibleWorldRect } from '@canvas/surface/coordinates/visibleWorldRect';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface, useVisibleWorldRect } from '@canvas/surface/index';
 import { placeOnboardingGraph } from '@magic/shared/graph-shell/onboarding-graph/layout';
 import { describe, expect, it } from 'vitest';
 

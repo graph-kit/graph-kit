@@ -1,5 +1,5 @@
 import { Aggregator } from '@canvas/primitives/aggregator/types';
-import type { ElementMouseEvent } from '@canvas/surface/events/index';
+import type { ElementMouseEvent } from '@canvas/surface/index';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';

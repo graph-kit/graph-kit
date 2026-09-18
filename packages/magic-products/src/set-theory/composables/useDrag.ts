@@ -1,5 +1,4 @@
-import type { ElementMouseEvent } from '@canvas/surface/events/index';
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface, ElementMouseEvent } from '@canvas/surface/index';
 import { Coordinate } from '@core/utils/canvas/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 

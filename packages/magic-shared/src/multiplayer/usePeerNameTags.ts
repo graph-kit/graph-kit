@@ -7,7 +7,7 @@ import { rect } from '@canvas/primitives/shapes/rect/index';
 import { TEXT_BLOCK_DEFAULTS } from '@canvas/primitives/text/defaults';
 import { getTextDimensions } from '@canvas/primitives/text/getTextDimensions';
 import type { TextBlock } from '@canvas/primitives/text/types';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 import { ANNOTATION_PRIORITY } from '@core/annotations/constants';
 
 import { onUnmounted } from 'vue';

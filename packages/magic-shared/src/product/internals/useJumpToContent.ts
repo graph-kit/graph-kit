@@ -1,4 +1,4 @@
-import { centerCameraOn } from '@canvas/surface/camera/centerCameraOn';
+import { centerCameraOn } from '@canvas/surface/index';
 import { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import { throttle } from '@core/utils/throttle';
 

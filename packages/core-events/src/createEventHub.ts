@@ -3,25 +3,39 @@ import { EventMapToEventRegistry, GenericEventMap } from './types.ts';
 
 /**
  * creates a `subscribe`, `unsubscribe`, and `emit` function for
- * registering, deregistering and broadcasting graph events.
+ * registering, deregistering and broadcasting events.
  */
 export const createEventHub = <EventMap extends GenericEventMap>(
   eventRegistry: EventMapToEventRegistry<EventMap>,
 ) => {
   const { handle, unhandle, fireHandlers } = createEventHandler<EventMap>();
+
+  const unsubscribe = <EventName extends keyof EventMap>(
+    eventName: EventName,
+    eventCallback: EventMap[EventName],
+  ) => {
+    eventRegistry[eventName].delete(eventCallback);
+  };
+
   return {
     /**
      * subscribe to an event to receive updates when it is triggered
      *
      * @param eventName the name of the event to subscribe to
      * @param eventCallback the callback function invoked when the event is emitted
-     * @example subscribe('onNodesAdded', (node) => console.log(node)) // logs the node that was added
+     * @returns a cleanup function that unsubscribes the callback. subscriptions
+     * are deduped by callback, so cleanup removes the callback for every caller
+     * that subscribed it
+     * @example
+     * const cleanup = subscribe('onItemsAdded', (items) => console.log(items)) // logs the items that were added
+     * cleanup() // stops logging
      */
     subscribe: <EventName extends keyof EventMap>(
       eventName: EventName,
       eventCallback: EventMap[EventName],
     ) => {
       eventRegistry[eventName].add(eventCallback);
+      return () => unsubscribe(eventName, eventCallback);
     },
     /**
      * handle an event, and call consume to prevent lower priority handlers from receiving the event
@@ -29,8 +43,11 @@ export const createEventHub = <EventMap extends GenericEventMap>(
      * @param eventName the name of the event to handle
      * @param eventCallback the callback function invoked when the event is emitted
      * @param consume prevents the event from being handled by other handlers downstream (ie stops propagation)
-     * @example handle('onNodesAdded', (node, consume) => {
-     *  console.log(node)
+     * @returns a cleanup function that removes the handler. handlers are
+     * deduped by callback, so cleanup removes the callback for every caller
+     * that registered it
+     * @example handle('onItemsAdded', (items, consume) => {
+     *  console.log(items)
      *  // we handled the event 😎
      *  consume()
      * })
@@ -41,20 +58,15 @@ export const createEventHub = <EventMap extends GenericEventMap>(
      *
      * @param eventName the name of the event to unsubscribe from
      * @param eventCallback the callback function to be removed from the event
-     * @example unsubscribe('onNodesAdded', someSubscribedCallback) // stops logging the node that was added
+     * @example unsubscribe('onItemsAdded', someSubscribedCallback) // stops logging the items that were added
      */
-    unsubscribe: <EventName extends keyof EventMap>(
-      eventName: EventName,
-      eventCallback: EventMap[EventName],
-    ) => {
-      eventRegistry[eventName].delete(eventCallback);
-    },
+    unsubscribe,
     /**
      * clear a handler callback to stop handling updates when triggered
      *
      * @param eventName the name of the event to clear the handler from
      * @param eventCallback the callback function to be removed from the event
-     * @example unhandle('onNodesAdded', someHandlerCallback) // stops logging the node that was added
+     * @example unhandle('onItemsAdded', someHandlerCallback) // stops logging the items that were added
      */
     unhandle,
     /**
@@ -62,7 +74,7 @@ export const createEventHub = <EventMap extends GenericEventMap>(
      *
      * @param eventName the name of the event to push to
      * @param callbackArgs the arguments to be passed to the event's callbacks
-     * @example emit('onNodesAdded', node) // invokes all callbacks subscribed or handling onNodesAdded, with the node as an argument
+     * @example emit('onItemsAdded', items) // invokes all callbacks subscribed or handling onItemsAdded, with the items as an argument
      */
     emit: <EventName extends keyof EventMap>(
       eventName: EventName,

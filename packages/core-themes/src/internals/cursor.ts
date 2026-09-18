@@ -11,9 +11,9 @@ export const CURSOR_FALLBACK = 'fallback' as const;
 export type CursorFallback = typeof CURSOR_FALLBACK;
 
 /**
- * the same "no canvas-level opinion" in the spelling a canvas surface uses,
- * for a consumer handing its resolved `canvas.cursor` to one
+ * the same "no opinion" in the spelling a canvas surface uses, for handing a
+ * resolved cursor token to one
  */
-export const canvasCursorOverride = (
+export const toSurfaceCursor = (
   resolved: Cursor | CursorFallback,
 ): Cursor | undefined => (resolved === CURSOR_FALLBACK ? undefined : resolved);

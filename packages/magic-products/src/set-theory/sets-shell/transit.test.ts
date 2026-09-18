@@ -1,4 +1,4 @@
-import type { CanvasSurface } from '@canvas/surface/types';
+import type { CanvasSurface } from '@canvas/surface/index';
 import type { Annotation, AnnotationsControls } from '@core/annotations/index';
 import { describe, expect, it } from 'vitest';
 

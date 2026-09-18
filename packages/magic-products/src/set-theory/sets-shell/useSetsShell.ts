@@ -1,5 +1,5 @@
 import { useCanvasSurface } from '@canvas/surface/index';
-import { canvasCursorOverride } from '@core/themes/index';
+import { toSurfaceCursor } from '@core/themes/index';
 import { ProductControls, Shell, useShell } from '@magic/shared/product';
 
 import { computed, ref } from 'vue';
@@ -33,8 +33,7 @@ export const useSetsShell = (): {
   const theme = useSetsTheme();
 
   const surface = useCanvasSurface({
-    canvasCursor: () =>
-      canvasCursorOverride(theme._resolveToken('canvas.cursor')),
+    cursorOverride: () => toSurfaceCursor(theme._resolveToken('canvas.cursor')),
   });
 
   const annotations = useSetsAnnotations({ surface, theme });

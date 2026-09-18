@@ -1,7 +1,6 @@
 import type { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type { AnimatedShapeFactories } from '@canvas/primitives/animation/index';
 import type { RegionMember } from '@canvas/primitives/shapes/region/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/cursor';
 import type { BoundingBox, Coordinate } from '@core/utils/canvas/index';
 import type { Color } from '@core/utils/colors';
 import { CURSOR } from '@core/utils/cursor';
@@ -103,10 +102,8 @@ const circleElements = (props: SetsCanvasElementsProps): CanvasElement[] => {
   return definitions.toSorted(byDescendingRadius).map((definition) => ({
     id: definition.id,
     priority: CIRCLE_PRIORITY,
-    data: {
-      // grabbing is the canvas's to say, see useCircleDrag
-      [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: resolveToken('set.cursor'),
-    },
+    // grabbing is the canvas's to say, see useCircleDrag
+    cursor: resolveToken('set.cursor'),
     shape: shapes.circle({
       id: definition.id,
       ...definition.display,
@@ -161,9 +158,7 @@ const resizeBandElements = (
     return {
       id,
       priority: RESIZE_BAND_PRIORITY,
-      data: {
-        [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: resizeCursor(at, cursorAt),
-      },
+      cursor: resizeCursor(at, cursorAt),
       shape: shapes.region({
         id,
         inside: [{ shape: 'circle', at, radius: radius + EDGE_GRAB_BUFFER }],

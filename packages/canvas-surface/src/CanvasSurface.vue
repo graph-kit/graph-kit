@@ -13,13 +13,6 @@
 
   onMounted(() => props.canvasRef(nullThrows(canvas.value, CANVAS_MISSING)));
 
-  /**
-   * a canvas element is not focusable on its own, so clicking it leaves DOM
-   * focus wherever it was, typically on the last shell button the user pressed.
-   * tabindex makes the canvas a real focus target and this claims it explicitly
-   * on mousedown rather than trusting the browser default, so focus lands on the
-   * canvas before any of the graph's own mouse handling runs.
-   */
   const claimFocus = () => canvas.value?.focus();
 </script>
 

@@ -24,6 +24,18 @@ type HandlerRecord<EventMap extends GenericEventMap> = {
 
 export const createEventHandler = <EventMap extends GenericEventMap>() => {
   const allHandlers: HandlerRecord<EventMap> = {};
+
+  const unhandle = <EventName extends keyof EventMap>(
+    eventName: EventName,
+    eventCallback: WithConsume<EventMap[EventName]>,
+  ) => {
+    const handlers = allHandlers[eventName];
+    if (!handlers) return;
+    allHandlers[eventName] = handlers.filter(
+      ({ callback }) => callback !== eventCallback,
+    );
+  };
+
   return {
     handle: <EventName extends keyof EventMap>(
       eventName: EventName,
@@ -31,24 +43,20 @@ export const createEventHandler = <EventMap extends GenericEventMap>() => {
       handlerId: string,
       priority: HandlerPriority = { before: [] },
     ) => {
+      const cleanup = () => unhandle(eventName, eventCallback);
+
       const handlers = allHandlers[eventName] ?? [];
-      if (handlers.some(({ callback }) => callback === eventCallback)) return;
+      if (handlers.some(({ callback }) => callback === eventCallback)) {
+        return cleanup;
+      }
 
       allHandlers[eventName] = getSortedByPriority([
         ...handlers,
         { id: handlerId, callback: eventCallback, priority },
       ]);
+      return cleanup;
     },
-    unhandle: <EventName extends keyof EventMap>(
-      eventName: EventName,
-      eventCallback: WithConsume<EventMap[EventName]>,
-    ) => {
-      const handlers = allHandlers[eventName];
-      if (!handlers) return;
-      allHandlers[eventName] = handlers.filter(
-        ({ callback }) => callback !== eventCallback,
-      );
-    },
+    unhandle,
     fireHandlers: <EventName extends keyof EventMap>(
       eventName: EventName,
       ...callbackArgs: Parameters<EventMap[EventName]>

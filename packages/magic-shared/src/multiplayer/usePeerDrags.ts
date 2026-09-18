@@ -1,5 +1,5 @@
 import { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface } from '@canvas/surface/index';
 import { DraggedElement, UserId } from '@multiplayer/protocol/room';
 
 import { onUnmounted } from 'vue';

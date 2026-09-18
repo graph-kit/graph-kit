@@ -1,8 +1,7 @@
 import { createAggregator } from '@canvas/primitives/aggregator/index';
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { rect } from '@canvas/primitives/shapes/rect/index';
-import { useVisibleWorldRect } from '@canvas/surface/coordinates/visibleWorldRect';
-import { CanvasSurface } from '@canvas/surface/types';
+import { CanvasSurface, useVisibleWorldRect } from '@canvas/surface/index';
 import { Coordinate } from '@core/utils/canvas/index';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

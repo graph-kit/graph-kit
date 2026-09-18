@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
 
-import { assert } from '@core/utils/assert';
+import { assert, nullThrows } from '@core/utils/assert';
 import { type Browser, type Page, chromium } from 'playwright';
 
 import { PROBE_TIMEOUT_MS, ROUTE, VIEWPORT } from './constants.ts';
@@ -73,6 +73,7 @@ const main = async () => {
     },
   });
 
+  const out = nullThrows(values.out, '--out is required');
   const url = new URL(ROUTE, values.url).toString();
 
   log(`measuring ${values.commit} at ${url}`);
@@ -119,14 +120,8 @@ const main = async () => {
     scenes: results,
   };
 
-  const serialized = JSON.stringify(runResult, null, 2);
-
-  if (values.out) {
-    await writeFile(values.out, serialized);
-    log(`wrote ${results.length} scenes to ${values.out}`);
-  } else {
-    process.stdout.write(serialized);
-  }
+  await writeFile(out, JSON.stringify(runResult, null, 2));
+  log(`wrote ${results.length} scenes to ${out}`);
 };
 
 await main();

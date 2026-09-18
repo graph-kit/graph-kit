@@ -1,6 +1,6 @@
-import { RepaintEvents } from '@graph/dev-tools/perf/ctx-counter';
+import type { RepaintEvents } from '@graph/dev-tools/perf/ctx-counter';
 import { startGraphCallProbe } from '@graph/dev-tools/perf/graph-call-probe';
-import { SceneGraph } from '@graph/dev-tools/perf/scene';
+import type { SceneGraph } from '@graph/dev-tools/perf/scene';
 
 import { onBeforeUnmount, onMounted } from 'vue';
 

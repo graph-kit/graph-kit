@@ -4,7 +4,6 @@ const toSecondString = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
 export const log = (message: string) => {
   const elapsed = toSecondString(Date.now() - RUN_STARTED_AT);
-  // stderr because stdout carries the report itself when --out is not given
   process.stderr.write(`[${elapsed.padStart(6)}] ${message}\n`);
 };
 

@@ -290,6 +290,9 @@ importers:
       '@graph/perf-harness':
         specifier: workspace:*
         version: link:../perf-harness
+      ts-essentials:
+        specifier: ^10.2.0
+        version: 10.2.1(typescript@6.0.3)
 
   packages/graph-plugins:
     dependencies:

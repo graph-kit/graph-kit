@@ -1,5 +1,5 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/index';
+import { toSurfaceCursor } from '@core/themes/index';
 import { nullThrows } from '@core/utils/assert';
 import { ComputedTokenResolver } from '@graph/computed-tokens/index';
 import { CoreControls } from '@graph/core/types';
@@ -79,9 +79,7 @@ export const createCanvasElementFactories = (
       ),
     }),
     priority: controls.surface.getNodePriority()(node.id),
-    data: {
-      [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: tokenResolver('node.cursor', node),
-    },
+    cursor: toSurfaceCursor(tokenResolver('node.cursor', node)),
   });
 
   const EDGE_RENDER_PRIORITY = 1;
@@ -99,9 +97,7 @@ export const createCanvasElementFactories = (
       },
     }),
     priority: EDGE_RENDER_PRIORITY,
-    data: {
-      [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: tokenResolver('edge.cursor', edge),
-    },
+    cursor: toSurfaceCursor(tokenResolver('edge.cursor', edge)),
   });
 
   return {

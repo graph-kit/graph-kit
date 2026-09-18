@@ -1,18 +1,19 @@
 import { createAggregator } from '@canvas/primitives/aggregator/index';
+import type { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';
 import { getCtx } from '@core/utils/canvas/index';
 import type { Cursor } from '@core/utils/cursor';
 
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { type DrawPattern, useBackgroundPattern } from './backgroundPattern.ts';
 import { useCamera } from './camera/index.ts';
-import { CANVAS_MISSING } from './constants.ts';
+import { useCanvasSize } from './canvasSize.ts';
 import { useWorldCoordinates } from './coordinates/index.ts';
 import { useVisibleWorldRect } from './coordinates/visibleWorldRect.ts';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY, setupCursor } from './cursor.ts';
+import { setupCursor } from './cursor.ts';
 import { useDevicePixelRatio } from './devicePixelRatio.ts';
 import {
   createCanvasBoundEvents,
@@ -20,7 +21,6 @@ import {
   createDocumentBoundEvents,
   createElementsUnderCursor,
 } from './events/index.ts';
-import { syncBackingStore } from './syncBackingStore.ts';
 import type { CanvasSurface } from './types.ts';
 
 const REPAINT_FPS = 60;
@@ -32,8 +32,8 @@ const MS_PER_REPAINT = 1000 / REPAINT_FPS - 1;
 export type CanvasSurfaceOptions = {
   /**
    * when this returns a cursor, the browser shows it anywhere on the canvas.
-   * returning `undefined` falls back to the canvas element under the pointer,
-   * which sets its cursor via {@link CANVAS_ELEMENT_CURSOR_FIELD_KEY}
+   * returning `undefined` falls back to the {@link CanvasElement.cursor} of
+   * the canvas element under the pointer
    */
   cursorOverride?: () => Cursor | undefined;
 };
@@ -42,9 +42,6 @@ export const useCanvasSurface = (
   options: CanvasSurfaceOptions = {},
 ): CanvasSurface => {
   const canvas = ref<HTMLCanvasElement>();
-
-  /** the layout box as of the last resize, in css pixels */
-  const canvasCssSize = { width: ref(0), height: ref(0) };
 
   const devicePixelRatio = useDevicePixelRatio();
 
@@ -58,7 +55,6 @@ export const useCanvasSurface = (
   const lifecycleEvents = createEventHub(createCanvasLifecycleEventRegistry());
 
   let repaintFrame: number | undefined;
-  let resizeObserver: ResizeObserver | undefined;
   let ctx: CanvasRenderingContext2D | undefined;
 
   let lastRepaintAt = 0;
@@ -70,39 +66,21 @@ export const useCanvasSurface = (
     });
   };
 
-  const resizeCanvas = () => {
-    const { rect, resized } = syncBackingStore(
-      canvas.value,
-      devicePixelRatio.value,
-    );
-    canvasCssSize.width.value = rect.width;
-    canvasCssSize.height.value = rect.height;
-    return resized;
-  };
-
-  const resizeAndRepaint = () => {
-    if (!resizeCanvas()) return;
-    repaintCanvas(performance.now());
-  };
-
-  // tracks when user drags window to another display
-  watch(devicePixelRatio, resizeAndRepaint);
+  const canvasCssSize = useCanvasSize({
+    canvas,
+    devicePixelRatio,
+    onResize: () => repaintCanvas(performance.now()),
+  });
 
   onMounted(() => {
     ctx = getCtx(canvas);
-    resizeCanvas();
     scheduleRepaint();
     lifecycleEvents.emit('onMounted');
-
-    resizeObserver = new ResizeObserver(resizeAndRepaint);
-    resizeObserver.observe(nullThrows(canvas.value, CANVAS_MISSING));
   });
 
   onBeforeUnmount(() => {
     lifecycleEvents.emit('onBeforeUnmount');
     cancelAnimationFrame(nullThrows(repaintFrame, 'rAF loop undefined'));
-    nullThrows(resizeObserver, 'resize observer undefined').disconnect();
-    resizeObserver = undefined;
     ctx = undefined;
   });
 

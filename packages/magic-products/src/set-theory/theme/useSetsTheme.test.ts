@@ -1,4 +1,4 @@
-import { CURSOR_FALLBACK, canvasCursorOverride } from '@core/themes/index';
+import { CURSOR_FALLBACK, toSurfaceCursor } from '@core/themes/index';
 import { CURSOR } from '@core/utils/cursor';
 import { describe, expect, it } from 'vitest';
 
@@ -25,7 +25,7 @@ describe('the sets theme', () => {
 
       expect(theme._resolveToken('canvas.cursor')).toBe(CURSOR_FALLBACK);
       expect(
-        canvasCursorOverride(theme._resolveToken('canvas.cursor')),
+        toSurfaceCursor(theme._resolveToken('canvas.cursor')),
       ).toBeUndefined();
     });
 
@@ -38,11 +38,11 @@ describe('the sets theme', () => {
         .set('canvas.cursor', () => (dragging ? CURSOR.GRABBING : undefined));
 
       expect(
-        canvasCursorOverride(theme._resolveToken('canvas.cursor')),
+        toSurfaceCursor(theme._resolveToken('canvas.cursor')),
       ).toBeUndefined();
 
       dragging = true;
-      expect(canvasCursorOverride(theme._resolveToken('canvas.cursor'))).toBe(
+      expect(toSurfaceCursor(theme._resolveToken('canvas.cursor'))).toBe(
         CURSOR.GRABBING,
       );
     });

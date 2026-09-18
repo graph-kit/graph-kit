@@ -1,13 +1,9 @@
 import type { BoundingBox } from '@core/utils/canvas/index';
 
-import { type Ref, computed } from 'vue';
+import { computed } from 'vue';
 
 import type { Camera } from '../camera/index.ts';
-
-type CanvasSize = {
-  width: Readonly<Ref<number>>;
-  height: Readonly<Ref<number>>;
-};
+import type { CanvasSize } from '../canvasSize.ts';
 
 /**
  * the slice of the world the canvas currently shows.

@@ -1,15 +1,10 @@
 import type { AggregatorControls } from '@canvas/primitives/aggregator/index';
-import { CURSOR, Cursor, isValidCursor } from '@core/utils/cursor';
+import type { CanvasElement } from '@canvas/primitives/aggregator/types';
+import { CURSOR, Cursor } from '@core/utils/cursor';
 
 import type { Ref } from 'vue';
 
 import type { ElementsUnderCursor } from './events/index.ts';
-
-/**
- * the key a canvas element hangs its cursor from. anything contributing to the
- * aggregator can set it, and the topmost element under the pointer wins
- */
-export const CANVAS_ELEMENT_CURSOR_FIELD_KEY = 'cursor';
 
 type CursorProps = {
   subscribe: AggregatorControls['events']['subscribe'];
@@ -17,8 +12,8 @@ type CursorProps = {
   elementsUnderCursor: Pick<ElementsUnderCursor, 'topElement'>;
   /**
    * when this returns a cursor, the browser shows it anywhere on the canvas.
-   * returning `undefined` falls back to the canvas element under the pointer,
-   * which sets its cursor via {@link CANVAS_ELEMENT_CURSOR_FIELD_KEY}
+   * returning `undefined` falls back to the {@link CanvasElement.cursor} of
+   * the canvas element under the pointer
    */
   cursorOverride?: () => Cursor | undefined;
 };
@@ -37,18 +32,7 @@ export const setupCursor = ({
     const override = cursorOverride?.();
     if (override !== undefined) return override;
 
-    const topElement = elementsUnderCursor.topElement;
-    if (!topElement) return CURSOR.DEFAULT;
-
-    const elementCursor = topElement.data?.[CANVAS_ELEMENT_CURSOR_FIELD_KEY];
-
-    if (elementCursor === undefined) return CURSOR.DEFAULT;
-    if (!isValidCursor(elementCursor)) {
-      console.warn(`expected valid cursor: got "${elementCursor}"`);
-      return CURSOR.DEFAULT;
-    }
-
-    return elementCursor;
+    return elementsUnderCursor.topElement?.cursor ?? CURSOR.DEFAULT;
   };
 
   const refreshCursor = () => {

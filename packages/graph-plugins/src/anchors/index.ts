@@ -1,12 +1,9 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type { CircleSchema } from '@canvas/primitives/shapes/circle/types';
 import type { WithId } from '@canvas/primitives/types/index';
-import {
-  CANVAS_ELEMENT_CURSOR_FIELD_KEY,
-  type ElementMouseEvent,
-} from '@canvas/surface/index';
+import { type ElementMouseEvent } from '@canvas/surface/index';
 import { createEventHub } from '@core/events/createEventHub';
-import { createThemeController } from '@core/themes/index';
+import { createThemeController, toSurfaceCursor } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { CoreNode } from '@graph/primitives/types';
@@ -104,12 +101,9 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
         id: anchor.id,
         shape: nodeAnchorShape,
         priority: 4,
-        data: {
-          [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: theme._resolveToken(
-            'anchors.default.cursor',
-            node,
-          ),
-        },
+        cursor: toSurfaceCursor(
+          theme._resolveToken('anchors.default.cursor', node),
+        ),
       });
     }
 

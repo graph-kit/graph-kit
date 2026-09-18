@@ -1,5 +1,5 @@
 import { CanvasElement } from '@canvas/primitives/aggregator/types';
-import { CANVAS_ELEMENT_CURSOR_FIELD_KEY } from '@canvas/surface/index';
+import { toSurfaceCursor } from '@core/themes/index';
 import { nullThrows } from '@core/utils/assert';
 import { CoreEdge, CoreNode } from '@graph/primitives/types';
 
@@ -41,12 +41,7 @@ export const phantom: PhantomPlugin = ({
         id: node.id,
         priority: NODE_RENDER_PRIORITY,
         shape: renderFunctions.node()(node),
-        data: {
-          [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: finalTokenResolver(
-            'node.cursor',
-            node,
-          ),
-        },
+        cursor: toSurfaceCursor(finalTokenResolver('node.cursor', node)),
       });
     }
     for (const edge of edges) {
@@ -58,12 +53,7 @@ export const phantom: PhantomPlugin = ({
           source: getNode(edge.source),
           target: getNode(edge.target),
         }),
-        data: {
-          [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: finalTokenResolver(
-            'edge.cursor',
-            edge,
-          ),
-        },
+        cursor: toSurfaceCursor(finalTokenResolver('edge.cursor', edge)),
       });
     }
     return elements;

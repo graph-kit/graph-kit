@@ -1,12 +1,9 @@
 import { Aggregator, CanvasElement } from '@canvas/primitives/aggregator/types';
 import { normalizeBoundingBox } from '@canvas/primitives/helpers';
 import type { BoundingBox, Coordinate } from '@canvas/primitives/types/utility';
-import {
-  CANVAS_ELEMENT_CURSOR_FIELD_KEY,
-  type ElementMouseEvent,
-} from '@canvas/surface/index';
+import { type ElementMouseEvent } from '@canvas/surface/index';
 import { createEventHub } from '@core/events/createEventHub';
-import { createThemeController } from '@core/themes/index';
+import { createThemeController, toSurfaceCursor } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
 import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
@@ -170,10 +167,8 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       priority: 3,
       data: {
         [NODE_DRAG_CANVAS_ELEMENT_DATA_FIELD]: selectableFocusedNodeIds(),
-        [CANVAS_ELEMENT_CURSOR_FIELD_KEY]: theme._resolveToken(
-          'marquee.selection.cursor',
-        ),
       },
+      cursor: toSurfaceCursor(theme._resolveToken('marquee.selection.cursor')),
     };
   };
 

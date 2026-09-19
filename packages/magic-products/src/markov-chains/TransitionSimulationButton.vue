@@ -16,7 +16,7 @@
   import { mdiPlay } from '@mdi/js';
   import Fraction from 'fraction.js';
 
-  import { computed, ref, shallowRef } from 'vue';
+  import { computed, onUnmounted, ref, shallowRef } from 'vue';
 
   import { distributionSimulationDefinition } from './simulations/useDistributionSimulation.ts';
   import { useChainDisabledState } from './useChainDisabledState.ts';
@@ -41,14 +41,9 @@
 
   const rawInput = ref(initRawInput());
 
-  graph.events.subscribe(
-    'onNodesAdded',
-    () => (rawInput.value = initRawInput()),
-  );
-  graph.events.subscribe(
-    'onNodesRemoved',
-    () => (rawInput.value = initRawInput()),
-  );
+  const resetRawInput = () => (rawInput.value = initRawInput());
+  onUnmounted(graph.events.subscribe('onNodesAdded', resetRawInput));
+  onUnmounted(graph.events.subscribe('onNodesRemoved', resetRawInput));
 
   const cleanedInput = (rawInput: string) => {
     const trimmed = rawInput.trim();

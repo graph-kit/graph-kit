@@ -1,25 +1,18 @@
-import { Annotation, AnnotationsChange } from '@core/annotations/index';
+import { AnnotationsChange } from '@core/annotations/index';
 import { NodePositionStreamControls } from '@graph/core/positions/types';
 import { ConsumerEventMap } from '@graph/create-graph/consumer-events';
 import { UserId } from '@multiplayer/protocol/room';
 import Fraction from 'fraction.js';
 import * as Y from 'yjs';
 
-import { computed, ref } from 'vue';
-
 import { Graph } from '../../graph/types.ts';
 import {
-  DocAnnotation,
   annotationFromDoc,
   annotationToDoc,
   readAnnotationsMap,
 } from '../../multiplayer/doc/annotations.ts';
 import { createDocHistory } from '../../multiplayer/doc/history.ts';
-import {
-  BINDING_ORIGIN,
-  RECONCILE_ORIGIN,
-  isOwnWrite,
-} from '../../multiplayer/doc/origins.ts';
+import { RECONCILE_ORIGIN, isOwnWrite } from '../../multiplayer/doc/origins.ts';
 import { createDocWriter } from '../../multiplayer/doc/writer.ts';
 import { DocBindMode, DocBinding } from '../../product/types.ts';
 
@@ -369,10 +362,6 @@ export const bindGraphToDoc = (
     });
   };
 
-  // rawEvents rather than graph.events, whose subscribe registers an onUnmounted per
-  // call: binding happens after the join resolves, so there is no component instance
-  // left to attach to
-  //
   // subscription driven rather than watcher driven: the suppression flag only holds
   // because graph events emit synchronously
   const subscribe = () => {
@@ -381,16 +370,16 @@ export const bindGraphToDoc = (
       'onAnnotationsChanged',
       onAnnotationsChanged,
     );
-    graph.rawEvents.subscribe('onElementsAdded', onElementsAdded);
-    graph.rawEvents.subscribe('onElementsRemoved', onElementsRemoved);
-    graph.rawEvents.subscribe(
+    graph.events.subscribe('onElementsAdded', onElementsAdded);
+    graph.events.subscribe('onElementsRemoved', onElementsRemoved);
+    graph.events.subscribe(
       'onNodePositionsCommitted',
       onNodePositionsCommitted,
     );
-    graph.rawEvents.subscribe('onEdgeWeightsChanged', onEdgeWeightsChanged);
+    graph.events.subscribe('onEdgeWeightsChanged', onEdgeWeightsChanged);
     // an undo or a link load replaces the whole graph at once, and there is no per
     // element event describing what changed
-    graph.rawEvents.transit.subscribe('onDecoded', writeWholeGraph);
+    graph.events.transit.subscribe('onDecoded', writeWholeGraph);
   };
 
   // one per peer, since two people dragging at once are two continuous moves and
@@ -448,14 +437,14 @@ export const bindGraphToDoc = (
       'onAnnotationsChanged',
       onAnnotationsChanged,
     );
-    graph.rawEvents.unsubscribe('onElementsAdded', onElementsAdded);
-    graph.rawEvents.unsubscribe('onElementsRemoved', onElementsRemoved);
-    graph.rawEvents.unsubscribe(
+    graph.events.unsubscribe('onElementsAdded', onElementsAdded);
+    graph.events.unsubscribe('onElementsRemoved', onElementsRemoved);
+    graph.events.unsubscribe(
       'onNodePositionsCommitted',
       onNodePositionsCommitted,
     );
-    graph.rawEvents.unsubscribe('onEdgeWeightsChanged', onEdgeWeightsChanged);
-    graph.rawEvents.transit.unsubscribe('onDecoded', writeWholeGraph);
+    graph.events.unsubscribe('onEdgeWeightsChanged', onEdgeWeightsChanged);
+    graph.events.transit.unsubscribe('onDecoded', writeWholeGraph);
   };
 
   if (mode === 'seed') writeWholeGraph();

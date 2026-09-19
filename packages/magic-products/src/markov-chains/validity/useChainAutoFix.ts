@@ -157,11 +157,11 @@ export const useChainAutoFix = (graph: Graph, chain: MarkovChain) => {
   const themer = {
     activate: () => {
       preview.activate();
-      graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
+      graph.events.subscribe('onStructureChange', handleStructureChange);
     },
     deactivate: () => {
       preview.deactivate();
-      graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
+      graph.events.unsubscribe('onStructureChange', handleStructureChange);
     },
   };
 

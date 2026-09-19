@@ -27,7 +27,6 @@ import { useAnimation } from '@graph/vue/useAnimation';
 import { useCharacteristics } from '@graph/vue/useCharacteristics';
 import { useCreateGraphActivePreset } from '@graph/vue/useCreateGraphActivePreset';
 import { useFocus } from '@graph/vue/useFocus';
-import { useGraphEvents } from '@graph/vue/useGraphEvents';
 import { useHistory } from '@graph/vue/useHistory';
 import { useMinimumSpanningTrees } from '@graph/vue/useMinimumSpanningTrees';
 import { useNodesEdges } from '@graph/vue/useNodesEdges';
@@ -92,8 +91,6 @@ export const useGraph = (options: UseGraphOptions = {}) => {
   const vueHistory = useHistory(graph.history);
   const vueAnimation = useAnimation(graph.animation);
 
-  const vueEvents = useGraphEvents(graph.events);
-
   return {
     ...graph,
     ...vueNodesEdges,
@@ -108,7 +105,5 @@ export const useGraph = (options: UseGraphOptions = {}) => {
       ...graph.theme,
       ...vueActivePreset,
     },
-    events: vueEvents,
-    rawEvents: graph.events,
   };
 };

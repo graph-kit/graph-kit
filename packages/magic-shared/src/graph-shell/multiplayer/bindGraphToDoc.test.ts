@@ -43,7 +43,7 @@ const createFakeGraph = () => {
 
   const positions = createNodePositionStore(coreEvents);
 
-  const rawEvents = createEventHub<ConsumerEventMap>({
+  const consumerEvents = createEventHub<ConsumerEventMap>({
     onStructureChange: new Set(),
     onNodesAdded: new Set(),
     onNodesRemoved: new Set(),
@@ -63,7 +63,7 @@ const createFakeGraph = () => {
   // the store commits on its own clock, so the consumer event the binding listens to is
   // relayed from the core one rather than emitted at each call site
   coreEvents.subscribe('onNodePositionsCommitted', (committed) =>
-    rawEvents.emit('onNodePositionsCommitted', committed),
+    consumerEvents.emit('onNodePositionsCommitted', committed),
   );
 
   const findNode = (id: string) => nodes.find((node) => node.id === id);
@@ -107,7 +107,7 @@ const createFakeGraph = () => {
       if (index >= 0) nodes.splice(index, 1);
     }
     positions._internal.remove(removedNodeIds);
-    rawEvents.emit('onElementsRemoved', { removedNodeIds, removedEdgeIds });
+    consumerEvents.emit('onElementsRemoved', { removedNodeIds, removedEdgeIds });
     return { removedNodeIds, removedEdgeIds };
   };
 
@@ -128,7 +128,7 @@ const createFakeGraph = () => {
       ({ source, target }) => findNode(source) && findNode(target),
     );
     for (const edge of acceptedEdges) edges.push({ ...edge });
-    rawEvents.emit('onElementsAdded', {
+    consumerEvents.emit('onElementsAdded', {
       addedNodes: addedNodes.map(({ id }) => ({ id })),
       addedEdges: acceptedEdges.map(({ id }) => ({ id })),
     } as never);
@@ -157,7 +157,7 @@ const createFakeGraph = () => {
           const edge = findEdge(edgeId);
           if (edge) edge.weight = update;
         }
-        rawEvents.emit(
+        consumerEvents.emit(
           'onEdgeWeightsChanged',
           updates.map(({ edgeId }) => ({ edgeId })) as never,
         );
@@ -171,7 +171,7 @@ const createFakeGraph = () => {
       remove: (ids: string[]) =>
         (annotations = annotations.filter(({ id }) => !ids.includes(id))),
     },
-    rawEvents: { ...rawEvents, transit },
+    events: { ...consumerEvents, transit },
   } as unknown as Graph;
 
   return {

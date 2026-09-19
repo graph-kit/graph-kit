@@ -116,7 +116,7 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
       removeEdges = true;
       edgeThemer.activate();
       graph.anchors.lifecycle.disable();
-      graph.rawEvents.subscribe('onStructureChange', handleStructureChange);
+      graph.events.subscribe('onStructureChange', handleStructureChange);
       graph.surface.events.elements.subscribe(
         'onElementsUnderCursorChange',
         setActiveMstIndex,
@@ -128,7 +128,7 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
       removeEdges = false;
       edgeThemer.deactivate();
       graph.anchors.lifecycle.enable();
-      graph.rawEvents.unsubscribe('onStructureChange', handleStructureChange);
+      graph.events.unsubscribe('onStructureChange', handleStructureChange);
       graph.surface.events.elements.unsubscribe(
         'onElementsUnderCursorChange',
         setActiveMstIndex,

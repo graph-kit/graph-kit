@@ -129,6 +129,7 @@ type BeginPassFrame = {
 type PassSettledFrame = {
   type: 'pass-settled';
   pass: number;
+  totalPasses: number;
 };
 
 type NegativeCycleFrame = {

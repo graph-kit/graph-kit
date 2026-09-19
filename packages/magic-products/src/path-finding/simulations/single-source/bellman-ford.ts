@@ -311,7 +311,7 @@ export const bellmanFord: SingleSourceFunction =
       if (anyDistanceImproved) continue;
 
       endSweep();
-      frameCollector.add(frame({ type: 'pass-settled', pass }));
+      frameCollector.add(frame({ type: 'pass-settled', pass, totalPasses }));
       provedByFixpoint = true;
       break;
     }

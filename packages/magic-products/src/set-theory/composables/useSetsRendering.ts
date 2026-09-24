@@ -1,7 +1,4 @@
-import type {
-  Aggregator,
-  AggregatorTransformer,
-} from '@canvas/primitives/aggregator/types';
+import type { AggregatorTransformer } from '@canvas/primitives/aggregator/types';
 import type { CanvasSurface } from '@canvas/surface/index';
 import type { Color } from '@core/utils/colors';
 
@@ -52,7 +49,7 @@ export const useSetsRendering = (props: SetsRenderingProps) => {
     return map;
   });
 
-  const transformer: AggregatorTransformer = (aggregator: Aggregator) => {
+  const transformer: AggregatorTransformer = (aggregator) => {
     aggregator.push(
       ...setsCanvasElements({
         definitions: sets.definitions.value,

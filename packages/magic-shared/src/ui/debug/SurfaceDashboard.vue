@@ -31,7 +31,7 @@
 
   /** the aggregator is a plain array behind a getter, so its counts are polled */
   const sampleSurface = () => {
-    const aggregator = surface.aggregator.aggregator();
+    const aggregator = surface.aggregator.elements();
     const countByShape = new Map<string, number>();
     let hitTestable = 0;
 

@@ -136,6 +136,7 @@ export const useCanvasSurface = (
     },
     draw: {
       backgroundPattern: drawBackgroundPattern,
+      content: aggregator.draw,
       contentSuspended,
       backgroundPatternSuspended,
     },

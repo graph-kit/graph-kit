@@ -27,7 +27,7 @@ export const animation: AnimationPlugin = ({ controls }) => {
 
   const autoAnimateCapture = () =>
     autoAnimate.captureFrame(() =>
-      controls.surface.aggregator.draw(getCtx(controls.surface.canvas)),
+      controls.surface.draw.content(getCtx(controls.surface.canvas)),
     );
 
   /** whether the duration currently set is a one-off override rather than the consumers */

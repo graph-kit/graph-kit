@@ -58,12 +58,11 @@ const hitTest = (
   elements: ReturnType<typeof setsCanvasElements>,
   point: { x: number; y: number },
 ) => {
-  const { aggregator, addTransformer, getCanvasElementsAtCoordinate, draw } =
-    createAggregator({
-      drawGroup: () => {},
-      beginFrame: () => {},
-      endFrame: () => {},
-    });
+  const { addTransformer, elementsAt, draw } = createAggregator({
+    drawGroup: () => {},
+    beginFrame: () => {},
+    endFrame: () => {},
+  });
 
   addTransformer((agg) => {
     agg.push(...elements);
@@ -72,9 +71,8 @@ const hitTest = (
 
   // the aggregator only sorts on draw, and the hit test reads what was drawn
   draw(undefined as unknown as CanvasRenderingContext2D);
-  void aggregator;
 
-  return getCanvasElementsAtCoordinate(point).at(-1);
+  return elementsAt(point).at(-1);
 };
 
 describe('the sets canvas elements', () => {

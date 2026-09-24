@@ -1,4 +1,4 @@
-import type { Aggregator } from '@canvas/primitives/aggregator/types';
+import type { CanvasElement } from '@canvas/primitives/aggregator/types';
 import type {
   CanvasSurface,
   ElementMouseEvent,
@@ -63,7 +63,7 @@ export const useSetsAnnotations = ({
 
   const swallow = (_: unknown, consume: () => void) => consume();
 
-  const paintAnnotations = (aggregator: Aggregator) => {
+  const paintAnnotations = (aggregator: CanvasElement[]) => {
     for (const element of engine.canvasElements()) {
       aggregator.push({ ...element, paintOnly: true });
     }

@@ -69,7 +69,7 @@ const setup = () => {
     phantom: folded.controls.phantom as PhantomControls,
     render: () => {
       aggregator.draw({} as CanvasRenderingContext2D);
-      return aggregator.aggregator();
+      return aggregator.elements();
     },
   };
 };

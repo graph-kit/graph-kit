@@ -55,9 +55,9 @@ export const allMstsChip = (graph: Graph): LensChipDefinition => {
 
   let removeEdges = false;
 
-  const removeNonPhantomEdges: AggregatorTransformer = (agg) => {
-    if (!removeEdges) return agg;
-    return agg.filter((el) => !graph.isEdge(el.id));
+  const removeNonPhantomEdges: AggregatorTransformer = (elements) => {
+    if (!removeEdges) return elements;
+    return elements.filter((el) => !graph.isEdge(el.id));
   };
   graph.surface.aggregator.addTransformer(removeNonPhantomEdges);
 

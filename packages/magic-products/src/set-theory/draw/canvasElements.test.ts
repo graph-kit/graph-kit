@@ -65,9 +65,9 @@ const hitTest = (
       endFrame: () => {},
     });
 
-  addTransformer((agg) => {
-    agg.push(...elements);
-    return agg;
+  addTransformer((drawn) => {
+    drawn.push(...elements);
+    return drawn;
   });
 
   // the aggregator only sorts on draw, and the hit test reads what was drawn

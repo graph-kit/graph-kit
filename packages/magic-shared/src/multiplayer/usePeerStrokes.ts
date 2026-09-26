@@ -73,9 +73,9 @@ export const usePeerStrokes = ({
     return adopted;
   };
 
-  const peerStrokeElements: AggregatorTransformer = (aggregator) => {
+  const peerStrokeElements: AggregatorTransformer = (elements) => {
     const state = room.state.value;
-    if (!state.connected) return aggregator;
+    if (!state.connected) return elements;
 
     // the stroke carries the id it commits under, so the annotation that replaces it is
     // recognised by identity rather than by which channel happened to land first
@@ -91,10 +91,10 @@ export const usePeerStrokes = ({
       if (!element) continue;
 
       // a stroke nobody has committed is not a thing the pointer can land on
-      aggregator.push({ ...element, paintOnly: true });
+      elements.push({ ...element, paintOnly: true });
     }
 
-    return aggregator;
+    return elements;
   };
 
   surface.aggregator.addTransformer(peerStrokeElements);

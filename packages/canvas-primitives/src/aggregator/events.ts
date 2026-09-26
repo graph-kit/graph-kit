@@ -1,12 +1,9 @@
 import type { EventMapToEventRegistry } from '@core/events/types';
 
 export type AggregatorEventMap = {
-  /**
-   * before the aggregator is rebuilt for this frame, so a producer can refresh whatever
-   * its transformer is about to read
-   */
+  /** fires before the element list is rebuilt, so transformers can read fresh data */
   onBeforeDraw: (ctx: CanvasRenderingContext2D) => void;
-  /** once every element in the aggregator has been painted */
+  /** fires after every element has been drawn */
   onDraw: (ctx: CanvasRenderingContext2D) => void;
 };
 

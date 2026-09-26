@@ -64,9 +64,9 @@ export const useOnboarding = ({
   // nothing to paint until `open` builds the card
   let elements: () => CanvasElement[] = () => [];
 
-  const transformer: AggregatorTransformer = (agg) => {
-    agg.push(...elements());
-    return agg;
+  const transformer: AggregatorTransformer = (drawn) => {
+    drawn.push(...elements());
+    return drawn;
   };
 
   const active = ref(false);

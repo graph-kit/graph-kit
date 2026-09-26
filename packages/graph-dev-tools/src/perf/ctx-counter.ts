@@ -1,9 +1,11 @@
 import type { FrameCalls } from '@graph/perf-harness/types';
 import type { AnyFunction } from 'ts-essentials';
 
+type RepaintEvent = 'onBeforeRepaint' | 'onAfterRepaint';
+
 export type RepaintEvents = {
-  subscribe: (event: 'onBeforeRepaint', callback: () => void) => void;
-  unsubscribe: (event: 'onBeforeRepaint', callback: () => void) => void;
+  subscribe: (event: RepaintEvent, callback: () => void) => void;
+  unsubscribe: (event: RepaintEvent, callback: () => void) => void;
 };
 
 /** how many canvas elements were created, keyed alongside the ctx call names */
@@ -11,6 +13,7 @@ export const CANVAS_ELEMENTS_CREATED = 'canvasElementsCreated';
 
 export type CtxCounter = {
   frames: () => FrameCalls[];
+  paintMs: () => number[];
   stop: () => void;
 };
 
@@ -73,14 +76,30 @@ export const startCtxCounter = (events: RepaintEvents): CtxCounter => {
     ),
   );
 
-  const onBeforeRepaint = () => frames.push({});
+  const paintMs: number[] = [];
+  let paintStartedAt: number | undefined;
+
+  const onBeforeRepaint = () => {
+    frames.push({});
+    paintStartedAt = performance.now();
+  };
+
+  const onAfterRepaint = () => {
+    if (paintStartedAt === undefined) return;
+    paintMs.push(performance.now() - paintStartedAt);
+    paintStartedAt = undefined;
+  };
+
   events.subscribe('onBeforeRepaint', onBeforeRepaint);
+  events.subscribe('onAfterRepaint', onAfterRepaint);
 
   return {
     frames: () => frames,
+    paintMs: () => paintMs,
     stop: () => {
       for (const restore of restorePatches) restore();
       events.unsubscribe('onBeforeRepaint', onBeforeRepaint);
+      events.unsubscribe('onAfterRepaint', onAfterRepaint);
     },
   };
 };

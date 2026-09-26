@@ -61,7 +61,7 @@ export const nodeLabel: NodeLabelPlugin = ({
         nodeIdToLabel.clear();
         setNodeLabels(data);
       },
-      validate: (data) => true,
+      validate: (_data) => true,
     },
     getters: {
       ...getters,

@@ -1,5 +1,4 @@
 import type { AggregatorControls } from '@canvas/primitives/aggregator/index';
-import type { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { CURSOR, Cursor } from '@core/utils/cursor';
 
 import type { Ref } from 'vue';

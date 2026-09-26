@@ -1,7 +1,6 @@
 <script setup lang="ts">
   import HStackVue from '@core/components/HStack';
   import Button from '@magic/shared/Button';
-  import ToggleButton from '@magic/shared/ToggleButton';
   import Well from '@magic/shared/Well';
   import { useProvidedGraph } from '@magic/shared/graph-shell';
   import { useProvidedShell } from '@magic/shared/product';

@@ -128,11 +128,11 @@ export const createSetsHistory = ({
 
   return {
     canUndo: computed(() => {
-      revision.value;
+      void revision.value;
       return cursor >= 0;
     }),
     canRedo: computed(() => {
-      revision.value;
+      void revision.value;
       return cursor < steps.length - 1;
     }),
 

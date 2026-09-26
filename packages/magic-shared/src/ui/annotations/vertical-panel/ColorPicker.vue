@@ -2,7 +2,6 @@
   import Dropdown from '../../../components/dropdown/Dropdown.vue';
   import DropdownItem from '../../../components/dropdown/DropdownItem.vue';
   import HStack from '../../../components/layout/HStack.vue';
-  import Well from '../../../components/layout/Well.vue';
   import ColorSwatch from '../panel-shared/ColorSwatch.vue';
   import CustomColorSwatch from '../panel-shared/CustomColorSwatch.vue';
   import { SWATCH_COLORS } from '../panel-shared/options.ts';

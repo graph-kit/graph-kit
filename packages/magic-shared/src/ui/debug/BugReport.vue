@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { devWarning } from '@core/utils/debugging';
   import { mdiBugOutline, mdiCheck } from '@mdi/js';
 
   import { computed, onBeforeUnmount, ref } from 'vue';
@@ -41,7 +40,7 @@
         () => (copied.value = false),
         COPIED_FEEDBACK_MS,
       );
-    } catch (err) {
+    } catch {
       toast.show({
         title: 'Report Not Copied',
         description: 'Your browser turned down access to the clipboard.',

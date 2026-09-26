@@ -1,5 +1,4 @@
 import { createAggregator } from '@canvas/primitives/aggregator/index';
-import type { CanvasElement } from '@canvas/primitives/aggregator/types';
 import { createAnimatedShapes } from '@canvas/primitives/animation/index';
 import { createEventHub } from '@core/events/createEventHub';
 import { nullThrows } from '@core/utils/assert';

@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { devWarning } from '@core/utils/debugging';
-  import { mdiCheck, mdiClipboard, mdiContentCopy } from '@mdi/js';
+  import { mdiCheck, mdiContentCopy } from '@mdi/js';
 
   import { computed, ref } from 'vue';
 

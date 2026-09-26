@@ -5,7 +5,7 @@ import { useProvidedShell } from '../product/context.ts';
 export const useCurrentFrame = <Frame = any>() => {
   const shell = useProvidedShell();
 
-  return computed(() => {
+  return computed<Frame | undefined>(() => {
     const simulation = shell.simulation.current.value;
     if (!simulation) return;
     return simulation.getFrame(simulation.playhead.position);

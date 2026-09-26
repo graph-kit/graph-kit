@@ -51,6 +51,28 @@ importers:
         specifier: ^3.0.7
         version: 3.3.8(typescript@6.0.3)
 
+  packages/a11y-harness:
+    dependencies:
+      '@magic/shared':
+        specifier: workspace:*
+        version: link:../magic-shared
+    devDependencies:
+      '@axe-core/playwright':
+        specifier: ^4.10.2
+        version: 4.13.0(playwright-core@1.62.0)
+      '@types/node':
+        specifier: ^24.2.1
+        version: 24.13.3
+      axe-core:
+        specifier: ^4.13.0
+        version: 4.13.0
+      playwright:
+        specifier: ^1.56.0
+        version: 1.62.0
+      tsx:
+        specifier: ^4.20.0
+        version: 4.23.1
+
   packages/canvas-primitives:
     dependencies:
       '@core/events':
@@ -706,6 +728,11 @@ packages:
 
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
+
+  '@axe-core/playwright@4.13.0':
+    resolution: {integrity: sha512-6YLx+kxXu5GJceG4ozFg+33a2EMTdjYwWGloJ3sb9Kta5pp+ZNS53uxGVog5JetIY8s++P5UrtX+cri+u0VAVg==}
+    peerDependencies:
+      playwright-core: '>= 1.0.0'
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -2617,6 +2644,10 @@ packages:
     hasBin: true
     peerDependencies:
       postcss: ^8.1.0
+
+  axe-core@4.13.0:
+    resolution: {integrity: sha512-UzGt8zg7Ny8djbYMhxl2zuEevVa7r2gJjYY5Lwr1xM7+XU2nd6CkIWFTVcCIbAP63vSz71NaVyyuSk9lHKcy0A==}
+    engines: {node: '>=4'}
 
   b4a@1.8.1:
     resolution: {integrity: sha512-aiqre1Nr0B/6DgE2N5vwTc+2/oQZ4Wh1t4NznYY4E00y8LCt6NqdRv81so00oo27D8MVKTpUa/MwUUtBLXCoDw==}
@@ -5491,6 +5522,11 @@ snapshots:
 
   '@asamuzakjp/nwsapi@2.3.9': {}
 
+  '@axe-core/playwright@4.13.0(playwright-core@1.62.0)':
+    dependencies:
+      axe-core: 4.13.0
+      playwright-core: 1.62.0
+
   '@babel/code-frame@7.29.7':
     dependencies:
       '@babel/helper-validator-identifier': 7.29.7
@@ -7471,6 +7507,8 @@ snapshots:
       picocolors: 1.1.1
       postcss: 8.5.22
       postcss-value-parser: 4.2.0
+
+  axe-core@4.13.0: {}
 
   b4a@1.8.1: {}
 

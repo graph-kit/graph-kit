@@ -87,9 +87,7 @@ describe(createEventHub, () => {
 
   it('does not invoke a subscriber another subscriber unsubscribed mid-emit', () => {
     const second = vi.fn();
-    hub.subscribe('onChange', () =>
-      hub.unsubscribe('onChange', second),
-    );
+    hub.subscribe('onChange', () => hub.unsubscribe('onChange', second));
     hub.subscribe('onChange', second);
     hub.emit('onChange');
     expect(second).not.toHaveBeenCalled();

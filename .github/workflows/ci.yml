@@ -50,6 +50,17 @@ jobs:
       - name: Typecheck
         run: pnpm build:types
 
+  lint:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Lint
+        run: pnpm lint
+
   format:
     runs-on: ubuntu-22.04
     timeout-minutes: 15

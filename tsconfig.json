@@ -15,6 +15,7 @@
     { "path": "./packages/graph-theme-presets" },
     { "path": "./packages/graph-computed-tokens" },
     { "path": "./packages/graph-vue" },
+    { "path": "./packages/a11y-harness" },
     { "path": "./packages/perf-harness" },
     { "path": "./packages/magic-products" },
     { "path": "./packages/canvas-primitives" },

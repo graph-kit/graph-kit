@@ -1,0 +1,20 @@
+{
+  "name": "@graph/a11y-harness",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "a11y": "tsx src/run.ts",
+    "build:types": "vue-tsc -b tsconfig.json"
+  },
+  "dependencies": {
+    "@magic/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@types/node": "^24.2.1",
+    "axe-core": "^4.13.0",
+    "playwright": "^1.56.0",
+    "tsx": "^4.20.0"
+  }
+}

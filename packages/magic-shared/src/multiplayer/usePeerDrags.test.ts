@@ -82,7 +82,7 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
   const paintOnlyIds = (ids: string[]) => {
     seeded = ids;
     aggregator.draw({} as CanvasRenderingContext2D);
-    const drawn = aggregator.aggregator();
+    const drawn = aggregator.elements();
 
     // half the assertions below expect nothing held, which an empty pipeline would
     // satisfy on its own

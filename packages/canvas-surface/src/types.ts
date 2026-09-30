@@ -16,6 +16,13 @@ export type { BoundingBox, Coordinate };
 
 export type DrawFns = {
   backgroundPattern: Ref<DrawPattern>;
+  /**
+   * draws the elements into `ctx` right away, even when {@link DrawFns.contentSuspended}
+   * is set. fires the aggregator's draw events but does not clear the canvas or apply the
+   * camera. the render loop already draws every frame. this exists only so auto-animate
+   * can capture the current frame
+   */
+  content: (ctx: CanvasRenderingContext2D) => void;
   /** holds the canvas on its background pattern alone, leaving the aggregator undrawn */
   contentSuspended: Ref<boolean>;
   /** the mirror of {@link DrawFns.contentSuspended}, leaving the pattern undrawn */
@@ -39,7 +46,7 @@ export type CanvasSurface = {
   visibleWorldRect: ComputedRef<BoundingBox>;
   ref: CanvasRef;
   draw: DrawFns;
-  /** every canvas element this surface paints, and the hit test over them */
+  /** to change what is drawn, add a transformer */
   aggregator: AggregatorControls;
   /**
    * build the shapes fed into the aggregator. these animate themselves, so a schema

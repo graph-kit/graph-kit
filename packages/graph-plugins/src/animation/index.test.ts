@@ -77,7 +77,7 @@ const setup = () => {
     controls: {
       surface: {
         renderer: { autoAnimate },
-        aggregator: { draw },
+        draw: { content: draw },
         canvas: { getContext: () => ({}) },
       },
       positions,

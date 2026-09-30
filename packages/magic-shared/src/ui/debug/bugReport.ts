@@ -130,7 +130,7 @@ const roomSection = (shell: Shell): ReportRow[] => {
 };
 
 const countElements = (surface: CanvasSurface) => {
-  const elements = surface.aggregator.aggregator();
+  const elements = surface.aggregator.elements();
   const countByShape = new Map<string, number>();
   let hitTestable = 0;
 

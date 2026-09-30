@@ -6,6 +6,11 @@ export type CanvasCallCounter = {
   start: () => void;
   /** each repaint since {@link CanvasCallCounter.start}, oldest first */
   get: () => FrameCalls[] | undefined;
+  /**
+   * how long each repaint took in milliseconds, in the same order as `get`. optional
+   * because apps built before it existed don't have it
+   */
+  getPaintMs?: () => number[] | undefined;
 };
 
 export type CanvasScene = {
@@ -31,6 +36,8 @@ declare global {
 export type SceneResult = {
   scene: string;
   frames: FrameCalls[];
+  /** missing when the measured app predates paint timing */
+  paintMs?: number[];
 };
 
 export type RunResult = {

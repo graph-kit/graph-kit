@@ -52,8 +52,8 @@ export const useSetsRendering = (props: SetsRenderingProps) => {
     return map;
   });
 
-  const transformer: AggregatorTransformer = (aggregator: Aggregator) => {
-    aggregator.push(
+  const transformer: AggregatorTransformer = (elements: Aggregator) => {
+    elements.push(
       ...setsCanvasElements({
         definitions: sets.definitions.value,
         sections: props.sections.value,
@@ -65,7 +65,7 @@ export const useSetsRendering = (props: SetsRenderingProps) => {
         resolveToken: props.theme._resolveToken,
       }),
     );
-    return aggregator;
+    return elements;
   };
 
   surface.aggregator.addTransformer(transformer);

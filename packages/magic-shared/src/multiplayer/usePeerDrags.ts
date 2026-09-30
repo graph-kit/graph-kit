@@ -94,12 +94,12 @@ export const usePeerDrags = ({
 
   // paint only keeps a peer's element on screen while taking it out of hit testing, so
   // nobody here can grab it out from under them mid drag
-  const markPeerHeldElements: AggregatorTransformer = (aggregator) => {
-    if (heldIds.size === 0) return aggregator;
-    for (const element of aggregator) {
+  const markPeerHeldElements: AggregatorTransformer = (elements) => {
+    if (heldIds.size === 0) return elements;
+    for (const element of elements) {
       if (heldIds.has(element.id)) element.paintOnly = true;
     }
-    return aggregator;
+    return elements;
   };
 
   surface.aggregator.addTransformer(markPeerHeldElements);

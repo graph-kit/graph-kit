@@ -34,13 +34,13 @@ const setup = (peerDrags: Record<string, DraggedElement[]> = {}) => {
   // seeds the elements under test, registered ahead of usePeerDrags so its own
   // transformer sees them
   let seeded: string[] = [];
-  aggregator.addTransformer((agg) => {
-    agg.push(
+  aggregator.addTransformer((elements) => {
+    elements.push(
       ...seeded.map(
         (id) => ({ id, priority: 1, shape: {} }) as unknown as CanvasElement,
       ),
     );
-    return agg;
+    return elements;
   });
 
   const surface = { aggregator } as unknown as CanvasSurface;

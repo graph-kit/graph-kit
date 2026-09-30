@@ -22,8 +22,8 @@ const setup = (contentAt: Coordinate[]) => {
     drawGroup: () => {},
   });
 
-  aggregator.addTransformer((agg) => {
-    agg.push(
+  aggregator.addTransformer((elements) => {
+    elements.push(
       ...contentAt.map(
         (at, index) =>
           ({
@@ -33,7 +33,7 @@ const setup = (contentAt: Coordinate[]) => {
           }) as CanvasElement,
       ),
     );
-    return agg;
+    return elements;
   });
 
   const state = { panX: ref(0), panY: ref(0), zoom: ref(1) };

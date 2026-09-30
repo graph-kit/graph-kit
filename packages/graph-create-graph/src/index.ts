@@ -102,10 +102,10 @@ export const createGraph = <
   // could be built (see [5] in plugins/internals/plugin.ts)
   folded.resolveFinalRenderFunctions(renderFunctions);
 
-  const transformer: AggregatorTransformer = (agg) => {
-    agg.push(...controls.nodes().map(nodeCanvasElement));
-    agg.push(...controls.edges().map(edgeCanvasElement));
-    return agg;
+  const transformer: AggregatorTransformer = (elements) => {
+    elements.push(...controls.nodes().map(nodeCanvasElement));
+    elements.push(...controls.edges().map(edgeCanvasElement));
+    return elements;
   };
 
   castControls.surface.aggregator.addTransformer(transformer);

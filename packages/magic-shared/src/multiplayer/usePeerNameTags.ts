@@ -46,9 +46,9 @@ export const usePeerNameTags = ({
   surface,
   multiplayer,
 }: PeerNameTagOptions) => {
-  const nameTagElements: AggregatorTransformer = (agg) => {
+  const nameTagElements: AggregatorTransformer = (elements) => {
     const room = multiplayer.room.state.value;
-    if (!room.connected) return agg;
+    if (!room.connected) return elements;
 
     const roster = room.userIdToRosterEntry;
     const userPresence = Object.entries(room.userIdToPresence);
@@ -99,10 +99,10 @@ export const usePeerNameTags = ({
         }),
       };
 
-      agg.push(nameTag, cursorDot);
+      elements.push(nameTag, cursorDot);
     }
 
-    return agg;
+    return elements;
   };
 
   const show = () => surface.aggregator.addTransformer(nameTagElements);

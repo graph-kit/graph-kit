@@ -63,11 +63,11 @@ export const useSetsAnnotations = ({
 
   const swallow = (_: unknown, consume: () => void) => consume();
 
-  const paintAnnotations = (aggregator: Aggregator) => {
+  const paintAnnotations = (elements: Aggregator) => {
     for (const element of engine.canvasElements()) {
-      aggregator.push({ ...element, paintOnly: true });
+      elements.push({ ...element, paintOnly: true });
     }
-    return aggregator;
+    return elements;
   };
 
   surface.aggregator.addTransformer(paintAnnotations);

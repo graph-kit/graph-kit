@@ -298,23 +298,22 @@ export const anchors: AnchorsPlugin = ({ controls, events, getters }) => {
     clearAnchorState();
   };
 
-  const insertAnchorsIntoAggregator = (aggregator: CanvasElement[]) => {
-    if (!parentNode) return aggregator;
+  const insertAnchorsIntoAggregator = (elements: CanvasElement[]) => {
+    if (!parentNode) return elements;
     const anchors = getAnchorSchemas(parentNode);
-    for (const anchor of anchors) aggregator.push(anchor);
-    return aggregator;
+    for (const anchor of anchors) elements.push(anchor);
+    return elements;
   };
 
-  const insertLinkPreviewIntoAggregator = (aggregator: CanvasElement[]) => {
+  const insertLinkPreviewIntoAggregator = (elements: CanvasElement[]) => {
     const draggedAnchor = anchorDragState.getDragState()?.data;
-    if (!parentNode || !draggedAnchor) return aggregator;
+    if (!parentNode || !draggedAnchor) return elements;
 
-    const linkPreviewCanvasElement =
-      resolveEdgePreviewCanvasElement(aggregator);
-    if (!linkPreviewCanvasElement) return aggregator;
+    const linkPreviewCanvasElement = resolveEdgePreviewCanvasElement(elements);
+    if (!linkPreviewCanvasElement) return elements;
 
-    aggregator.push(linkPreviewCanvasElement);
-    return aggregator;
+    elements.push(linkPreviewCanvasElement);
+    return elements;
   };
 
   controls.surface.aggregator.addTransformer(insertAnchorsIntoAggregator);

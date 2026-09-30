@@ -31,17 +31,17 @@
 
   /** the aggregator is a plain array behind a getter, so its counts are polled */
   const sampleSurface = () => {
-    const aggregator = surface.aggregator.aggregator();
+    const elements = surface.aggregator.aggregator();
     const countByShape = new Map<string, number>();
     let hitTestable = 0;
 
-    for (const element of aggregator) {
+    for (const element of elements) {
       if (!element.paintOnly) hitTestable++;
       const { name } = element.shape;
       countByShape.set(name, (countByShape.get(name) ?? 0) + 1);
     }
 
-    elementCount.value = aggregator.length;
+    elementCount.value = elements.length;
     hitTestableCount.value = hitTestable;
     shapeCounts.value = [...countByShape].sort(
       ([, previousCount], [, nextCount]) => nextCount - previousCount,

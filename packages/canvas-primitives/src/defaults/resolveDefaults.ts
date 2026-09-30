@@ -12,7 +12,7 @@ type WithDefaults<
     PartiallyRequired<Schema, Extract<keyof Defaults, keyof Schema>>,
     'textArea'
   > &
-    ReturnType<typeof resolveTextArea>
+    Partial<NonNullable<ReturnType<typeof resolveTextArea>>>
 >;
 
 export const resolveDefaults =
@@ -28,12 +28,10 @@ export const resolveDefaults =
       ),
     );
 
-    // @ts-expect-error this works... but the types are being weird
-    const resolvedSchema: WithDefaults<TSchema, TDefaults> = {
+    // typescript can't check a mapped type over a generic, so this is asserted
+    return {
       ...defaults,
       ...resolveTextArea(textArea),
       ...cleanedRest,
-    };
-
-    return resolvedSchema;
+    } as unknown as WithDefaults<TSchema, TDefaults>;
   };

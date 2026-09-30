@@ -13,7 +13,10 @@ import {
 import { interpolateCoordinate } from '../../animation/interpolation/coordinate.ts';
 import { interpolateNumber } from '../../animation/interpolation/number.ts';
 import { interpolateTextArea } from '../../animation/interpolation/textArea.ts';
-import type { AnimationKeyframe } from '../../animation/interpolation/types.ts';
+import type {
+  AnimationKeyframe,
+  InterpolationFunction,
+} from '../../animation/interpolation/types.ts';
 import { resolveTextArea } from '../../text/defaults.ts';
 import type { TextArea } from '../../text/types.ts';
 import type { EverySchemaPropName, ShapeName } from '../../types/index.ts';
@@ -146,7 +149,11 @@ export const compileTimeline = (timeline: Timeline<any>): CompiledTimeline => {
     propName: EverySchemaPropName,
   ): propVal is TextArea => TEXT_AREA_PROPS.has(propName);
 
-  const interpolationFns = [
+  // one shared signature, since a union of the specific ones can only be called with never
+  const interpolationFns: {
+    predicate: (propVal: unknown, propName: EverySchemaPropName) => boolean;
+    fn: InterpolationFunction<any>;
+  }[] = [
     {
       predicate: (propVal: unknown) => typeof propVal === 'number',
       fn: interpolateNumber,
@@ -164,7 +171,7 @@ export const compileTimeline = (timeline: Timeline<any>): CompiledTimeline => {
       predicate: isTextArea,
       fn: interpolateTextArea,
     },
-  ] as const;
+  ];
 
   for (const propName of propsInTimeline) {
     tl.properties[propName] = (schemaWithDefaults, progress) => {
@@ -205,7 +212,6 @@ export const compileTimeline = (timeline: Timeline<any>): CompiledTimeline => {
       return interpolation.fn(
         keyframes,
         getDefaultEasing(propName),
-        // @ts-expect-error could make TS happy, but would make this verbose unfortunately
         rawPropVal,
       )(progress);
     };

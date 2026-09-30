@@ -1,4 +1,3 @@
-// @ts-expect-error add vite env to .d.ts
 export const IS_DEV: boolean = import.meta.env.DEV;
 
 /** the channel for warnings addressed to developers rather than users */

@@ -20,4 +20,6 @@ export const ANNOTATION_HANDLER_PRIORITY = {
   ],
 } as const;
 
+export const ANNOTATION_SUPPRESSION_REASON = 'annotations';
+
 export const ANNOTATION_THEME_LAYER_ID = 'plugins/annotations';

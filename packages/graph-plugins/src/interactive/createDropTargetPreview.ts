@@ -133,6 +133,7 @@ export const createDropTargetPreview = (
 
     controls.anchors?.events.subscribe('onNodeAnchorDragStart', startDrag);
     controls.anchors?.events.subscribe('onNodeAnchorDrop', stopDrag);
+    controls.anchors?.lifecycle.events.subscribe('onDisabled', stopDrag);
     controls.surface.events.elements.handle(
       'onElementsUnderCursorChange',
       syncPreviewEdge,
@@ -147,6 +148,7 @@ export const createDropTargetPreview = (
 
     controls.anchors?.events.unsubscribe('onNodeAnchorDragStart', startDrag);
     controls.anchors?.events.unsubscribe('onNodeAnchorDrop', stopDrag);
+    controls.anchors?.lifecycle.events.unsubscribe('onDisabled', stopDrag);
     controls.surface.events.elements.unhandle(
       'onElementsUnderCursorChange',
       syncPreviewEdge,

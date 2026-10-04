@@ -3,13 +3,17 @@ import type { ElementMouseEvent } from '@canvas/surface/index';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import { createLifecycle } from '@graph/plugins-shared/lifecycle';
+import {
+  ReleaseSuppression,
+  createLifecycle,
+} from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
 import { GraphUnderCursor } from '../surface/types.ts';
 import {
   ANNOTATION_HANDLER_PRIORITY,
   ANNOTATION_PLUGIN_ID,
+  ANNOTATION_SUPPRESSION_REASON,
   ANNOTATION_THEME_LAYER_ID,
 } from './constants.ts';
 import { createAnnotationsThemeOverrides } from './themes.ts';
@@ -74,9 +78,22 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
   const captureSnapshot = () => controls.history?.captureSnapshot();
 
+  const lifecyclesToSuppress = [
+    controls.marquee?.lifecycle,
+    controls.anchors?.lifecycle,
+    controls.nodeDrag?.lifecycle,
+  ].filter((pluginLifecycle) => pluginLifecycle !== undefined);
+
+  let releases: ReleaseSuppression[] = [];
+
   const activate = () => {
     if (!lifecycle.isEnabled()) return;
+    if (engine.isActive()) return;
     engine.activate();
+
+    for (const pluginLifecycle of lifecyclesToSuppress) {
+      releases.push(pluginLifecycle.suppress(ANNOTATION_SUPPRESSION_REASON));
+    }
 
     cursorLayer.set('canvas.cursor', () => engine.cursor());
 
@@ -95,6 +112,9 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
   const deactivate = () => {
     engine.deactivate();
+
+    for (const release of releases) release();
+    releases = [];
 
     cursorLayer.removeAll();
 

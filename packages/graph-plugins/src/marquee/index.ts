@@ -187,6 +187,9 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
   controls.surface.aggregator.addTransformer(addSelectionBoxToAggregator);
   controls.surface.aggregator.addTransformer(addMarqueeBoxToAggregator);
 
+  controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
+  events._internal.core.subscribe('onNodeMoveStream', updateSelectionBox);
+
   const cursorTheme = createCursorThemer(
     controls,
     theme,
@@ -195,8 +198,6 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
 
   const onEnable = () => {
     cursorTheme.enable();
-
-    controls.focus.events.subscribe('onFocusChange', updateSelectionBox);
 
     controls.surface.events.elements.handle(
       'onMouseDown',
@@ -221,13 +222,9 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       MARQUEE_PLUGIN_ID,
       { before: [ANCHOR_PLUGIN_ID] },
     );
-
-    events._internal.core.subscribe('onNodeMoveStream', updateSelectionBox);
   };
 
   const onDisable = () => {
-    controls.focus.events.unsubscribe('onFocusChange', updateSelectionBox);
-
     controls.surface.events.elements.unhandle(
       'onMouseDown',
       handleMarqueeEngagement,
@@ -238,11 +235,9 @@ export const marquee: MarqueePlugin = ({ controls, events }) => {
       disengageMarqueeBox,
     );
     controls.surface.events.elements.unhandle(
-      'onMouseMove',
+      'onElementsUnderCursorChange',
       setMarqueeBoxDimensions,
     );
-
-    events._internal.core.unsubscribe('onNodeMoveStream', updateSelectionBox);
 
     disengageMarqueeBox();
     cursorTheme.disable();

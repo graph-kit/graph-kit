@@ -7,6 +7,7 @@ import {
 
 import { AnchorsPlugin } from '../anchors/types.ts';
 import { HistoryPlugin } from '../history/types.ts';
+import { InteractivePlugin } from '../interactive/types.ts';
 import { MarqueePlugin } from '../marquee/types.ts';
 import { NodeDragPlugin } from '../node-drag/types.ts';
 import { SurfacePlugin } from '../surface/types.ts';
@@ -24,6 +25,7 @@ export type AnnotationsPlugin = GraphPlugin<{
   optionalDependsOn: [
     AnchorsPlugin,
     HistoryPlugin,
+    InteractivePlugin,
     MarqueePlugin,
     NodeDragPlugin,
   ];

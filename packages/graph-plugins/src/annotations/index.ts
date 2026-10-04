@@ -82,6 +82,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     controls.marquee?.lifecycle,
     controls.anchors?.lifecycle,
     controls.nodeDrag?.lifecycle,
+    controls.interactive?.lifecycle,
   ].filter((pluginLifecycle) => pluginLifecycle !== undefined);
 
   let releases: ReleaseSuppression[] = [];

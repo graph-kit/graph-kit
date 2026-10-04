@@ -32,6 +32,7 @@ import { useMinimumSpanningTrees } from '@graph/vue/useMinimumSpanningTrees';
 import { useNodesEdges } from '@graph/vue/useNodesEdges';
 import { useTransitionMatrix } from '@graph/vue/useTransitionMatrix';
 
+import { disableAnchorsWhileAnnotating } from './disableAnchorsWhileAnnotating.ts';
 import { useGraphDevTools } from './useGraphDevTools.ts';
 
 export type UseGraphOptions = {
@@ -71,6 +72,7 @@ const createGraphWithPlugins = (options: UseGraphOptions) => {
   });
   const edgeRenderer = createPhantomAwareEdgeRenderFunction(graph);
   graph.setRenderFunction('edge', edgeRenderer);
+  disableAnchorsWhileAnnotating(graph);
   return graph;
 };
 

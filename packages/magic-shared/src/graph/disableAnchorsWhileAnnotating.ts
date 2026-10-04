@@ -1,4 +1,4 @@
-import { Graph } from '../graph/types.ts';
+import { Graph } from './types.ts';
 
 export const disableAnchorsWhileAnnotating = (
   graph: Pick<Graph, 'anchors' | 'annotations'>,

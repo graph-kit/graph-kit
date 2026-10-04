@@ -2,9 +2,9 @@
 
 Freehand drawing, erasing and a laser pointer over the canvas, on top of everything the graph renders.
 
-| Export        | Dependencies | Optional dependencies                                      |
-| ------------- | ------------ | ---------------------------------------------------------- |
-| `annotations` | `canvas`     | `anchors`, `history`, `interactive`, `marquee`, `nodeDrag` |
+| Export        | Dependencies | Optional dependencies |
+| ------------- | ------------ | --------------------- |
+| `annotations` | `canvas`     | `history`             |
 
 **Controls:** everything on `AnnotationsControls`, plus `theme` and `lifecycle`
 
@@ -17,8 +17,3 @@ graphs. This plugin is the wiring: it hands the engine the pointer ahead of ever
 that acts on the graph, paints what the engine returns through the aggregator, keeps the
 strokes in the encoded payload, and asks `history` for a snapshot whenever the set of
 annotations changes. A product with a canvas and no graph binds the same engine itself.
-
-While the tools are out, `marquee`, `anchors`, `nodeDrag` and `interactive` are held
-disabled, so nothing they were showing when the tools came out stays frozen on the canvas,
-and Delete or Backspace cannot remove the selection while drawing. Each one has to be
-folded ahead of annotations to be held.

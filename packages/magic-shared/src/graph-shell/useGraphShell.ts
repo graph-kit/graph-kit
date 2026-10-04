@@ -4,6 +4,7 @@ import { resolveShellFlags } from '../product/flags.ts';
 import { ContentPredicate, ProductControls, Shell } from '../product/types.ts';
 import { useShell } from '../product/useShell.ts';
 import { provideGraph } from './context.ts';
+import { disableAnchorsWhileAnnotating } from './disableAnchorsWhileAnnotating.ts';
 import { graphShellHelpMenu } from './help.ts';
 import { multiplayerControls } from './multiplayer/index.ts';
 import { OnboardingGraphControls } from './onboarding-graph/types.ts';
@@ -36,6 +37,8 @@ export const useGraphShell = (options: GraphShellOptions): GraphShell => {
 
   if (!flags.history) graph.history.lifecycle.disable();
   if (!flags.annotations) graph.annotations.lifecycle.disable();
+
+  disableAnchorsWhileAnnotating(graph);
 
   const product: ProductControls = {
     surface: graph.surface,

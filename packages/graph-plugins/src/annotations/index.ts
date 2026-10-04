@@ -3,17 +3,13 @@ import type { ElementMouseEvent } from '@canvas/surface/index';
 import { createAnnotations } from '@core/annotations/index';
 import { createThemeController } from '@core/themes/index';
 import { MOUSE_BUTTONS } from '@core/utils/mouse';
-import {
-  ReleaseSuppression,
-  createLifecycle,
-} from '@graph/plugins-shared/lifecycle';
+import { createLifecycle } from '@graph/plugins-shared/lifecycle';
 import { DeepReadonly } from 'ts-essentials';
 
 import { GraphUnderCursor } from '../surface/types.ts';
 import {
   ANNOTATION_HANDLER_PRIORITY,
   ANNOTATION_PLUGIN_ID,
-  ANNOTATION_SUPPRESSION_REASON,
   ANNOTATION_THEME_LAYER_ID,
 } from './constants.ts';
 import { createAnnotationsThemeOverrides } from './themes.ts';
@@ -37,12 +33,15 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     ANNOTATION_THEME_LAYER_ID,
   );
 
+  let isStroking = false;
+
   const beginStroke = (
     { coords, event }: ElementMouseEvent,
     consume: () => void,
   ) => {
     if (event.button !== MOUSE_BUTTONS.left) return;
     consume();
+    isStroking = true;
     engine.beginStroke(coords);
   };
 
@@ -58,7 +57,9 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   };
 
   const endStroke = (_: unknown, consume: () => void) => {
+    if (!isStroking) return;
     consume();
+    isStroking = false;
     engine.endStroke();
   };
 
@@ -78,23 +79,9 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
   const captureSnapshot = () => controls.history?.captureSnapshot();
 
-  const lifecyclesToSuppress = [
-    controls.marquee?.lifecycle,
-    controls.anchors?.lifecycle,
-    controls.nodeDrag?.lifecycle,
-    controls.interactive?.lifecycle,
-  ].filter((pluginLifecycle) => pluginLifecycle !== undefined);
-
-  let releases: ReleaseSuppression[] = [];
-
   const activate = () => {
     if (!lifecycle.isEnabled()) return;
-    if (engine.isActive()) return;
     engine.activate();
-
-    for (const pluginLifecycle of lifecyclesToSuppress) {
-      releases.push(pluginLifecycle.suppress(ANNOTATION_SUPPRESSION_REASON));
-    }
 
     cursorLayer.set('canvas.cursor', () => engine.cursor());
 
@@ -113,9 +100,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
   const deactivate = () => {
     engine.deactivate();
-
-    for (const release of releases) release();
-    releases = [];
+    isStroking = false;
 
     cursorLayer.removeAll();
 

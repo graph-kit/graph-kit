@@ -33,7 +33,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
     ANNOTATION_THEME_LAYER_ID,
   );
 
-  let isStroking = false;
+  let strokeInProgress = false;
 
   const beginStroke = (
     { coords, event }: ElementMouseEvent,
@@ -41,7 +41,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   ) => {
     if (event.button !== MOUSE_BUTTONS.left) return;
     consume();
-    isStroking = true;
+    strokeInProgress = true;
     engine.beginStroke(coords);
   };
 
@@ -57,9 +57,9 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
   };
 
   const endStroke = (_: unknown, consume: () => void) => {
-    if (!isStroking) return;
+    if (!strokeInProgress) return;
     consume();
-    isStroking = false;
+    strokeInProgress = false;
     engine.endStroke();
   };
 
@@ -100,7 +100,7 @@ export const annotations: AnnotationsPlugin = ({ controls }) => {
 
   const deactivate = () => {
     engine.deactivate();
-    isStroking = false;
+    strokeInProgress = false;
 
     cursorLayer.removeAll();
 

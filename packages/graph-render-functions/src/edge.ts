@@ -73,13 +73,12 @@ export const createEdgeRenderFunction: CreateEdgeRenderFunction = ({
       targetNode.styles.border.width / 2 +
       WHITESPACE_BETWEEN_ARROW_TIP_AND_NODE_PX;
 
+    const arrowDrawDistance =
+      targetNode.styles.size + arrowHeadSpacingAwayFromNode;
+
     const arrowDrawOffset = {
-      x:
-        (targetNode.styles.size + arrowHeadSpacingAwayFromNode) *
-        Math.cos(angle),
-      y:
-        (targetNode.styles.size + arrowHeadSpacingAwayFromNode) *
-        Math.sin(angle),
+      x: arrowDrawDistance * Math.cos(angle),
+      y: arrowDrawDistance * Math.sin(angle),
     };
 
     // copied because the shift below would otherwise write through to the position store
@@ -154,9 +153,19 @@ export const createEdgeRenderFunction: CreateEdgeRenderFunction = ({
     };
 
     if (directed) {
+      const doesArrowRunBackwards =
+        Math.hypot(
+          targetNode.position.x - sourceNode.position.x,
+          targetNode.position.y - sourceNode.position.y,
+        ) < arrowDrawDistance;
+
+      const labelOffset =
+        sourceNodeGirth / 2 + WHITESPACE_BETWEEN_ARROW_TIP_AND_NODE_PX / 2;
+
       return shapes.arrow({
-        textOffsetFromCenter:
-          sourceNodeGirth / 2 + WHITESPACE_BETWEEN_ARROW_TIP_AND_NODE_PX / 2,
+        textOffsetFromCenter: doesArrowRunBackwards
+          ? -labelOffset
+          : labelOffset,
         ...lineOptions,
       });
     }

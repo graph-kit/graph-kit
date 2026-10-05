@@ -1,6 +1,10 @@
 import { AnimatedShapeFactories } from '@canvas/primitives/animation/index';
-import { Shape } from '@canvas/primitives/types/index';
+import { resolveLineDefaults } from '@canvas/primitives/shapes/line/defaults';
+import { getTextAreaAnchorPoint } from '@canvas/primitives/shapes/line/text';
+import { LineSchema } from '@canvas/primitives/shapes/line/types';
+import { Shape, WithId } from '@canvas/primitives/types/index';
 import { Coordinate } from '@canvas/primitives/types/utility';
+import { nullThrows } from '@core/utils/assert';
 import { ComputedTokenResolver } from '@graph/computed-tokens/index';
 import { CoreEdge } from '@graph/primitives/types';
 import { describe, expect, it } from 'vitest';
@@ -278,4 +282,72 @@ describe('createEdgeRenderFunction parallel edge geometry', () => {
 
   // tracked by #826, self directed edges take a slot but draw on top of each other
   it.todo('fans self directed edges sharing a node');
+});
+
+/** draws a lone a to b edge, with b placed `distance` px from a along the route */
+const renderAtDistance = (
+  distance: number,
+  options: Partial<EdgeRenderOptions> = {},
+) => {
+  const drawn: WithId<LineSchema>[] = [];
+
+  const capture = (schema: WithId<LineSchema>) => {
+    drawn.push(schema);
+    return {} as Shape;
+  };
+
+  const render = createEdgeRenderFunction({
+    shapes: {
+      line: capture,
+      arrow: capture,
+    } as unknown as AnimatedShapeFactories,
+    resolveToken,
+    directed: true,
+    labelTextInputColor: () => 'black',
+    parallelEdges: () => [edge('1', 'a', 'b')],
+    neighborPositions: () => [],
+    ...options,
+  });
+
+  const source = NODE_POSITIONS.a!;
+  render({
+    id: '1',
+    source: { id: 'a', position: source },
+    target: {
+      id: 'b',
+      position: {
+        x: source.x + distance * Math.cos(ROUTE_ANGLE),
+        y: source.y + distance * Math.sin(ROUTE_ANGLE),
+      },
+    },
+  });
+
+  return nullThrows(drawn[0], 'expected the edge to draw a shape');
+};
+
+/** how far along the route from a an edge's label is centered */
+const labelDistanceAlongRoute = (schema: WithId<LineSchema>) => {
+  const anchor = nullThrows(
+    getTextAreaAnchorPoint(resolveLineDefaults(schema)),
+    'expected the edge to be labelled',
+  );
+  return round(
+    (anchor.x - NODE_POSITIONS.a!.x) * Math.cos(ROUTE_ANGLE) +
+      (anchor.y - NODE_POSITIONS.a!.y) * Math.sin(ROUTE_ANGLE),
+  );
+};
+
+describe('createEdgeRenderFunction directed edge labels', () => {
+  // an arrow ends 33px short of its target's center, so the closer two are pulled back behind the
+  // source, which used to flip the label onto the far side of the source
+  it.each([200, 50, 20, 1])(
+    'labels the edge where an undirected one would be with node centers %ipx apart',
+    (distance) => {
+      expect(labelDistanceAlongRoute(renderAtDistance(distance))).toBe(
+        labelDistanceAlongRoute(
+          renderAtDistance(distance, { directed: false }),
+        ),
+      );
+    },
+  );
 });

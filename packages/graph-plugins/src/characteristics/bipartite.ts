@@ -14,8 +14,7 @@ export const getBipartitePartition: GetBipartitePartition = (adjList) => {
   const colors: { [node: string]: 0 | 1 } = {};
   const groups: BipartitePartition = [[], []];
 
-  // @ts-expect-error deep read only type I dont wanna deal with now
-  const completeGraph: AdjacencyList = { ...adjList };
+  const completeGraph: Record<string, readonly string[]> = { ...adjList };
 
   // Ensure all nodes are in the graph
   Object.keys(adjList).forEach((node) => {

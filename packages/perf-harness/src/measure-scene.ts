@@ -85,8 +85,14 @@ export const measureScene = async ({
   }
 
   logger('collecting the frames');
+  // one evaluate, so no repaint lands between reading the calls and the timings
+  const collected = await probe.evaluate((probe) => ({
+    frames: probe.counter.get(),
+    paintMs: probe.counter.getPaintMs?.(),
+  }));
+
   const frames = nullThrows(
-    await probe.evaluate((probe) => probe.counter.get()),
+    collected.frames,
     `${sceneName} has no frames to collect because its counter never started`,
   );
 
@@ -97,5 +103,5 @@ export const measureScene = async ({
 
   logger(`done, ${frames.length} frames`);
 
-  return { scene: sceneName, frames };
+  return { scene: sceneName, frames, paintMs: collected.paintMs };
 };

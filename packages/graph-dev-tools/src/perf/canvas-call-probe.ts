@@ -38,6 +38,7 @@ export const startCanvasCallProbe = ({
         counter = startCtxCounter(repaintEvents);
       },
       get: () => counter?.frames(),
+      getPaintMs: () => counter?.paintMs(),
     },
   };
 

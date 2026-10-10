@@ -40,6 +40,30 @@ const formatDelta = (base: number, head: number) => {
   return `${arrow} ${percent > 0 ? '+' : ''}${percent}%`;
 };
 
+/** nearest rank, so the result is always one of the measured frames */
+const percentile = (values: number[], fraction: number) => {
+  const sorted = values.toSorted((previous, next) => previous - next);
+  const rank = Math.ceil(fraction * sorted.length) - 1;
+  return sorted[Math.max(0, rank)];
+};
+
+const formatMs = (value: number) => value.toFixed(2);
+
+const paintRows = (head: SceneResult, base: SceneResult) =>
+  (
+    [
+      ['paint ms, median', 0.5],
+      ['paint ms, p95', 0.95],
+    ] as const
+  ).map(([label, fraction]) => {
+    if (!head.paintMs?.length || !base.paintMs?.length) {
+      return `| ${label} | n/a | n/a | |`;
+    }
+    const baseValue = percentile(base.paintMs, fraction);
+    const headValue = percentile(head.paintMs, fraction);
+    return `| ${label} | ${formatMs(baseValue)} | ${formatMs(headValue)} | ${formatDelta(baseValue, headValue)} |`;
+  });
+
 const averageCalls = (frames: FrameCalls[]) => {
   const totals: FrameCalls = {};
 
@@ -70,8 +94,9 @@ const sceneTable = (head: SceneResult, base: SceneResult) => {
   return [
     `#### \`${head.scene}\` (${head.frames.length} frames)`,
     '',
-    '| average per frame | base | head | |',
+    '| per frame | base | head | |',
     '| --- | ---: | ---: | --- |',
+    ...paintRows(head, base),
     ...rows,
     '',
     ...nonHeadlineChanges(headAverages, baseAverages),

@@ -3,6 +3,7 @@
   import { useGraphShell } from '@magic/shared/graph-shell';
 
   import { lensChips } from './lensChips.ts';
+  import { simulationButtons } from './simulationButtons.ts';
 
   useGraphShell({
     productId: 'topological-sort',
@@ -13,6 +14,7 @@
       allowSelfLoops: false,
     },
     lensChips,
+    simulationButtons,
   });
 </script>
 

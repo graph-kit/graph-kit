@@ -2,8 +2,8 @@
   import Shell from '@magic/shared/Shell';
   import { useGraphShell } from '@magic/shared/graph-shell';
 
-  import { lensChips } from './lensChips.ts';
-  import { simulationButtons } from './simulationButtons.ts';
+  import { lensChips } from './lenses/lensChips.ts';
+  import { simulationButtons } from './simulations/simulationButtons.ts';
 
   useGraphShell({
     productId: 'topological-sort',

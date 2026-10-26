@@ -4,7 +4,7 @@ import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 import { computed } from 'vue';
 
-import { useInDegrees } from '../useInDegrees.ts';
+import { useInDegrees } from './useInDegrees.ts';
 
 export const sourcesChip = (graph: Graph): LensChipDefinition => {
   const inDegrees = useInDegrees(graph);

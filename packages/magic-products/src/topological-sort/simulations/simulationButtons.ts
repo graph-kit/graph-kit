@@ -1,6 +1,6 @@
 import { GraphSimulationButtonOption } from '@magic/shared/graph-shell';
 
-import { kahnsSimulation } from './simulations/kahns/index.ts';
+import { kahnsSimulation } from './kahns/index.ts';
 
 export const simulationButtons: GraphSimulationButtonOption = (graph) => [
   {

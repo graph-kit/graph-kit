@@ -4,10 +4,10 @@ import {
   disabledState,
 } from '@magic/shared/ui/lens-chips/types';
 
-import { acyclicChip } from './chips/acyclic.ts';
-import { adjacencyListChip } from './chips/adjacencyList.ts';
-import { inDegreeChip } from './chips/inDegree.ts';
-import { sourcesChip } from './chips/sources.ts';
+import { acyclicChip } from './acyclic.ts';
+import { adjacencyListChip } from './adjacencyList.ts';
+import { inDegreeChip } from './inDegree.ts';
+import { sourcesChip } from './sources.ts';
 
 const requiresNodes =
   (graph: Graph) =>

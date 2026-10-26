@@ -3,7 +3,7 @@ import { Graph } from '@magic/shared/graph';
 import { LensChipDefinition } from '@magic/shared/ui/lens-chips/types';
 
 import { createInDegreeLabelThemer } from '../createInDegreeLabelThemer.ts';
-import { useInDegrees } from '../useInDegrees.ts';
+import { useInDegrees } from './useInDegrees.ts';
 
 export const inDegreeChip = (graph: Graph): LensChipDefinition => {
   const inDegrees = useInDegrees(graph);

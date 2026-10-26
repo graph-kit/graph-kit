@@ -122,6 +122,21 @@ export const manifests = {
       ogImage: productThumbnail('set-theory', 'dark'),
     },
   },
+  'topological-sort': {
+    id: 'topological-sort',
+    multiplayer: false,
+    name: 'Topological Sort',
+    abbreviatedName: 'TOP',
+    navigation: {
+      slug: 'topological-sort',
+    },
+    meta: {
+      title: 'Topological Sort | Magic Graphs',
+      description:
+        "Run Kahn's algorithm on a directed graph you build and watch it order every node before the nodes it points to.",
+      robots: 'noindex, nofollow',
+    },
+  },
   traversals: {
     id: 'traversals',
     multiplayer: true,

@@ -12,20 +12,18 @@ const componentSlotHighlight = (
 
 const highlights = {
   dequeue: {
-    tooltipLabel: 'Dequeue removes the first node in the queue.',
+    tooltipLabel: 'Remove the first node in the queue.',
     ...componentSlotHighlight('queue'),
   },
   enqueue: {
-    tooltipLabel: 'Enqueue adds a node to the back of the queue.',
+    tooltipLabel: 'Add a node to the back of the queue.',
     ...componentSlotHighlight('queue'),
   },
   inDegree: {
-    tooltipLabel:
-      'How many edges still point into a node, shown on every node not yet placed.',
+    tooltipLabel: 'How many edges point into a node.',
   },
   order: {
-    tooltipLabel:
-      'The topological ordering so far. Every node comes before the nodes it points to.',
+    tooltipLabel: 'The topological ordering so far.',
     ...componentSlotHighlight('order'),
   },
   queue: {
@@ -45,7 +43,7 @@ export const kahnsExplainer = (frame: KahnsFrame): Explainer | undefined => {
 
   if (frame.type === 'enqueue-sources') {
     return {
-      content: '[Enqueuing] Every Node With an [In-Degree] of <0>',
+      content: '[Enqueuing] Every Node With an [In-Degree] of 0',
       highlights: [highlights.enqueue, highlights.inDegree],
     };
   }
@@ -59,14 +57,14 @@ export const kahnsExplainer = (frame: KahnsFrame): Explainer | undefined => {
 
   if (frame.type === 'remove-edge') {
     return {
-      content: `Removing Edge {${frame.edge}}, Leaving {${frame.node}} With an [In-Degree] of <${frame.inDegrees[frame.node]}>`,
+      content: `Removing {${frame.edge}} Leaves {${frame.node}} With an [In-Degree] of <${frame.inDegrees[frame.node]}>`,
       highlights: [highlights.inDegree],
     };
   }
 
   if (frame.type === 'enqueue-node') {
     return {
-      content: `Removing Edge {${frame.edge}} Drops {${frame.node}}'s [In-Degree] to <0>, Therefore, [Enqueuing]`,
+      content: `Removing {${frame.edge}} Leaves {${frame.node}} With an [In-Degree] of 0. [Enqueuing] {${frame.node}}.`,
       highlights: [highlights.inDegree, highlights.enqueue],
     };
   }
@@ -74,8 +72,7 @@ export const kahnsExplainer = (frame: KahnsFrame): Explainer | undefined => {
   const stuck = frame.stuckNodeIds.length;
   if (stuck === 0) {
     return {
-      content:
-        'Done! Every Node Is in the [Order], Each Before the Nodes It Points To',
+      content: 'Done! Every Node Is in [Order]',
       highlights: [highlights.order],
     };
   }

@@ -29,9 +29,9 @@ export const sourcesChip = (graph: Graph): LensChipDefinition => {
     },
     tooltipLabel: () => {
       if (sourceIds.value.size === 0) {
-        return "Every node has an edge pointing into it, which only a cycle can cause, so Kahn's algorithm has nowhere to start.";
+        return 'Every node has an edge pointing into it, meaning there is a cycle.';
       }
-      return "Nodes nothing points to. Kahn's algorithm starts from these, since nothing has to come before them.";
+      return 'Nodes no other node points to.';
     },
     lens: {
       id: 'sources',

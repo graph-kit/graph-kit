@@ -28,12 +28,7 @@ export const acyclicChip = (graph: Graph): LensChipDefinition => {
       term: 'Acyclic',
       value: () => (cycles.value.isAcyclic ? 'Yes' : 'No'),
     },
-    tooltipLabel: () => {
-      if (cycles.value.isAcyclic) {
-        return "No cycles, so there is always a node nothing points to and Kahn's algorithm can place every node.";
-      }
-      return "Nodes on a cycle each wait on another to go first, so Kahn's algorithm can never place them and no ordering exists.";
-    },
+    tooltipLabel: 'Does a group of nodes form a cycle?',
     lens: {
       id: 'acyclic',
       activate: () => {

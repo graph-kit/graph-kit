@@ -6,7 +6,7 @@ import {
 } from '@vueuse/core';
 import { useCookie, useHead } from 'nuxt/app';
 
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 import {
   APPEARANCE_COOKIE_KEY,
@@ -62,6 +62,20 @@ export const useDocumentAppearance = () => {
     htmlAttrs: { class: documentAppearance },
     script: [{ innerHTML: APPEARANCE_PREPAINT_SCRIPT, tagPosition: 'head' }],
   });
+
+  // unhead only removes classes it added, so a pre-paint stamp that disagrees with vue
+  // (the system flipping mid-load) would otherwise outlive it and keep `dark:` matching
+  if (typeof document !== 'undefined') {
+    watch(
+      documentAppearance,
+      (appearance) => {
+        const { classList } = document.documentElement;
+        classList.toggle('dark', appearance === 'dark');
+        classList.toggle('light', appearance === 'light');
+      },
+      { immediate: true },
+    );
+  }
 
   // css follows the html class, but anything resolved in js has to hydrate against the
   // baked markup first or vue will keep the prerendered value in production builds

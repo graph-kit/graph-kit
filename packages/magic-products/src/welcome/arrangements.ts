@@ -2,7 +2,10 @@ import { Coordinate } from '@core/utils/canvas/index';
 import { ProductId } from '@magic/shared/product';
 
 /** every product the scene places, so no edge can name a node that is absent */
-export type WelcomeProductId = Exclude<ProductId, 'dev' | 'welcome'>;
+export type WelcomeProductId = Exclude<
+  ProductId,
+  'dev' | 'welcome' | 'topological-sort'
+>;
 
 export type WelcomeArrangement = {
   /** names the layout for whoever is editing these, never shown to a visitor */
